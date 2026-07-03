@@ -42,11 +42,11 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg-primary); }
   ::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--primary) 30%, transparent);
+    background: rgba(230, 126, 34, 0.3);
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in srgb, var(--primary) 50%, transparent);
+    background: rgba(230, 126, 34, 0.5);
   }
 }
 
@@ -67,7 +67,7 @@
     transition: all 0.5s;
   }
   .glass-card:hover {
-    border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+    border-color: rgba(230, 126, 34, 0.3);
   }
 
   .gradient-text {
@@ -103,9 +103,9 @@
     color: var(--text-primary);
   }
   .btn-secondary:hover {
-    border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+    border-color: rgba(230, 126, 34, 0.5);
     background: var(--glass-bg);
-    box-shadow: 0 4px 20px color-mix(in srgb, var(--primary) 20%, transparent);
+    box-shadow: 0 4px 20px rgba(230, 126, 34, 0.2);
   }
 
   .input-field {
@@ -117,8 +117,8 @@
   .input-field::placeholder { color: var(--text-muted); }
   .input-field:focus {
     outline: none;
-    border-color: color-mix(in srgb, var(--primary) 50%, transparent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
+    border-color: rgba(230, 126, 34, 0.5);
+    box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.2);
   }
 
   .section-title {
@@ -134,7 +134,7 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      color-mix(in srgb, var(--primary) 10%, transparent) 50%,
+      rgba(230, 126, 34, 0.1) 50%,
       transparent 100%
     );
     background-size: 200% 100%;

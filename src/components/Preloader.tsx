@@ -39,7 +39,7 @@ export default function Preloader() {
               transition={{ duration: 2, ease: 'easeInOut' }}
               className="h-1 rounded-full mx-auto overflow-hidden"
               style={{
-                background: `color-mix(in srgb, var(--primary) 20%, transparent)`,
+                background: "rgba(230, 126, 34, 0.2)",
               }}
             >
               <motion.div

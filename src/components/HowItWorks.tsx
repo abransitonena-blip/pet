@@ -49,7 +49,7 @@ export default function HowItWorks() {
         >
           <span
             className="text-sm uppercase tracking-widest font-medium"
-            style={{ color: 'color-mix(in srgb, var(--primary) 80%, transparent)' }}
+            style={{ color: "rgba(230, 126, 34, 0.8)" }}
           >
             Cómo funciona
           </span>
