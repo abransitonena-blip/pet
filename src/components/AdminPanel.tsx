@@ -157,27 +157,25 @@ export default function AdminPanel({
                   <p className="text-xs text-white/40">Gestión de Paseos Quebrada</p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={requestNotificationPermission}
-                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all ${
-                  notificationsOn
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-white/5 text-white/40 hover:text-white/60'
-                }`}
-              >
-                <FaBell size={12} />
-                {notificationsOn ? 'Notificaciones activas' : 'Activar notificaciones'}
-              </button>
-            </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={requestNotificationPermission}
+                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all ${
+                    notificationsOn
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-white/5 text-white/40 hover:text-white/60'
+                  }`}
+                >
+                  <FaBell size={12} />
+                  {notificationsOn ? 'Notificaciones activas' : 'Activar notificaciones'}
+                </button>
+                <button
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <FaTimes />
+                </button>
+              </div>
             </div>
 
             <div className="flex border-b border-white/5">
