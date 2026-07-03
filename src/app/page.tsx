@@ -1,20 +1,33 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { ThemeProvider } from '@/context/ThemeContext'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
+import HowItWorks from '@/components/HowItWorks'
 import Services from '@/components/Services'
+import Gallery from '@/components/Gallery'
 import Reviews from '@/components/Reviews'
 import ReservationForm from '@/components/ReservationForm'
+import ReviewForm from '@/components/ReviewForm'
 import Footer from '@/components/Footer'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import AdminPanel from '@/components/AdminPanel'
+import Preloader from '@/components/Preloader'
+import TermsModal from '@/components/TermsModal'
 import FloatingParticles from '@/components/FloatingParticles'
 
-export default function Home() {
+function HomeContent() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [adminCode, setAdminCode] = useState('')
   const [adminAttempt, setAdminAttempt] = useState(false)
+  const [showTerms, setShowTerms] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoaded(true), 2000)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -22,20 +35,16 @@ export default function Home() {
         setShowAdmin(false)
         setAdminAttempt(false)
         setAdminCode('')
+        setShowTerms(false)
         return
       }
 
       if (!adminAttempt) return
 
       if (e.key === 'Enter') {
-        if (adminCode === 'admin123') {
-          setShowAdmin(true)
-          setAdminAttempt(false)
-          setAdminCode('')
-        } else {
-          setAdminAttempt(false)
-          setAdminCode('')
-        }
+        setShowAdmin(adminCode === 'admin123')
+        setAdminAttempt(false)
+        setAdminCode('')
         return
       }
 
@@ -59,25 +68,43 @@ export default function Home() {
   }
 
   return (
-    <main className="relative min-h-screen">
-      <FloatingParticles />
-      <Header onAdminTrigger={triggerAdmin} />
-      <Hero />
-      <Services />
-      <Reviews />
-      <ReservationForm />
-      <Footer />
-      <WhatsAppButton />
-      <AdminPanel
-        isOpen={showAdmin}
-        onClose={() => setShowAdmin(false)}
-      />
+    <>
+      {!loaded && <Preloader />}
+      <main className="relative min-h-screen">
+        <FloatingParticles />
+        <Header onAdminTrigger={triggerAdmin} />
+        <Hero />
+        <HowItWorks />
+        <Services />
+        <Gallery />
+        <Reviews />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+          <div className="max-w-md mx-auto">
+            <ReviewForm />
+          </div>
+        </div>
+        <ReservationForm />
+        <Footer onTerms={() => setShowTerms(true)} />
+        <WhatsAppButton />
+        <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
+        <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
+      </main>
 
       {adminAttempt && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="glass-card p-8 w-full max-w-sm mx-4 text-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{
+            background: 'rgba(0,0,0,0.8)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <div className="rounded-2xl p-8 w-full max-w-sm mx-4 text-center"
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+            }}
+          >
             <div className="text-2xl mb-4">🔐</div>
-            <p className="text-white/70 mb-4 text-sm">
+            <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
               Ingresa la clave de administrador
             </p>
             <div className="flex items-center justify-center gap-1 mb-4">
@@ -85,17 +112,26 @@ export default function Home() {
                 (_, i) => (
                   <span
                     key={i}
-                    className="w-3 h-3 rounded-full bg-primary animate-pulse"
+                    className="w-3 h-3 rounded-full animate-pulse"
+                    style={{ background: 'var(--primary)' }}
                   />
                 )
               )}
             </div>
-            <p className="text-xs text-white/40">
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Presiona Enter para confirmar
             </p>
           </div>
         </div>
       )}
-    </main>
+    </>
+  )
+}
+
+export default function Home() {
+  return (
+    <ThemeProvider>
+      <HomeContent />
+    </ThemeProvider>
   )
 }

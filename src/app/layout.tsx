@@ -34,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
-      <body className="min-h-screen bg-dark overflow-x-hidden">
+    <html lang="es" className={`${inter.variable} ${playfair.variable}`} data-theme="dark">
+      <body className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         {children}
       </body>
     </html>

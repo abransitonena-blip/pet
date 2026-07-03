@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db } from '@/firebase/config'
 import {
@@ -21,6 +21,7 @@ import {
   FaChartBar,
   FaCalendarAlt,
   FaStar,
+  FaBell,
 } from 'react-icons/fa'
 
 interface Reservation {
@@ -59,6 +60,18 @@ export default function AdminPanel({
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [reviews, setReviews] = useState<AdminReview[]>([])
   const [loading, setLoading] = useState(true)
+  const [notificationsOn, setNotificationsOn] = useState(false)
+  const prevCount = useRef(0)
+
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) return
+    if (Notification.permission === 'granted') {
+      setNotificationsOn(true)
+      return
+    }
+    const result = await Notification.requestPermission()
+    if (result === 'granted') setNotificationsOn(true)
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -72,6 +85,17 @@ export default function AdminPanel({
         ...doc.data(),
       })) as Reservation[]
       setReservations(data)
+
+      if (prevCount.current > 0 && data.length > prevCount.current && notificationsOn) {
+        const newest = data[0]
+        try {
+          new Notification('🐾 Nueva reserva recibida!', {
+            body: `${newest.name} agendó "${newest.service}" para ${newest.petName}`,
+            icon: '/favicon.ico',
+          })
+        } catch {}
+      }
+      prevCount.current = data.length
       setLoading(false)
     })
 
@@ -139,6 +163,21 @@ export default function AdminPanel({
               >
                 <FaTimes />
               </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={requestNotificationPermission}
+                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all ${
+                  notificationsOn
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-white/5 text-white/40 hover:text-white/60'
+                }`}
+              >
+                <FaBell size={12} />
+                {notificationsOn ? 'Notificaciones activas' : 'Activar notificaciones'}
+              </button>
+            </div>
             </div>
 
             <div className="flex border-b border-white/5">
