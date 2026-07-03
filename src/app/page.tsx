@@ -18,6 +18,13 @@ import AdminPanel from '@/components/AdminPanel'
 import Preloader from '@/components/Preloader'
 import TermsModal from '@/components/TermsModal'
 import FloatingParticles from '@/components/FloatingParticles'
+import FAQ from '@/components/FAQ'
+import WalkTips from '@/components/WalkTips'
+import WalkReminder from '@/components/WalkReminder'
+import PetProfileManager from '@/components/PetProfileManager'
+import LoyaltyProgram from '@/components/LoyaltyProgram'
+import ReferralSection from '@/components/ReferralSection'
+import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 
 function HomeContent() {
   const [showAdmin, setShowAdmin] = useState(false)
@@ -28,6 +35,7 @@ function HomeContent() {
   const [loginError, setLoginError] = useState('')
   const [showTerms, setShowTerms] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [userPhone, setUserPhone] = useState('')
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 2000)
@@ -90,13 +98,40 @@ function HomeContent() {
         <HowItWorks />
         <Services />
         <Gallery />
+        <FAQ />
+        <WalkTips />
         <Reviews />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
           <div className="max-w-md mx-auto">
             <ReviewForm />
           </div>
         </div>
-        <ReservationForm />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <PetProfileManager onSelect={(profile) => {
+              const nameInput = document.querySelector<HTMLInputElement>('input[name="name"]')
+              const phoneInput = document.querySelector<HTMLInputElement>('input[name="phone"]')
+              const petInput = document.querySelector<HTMLInputElement>('input[name="petName"]')
+              const petTypeSelect = document.querySelector<HTMLSelectElement>('select[name="petType"]')
+              if (nameInput) nameInput.value = profile.ownerName
+              if (phoneInput) phoneInput.value = profile.phone
+              if (petInput) petInput.value = profile.name
+              if (petTypeSelect) petTypeSelect.value = profile.type
+              setUserPhone(profile.phone)
+              setTimeout(() => document.getElementById('reservar')?.scrollIntoView({ behavior: 'smooth' }), 300)
+            }} />
+            <WalkReminder />
+            <div>
+              <LoyaltyProgram phone={userPhone} />
+              <div className="mt-4">
+                <ReferralSection phone={userPhone} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ReservationForm onPhoneChange={setUserPhone} />
         <Footer onTerms={() => setShowTerms(true)} />
         <WhatsAppButton />
         <AdminPanel

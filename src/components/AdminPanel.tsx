@@ -28,7 +28,9 @@ import {
   FaSearch,
   FaUndo,
   FaSignOutAlt,
+  FaPaperPlane,
 } from 'react-icons/fa'
+import { getServicePrice } from '@/lib/services'
 import EditReservationModal from './EditReservationModal'
 import CalendarView from './CalendarView'
 
@@ -79,6 +81,9 @@ export default function AdminPanel({
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed'>('all')
   const [editingReservation, setEditingReservation] = useState<any>(null)
+  const [quickMsgNumber, setQuickMsgNumber] = useState('')
+  const [quickMsgInput, setQuickMsgInput] = useState('')
+  const [showQuickMsg, setShowQuickMsg] = useState(false)
   const prevCount = useRef(0)
 
   const requestNotificationPermission = async () => {
@@ -204,6 +209,18 @@ export default function AdminPanel({
     URL.revokeObjectURL(url)
   }
 
+  const totalRevenue = useMemo(() => {
+    return reservations
+      .filter((r) => r.status === 'completed')
+      .reduce((sum, r) => sum + getServicePrice(r.service), 0)
+  }, [reservations])
+
+  const pendingRevenue = useMemo(() => {
+    return reservations
+      .filter((r) => r.status === 'pending' || !r.status)
+      .reduce((sum, r) => sum + getServicePrice(r.service), 0)
+  }, [reservations])
+
   const serviceCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     reservations.forEach((r) => {
@@ -241,6 +258,13 @@ export default function AdminPanel({
     window.open(url, '_blank')
   }
 
+  const sendQuickMessage = () => {
+    if (!quickMsgNumber || !quickMsgInput) return
+    const cleaned = quickMsgNumber.replace(/\D/g, '')
+    const url = `https://wa.me/52${cleaned}?text=${encodeURIComponent(quickMsgInput)}`
+    window.open(url, '_blank')
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -267,6 +291,14 @@ export default function AdminPanel({
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowQuickMsg(!showQuickMsg)}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                  title="Enviar WhatsApp"
+                >
+                  <FaPaperPlane size={12} />
+                  Mensaje
+                </button>
                 <button
                   onClick={exportCSV}
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
@@ -306,6 +338,40 @@ export default function AdminPanel({
                 </button>
               </div>
             </div>
+
+            {showQuickMsg && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                className="border-b border-white/5 overflow-hidden"
+              >
+                <div className="p-4 flex items-center gap-3">
+                  <input
+                    type="tel"
+                    placeholder="WhatsApp del cliente"
+                    value={quickMsgNumber}
+                    onChange={(e) => setQuickMsgNumber(e.target.value)}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Mensaje..."
+                    value={quickMsgInput}
+                    onChange={(e) => setQuickMsgInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && sendQuickMessage()}
+                    className="flex-[2] bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
+                  />
+                  <button
+                    onClick={sendQuickMessage}
+                    disabled={!quickMsgNumber || !quickMsgInput}
+                    className="shrink-0 px-4 py-2 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all disabled:opacity-30"
+                  >
+                    <FaPaperPlane size={12} />
+                  </button>
+                  <button onClick={() => setShowQuickMsg(false)} className="shrink-0 text-white/30 hover:text-white text-xs">Cerrar</button>
+                </div>
+              </motion.div>
+            )}
 
             <div className="flex border-b border-white/5">
               {[
@@ -535,6 +601,8 @@ export default function AdminPanel({
                       { label: 'Reseñas', value: reviews.length, icon: FaStar, color: 'from-pink-500 to-rose-600' },
                       { label: 'Calificación', value: avgRating, icon: FaStar, color: 'from-yellow-500 to-amber-600' },
                       { label: 'Perros', value: new Set(reservations.map((r) => r.petName)).size, icon: FaDog, color: 'from-cyan-500 to-blue-600' },
+                      { label: '💰 Ingresos cobrados', value: `$${totalRevenue.toLocaleString()}`, icon: FaChartBar, color: 'from-emerald-500 to-green-600' },
+                      { label: '⏳ Por cobrar', value: `$${pendingRevenue.toLocaleString()}`, icon: FaChartBar, color: 'from-amber-500 to-orange-600' },
                     ].map((stat) => {
                       const Icon = stat.icon
                       return (

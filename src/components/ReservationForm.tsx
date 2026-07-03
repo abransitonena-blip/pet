@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { db } from '@/firebase/config'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
+import { SERVICE_NAMES } from '@/lib/services'
+import AvailabilityCalendar from './AvailabilityCalendar'
 import {
   FaDog,
   FaCalendarAlt,
@@ -18,18 +20,7 @@ import {
   FaWalking,
 } from 'react-icons/fa'
 
-const services = [
-  'Paseo Individual (30 min)',
-  'Paseo Plus (60 min)',
-  'Paseo Grupal (45 min)',
-  'Ruta Premium (90 min)',
-  'Paquete Semanal (5 paseos)',
-  'Paquete Mensual (20 paseos)',
-  'Paseo + Reporte (45 min)',
-  'Paseo Express (20 min)',
-]
-
-export default function ReservationForm() {
+export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (phone: string) => void }) {
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -48,7 +39,9 @@ export default function ReservationForm() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    const val = e.target.value
+    setForm((prev) => ({ ...prev, [e.target.name]: val }))
+    if (e.target.name === 'phone') onPhoneChange?.(val)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,11 +198,11 @@ export default function ReservationForm() {
                 className="input-field"
               >
                 <option value="">Selecciona un paquete</option>
-                {services.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
+                  {SERVICE_NAMES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -243,6 +236,21 @@ export default function ReservationForm() {
                 />
               </div>
             </div>
+
+            {form.date && (
+              <div className="space-y-2">
+                <label className="text-sm text-white/40 flex items-center gap-2">
+                  <FaCalendarAlt className="text-primary" size={10} />
+                  Disponibilidad
+                </label>
+                <div className="glass-card p-3">
+                  <AvailabilityCalendar
+                    date={form.date}
+                    onSelect={(time) => setForm((prev) => ({ ...prev, time }))}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-sm text-white/60 flex items-center gap-2">
