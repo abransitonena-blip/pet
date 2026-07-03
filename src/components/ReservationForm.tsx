@@ -15,18 +15,18 @@ import {
   FaPaw,
   FaSpinner,
   FaCheckCircle,
+  FaWalking,
 } from 'react-icons/fa'
 
 const services = [
-  'Baño completo',
-  'Corte estético',
-  'Baño + Corte',
-  'Guardería',
-  'Limpieza dental',
-  'Spa Premium',
-  'Paseo diario',
-  'Corte de uñas',
-  'Otro',
+  'Paseo Individual (30 min)',
+  'Paseo Plus (60 min)',
+  'Paseo Grupal (45 min)',
+  'Ruta Premium (90 min)',
+  'Paquete Semanal (5 paseos)',
+  'Paquete Mensual (20 paseos)',
+  'Paseo + Reporte (45 min)',
+  'Paseo Express (20 min)',
 ]
 
 export default function ReservationForm() {
@@ -55,11 +55,11 @@ export default function ReservationForm() {
     e.preventDefault()
     setSending(true)
 
-    const message = `🐾 *Nueva Reserva - PetCare Quebrada* 🐾
+    const message = `🐾 *Nuevo Paseo - Paseos Quebrada* 🐾
     *Nombre:* ${form.name}
     *Teléfono:* ${form.phone}
-    *Mascota:* ${form.petName} (${form.petType})
-    *Servicio:* ${form.service}
+    *Perro:* ${form.petName} (${form.petType})
+    *Paquete:* ${form.service}
     *Fecha:* ${form.date}
     *Hora:* ${form.time}
     *Notas:* ${form.notes || 'Sin notas'}`
@@ -104,15 +104,15 @@ export default function ReservationForm() {
           className="text-center mb-16"
         >
           <span className="text-primary/80 text-sm uppercase tracking-widest font-medium">
-            Reserva tu cita
+            Agenda su paseo
           </span>
           <h2 className="section-title mt-3">
-            Agenda{' '}
-            <span className="gradient-text">ahora</span>
+            Reserva su{' '}
+            <span className="gradient-text">paseo</span>
           </h2>
           <p className="section-subtitle">
             Llena el formulario y te enviaremos la confirmación directo a tu
-            WhatsApp. Fácil y rápido.
+            WhatsApp. Fácil y rápido. ¡Tu perro te lo va a agradecer!
           </p>
         </motion.div>
 
@@ -162,7 +162,7 @@ export default function ReservationForm() {
               <div className="space-y-2">
                 <label className="text-sm text-white/60 flex items-center gap-2">
                   <FaPaw className="text-primary" size={12} />
-                  Nombre de tu mascota
+                  Nombre de tu perro
                 </label>
                 <input
                   type="text"
@@ -177,7 +177,7 @@ export default function ReservationForm() {
               <div className="space-y-2">
                 <label className="text-sm text-white/60 flex items-center gap-2">
                   <FaDog className="text-primary" size={12} />
-                  Tipo de mascota
+                  Raza o talla
                 </label>
                 <select
                   name="petType"
@@ -194,8 +194,8 @@ export default function ReservationForm() {
 
             <div className="space-y-2">
               <label className="text-sm text-white/60 flex items-center gap-2">
-                <FaDog className="text-primary" size={12} />
-                Servicio
+                <FaWalking className="text-primary" size={12} />
+                Paquete de paseo
               </label>
               <select
                 name="service"
@@ -204,7 +204,7 @@ export default function ReservationForm() {
                 required
                 className="input-field"
               >
-                <option value="">Selecciona un servicio</option>
+                <option value="">Selecciona un paquete</option>
                 {services.map((s) => (
                   <option key={s} value={s}>
                     {s}
@@ -277,7 +277,7 @@ export default function ReservationForm() {
                 ? 'Enviando...'
                 : sent
                 ? '¡Enviado!'
-                : 'Reservar por WhatsApp'}
+                : 'Reservar paseo por WhatsApp'}
             </motion.button>
 
             {sent && (

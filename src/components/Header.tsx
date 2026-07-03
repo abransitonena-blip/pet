@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FaDog } from 'react-icons/fa'
 
 const navLinks = [
   { label: 'Inicio', href: '#hero' },
-  { label: 'Servicios', href: '#servicios' },
+  { label: 'Paquetes', href: '#servicios' },
   { label: 'Reseñas', href: '#resenas' },
   { label: 'Reservar', href: '#reservar' },
 ]
@@ -50,12 +51,12 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
           <motion.div
             whileHover={{ rotate: 360 }}
             transition={{ duration: 0.6 }}
-            className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-lg"
+            className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center text-white font-bold text-lg"
           >
-            P
+            <FaDog />
           </motion.div>
           <span className="text-lg font-bold hidden sm:block">
-            <span className="gradient-text">PetCare</span>
+            <span className="gradient-text">Paseos</span>
             <span className="text-white/60 ml-1">Quebrada</span>
           </span>
         </button>
@@ -85,7 +86,7 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
           whileTap={{ scale: 0.95 }}
           className="btn-primary text-sm !py-2 !px-5 hidden sm:block"
         >
-          Reservar ahora
+                Reservar paseo
         </motion.a>
 
         <button
@@ -133,7 +134,7 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
                 onClick={() => setMobileOpen(false)}
                 className="btn-primary text-center mt-2"
               >
-                Reservar ahora
+          Reservar paseo
               </a>
             </div>
           </motion.div>

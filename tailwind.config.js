@@ -10,12 +10,12 @@ module.exports = {
         display: ['var(--font-playfair)', 'serif'],
       },
       colors: {
-        primary: '#8B5CF6',
-        'primary-dark': '#7C3AED',
-        secondary: '#F59E0B',
-        dark: '#0F0F1A',
-        'dark-card': '#1A1A2E',
-        'dark-light': '#252540',
+        primary: '#E67E22',
+        'primary-dark': '#D35400',
+        secondary: '#F1C40F',
+        dark: '#1A120B',
+        'dark-card': '#2D1F13',
+        'dark-light': '#3D2A1A',
       },
       animation: {
         'float': 'float 6s ease-in-out infinite',

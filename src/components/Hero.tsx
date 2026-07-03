@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { FaDog, FaMapMarkerAlt, FaPaw } from 'react-icons/fa'
 
 export default function Hero() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
@@ -33,9 +34,9 @@ export default function Hero() {
       className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
     >
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-20"
         style={{
-          background: `radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(139, 92, 246, 0.3) 0%, transparent 60%)`,
+          background: `radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(230, 126, 34, 0.25) 0%, transparent 60%)`,
         }}
       />
 
@@ -48,7 +49,7 @@ export default function Hero() {
         <motion.div
           animate={{ y: [0, 30, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
+          className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl"
         />
       </div>
 
@@ -58,7 +59,8 @@ export default function Hero() {
         animate="show"
         className="relative z-10 max-w-5xl mx-auto px-4 text-center"
       >
-        <motion.div variants={item} className="mb-6">
+        <motion.div variants={item} className="mb-6 flex items-center justify-center gap-2">
+          <FaMapMarkerAlt className="text-primary" size={14} />
           <span className="inline-block px-4 py-1.5 rounded-full text-xs font-medium bg-primary/10 border border-primary/20 text-primary/80 uppercase tracking-wider">
             Zona Quebrada, Cuautitlán
           </span>
@@ -68,19 +70,23 @@ export default function Hero() {
           variants={item}
           className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
         >
-          <span className="gradient-text animate-gradient">
-            Cuidado Premium
+          <span className="flex items-center justify-center gap-3">
+            <FaDog className="text-primary inline-block" />
+            <span className="gradient-text animate-gradient">
+              Paseos Caninos
+            </span>
+            <FaDog className="text-primary inline-block scale-x-[-1]" />
           </span>
           <br />
-          <span className="text-white">para tu mascota</span>
+          <span className="text-white">en Zona Quebrada</span>
         </motion.h1>
 
         <motion.p
           variants={item}
           className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10"
         >
-          Baño, corte, guardería y más. Precios accesibles en Zona Quebrada,
-          Cuautitlán. Tu mascota merece el mejor cuidado.
+          Paseos supervisados y ejercicio para tu perro en Zona Quebrada, Cuautitlán.
+          Precios accesibles, horario flexible y mucho amor canino.
         </motion.p>
 
         <motion.div variants={item} className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -90,7 +96,7 @@ export default function Hero() {
             whileTap={{ scale: 0.95 }}
             className="btn-primary text-lg"
           >
-            Reserva ahora
+            Reserva tu paseo
           </motion.a>
           <motion.a
             href="#servicios"
@@ -98,7 +104,7 @@ export default function Hero() {
             whileTap={{ scale: 0.95 }}
             className="btn-secondary text-lg"
           >
-            Ver servicios
+            Ver paquetes
           </motion.a>
         </motion.div>
 
@@ -107,17 +113,20 @@ export default function Hero() {
           className="mt-16 flex items-center justify-center gap-8 sm:gap-16"
         >
           {[
-            { value: '50+', label: 'Mascotas felices' },
-            { value: '4.9', label: 'Calificación' },
-            { value: '2 años', label: 'Experiencia' },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold gradient-text">
-                {stat.value}
+            { value: '50+', label: 'Perros felices', icon: FaDog },
+            { value: '4.9', label: 'Calificación', icon: FaPaw },
+            { value: '2 años', label: 'Paseando', icon: FaPaw },
+          ].map((stat) => {
+            const Icon = stat.icon
+            return (
+              <div key={stat.label} className="text-center">
+                <div className="text-2xl sm:text-3xl font-bold gradient-text flex items-center justify-center gap-2">
+                  {stat.value}
+                </div>
+                <div className="text-xs sm:text-sm text-white/40 mt-1">{stat.label}</div>
               </div>
-              <div className="text-xs sm:text-sm text-white/40 mt-1">{stat.label}</div>
-            </div>
-          ))}
+            )
+          })}
         </motion.div>
       </motion.div>
 

@@ -26,7 +26,7 @@ const fallbackReviews = [
     id: '1',
     name: 'María García',
     rating: 5,
-    text: 'Excelente servicio, mi perrito salió feliz y hermoso. Muy recomendados en la Zona Quebrada.',
+    text: 'Excelente servicio, mi perrito Max llega feliz después de cada paseo. Muy recomendados en Zona Quebrada.',
     date: '2024-06-15',
     petName: 'Max',
   },
@@ -34,7 +34,7 @@ const fallbackReviews = [
     id: '2',
     name: 'Carlos López',
     rating: 5,
-    text: 'Precios muy accesibles y el trato es increíble. Mi mascota ama ir a bañarse aquí.',
+    text: 'Precios muy accesibles y el trato es increíble. Mi perra Luna ama sus paseos diarios.',
     date: '2024-06-10',
     petName: 'Luna',
   },
@@ -42,7 +42,7 @@ const fallbackReviews = [
     id: '3',
     name: 'Ana Martínez',
     rating: 5,
-    text: 'La guardería es perfecta para cuando trabajo. Mi perro jueza todo el día y llega feliz.',
+    text: 'El paquete semanal es perfecto para cuando trabajo. Mi perro Toby juega, corre y llega feliz.',
     date: '2024-06-05',
     petName: 'Toby',
   },
@@ -50,7 +50,7 @@ const fallbackReviews = [
     id: '4',
     name: 'Roberto Sánchez',
     rating: 4,
-    text: 'Muy buen servicio de corte estético. Quedó exactamente como lo pedí. Volveré sin duda.',
+    text: 'Muy buen servicio de paseos. Rocky vuelve cansado y contento. Sin duda el mejor paseador de Cuautitlán.',
     date: '2024-05-28',
     petName: 'Rocky',
   },
@@ -58,7 +58,7 @@ const fallbackReviews = [
     id: '5',
     name: 'Laura Jiménez',
     rating: 5,
-    text: 'El spa premium es una experiencia única. Mi gata salió relajada y con un pelaje hermoso.',
+    text: 'Los paseos premium son una experiencia única. Mi perra Mimi explora rutas nuevas cada semana.',
     date: '2024-05-20',
     petName: 'Mimi',
   },
@@ -66,7 +66,7 @@ const fallbackReviews = [
     id: '6',
     name: 'Pedro Hernández',
     rating: 5,
-    text: 'Desde que encontré este lugar, no llevo a mi perro a otro lado. Precio justo y calidad excelente.',
+    text: 'Desde que empecé con los paseos, mi perro Thor está más sano y feliz. Precio justo y calidad excelente.',
     date: '2024-05-15',
     petName: 'Thor',
   },
@@ -131,12 +131,12 @@ export default function Reviews() {
             Testimonios
           </span>
           <h2 className="section-title mt-3">
-            Lo que dicen nuestros{' '}
-            <span className="gradient-text">clientes</span>
+            Lo que dicen los{' '}
+            <span className="gradient-text">dueños</span>
           </h2>
           <p className="section-subtitle">
-            La satisfacción de nuestros clientes y sus mascotas es nuestra mejor
-            carta de presentación.
+            La felicidad de los perros y la tranquilidad de sus dueños es nuestra
+            mejor carta de presentación.
           </p>
         </motion.div>
 
@@ -183,7 +183,7 @@ export default function Reviews() {
                     {review.text}
                   </p>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center text-white text-xs font-bold">
                       {review.name.charAt(0)}
                     </div>
                     <div>
@@ -224,7 +224,7 @@ export default function Reviews() {
                     {review.text}
                   </p>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center text-white text-xs font-bold">
                       {review.name.charAt(0)}
                     </div>
                     <div>

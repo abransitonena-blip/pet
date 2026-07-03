@@ -15,16 +15,16 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'PetCare Quebrada | Reserva el mejor cuidado para tu mascota',
+  title: 'Paseos Quebrada | Paseos caninos en Zona Quebrada, Cuautitlán',
   description:
-    'Servicios profesionales de cuidado para mascotas en Zona Quebrada, Cuautitlán. Baño, corte, guardería y más. Precios accesibles.',
+    'Paseos supervisados para perros en Zona Quebrada, Cuautitlán. Precios accesibles, horario flexible. Ejercicio y diversión para tu mejor amigo.',
   keywords: [
-    'cuidado de mascotas',
-    'baño para perros',
+    'paseos para perros',
     'Cuautitlán',
     'zona quebrada',
-    'pet care',
-    'reservas mascotas',
+    'paseos caninos',
+    'cuidado de perros',
+    'paseador de perros',
   ],
 }
 

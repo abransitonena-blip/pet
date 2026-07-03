@@ -5,76 +5,79 @@ import { useInView } from 'framer-motion'
 import { useRef } from 'react'
 import {
   FaDog,
-  FaCut,
-  FaShower,
-  FaHome,
   FaPaw,
-  FaHeart,
+  FaWalking,
+  FaTree,
+  FaSun,
+  FaClock,
+  FaStar,
+  FaUsers,
 } from 'react-icons/fa'
 
 const services = [
   {
-    icon: FaShower,
-    title: 'Baño completo',
+    icon: FaWalking,
+    title: 'Paseo Individual',
     description:
-      'Baño con shampoo premium, secado, cepillado y limpieza de oídos.',
-    price: '$150',
-    duration: '40 min',
+      'Paseo personalizado de 30 min para tu perro. Atención 1 a 1, ruta por Zona Quebrada.',
+    price: '$80',
+    duration: '30 min',
   },
   {
-    icon: FaCut,
-    title: 'Corte estético',
+    icon: FaClock,
+    title: 'Paseo Plus',
     description:
-      'Corte profesional según la raza y necesidades de tu mascota.',
-    price: '$250',
+      'Paseo extendido de 1 hora con juegos, ejercicios y mucho tiempo al aire libre.',
+    price: '$130',
     duration: '60 min',
   },
   {
-    icon: FaDog,
-    title: 'Baño + Corte',
-    description: 'Paquete completo de baño y corte estético a precio especial.',
-    price: '$350',
+    icon: FaUsers,
+    title: 'Paseo Grupal',
+    description:
+      'Paseo en grupo supervisado. Tu perro socializa mientras se ejercita con amigos.',
+    price: '$60',
+    duration: '45 min',
+  },
+  {
+    icon: FaTree,
+    title: 'Ruta Premium',
+    description:
+      'Ruta especial por zonas arboladas de Cuautitlán. Tu perro explora y se divierte.',
+    price: '$180',
     duration: '90 min',
   },
   {
-    icon: FaHome,
-    title: 'Guardería',
+    icon: FaSun,
+    title: 'Paquete Semanal',
     description:
-      'Cuida a tu mascota mientras trabajas. Incluye paseos y juegos.',
-    price: '$200/día',
-    duration: 'Todo el día',
+      '5 paseos individuales a la semana. Precio especial por paquete. ¡Ahorra!',
+    price: '$350',
+    duration: '5 paseos',
   },
   {
-    icon: FaPaw,
-    title: 'Limpieza dental',
+    icon: FaStar,
+    title: 'Paquete Mensual',
     description:
-      'Limpieza dental profesional para prevenir enfermedades bucales.',
-    price: '$180',
-    duration: '30 min',
-  },
-  {
-    icon: FaHeart,
-    title: 'Spa Premium',
-    description:
-      'Todo el lujo que tu mascota merece. Hidratación, masajes y más.',
-    price: '$450',
-    duration: '120 min',
+      'Paseos diarios (lun-vie) durante un mes. La mejor opción para dueños ocupados.',
+    price: '$1,200',
+    duration: '20 paseos',
   },
   {
     icon: FaDog,
-    title: 'Paseo diario',
+    title: 'Paseo + Reporte',
     description:
-      'Paseos supervisados en la Zona Quebrada para que tu mascota se ejercite.',
-    price: '$80',
-    duration: '30 min',
+      'Paseo individual + fotos y video de tu perro durante el paseo. Llega reporte por WhatsApp.',
+    price: '$150',
+    duration: '45 min',
   },
   {
-    icon: FaCut,
-    title: 'Corte de uñas',
+    icon: FaPaw,
+    title: 'Paseo Express',
     description:
-      'Corte seguro y profesional de uñas con lima incluida.',
-    price: '$80',
-    duration: '15 min',
+      'Paseo rápido de 20 min para necesidades básicas. Ideal para emergencias.',
+    price: '$60',
+    duration: '20 min',
   },
 ]
 
@@ -84,6 +87,11 @@ export default function Services() {
 
   return (
     <section id="servicios" className="relative py-24 sm:py-32" ref={ref}>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 text-primary/5 text-8xl rotate-12">🐾</div>
+        <div className="absolute bottom-20 right-10 text-primary/5 text-8xl -rotate-12">🐾</div>
+        <div className="absolute top-1/2 left-1/4 text-primary/[0.03] text-9xl">🐕</div>
+      </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -92,15 +100,14 @@ export default function Services() {
           className="text-center mb-16"
         >
           <span className="text-primary/80 text-sm uppercase tracking-widest font-medium">
-            Nuestros servicios
+            Paquetes de paseos
           </span>
           <h2 className="section-title mt-3">
-            Precios{' '}
-            <span className="gradient-text">accesibles</span>
+            Precios <span className="gradient-text">accesibles</span>
           </h2>
           <p className="section-subtitle">
-            Todos nuestros servicios están diseñados para darle el mejor cuidado
-            a tu mascota sin que tengas que gastar de más.
+            Todos nuestros paseos son supervisados, seguros y pensados para la
+            felicidad de tu perro. ¡Elige el que más te guste!
           </p>
         </motion.div>
 
@@ -125,7 +132,7 @@ export default function Services() {
                   <motion.div
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
-                    className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-600/20 flex items-center justify-center mb-4 group-hover:from-primary/30 group-hover:to-purple-600/30 transition-all duration-300"
+                    className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-amber-600/20 flex items-center justify-center mb-4 group-hover:from-primary/30 group-hover:to-amber-600/30 transition-all duration-300"
                   >
                     <Icon className="text-xl text-primary" />
                   </motion.div>
@@ -141,7 +148,10 @@ export default function Services() {
                     <span className="text-2xl font-bold gradient-text">
                       {service.price}
                     </span>
-                    <span className="text-xs text-white/40">{service.duration}</span>
+                    <span className="text-xs text-white/40 flex items-center gap-1">
+                      <FaClock size={10} />
+                      {service.duration}
+                    </span>
                   </div>
                 </div>
               </motion.div>
@@ -156,7 +166,7 @@ export default function Services() {
           className="text-center mt-12"
         >
           <p className="text-white/40 text-sm">
-            *Precios especiales por paquete. Pregunta por nuestras promociones.
+            *Precios especiales por paquete. Pregunta por nuestras promociones semanales.
           </p>
         </motion.div>
       </div>

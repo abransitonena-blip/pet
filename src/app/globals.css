@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --primary: #8B5CF6;
-  --secondary: #F59E0B;
+  --primary: #E67E22;
+  --secondary: #F1C40F;
 }
 
 @layer base {
@@ -37,7 +37,7 @@
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-400 to-secondary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-amber-400 to-secondary;
   }
 
   .gradient-border {
@@ -46,7 +46,7 @@
 
   .gradient-border::before {
     content: '';
-    @apply absolute -inset-[1px] rounded-[inherit] bg-gradient-to-r from-primary via-purple-500 to-secondary 
+    @apply absolute -inset-[1px] rounded-[inherit] bg-gradient-to-r from-primary via-amber-500 to-secondary 
            opacity-0 transition-opacity duration-500 -z-10;
   }
 
@@ -98,7 +98,7 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(139, 92, 246, 0.1) 50%,
+      rgba(230, 126, 34, 0.1) 50%,
       transparent 100%
     );
     background-size: 200% 100%;

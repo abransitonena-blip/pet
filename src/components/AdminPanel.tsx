@@ -125,12 +125,12 @@ export default function AdminPanel({
           >
             <div className="flex items-center justify-between p-6 border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center text-white font-bold text-sm">
                   A
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Panel Admin</h2>
-                  <p className="text-xs text-white/40">Gestión de PetCare Quebrada</p>
+                  <p className="text-xs text-white/40">Gestión de Paseos Quebrada</p>
                 </div>
               </div>
               <button
@@ -276,12 +276,12 @@ export default function AdminPanel({
               {tab === 'estadisticas' && (
                 <div className="grid sm:grid-cols-3 gap-4">
                   {[
-                    { label: 'Reservas totales', value: reservations.length, icon: FaCalendarAlt, color: 'from-primary to-purple-600' },
+                    { label: 'Reservas totales', value: reservations.length, icon: FaCalendarAlt, color: 'from-primary to-amber-600' },
                     { label: 'Completadas', value: completedCount, icon: FaCheck, color: 'from-green-500 to-emerald-600' },
                     { label: 'Pendientes', value: pendingCount, icon: FaSpinner, color: 'from-secondary to-orange-500' },
                     { label: 'Reseñas', value: reviews.length, icon: FaStar, color: 'from-pink-500 to-rose-600' },
                     { label: 'Calificación', value: avgRating, icon: FaStar, color: 'from-yellow-500 to-amber-600' },
-                    { label: 'Mascotas', value: new Set(reservations.map((r) => r.petName)).size, icon: FaDog, color: 'from-cyan-500 to-blue-600' },
+                    { label: 'Perros', value: new Set(reservations.map((r) => r.petName)).size, icon: FaDog, color: 'from-cyan-500 to-blue-600' },
                   ].map((stat) => {
                     const Icon = stat.icon
                     return (
