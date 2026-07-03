@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth'
+import { auth } from '@/firebase/config'
 import { ThemeProvider } from '@/context/ThemeContext'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
@@ -19,8 +21,11 @@ import FloatingParticles from '@/components/FloatingParticles'
 
 function HomeContent() {
   const [showAdmin, setShowAdmin] = useState(false)
-  const [adminCode, setAdminCode] = useState('')
-  const [adminAttempt, setAdminAttempt] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
   const [showTerms, setShowTerms] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
@@ -30,41 +35,49 @@ function HomeContent() {
   }, [])
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowAdmin(false)
-        setAdminAttempt(false)
-        setAdminCode('')
-        setShowTerms(false)
-        return
-      }
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u)
+      if (u) setShowLogin(false)
+    })
+    return unsub
+  }, [])
 
-      if (!adminAttempt) return
-
-      if (e.key === 'Enter') {
-        setShowAdmin(adminCode === 'admin123')
-        setAdminAttempt(false)
-        setAdminCode('')
-        return
-      }
-
-      if (e.key === 'Backspace') {
-        setAdminCode((prev) => prev.slice(0, -1))
-        return
-      }
-
-      if (/^[a-zA-Z0-9]$/.test(e.key) && adminCode.length < 20) {
-        setAdminCode((prev) => prev + e.key)
+  const handleLogin = async () => {
+    setLoginError('')
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+      setShowAdmin(true)
+    } catch (e: any) {
+      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+        setLoginError('Correo o contraseña incorrectos')
+      } else if (e.code === 'auth/invalid-email') {
+        setLoginError('Correo inválido')
+      } else if (e.code === 'auth/too-many-requests') {
+        setLoginError('Demasiados intentos. Espera un momento')
+      } else {
+        setLoginError('Error al iniciar sesión')
       }
     }
+  }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [adminAttempt, adminCode])
+  const handleLogout = async () => {
+    await signOut(auth)
+    setShowAdmin(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleLogin()
+  }
 
   const triggerAdmin = () => {
-    setAdminAttempt(true)
-    setAdminCode('')
+    if (user) {
+      setShowAdmin(true)
+    } else {
+      setShowLogin(true)
+      setEmail('')
+      setPassword('')
+      setLoginError('')
+    }
   }
 
   return (
@@ -86,11 +99,16 @@ function HomeContent() {
         <ReservationForm />
         <Footer onTerms={() => setShowTerms(true)} />
         <WhatsAppButton />
-        <AdminPanel isOpen={showAdmin} onClose={() => setShowAdmin(false)} />
+        <AdminPanel
+          isOpen={showAdmin}
+          onClose={() => setShowAdmin(false)}
+          user={user}
+          onLogout={handleLogout}
+        />
         <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
       </main>
 
-      {adminAttempt && (
+      {showLogin && !user && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           style={{
             background: 'rgba(0,0,0,0.8)',
@@ -105,22 +123,47 @@ function HomeContent() {
           >
             <div className="text-2xl mb-4">🔐</div>
             <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Ingresa la clave de administrador
+              Acceso administrador
             </p>
-            <div className="flex items-center justify-center gap-1 mb-4">
-              {Array.from({ length: Math.max(adminCode.length, 1) }).map(
-                (_, i) => (
-                  <span
-                    key={i}
-                    className="w-3 h-3 rounded-full animate-pulse"
-                    style={{ background: 'var(--primary)' }}
-                  />
-                )
+            <div className="space-y-3 text-left">
+              <div>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Correo</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="admin@correo.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Contraseña</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="••••••••"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
+                />
+              </div>
+              {loginError && (
+                <p className="text-red-400 text-xs">{loginError}</p>
               )}
+              <button
+                onClick={handleLogin}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all"
+              >
+                Iniciar sesión
+              </button>
+              <button
+                onClick={() => setShowLogin(false)}
+                className="w-full text-xs py-1.5" style={{ color: 'var(--text-muted)' }}
+              >
+                Cancelar
+              </button>
             </div>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Presiona Enter para confirmar
-            </p>
           </div>
         </div>
       )}

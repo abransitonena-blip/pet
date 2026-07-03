@@ -27,6 +27,7 @@ import {
   FaDownload,
   FaSearch,
   FaUndo,
+  FaSignOutAlt,
 } from 'react-icons/fa'
 import EditReservationModal from './EditReservationModal'
 import CalendarView from './CalendarView'
@@ -62,9 +63,13 @@ type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas'
 export default function AdminPanel({
   isOpen,
   onClose,
+  user,
+  onLogout,
 }: {
   isOpen: boolean
   onClose: () => void
+  user?: any
+  onLogout?: () => void
 }) {
   const [tab, setTab] = useState<Tab>('reservas')
   const [reservations, setReservations] = useState<Reservation[]>([])
@@ -281,6 +286,18 @@ export default function AdminPanel({
                   <FaBell size={12} />
                   {notificationsOn ? 'Notificaciones activas' : 'Activar notificaciones'}
                 </button>
+                {user && (
+                  <span className="text-xs text-white/30 hidden sm:block">{user.email}</span>
+                )}
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-all"
+                    title="Cerrar sesión"
+                  >
+                    <FaSignOutAlt size={12} />
+                  </button>
+                )}
                 <button
                   onClick={onClose}
                   className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
