@@ -1,0 +1,297 @@
+'use client'
+
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { db } from '@/firebase/config'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { WHATSAPP_NUMBER } from '@/lib/utils'
+import {
+  FaDog,
+  FaCalendarAlt,
+  FaClock,
+  FaPhone,
+  FaUser,
+  FaCommentAlt,
+  FaPaw,
+  FaSpinner,
+  FaCheckCircle,
+} from 'react-icons/fa'
+
+const services = [
+  'Baño completo',
+  'Corte estético',
+  'Baño + Corte',
+  'Guardería',
+  'Limpieza dental',
+  'Spa Premium',
+  'Paseo diario',
+  'Corte de uñas',
+  'Otro',
+]
+
+export default function ReservationForm() {
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    petName: '',
+    petType: 'perro',
+    service: '',
+    date: '',
+    time: '',
+    notes: '',
+  })
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSending(true)
+
+    const message = `🐾 *Nueva Reserva - PetCare Quebrada* 🐾
+    *Nombre:* ${form.name}
+    *Teléfono:* ${form.phone}
+    *Mascota:* ${form.petName} (${form.petType})
+    *Servicio:* ${form.service}
+    *Fecha:* ${form.date}
+    *Hora:* ${form.time}
+    *Notas:* ${form.notes || 'Sin notas'}`
+
+    try {
+      await addDoc(collection(db, 'reservations'), {
+        ...form,
+        createdAt: serverTimestamp(),
+        status: 'pending',
+      })
+    } catch {
+      // Firebase save optional
+    }
+
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+    window.open(waUrl, '_blank')
+
+    setSending(false)
+    setSent(true)
+    setForm({
+      name: '',
+      phone: '',
+      petName: '',
+      petType: 'perro',
+      service: '',
+      date: '',
+      time: '',
+      notes: '',
+    })
+
+    setTimeout(() => setSent(false), 5000)
+  }
+
+  return (
+    <section id="reservar" className="relative py-24 sm:py-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <span className="text-primary/80 text-sm uppercase tracking-widest font-medium">
+            Reserva tu cita
+          </span>
+          <h2 className="section-title mt-3">
+            Agenda{' '}
+            <span className="gradient-text">ahora</span>
+          </h2>
+          <p className="section-subtitle">
+            Llena el formulario y te enviaremos la confirmación directo a tu
+            WhatsApp. Fácil y rápido.
+          </p>
+        </motion.div>
+
+        <div className="max-w-2xl mx-auto">
+          <motion.form
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="glass-card p-6 sm:p-10 space-y-5"
+          >
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-sm text-white/60 flex items-center gap-2">
+                  <FaUser className="text-primary" size={12} />
+                  Tu nombre
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Ej: María García"
+                  className="input-field"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-white/60 flex items-center gap-2">
+                  <FaPhone className="text-primary" size={12} />
+                  WhatsApp
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  required
+                  placeholder="Ej: 5523053772"
+                  className="input-field"
+                />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-sm text-white/60 flex items-center gap-2">
+                  <FaPaw className="text-primary" size={12} />
+                  Nombre de tu mascota
+                </label>
+                <input
+                  type="text"
+                  name="petName"
+                  value={form.petName}
+                  onChange={handleChange}
+                  required
+                  placeholder="Ej: Max"
+                  className="input-field"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-white/60 flex items-center gap-2">
+                  <FaDog className="text-primary" size={12} />
+                  Tipo de mascota
+                </label>
+                <select
+                  name="petType"
+                  value={form.petType}
+                  onChange={handleChange}
+                  className="input-field"
+                >
+                  <option value="perro">Perro</option>
+                  <option value="gato">Gato</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-white/60 flex items-center gap-2">
+                <FaDog className="text-primary" size={12} />
+                Servicio
+              </label>
+              <select
+                name="service"
+                value={form.service}
+                onChange={handleChange}
+                required
+                className="input-field"
+              >
+                <option value="">Selecciona un servicio</option>
+                {services.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-sm text-white/60 flex items-center gap-2">
+                  <FaCalendarAlt className="text-primary" size={12} />
+                  Fecha
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  required
+                  className="input-field"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-white/60 flex items-center gap-2">
+                  <FaClock className="text-primary" size={12} />
+                  Hora
+                </label>
+                <input
+                  type="time"
+                  name="time"
+                  value={form.time}
+                  onChange={handleChange}
+                  required
+                  className="input-field"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-white/60 flex items-center gap-2">
+                <FaCommentAlt className="text-primary" size={12} />
+                Notas adicionales
+              </label>
+              <textarea
+                name="notes"
+                value={form.notes}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Alguna observación importante..."
+                className="input-field resize-none"
+              />
+            </div>
+
+            <motion.button
+              type="submit"
+              disabled={sending || sent}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-primary w-full text-lg flex items-center justify-center gap-2"
+            >
+              {sending ? (
+                <FaSpinner className="animate-spin" />
+              ) : sent ? (
+                <FaCheckCircle />
+              ) : (
+                <FaPhone />
+              )}
+              {sending
+                ? 'Enviando...'
+                : sent
+                ? '¡Enviado!'
+                : 'Reservar por WhatsApp'}
+            </motion.button>
+
+            {sent && (
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center text-green-400 text-sm"
+              >
+                ¡Solicitud enviada! Te contactaremos por WhatsApp.
+              </motion.p>
+            )}
+          </motion.form>
+        </div>
+      </div>
+    </section>
+  )
+}
