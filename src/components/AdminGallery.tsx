@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { FaUpload, FaTrash, FaImage, FaLink } from 'react-icons/fa'
+import { FaUpload, FaTrash, FaImage, FaLink, FaSpinner } from 'react-icons/fa'
 
 interface GalleryImage {
   id: string
@@ -16,9 +16,11 @@ interface GalleryImage {
 
 export default function AdminGallery() {
   const [images, setImages] = useState<GalleryImage[]>([])
-  const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
   const [dog, setDog] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [showUrlInput, setShowUrlInput] = useState(false)
+  const [url, setUrl] = useState('')
 
   useEffect(() => {
     const q = query(collection(db, 'gallery-images'), orderBy('createdAt', 'desc'))
@@ -28,7 +30,27 @@ export default function AdminGallery() {
     return unsub
   }, [])
 
-  const handleAdd = async () => {
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const dataUrl = reader.result as string
+      await addDoc(collection(db, 'gallery-images'), {
+        url: dataUrl,
+        title: title.trim() || '🐾 Cliente feliz',
+        dog: dog.trim() || '',
+        createdAt: Timestamp.now(),
+      })
+      setUploading(false)
+      setTitle('')
+      setDog('')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleUrl = async () => {
     if (!url.trim()) return
     await addDoc(collection(db, 'gallery-images'), {
       url: url.trim(),
@@ -39,6 +61,7 @@ export default function AdminGallery() {
     setUrl('')
     setTitle('')
     setDog('')
+    setShowUrlInput(false)
   }
 
   const handleDelete = async (id: string) => {
@@ -47,45 +70,70 @@ export default function AdminGallery() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
-        <FaImage className="text-primary" size={14} />
-        <h4 className="text-sm font-semibold text-white">Galería de fotos</h4>
-      </div>
-
-      <div className="space-y-2 mb-6">
-        <input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="URL de la imagen (Imgur, etc.)"
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary"
-        />
-        <div className="flex gap-2">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Título (opcional)"
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary"
-          />
-          <input
-            value={dog}
-            onChange={(e) => setDog(e.target.value)}
-            placeholder="Nombre del perro"
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary"
-          />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <FaImage className="text-primary" size={14} />
+          <h4 className="text-sm font-semibold text-white">Galería de fotos</h4>
         </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center justify-center gap-1.5 w-full text-xs px-3 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-all"
-        >
-          <FaLink size={10} />
-          Agregar imagen
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowUrlInput(!showUrlInput)}
+            className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <FaLink size={9} />
+            URL
+          </button>
+          <label className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-all cursor-pointer">
+            {uploading ? <FaSpinner className="animate-spin" size={10} /> : <FaUpload size={10} />}
+            Subir foto
+            <input type="file" accept="image/*" onChange={handleFile} className="hidden" disabled={uploading} />
+          </label>
+        </div>
       </div>
 
-      {images.length === 0 ? (
+      <div className="flex gap-2 mb-4">
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Título (opcional)"
+          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary"
+        />
+        <input
+          value={dog}
+          onChange={(e) => setDog(e.target.value)}
+          placeholder="Nombre del perro"
+          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary"
+        />
+      </div>
+
+      {showUrlInput && (
+        <div className="flex gap-2 mb-4">
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="URL de imagen"
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary"
+          />
+          <button
+            onClick={handleUrl}
+            className="text-xs px-3 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-all"
+          >
+            Agregar
+          </button>
+        </div>
+      )}
+
+      {uploading && (
+        <div className="text-center py-4 text-white/40">
+          <FaSpinner className="animate-spin mx-auto mb-2" size={20} />
+          <p className="text-xs">Procesando imagen...</p>
+        </div>
+      )}
+
+      {images.length === 0 && !uploading ? (
         <div className="text-center py-10 text-white/20">
           <FaImage className="text-3xl mx-auto mb-2" />
-          <p className="text-xs">Agrega URLs de imágenes para mostrarlas en la galería</p>
+          <p className="text-xs">Selecciona una foto para subirla a la galería</p>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-2">
