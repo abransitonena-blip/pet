@@ -40,7 +40,7 @@ import { getToken } from 'firebase/messaging'
 import { getMessagingInstance } from '@/firebase/config'
 import AdminGallery from './AdminGallery'
 
-interface Reservation {
+export interface Reservation {
   id: string
   name: string
   phone: string
@@ -76,7 +76,7 @@ export default function AdminPanel({
 }: {
   isOpen: boolean
   onClose: () => void
-  user?: any
+  user: import("firebase/auth").User | null
   onLogout?: () => void
 }) {
   const [tab, setTab] = useState<Tab>('reservas')
@@ -86,7 +86,7 @@ export default function AdminPanel({
   const [notificationsOn, setNotificationsOn] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'en_camino' | 'paseando' | 'completed'>('all')
-  const [editingReservation, setEditingReservation] = useState<any>(null)
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null)
   const [quickMsgNumber, setQuickMsgNumber] = useState('')
   const [quickMsgInput, setQuickMsgInput] = useState('')
   const [showQuickMsg, setShowQuickMsg] = useState(false)

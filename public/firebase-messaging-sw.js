@@ -1,8 +1,15 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js')
 
+const params = new URLSearchParams(self.location.search)
+
 firebase.initializeApp({
-  apiKey: self.location.origin.includes('localhost') ? undefined : undefined,
+  apiKey: params.get('apiKey') || undefined,
+  authDomain: params.get('authDomain') || undefined,
+  projectId: params.get('projectId') || undefined,
+  storageBucket: params.get('storageBucket') || undefined,
+  messagingSenderId: params.get('messagingSenderId') || undefined,
+  appId: params.get('appId') || undefined,
 })
 
 const messaging = firebase.messaging()

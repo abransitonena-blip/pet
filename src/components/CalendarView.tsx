@@ -7,7 +7,8 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const DAYS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
-export default function CalendarView({ reservations }: { reservations: any[] }) {
+import type { Reservation } from './AdminPanel'
+export default function CalendarView({ reservations }: { reservations: Reservation[] }) {
   const [month, setMonth] = useState(new Date().getMonth())
   const [year, setYear] = useState(new Date().getFullYear())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)

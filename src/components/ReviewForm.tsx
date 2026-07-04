@@ -14,6 +14,7 @@ export default function ReviewForm() {
   const [hover, setHover] = useState(0)
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,11 +31,14 @@ export default function ReviewForm() {
         createdAt: serverTimestamp(),
       })
     } catch {
-      // Fallback
+      setError("Error al enviar. Intenta de nuevo.")
+      setSending(false)
+      return
     }
 
     setSending(false)
     setSent(true)
+    setError("")
     setName('')
     setPetName('')
     setRating(0)
@@ -130,6 +134,9 @@ export default function ReviewForm() {
           />
         </div>
 
+        {error && (
+          <p className="text-red-400 text-xs text-center">{error}</p>
+        )}
         <motion.button
           type="submit"
           disabled={sending || sent || rating === 0}

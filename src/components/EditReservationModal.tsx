@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { FaTimes } from 'react-icons/fa'
+import type { Reservation } from './AdminPanel'
 
 const SERVICES = [
   'Paseo Individual - $120',
@@ -24,7 +25,7 @@ export default function EditReservationModal({
 }: {
   isOpen: boolean
   onClose: () => void
-  reservation: any
+  reservation: Reservation
 }) {
   const [form, setForm] = useState({
     date: reservation?.date || '',

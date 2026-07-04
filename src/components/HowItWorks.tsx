@@ -8,7 +8,7 @@ const steps = [
     icon: FaWhatsapp,
     title: '1. Contáctanos',
     description:
-      'EscrÍbenos por WhatsApp o llena el formulario con los datos de tu perro y el paquete que prefieras.',
+      'Escríbenos por WhatsApp o llena el formulario con los datos de tu perro y el paquete que prefieras.',
   },
   {
     icon: FaDog,

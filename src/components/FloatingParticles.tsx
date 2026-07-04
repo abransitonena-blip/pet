@@ -46,7 +46,7 @@ export default function FloatingParticles() {
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(139, 92, 246, ${p.opacity})`
+        ctx.fillStyle = `rgba(230, 126, 34, ${p.opacity})`
         ctx.fill()
       })
       requestAnimationFrame(animate)

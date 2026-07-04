@@ -20,7 +20,7 @@ const services = [
     title: 'Paseo Individual',
     description:
       'Paseo personalizado de 30 min para tu perro. Atención 1 a 1, ruta por Zona Quebrada.',
-    price: '$80',
+    price: '$120',
     duration: '30 min',
   },
   {
@@ -28,7 +28,7 @@ const services = [
     title: 'Paseo Plus',
     description:
       'Paseo extendido de 1 hora con juegos, ejercicios y mucho tiempo al aire libre.',
-    price: '$130',
+    price: '$200',
     duration: '60 min',
   },
   {
@@ -36,7 +36,7 @@ const services = [
     title: 'Paseo Grupal',
     description:
       'Paseo en grupo supervisado. Tu perro socializa mientras se ejercita con amigos.',
-    price: '$60',
+    price: '$80',
     duration: '45 min',
   },
   {
@@ -44,7 +44,7 @@ const services = [
     title: 'Ruta Premium',
     description:
       'Ruta especial por zonas arboladas de Cuautitlán. Tu perro explora y se divierte.',
-    price: '$180',
+    price: '$250',
     duration: '90 min',
   },
   {
@@ -52,7 +52,7 @@ const services = [
     title: 'Paquete Semanal',
     description:
       '5 paseos individuales a la semana. Precio especial por paquete. ¡Ahorra!',
-    price: '$350',
+    price: '$500',
     duration: '5 paseos',
   },
   {
@@ -60,7 +60,7 @@ const services = [
     title: 'Paquete Mensual',
     description:
       'Paseos diarios (lun-vie) durante un mes. La mejor opción para dueños ocupados.',
-    price: '$1,200',
+    price: '$1,800',
     duration: '20 paseos',
   },
   {
@@ -76,7 +76,7 @@ const services = [
     title: 'Paseo Express',
     description:
       'Paseo rápido de 20 min para necesidades básicas. Ideal para emergencias.',
-    price: '$60',
+    price: '$80',
     duration: '20 min',
   },
 ]
