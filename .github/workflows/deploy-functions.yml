@@ -1,0 +1,35 @@
+name: Deploy Cloud Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'functions/**'
+      - 'firebase.json'
+      - 'firestore.rules'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - id: auth
+        name: Authenticate with Google
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Install functions dependencies
+        working-directory: ./functions
+        run: npm ci
+
+      - name: Deploy to Firebase
+        run: firebase deploy --only functions --project pet-1cb0b
