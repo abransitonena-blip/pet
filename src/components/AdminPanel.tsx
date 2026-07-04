@@ -32,6 +32,7 @@ import {
   FaPaperPlane,
   FaImage,
   FaWalking,
+  FaTag,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import EditReservationModal from './EditReservationModal'
