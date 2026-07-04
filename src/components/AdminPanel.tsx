@@ -536,7 +536,7 @@ export default function AdminPanel({
                             )}
                             {res.completedAt && (
                               <p className="text-[10px] text-green-500/40 mt-0.5">
-                                ✓ Completada {new Date(res.completedAt?.seconds * 1000 || res.completedAt).toLocaleDateString()}
+                                ✓ Completada {new Date(typeof res.completedAt === 'object' ? res.completedAt.seconds * 1000 : res.completedAt).toLocaleDateString()}
                               </p>
                             )}
                           </div>
