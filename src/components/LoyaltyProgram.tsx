@@ -22,9 +22,10 @@ export default function LoyaltyProgram({ phone }: { phone?: string }) {
       .finally(() => setChecking(false))
   }, [phone])
 
-  const progress = count !== null ? Math.min(count / FREE_AFTER, 1) : 0
-  const remaining = count !== null ? Math.max(FREE_AFTER - count, 0) : FREE_AFTER
-  const earnedFree = count !== null && count > 0 && count % FREE_AFTER === 0
+  const cycle = count !== null ? count % FREE_AFTER : 0
+  const progress = cycle / FREE_AFTER
+  const remaining = count !== null ? (cycle === 0 && count > 0 ? FREE_AFTER : FREE_AFTER - cycle) : FREE_AFTER
+  const earnedFree = count !== null && count > 0 && cycle === 0
 
   return (
     <div className="glass-card p-5 sm:p-6">

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 
 export function showPushNotification(title: string, body: string, url = '/') {
+  if (typeof window === 'undefined') return
   if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then((reg) => {
       const notifOptions: NotificationOptions & Record<string, unknown> = {

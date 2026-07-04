@@ -17,7 +17,7 @@ export default function CalendarView({ reservations }: { reservations: Reservati
   const firstDayOfWeek = new Date(year, month, 1).getDay()
 
   const reservationsByDate = useMemo(() => {
-    const map: Record<string, any[]> = {}
+    const map: Record<string, Reservation[]> = {}
     reservations.forEach((r) => {
       const key = r.date
       if (!map[key]) map[key] = []
@@ -112,7 +112,7 @@ export default function CalendarView({ reservations }: { reservations: Reservati
           <p className="text-xs text-white/40 mb-2">
             Reservas para {selectedDay} de {MONTHS[month]}:
           </p>
-          {selectedReservations.map((r: any) => (
+          {selectedReservations.map((r: Reservation) => (
             <div key={r.id} className="glass p-3 rounded-xl">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-semibold text-white">{r.name}</span>

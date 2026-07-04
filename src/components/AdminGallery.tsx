@@ -30,15 +30,34 @@ export default function AdminGallery() {
     return unsub
   }, [])
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (dataUrl: string, maxW = 800, maxH = 800, quality = 0.7): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        let w = img.width, h = img.height
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW / w, maxH / h)
+          w *= ratio; h *= ratio
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', quality))
+      }
+      img.src = dataUrl
+    })
+  }
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
     const reader = new FileReader()
     reader.onload = async () => {
-      const dataUrl = reader.result as string
+      const compressed = await compressImage(reader.result as string)
       await addDoc(collection(db, 'gallery-images'), {
-        url: dataUrl,
+        url: compressed,
         title: title.trim() || '🐾 Cliente feliz',
         dog: dog.trim() || '',
         createdAt: Timestamp.now(),

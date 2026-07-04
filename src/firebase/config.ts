@@ -17,12 +17,11 @@ const db = getFirestore(app)
 const auth = getAuth(app)
 const storage = getStorage(app)
 
-import { getMessaging } from 'firebase/messaging'
+let _messaging: any = null
 
-let _messaging: ReturnType<typeof getMessaging> | null = null
-
-export function getMessagingInstance() {
+export async function getMessagingInstance() {
   if (typeof window !== 'undefined' && !_messaging) {
+    const { getMessaging } = await import('firebase/messaging')
     _messaging = getMessaging(app)
   }
   return _messaging

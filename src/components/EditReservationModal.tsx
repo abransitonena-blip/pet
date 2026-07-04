@@ -6,17 +6,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { FaTimes } from 'react-icons/fa'
 import type { Reservation } from '@/types'
-
-const SERVICES = [
-  'Paseo Individual - $120',
-  'Paseo Grupal - $80',
-  'Paseo Premium - $200',
-  'Individual Semanal (5 días) - $500',
-  'Grupal Semanal (5 días) - $350',
-  'Premium Semanal (5 días) - $900',
-  'Individual Mensual (20 días) - $1,800',
-  'Premium Mensual (20 días) - $3,500',
-]
+import { SERVICE_NAMES } from '@/lib/services'
 
 export default function EditReservationModal({
   isOpen,
@@ -106,7 +96,7 @@ export default function EditReservationModal({
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
                 >
                   <option value="">Seleccionar...</option>
-                  {SERVICES.map((s) => (
+                  {SERVICE_NAMES.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
