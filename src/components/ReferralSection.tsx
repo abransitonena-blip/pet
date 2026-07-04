@@ -1,19 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaShare, FaCheck, FaCopy, FaUsers } from 'react-icons/fa'
 
 export default function ReferralSection({ phone }: { phone?: string }) {
   const [copied, setCopied] = useState(false)
+  const [referralLink, setReferralLink] = useState<string | null>(null)
+  const [referralMessage, setReferralMessage] = useState<string | null>(null)
 
-  const referralLink = phone
-    ? `${window.location.origin}?ref=${phone.replace(/\D/g, '')}`
-    : null
-
-  const referralMessage = phone
-    ? `🐾 ¡Te recomiendo Paseos Quebrada! Paseos caninos en Zona Quebrada, Cuautitlán. Agenda aquí: ${referralLink}`
-    : null
+  useEffect(() => {
+    if (!phone) return
+    const link = `${window.location.origin}?ref=${phone.replace(/\D/g, '')}`
+    setReferralLink(link)
+    setReferralMessage(`🐾 ¡Te recomiendo Paseos Quebrada! Paseos caninos en Zona Quebrada, Cuautitlán. Agenda aquí: ${link}`)
+  }, [phone])
 
   const copyLink = () => {
     if (!referralLink) return
