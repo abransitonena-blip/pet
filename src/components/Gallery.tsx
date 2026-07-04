@@ -2,9 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { listAll, getDownloadURL, ref } from 'firebase/storage'
-import { storage } from '@/firebase/config'
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+import { db } from '@/firebase/config'
 import { FaDog, FaPaw, FaTimes, FaChevronLeft, FaChevronRight, FaImage } from 'react-icons/fa'
+
+interface GalleryImage {
+  id: string
+  url: string
+  title: string
+  dog: string
+}
 
 const fallbackImages = [
   { url: 'https://placedog.net/640/480?random=1', title: 'Max disfrutando su paseo', dog: 'Max' },
@@ -18,21 +25,16 @@ const fallbackImages = [
 ]
 
 export default function Gallery() {
-  const [realImages, setRealImages] = useState<{ url: string; title: string; dog: string }[]>([])
+  const [realImages, setRealImages] = useState<GalleryImage[]>([])
   const [selected, setSelected] = useState<number | null>(null)
 
   useEffect(() => {
-    const listRef = ref(storage, 'gallery')
-    listAll(listRef)
-      .then((result) =>
-        Promise.all(result.items.map((item) => getDownloadURL(item)))
-      )
-      .then((urls) => {
-        if (urls.length > 0) {
-          setRealImages(urls.map((url) => ({ url, title: '🐾 Cliente feliz', dog: '' })))
-        }
-      })
-      .catch(() => {})
+    const q = query(collection(db, 'gallery-images'), orderBy('createdAt', 'desc'))
+    const unsub = onSnapshot(q, (snap) => {
+      const imgs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as GalleryImage))
+      if (imgs.length > 0) setRealImages(imgs)
+    })
+    return unsub
   }, [])
 
   const images = realImages.length > 0 ? realImages : fallbackImages
