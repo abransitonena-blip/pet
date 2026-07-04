@@ -37,7 +37,7 @@ import { getServicePrice } from '@/lib/services'
 import EditReservationModal from './EditReservationModal'
 import CalendarView from './CalendarView'
 import { getToken } from 'firebase/messaging'
-import { messaging } from '@/firebase/config'
+import { getMessagingInstance } from '@/firebase/config'
 import AdminGallery from './AdminGallery'
 
 interface Reservation {
@@ -109,7 +109,9 @@ export default function AdminPanel({
 
   const storeFcmToken = async () => {
     try {
-      const token = await getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY })
+      const m = getMessagingInstance()
+      if (!m) return
+      const token = await getToken(m, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY })
       if (token && user) {
         const tokensRef = doc(db, 'admin', 'tokens')
         const existing = await (await import('firebase/firestore')).getDoc(tokensRef)
