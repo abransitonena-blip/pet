@@ -68,8 +68,18 @@ export default function RootLayout({
     <html lang="es" className={`${inter.variable} ${playfair.variable}`} data-theme="dark">
       <head>
         <link rel="canonical" href={siteUrl} />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#e67e22" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Paseos Q" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="geo.region" content="MX-MEX" />
         <meta name="geo.placename" content="Cuautitlán" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX" />
+        <script dangerouslySetInnerHTML={{
+          __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');`
+        }} />
       </head>
       <body className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         {children}

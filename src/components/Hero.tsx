@@ -2,10 +2,23 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { FaDog, FaMapMarkerAlt, FaPaw } from 'react-icons/fa'
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
+import { db } from '@/firebase/config'
+import { FaDog, FaMapMarkerAlt, FaPaw, FaStar } from 'react-icons/fa'
 
 export default function Hero() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [topReviews, setTopReviews] = useState<{ name: string; text: string; rating: number }[]>([])
+
+  useEffect(() => {
+    const q = query(collection(db, 'reviews'), orderBy('rating', 'desc'), limit(3))
+    getDocs(q)
+      .then((snap) => {
+        const data = snap.docs.map((d) => d.data() as { name: string; text: string; rating: number })
+        setTopReviews(data.filter((r) => r.text?.length > 10))
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const handleMouse = (e: MouseEvent) => {
@@ -128,6 +141,25 @@ export default function Hero() {
             )
           })}
         </motion.div>
+
+        {topReviews.length > 0 && (
+          <motion.div
+            variants={item}
+            className="mt-12 grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto"
+          >
+            {topReviews.map((rev, i) => (
+              <div key={i} className="glass-card p-4 text-center">
+                <div className="flex items-center justify-center gap-0.5 mb-2">
+                  {Array.from({ length: rev.rating }).map((_, j) => (
+                    <FaStar key={j} className="text-secondary" size={10} />
+                  ))}
+                </div>
+                <p className="text-xs text-white/50 line-clamp-3 mb-2">&ldquo;{rev.text}&rdquo;</p>
+                <p className="text-xs text-white/60 font-medium">- {rev.name}</p>
+              </div>
+            ))}
+          </motion.div>
+        )}
       </motion.div>
 
       <motion.div

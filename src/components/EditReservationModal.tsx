@@ -118,6 +118,8 @@ export default function EditReservationModal({
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
                 >
                   <option value="pending">Pendiente</option>
+                  <option value="en_camino">En camino</option>
+                  <option value="paseando">Paseando</option>
                   <option value="completed">Completada</option>
                 </select>
               </div>

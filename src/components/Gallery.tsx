@@ -1,59 +1,46 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaDog, FaPaw, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { listAll, getDownloadURL, ref } from 'firebase/storage'
+import { storage } from '@/firebase/config'
+import { FaDog, FaPaw, FaTimes, FaChevronLeft, FaChevronRight, FaImage } from 'react-icons/fa'
 
-const galleryImages = [
-  {
-    url: 'https://placedog.net/640/480?random=1',
-    title: 'Max disfrutando su paseo',
-    dog: 'Max',
-  },
-  {
-    url: 'https://placedog.net/640/480?random=2',
-    title: 'Luna en la zona verde',
-    dog: 'Luna',
-  },
-  {
-    url: 'https://placedog.net/640/480?random=3',
-    title: 'Toby conociendo amigos',
-    dog: 'Toby',
-  },
-  {
-    url: 'https://placedog.net/640/480?random=4',
-    title: 'Rocky explorando',
-    dog: 'Rocky',
-  },
-  {
-    url: 'https://placedog.net/640/480?random=5',
-    title: 'Mimi feliz después del paseo',
-    dog: 'Mimi',
-  },
-  {
-    url: 'https://placedog.net/640/480?random=6',
-    title: 'Thor corriendo libre',
-    dog: 'Thor',
-  },
-  {
-    url: 'https://placedog.net/640/480?random=7',
-    title: 'Paseo grupal en Quebrada',
-    dog: 'Coco',
-  },
-  {
-    url: 'https://placedog.net/640/480?random=8',
-    title: 'Nala disfrutando el sol',
-    dog: 'Nala',
-  },
+const fallbackImages = [
+  { url: 'https://placedog.net/640/480?random=1', title: 'Max disfrutando su paseo', dog: 'Max' },
+  { url: 'https://placedog.net/640/480?random=2', title: 'Luna en la zona verde', dog: 'Luna' },
+  { url: 'https://placedog.net/640/480?random=3', title: 'Toby conociendo amigos', dog: 'Toby' },
+  { url: 'https://placedog.net/640/480?random=4', title: 'Rocky explorando', dog: 'Rocky' },
+  { url: 'https://placedog.net/640/480?random=5', title: 'Mimi feliz después del paseo', dog: 'Mimi' },
+  { url: 'https://placedog.net/640/480?random=6', title: 'Thor corriendo libre', dog: 'Thor' },
+  { url: 'https://placedog.net/640/480?random=7', title: 'Paseo grupal en Quebrada', dog: 'Coco' },
+  { url: 'https://placedog.net/640/480?random=8', title: 'Nala disfrutando el sol', dog: 'Nala' },
 ]
 
 export default function Gallery() {
+  const [realImages, setRealImages] = useState<{ url: string; title: string; dog: string }[]>([])
   const [selected, setSelected] = useState<number | null>(null)
+
+  useEffect(() => {
+    const listRef = ref(storage, 'gallery')
+    listAll(listRef)
+      .then((result) =>
+        Promise.all(result.items.map((item) => getDownloadURL(item)))
+      )
+      .then((urls) => {
+        if (urls.length > 0) {
+          setRealImages(urls.map((url) => ({ url, title: '🐾 Cliente feliz', dog: '' })))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const images = realImages.length > 0 ? realImages : fallbackImages
 
   const open = (i: number) => setSelected(i)
   const close = () => setSelected(null)
-  const prev = () => selected !== null && setSelected(selected === 0 ? galleryImages.length - 1 : selected - 1)
-  const next = () => selected !== null && setSelected(selected === galleryImages.length - 1 ? 0 : selected + 1)
+  const prev = () => selected !== null && setSelected(selected === 0 ? images.length - 1 : selected - 1)
+  const next = () => selected !== null && setSelected(selected === images.length - 1 ? 0 : selected + 1)
 
   return (
     <section id="galeria" className="relative py-24 sm:py-32">
@@ -81,7 +68,7 @@ export default function Gallery() {
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {galleryImages.map((img, i) => (
+          {images.map((img, i) => (
             <motion.div
               key={img.url}
               initial={{ opacity: 0, scale: 0.8 }}
@@ -152,23 +139,23 @@ export default function Gallery() {
               className="max-w-4xl max-h-[80vh] w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={galleryImages[selected].url}
-                alt={galleryImages[selected].title}
-                className="w-full h-full object-contain rounded-2xl"
-              />
-              <div className="text-center mt-4">
-                <p className="text-white font-semibold">
-                  {galleryImages[selected].title}
-                </p>
-                <p className="text-white/50 text-sm">
-                  {galleryImages[selected].dog}
-                </p>
-              </div>
+                <img
+                  src={images[selected].url}
+                  alt={images[selected].title}
+                  className="w-full h-full object-contain rounded-2xl"
+                />
+                <div className="text-center mt-4">
+                  <p className="text-white font-semibold">
+                    {images[selected].title}
+                  </p>
+                  <p className="text-white/50 text-sm">
+                    {images[selected].dog}
+                  </p>
+                </div>
             </motion.div>
 
             <div className="absolute bottom-6 flex items-center gap-2">
-              {galleryImages.map((_, i) => (
+              {images.map((_, i) => (
                 <button
                   key={i}
                   onClick={(e) => { e.stopPropagation(); setSelected(i) }}

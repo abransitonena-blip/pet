@@ -25,6 +25,7 @@ import PetProfileManager from '@/components/PetProfileManager'
 import LoyaltyProgram from '@/components/LoyaltyProgram'
 import ReferralSection from '@/components/ReferralSection'
 import AvailabilityCalendar from '@/components/AvailabilityCalendar'
+import PWARegister from '@/components/PWARegister'
 
 function HomeContent() {
   const [showAdmin, setShowAdmin] = useState(false)
@@ -90,6 +91,7 @@ function HomeContent() {
 
   return (
     <>
+      <PWARegister />
       {!loaded && <Preloader />}
       <main className="relative min-h-screen">
         <FloatingParticles />

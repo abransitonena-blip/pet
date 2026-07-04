@@ -29,10 +29,13 @@ import {
   FaUndo,
   FaSignOutAlt,
   FaPaperPlane,
+  FaImage,
+  FaWalking,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import EditReservationModal from './EditReservationModal'
 import CalendarView from './CalendarView'
+import AdminGallery from './AdminGallery'
 
 interface Reservation {
   id: string
@@ -79,11 +82,12 @@ export default function AdminPanel({
   const [loading, setLoading] = useState(true)
   const [notificationsOn, setNotificationsOn] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'en_camino' | 'paseando' | 'completed'>('all')
   const [editingReservation, setEditingReservation] = useState<any>(null)
   const [quickMsgNumber, setQuickMsgNumber] = useState('')
   const [quickMsgInput, setQuickMsgInput] = useState('')
   const [showQuickMsg, setShowQuickMsg] = useState(false)
+  const [showGallery, setShowGallery] = useState(false)
   const prevCount = useRef(0)
 
   const requestNotificationPermission = async () => {
@@ -175,6 +179,8 @@ export default function AdminPanel({
 
   const completedCount = reservations.filter((r) => r.status === 'completed').length
   const pendingCount = reservations.filter((r) => r.status === 'pending' || !r.status).length
+  const enCaminoCount = reservations.filter((r) => r.status === 'en_camino').length
+  const paseandoCount = reservations.filter((r) => r.status === 'paseando').length
   const avgRating = reviews.length > 0
     ? (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length).toFixed(1)
     : '0'
@@ -292,6 +298,16 @@ export default function AdminPanel({
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setShowGallery(!showGallery)}
+                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all ${
+                    showGallery ? 'bg-primary/20 text-primary' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
+                  }`}
+                  title="Galería de fotos"
+                >
+                  <FaImage size={12} />
+                  Fotos
+                </button>
+                <button
                   onClick={() => setShowQuickMsg(!showQuickMsg)}
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
                   title="Enviar WhatsApp"
@@ -338,6 +354,16 @@ export default function AdminPanel({
                 </button>
               </div>
             </div>
+
+            {showGallery && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                className="border-b border-white/5 overflow-hidden p-4"
+              >
+                <AdminGallery />
+              </motion.div>
+            )}
 
             {showQuickMsg && (
               <motion.div
@@ -414,21 +440,25 @@ export default function AdminPanel({
                       />
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {(['all', 'pending', 'completed'] as const).map((s) => (
+                      {(['all', 'pending', 'en_camino', 'paseando', 'completed'] as const).map((s) => (
                         <button
                           key={s}
                           onClick={() => setStatusFilter(s)}
-                          className={`text-xs px-3 py-1.5 rounded-lg transition-all ${
+                          className={`text-xs px-2 py-1.5 rounded-lg transition-all ${
                             statusFilter === s
                               ? s === 'completed'
                                 ? 'bg-green-500/20 text-green-400'
-                                : s === 'pending'
-                                  ? 'bg-secondary/20 text-secondary'
-                                  : 'bg-primary/20 text-primary'
+                                : s === 'en_camino'
+                                  ? 'bg-blue-500/20 text-blue-400'
+                                  : s === 'paseando'
+                                    ? 'bg-purple-500/20 text-purple-400'
+                                    : s === 'pending'
+                                      ? 'bg-secondary/20 text-secondary'
+                                      : 'bg-primary/20 text-primary'
                               : 'bg-white/5 text-white/40 hover:text-white/60'
                           }`}
                         >
-                          {s === 'all' ? 'Todas' : s === 'pending' ? 'Pendientes' : 'Completadas'}
+                          {s === 'all' ? 'Todas' : s === 'pending' ? 'Pendientes' : s === 'en_camino' ? 'En camino' : s === 'paseando' ? 'Paseando' : 'Completadas'}
                         </button>
                       ))}
                     </div>
@@ -455,15 +485,19 @@ export default function AdminPanel({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="font-semibold text-white">{res.name}</span>
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full ${
-                                  res.status === 'completed'
-                                    ? 'bg-green-500/20 text-green-400'
-                                    : 'bg-secondary/20 text-secondary'
-                                }`}
-                              >
-                                {res.status === 'completed' ? 'Completada' : 'Pendiente'}
-                              </span>
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full ${
+                  res.status === 'completed'
+                    ? 'bg-green-500/20 text-green-400'
+                    : res.status === 'en_camino'
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : res.status === 'paseando'
+                        ? 'bg-purple-500/20 text-purple-400'
+                        : 'bg-secondary/20 text-secondary'
+                }`}
+              >
+                {res.status === 'completed' ? 'Completada' : res.status === 'en_camino' ? 'En camino' : res.status === 'paseando' ? 'Paseando' : 'Pendiente'}
+              </span>
                               {res.assignedWalker && (
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">
                                   🦮 {res.assignedWalker}
@@ -506,14 +540,32 @@ export default function AdminPanel({
                             </button>
                             {(!res.status || res.status === 'pending') && (
                               <button
+                                onClick={() => updateDoc(doc(db, 'reservations', res.id), { status: 'en_camino' })}
+                                className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 flex items-center justify-center transition-all"
+                                title="En camino"
+                              >
+                                <FaDog size={12} />
+                              </button>
+                            )}
+                            {res.status === 'en_camino' && (
+                              <button
+                                onClick={() => updateDoc(doc(db, 'reservations', res.id), { status: 'paseando' })}
+                                className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 flex items-center justify-center transition-all"
+                                title="Paseando"
+                              >
+                                <FaWalking size={12} />
+                              </button>
+                            )}
+                            {res.status === 'paseando' && (
+                              <button
                                 onClick={() => handleComplete(res.id)}
                                 className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 flex items-center justify-center transition-all"
-                                title="Marcar completada"
+                                title="Completar"
                               >
                                 <FaCheck size={12} />
                               </button>
                             )}
-                            {res.status === 'completed' && (
+                            {(res.status === 'completed' || res.status === 'en_camino' || res.status === 'paseando') && (
                               <button
                                 onClick={() => handleRestore(res.id)}
                                 className="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 flex items-center justify-center transition-all"
@@ -598,6 +650,8 @@ export default function AdminPanel({
                       { label: 'Reservas totales', value: reservations.length, icon: FaCalendarAlt, color: 'from-primary to-amber-600' },
                       { label: 'Completadas', value: completedCount, icon: FaCheck, color: 'from-green-500 to-emerald-600' },
                       { label: 'Pendientes', value: pendingCount, icon: FaSpinner, color: 'from-secondary to-orange-500' },
+                      { label: 'En camino', value: enCaminoCount, icon: FaDog, color: 'from-blue-500 to-indigo-600' },
+                      { label: 'Paseando', value: paseandoCount, icon: FaWalking, color: 'from-purple-500 to-violet-600' },
                       { label: 'Reseñas', value: reviews.length, icon: FaStar, color: 'from-pink-500 to-rose-600' },
                       { label: 'Calificación', value: avgRating, icon: FaStar, color: 'from-yellow-500 to-amber-600' },
                       { label: 'Perros', value: new Set(reservations.map((r) => r.petName)).size, icon: FaDog, color: 'from-cyan-500 to-blue-600' },
