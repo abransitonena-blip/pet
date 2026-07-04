@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { db } from '@/firebase/config'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, getDocs, query, where, limit } from 'firebase/firestore'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
-import { SERVICE_NAMES } from '@/lib/services'
+import { SERVICE_NAMES, getServicePrice } from '@/lib/services'
 import AvailabilityCalendar from './AvailabilityCalendar'
 import { showPushNotification } from './PWARegister'
 import {
@@ -19,6 +19,9 @@ import {
   FaSpinner,
   FaCheckCircle,
   FaWalking,
+  FaTag,
+  FaCheck,
+  FaTimes,
 } from 'react-icons/fa'
 
 export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (phone: string) => void }) {
@@ -31,9 +34,12 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
     date: '',
     time: '',
     notes: '',
+    coupon: '',
   })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [couponStatus, setCouponStatus] = useState<{ valid: boolean; msg: string; discount?: number; type?: 'percentage' | 'fixed' } | null>(null)
+  const [checkingCoupon, setCheckingCoupon] = useState(false)
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -45,16 +51,50 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
     if (e.target.name === 'phone') onPhoneChange?.(val)
   }
 
+  const checkCoupon = async (code: string) => {
+    if (!code.trim()) { setCouponStatus(null); return }
+    setCheckingCoupon(true)
+    const q = query(collection(db, 'coupons'), where('code', '==', code.trim().toUpperCase()), where('active', '==', true), limit(1))
+    const snap = await getDocs(q)
+    if (snap.empty) {
+      setCouponStatus({ valid: false, msg: 'Cupón no válido' })
+    } else {
+      const c = snap.docs[0].data()
+      if (c.maxUses > 0 && c.usedCount >= c.maxUses) {
+        setCouponStatus({ valid: false, msg: 'Este cupón ya no está disponible' })
+      } else {
+        setCouponStatus({ valid: true, msg: `Descuento aplicado: ${c.type === 'percentage' ? `${c.discount}%` : `$${c.discount}`}`, discount: c.discount, type: c.type })
+      }
+    }
+    setCheckingCoupon(false)
+  }
+
+  const handleCouponChange = (val: string) => {
+    setForm((prev) => ({ ...prev, coupon: val }))
+    setCouponStatus(null)
+    if (val.length >= 3) checkCoupon(val)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSending(true)
 
-    const message = `🐾 *Nuevo Paseo - Paseos Quebrada* 🐾
+    const basePrice = getServicePrice(form.service)
+    let discountAmount = 0
+    if (couponStatus?.valid && couponStatus.discount) {
+      discountAmount = couponStatus.type === 'percentage' ? Math.round(basePrice * couponStatus.discount / 100) : couponStatus.discount
+    }
+    const finalPrice = basePrice - discountAmount
+
+    let message = `🐾 *Nuevo Paseo - Paseos Quebrada* 🐾
     *Nombre:* ${form.name}
     *Teléfono:* ${form.phone}
     *Perro:* ${form.petName} (${form.petType})
-    *Paquete:* ${form.service}
-    *Fecha:* ${form.date}
+    *Paquete:* ${form.service}`
+    if (basePrice > 0) message += `\n    *Precio:* $${basePrice.toLocaleString()}`
+    if (discountAmount > 0) message += `\n    *Descuento:* -$${discountAmount.toLocaleString()} (${form.coupon.toUpperCase()})`
+    message += `\n    *Total:* $${finalPrice.toLocaleString()}`
+    message += `\n    *Fecha:* ${form.date}
     *Hora:* ${form.time}
     *Notas:* ${form.notes || 'Sin notas'}`
 
@@ -63,6 +103,9 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
         ...form,
         createdAt: serverTimestamp(),
         status: 'pending',
+        appliedCoupon: form.coupon.toUpperCase(),
+        discountApplied: discountAmount,
+        finalPrice,
       })
       showPushNotification(
         '🐾 Nueva reserva recibida',
@@ -77,6 +120,7 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
 
     setSending(false)
     setSent(true)
+    setCouponStatus(null)
     setForm({
       name: '',
       phone: '',
@@ -86,6 +130,7 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
       date: '',
       time: '',
       notes: '',
+      coupon: '',
     })
 
     setTimeout(() => setSent(false), 5000)
@@ -270,6 +315,34 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
                 placeholder="Alguna observación importante..."
                 className="input-field resize-none"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-white/60 flex items-center gap-2">
+                <FaTag className="text-primary" size={12} />
+                Cupón de descuento
+              </label>
+              <div className="relative">
+                <input
+                  name="coupon"
+                  value={form.coupon}
+                  onChange={(e) => handleCouponChange(e.target.value)}
+                  placeholder="Código (opcional)"
+                  className="input-field pr-10"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {checkingCoupon ? (
+                    <FaSpinner className="animate-spin text-white/30" size={14} />
+                  ) : couponStatus ? (
+                    couponStatus.valid ? <FaCheck className="text-green-400" size={14} /> : <FaTimes className="text-red-400" size={14} />
+                  ) : null}
+                </div>
+              </div>
+              {couponStatus && (
+                <p className={`text-xs ${couponStatus.valid ? 'text-green-400' : 'text-red-400'}`}>
+                  {couponStatus.msg}
+                </p>
+              )}
             </div>
 
             <motion.button

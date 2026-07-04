@@ -1,7 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaDog, FaMapMarkerAlt, FaWhatsapp, FaInstagram, FaFacebook } from 'react-icons/fa'
+import Link from 'next/link'
+import { FaDog, FaMapMarkerAlt, FaWhatsapp, FaInstagram, FaFacebook, FaTimes } from 'react-icons/fa'
 
 export default function Footer({ onTerms }: { onTerms: () => void }) {
   return (
@@ -82,6 +83,10 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                 <FaMapMarkerAlt size={14} style={{ color: 'var(--primary)' }} />
                 Zona Quebrada, Cuautitlán
               </p>
+              <Link href="/cancelar" className="flex items-center gap-2 hover:text-red-400 transition-colors text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <FaTimes size={14} />
+                Cancelar reserva
+              </Link>
             </div>
           </motion.div>
 
@@ -97,7 +102,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             <div className="flex gap-3">
               {[
                 { icon: FaWhatsapp, href: 'https://wa.me/5215523053772', color: 'hover:text-green-400' },
-                { icon: FaInstagram, href: '#', color: 'hover:text-pink-400' },
+                { icon: FaInstagram, href: 'https://www.instagram.com/pet___ap', color: 'hover:text-pink-400' },
                 { icon: FaFacebook, href: '#', color: 'hover:text-blue-400' },
               ].map(({ icon: Icon, href, color }) => (
                 <a

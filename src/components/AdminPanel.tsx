@@ -38,6 +38,7 @@ import EditReservationModal from './EditReservationModal'
 import CalendarView from './CalendarView'
 import { getMessagingInstance } from '@/firebase/config'
 import AdminGallery from './AdminGallery'
+import AdminCoupons from './AdminCoupons'
 import type { Reservation } from '@/types'
 
 
@@ -51,7 +52,7 @@ interface AdminReview {
   petName?: string
 }
 
-type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas'
+type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones'
 
 export default function AdminPanel({
   isOpen,
@@ -422,6 +423,7 @@ export default function AdminPanel({
                 { id: 'calendario' as Tab, label: 'Calendario', icon: FaDog },
                 { id: 'resenas' as Tab, label: 'Reseñas', icon: FaStar },
                 { id: 'estadisticas' as Tab, label: 'Estadísticas', icon: FaChartBar },
+                { id: 'cupones' as Tab, label: 'Cupones', icon: FaTag },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -658,6 +660,10 @@ export default function AdminPanel({
                     ))
                   )}
                 </div>
+              )}
+
+              {tab === 'cupones' && (
+                <AdminCoupons />
               )}
 
               {tab === 'estadisticas' && (
