@@ -11,6 +11,7 @@ import {
   doc,
   deleteDoc,
   updateDoc,
+  setDoc,
 } from 'firebase/firestore'
 import {
   FaTimes,
@@ -37,7 +38,6 @@ import EditReservationModal from './EditReservationModal'
 import CalendarView from './CalendarView'
 import { getToken } from 'firebase/messaging'
 import { messaging } from '@/firebase/config'
-import { doc, setDoc } from 'firebase/firestore'
 import AdminGallery from './AdminGallery'
 
 interface Reservation {
