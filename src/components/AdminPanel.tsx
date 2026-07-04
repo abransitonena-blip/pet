@@ -39,23 +39,9 @@ import CalendarView from './CalendarView'
 import { getToken } from 'firebase/messaging'
 import { getMessagingInstance } from '@/firebase/config'
 import AdminGallery from './AdminGallery'
+import type { Reservation } from '@/types'
 
-interface Reservation {
-  id: string
-  name: string
-  phone: string
-  petName: string
-  petType: string
-  service: string
-  date: string
-  time: string
-  notes?: string
-  status: string
-  createdAt?: any
-  internalNotes?: string
-  assignedWalker?: string
-  completedAt?: any
-}
+
 
 interface AdminReview {
   id: string

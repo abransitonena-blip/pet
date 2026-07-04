@@ -11,6 +11,6 @@ export interface Reservation {
   notes: string
   internalNotes: string
   assignedWalker: string
-  history: { status: string; timestamp: string }[]
-  createdAt: { seconds: number; nanoseconds: number }
+  history?: { status: string; timestamp: string }[]
+  createdAt?: { seconds: number; nanoseconds: number }
 }
