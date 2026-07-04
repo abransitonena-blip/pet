@@ -26,6 +26,7 @@ import LoyaltyProgram from '@/components/LoyaltyProgram'
 import ReferralSection from '@/components/ReferralSection'
 import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import PWARegister from '@/components/PWARegister'
+import ContactSection from '@/components/ContactSection'
 
 function HomeContent() {
   const [showAdmin, setShowAdmin] = useState(false)
@@ -134,6 +135,7 @@ function HomeContent() {
         </div>
 
         <ReservationForm onPhoneChange={setUserPhone} />
+        <ContactSection />
         <Footer onTerms={() => setShowTerms(true)} />
         <WhatsAppButton />
         <AdminPanel

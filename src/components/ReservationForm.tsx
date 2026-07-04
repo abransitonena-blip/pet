@@ -7,6 +7,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { SERVICE_NAMES } from '@/lib/services'
 import AvailabilityCalendar from './AvailabilityCalendar'
+import { showPushNotification } from './PWARegister'
 import {
   FaDog,
   FaCalendarAlt,
@@ -63,6 +64,10 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
         createdAt: serverTimestamp(),
         status: 'pending',
       })
+      showPushNotification(
+        '🐾 Nueva reserva recibida',
+        form.name + ' agendó "' + form.service + '" para ' + form.petName
+      )
     } catch {
       // Firebase save optional
     }

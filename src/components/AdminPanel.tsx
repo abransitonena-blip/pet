@@ -35,6 +35,9 @@ import {
 import { getServicePrice } from '@/lib/services'
 import EditReservationModal from './EditReservationModal'
 import CalendarView from './CalendarView'
+import { getToken } from 'firebase/messaging'
+import { messaging } from '@/firebase/config'
+import { doc, setDoc } from 'firebase/firestore'
 import AdminGallery from './AdminGallery'
 
 interface Reservation {
@@ -94,10 +97,29 @@ export default function AdminPanel({
     if (!('Notification' in window)) return
     if (Notification.permission === 'granted') {
       setNotificationsOn(true)
+      storeFcmToken()
       return
     }
     const result = await Notification.requestPermission()
-    if (result === 'granted') setNotificationsOn(true)
+    if (result === 'granted') {
+      setNotificationsOn(true)
+      storeFcmToken()
+    }
+  }
+
+  const storeFcmToken = async () => {
+    try {
+      const token = await getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY })
+      if (token && user) {
+        const tokensRef = doc(db, 'admin', 'tokens')
+        const existing = await (await import('firebase/firestore')).getDoc(tokensRef)
+        const tokens = existing.data()?.fcmTokens || []
+        if (!tokens.includes(token)) {
+          tokens.push(token)
+          await setDoc(tokensRef, { fcmTokens: tokens })
+        }
+      }
+    } catch {}
   }
 
   useEffect(() => {
@@ -118,8 +140,15 @@ export default function AdminPanel({
         try {
           new Notification('🐾 Nueva reserva recibida!', {
             body: `${newest.name} agendó "${newest.service}" para ${newest.petName}`,
-            icon: '/favicon.ico',
+            icon: '/icons/icon-192.svg',
           })
+          navigator.serviceWorker.ready.then((reg) =>
+            reg.showNotification('🐾 Nueva reserva recibida!', {
+              body: `${newest.name} agendó "${newest.service}" para ${newest.petName}`,
+              icon: '/icons/icon-192.svg',
+              badge: '/icons/icon-192.svg',
+            })
+          )
         } catch {}
       }
       prevCount.current = data.length
