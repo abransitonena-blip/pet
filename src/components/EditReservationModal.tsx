@@ -39,10 +39,11 @@ export default function EditReservationModal({
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
+    if (!reservation) return
     setSaving(true)
     try {
       const updates: any = { ...form }
-      if (form.status === 'completed' && reservation?.status !== 'completed') {
+      if (form.status === 'completed' && reservation.status !== 'completed') {
         updates.completedAt = serverTimestamp()
       }
       await updateDoc(doc(db, 'reservations', reservation.id), updates)
