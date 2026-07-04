@@ -40,7 +40,7 @@ import { getToken } from 'firebase/messaging'
 import { getMessagingInstance } from '@/firebase/config'
 import AdminGallery from './AdminGallery'
 
-export interface Reservation {
+interface Reservation {
   id: string
   name: string
   phone: string
