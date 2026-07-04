@@ -17,14 +17,10 @@ import {
 import { SERVICES } from '@/lib/services'
 
 const serviceMeta = [
-  { icon: FaWalking, title: 'Paseo Individual', description: 'Paseo personalizado de 30 min para tu perro. Atención 1 a 1, ruta por Zona Quebrada.', duration: '30 min' },
-  { icon: FaClock, title: 'Paseo Plus', description: 'Paseo extendido de 1 hora con juegos, ejercicios y mucho tiempo al aire libre.', duration: '60 min' },
-  { icon: FaUsers, title: 'Paseo Grupal', description: 'Paseo en grupo supervisado. Tu perro socializa mientras se ejercita con amigos.', duration: '45 min' },
-  { icon: FaTree, title: 'Ruta Premium', description: 'Ruta especial por zonas arboladas de Cuautitlán. Tu perro explora y se divierte.', duration: '90 min' },
-  { icon: FaSun, title: 'Paquete Semanal', description: '5 paseos individuales a la semana. Precio especial por paquete. ¡Ahorra!', duration: '5 paseos' },
-  { icon: FaStar, title: 'Paquete Mensual', description: 'Paseos diarios (lun-vie) durante un mes. La mejor opción para dueños ocupados.', duration: '20 paseos' },
-  { icon: FaDog, title: 'Paseo + Reporte', description: 'Paseo individual + fotos y video de tu perro durante el paseo. Llega reporte por WhatsApp.', duration: '45 min' },
-  { icon: FaPaw, title: 'Paseo Express', description: 'Paseo rápido de 20 min para necesidades básicas. Ideal para emergencias.', duration: '20 min' },
+  { icon: FaWalking, title: 'Paseo Individual', description: 'Paseo personalizado de 30 min. Atención 1 a 1, ruta por Zona Quebrada.', duration: '30 min' },
+  { icon: FaClock, title: 'Paseo Extendido', description: '1 hora de paseo con juegos, ejercicios y mucho tiempo al aire libre.', duration: '1 hora' },
+  { icon: FaStar, title: 'Paseo + Adiestramiento', description: 'Paseo de 1 hora + enseñanza de comandos básicos en el parque. Tu perro aprende mientras se ejercita.', duration: '1 hora' },
+  { icon: FaSun, title: 'Paquete Semanal', description: '6 paseos individuales de lunes a sábado. Precio especial por paquete. ¡Ahorra!', duration: '6 paseos' },
 ]
 
 const services = serviceMeta.map((meta, i) => ({
