@@ -12,7 +12,7 @@ const contacts = [
 
 const socials = [
   { icon: FaFacebook, label: 'Facebook', href: '#', color: 'hover:text-blue-500' },
-  { icon: FaInstagram, label: 'Instagram', href: '#', color: 'hover:text-pink-500' },
+  { icon: FaInstagram, label: 'Instagram', href: 'https://www.instagram.com/pet___ap?igsh=Z2I2OWgxb2x1eTc1', color: 'hover:text-pink-500' },
   { icon: FaTiktok, label: 'TikTok', href: '#', color: 'hover:text-white' },
 ]
 
