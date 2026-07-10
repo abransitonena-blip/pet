@@ -33,6 +33,7 @@ import {
   FaImage,
   FaWalking,
   FaTag,
+  FaHome,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import EditReservationModal from './EditReservationModal'
@@ -53,7 +54,7 @@ interface AdminReview {
   petName?: string
 }
 
-type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones'
+type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones' | 'resumen'
 
 export default function AdminPanel({
   isOpen,
@@ -66,7 +67,7 @@ export default function AdminPanel({
   user: import("firebase/auth").User | null
   onLogout?: () => void
 }) {
-  const [tab, setTab] = useState<Tab>('reservas')
+  const [tab, setTab] = useState<Tab>('resumen')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [reviews, setReviews] = useState<AdminReview[]>([])
   const [loading, setLoading] = useState(true)
@@ -420,6 +421,7 @@ export default function AdminPanel({
 
             <div className="flex border-b border-white/5">
               {[
+                { id: 'resumen' as Tab, label: 'Resumen', icon: FaHome },
                 { id: 'reservas' as Tab, label: 'Reservas', icon: FaCalendarAlt },
                 { id: 'calendario' as Tab, label: 'Calendario', icon: FaDog },
                 { id: 'resenas' as Tab, label: 'Reseñas', icon: FaStar },
@@ -660,6 +662,133 @@ export default function AdminPanel({
                       </motion.div>
                     ))
                   )}
+                </div>
+              )}
+
+              {tab === 'resumen' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Resumen del día</h3>
+                      <p className="text-xs text-white/40">{new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const today = new Date().toISOString().split('T')[0]
+                        const todays = reservations.filter((r) => r.date === today && r.status !== 'cancelled' && r.status !== 'completed')
+                        if (todays.length === 0) return
+                        const msg = todays.map((r) => `🐾 ${r.petName} - ${r.service} - ${r.time}`).join('\n')
+                        window.open(`https://wa.me/5215523053772?text=${encodeURIComponent('📋 *Reservas de hoy:*\n\n' + msg)}`, '_blank')
+                      }}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
+                    >
+                      <FaWhatsapp size={10} /> Enviar resumen por WhatsApp
+                    </button>
+                  </div>
+
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+                    className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3"
+                  >
+                    {[
+                      { label: 'Hoy', value: reservations.filter((r) => r.date === new Date().toISOString().split('T')[0] && r.status !== 'cancelled').length, color: 'from-primary to-amber-600' },
+                      { label: 'Completadas hoy', value: reservations.filter((r) => r.date === new Date().toISOString().split('T')[0] && r.status === 'completed').length, color: 'from-green-500 to-emerald-600' },
+                      { label: 'Pendientes', value: pendingCount, color: 'from-secondary to-orange-500' },
+                      { label: 'Por facturar', value: `$${pendingRevenue.toLocaleString()}`, color: 'from-amber-500 to-orange-600' },
+                    ].map((stat) => (
+                      <motion.div
+                        key={stat.label}
+                        variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
+                        className="glass-card p-4 text-center"
+                      >
+                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-2`}>
+                          <FaChartBar className="text-white text-sm" />
+                        </div>
+                        <div className="text-xl font-bold text-white">{stat.value}</div>
+                        <div className="text-[10px] text-white/40 mt-0.5">{stat.label}</div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-3">🕐 Reservas para hoy</h4>
+                    {(() => {
+                      const today = new Date().toISOString().split('T')[0]
+                      const todaysReservations = reservations.filter((r) => r.date === today && r.status !== 'cancelled')
+                      if (todaysReservations.length === 0) return <p className="text-sm text-white/30 text-center py-6">Sin reservas para hoy</p>
+                      return (
+                        <div className="space-y-2">
+                          {todaysReservations.sort((a, b) => a.time.localeCompare(b.time)).map((r) => (
+                            <motion.div
+                              key={r.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="flex items-center justify-between glass p-3 rounded-xl"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  r.status === 'completed' ? 'bg-green-400' : r.status === 'en_camino' ? 'bg-blue-400' : r.status === 'paseando' ? 'bg-purple-400' : 'bg-secondary'
+                                }`} />
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-semibold text-white">{r.petName}</span>
+                                    <span className="text-[10px] text-white/40">{r.time}</span>
+                                  </div>
+                                  <p className="text-xs text-white/50">{r.name} — {r.service}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => openWhatsApp(r.phone, r.name)}
+                                  className="w-7 h-7 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 flex items-center justify-center transition-all"
+                                >
+                                  <FaWhatsapp size={10} />
+                                </button>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )
+                    })()}
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="glass-card p-4">
+                      <h4 className="text-sm font-semibold text-white mb-3">⚡ Acciones rápidas</h4>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => setShowQuickMsg(true)}
+                          className="w-full text-left text-xs px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
+                        >
+                          <FaPaperPlane size={10} /> Enviar mensaje rápido
+                        </button>
+                        <button
+                          onClick={() => { setShowGallery(true); setTab('reservas') }}
+                          className="w-full text-left text-xs px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
+                        >
+                          <FaImage size={10} /> Subir fotos a la galería
+                        </button>
+                        <button
+                          onClick={() => setTab('cupones')}
+                          className="w-full text-left text-xs px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
+                        >
+                          <FaTag size={10} /> Crear cupón de descuento
+                        </button>
+                      </div>
+                    </div>
+                    <div className="glass-card p-4">
+                      <h4 className="text-sm font-semibold text-white mb-3">📊 Totales generales</h4>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between text-white/60"><span>Reservas totales</span><span className="text-white font-semibold">{reservations.length}</span></div>
+                        <div className="flex items-center justify-between text-white/60"><span>Completadas</span><span className="text-green-400 font-semibold">{completedCount}</span></div>
+                        <div className="flex items-center justify-between text-white/60"><span>Pendientes</span><span className="text-secondary font-semibold">{pendingCount}</span></div>
+                        <div className="flex items-center justify-between text-white/60"><span>Ingresos cobrados</span><span className="text-white font-semibold">${totalRevenue.toLocaleString()}</span></div>
+                        <div className="flex items-center justify-between text-white/60"><span>Calificación promedio</span><span className="text-secondary font-semibold">{avgRating}</span></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
