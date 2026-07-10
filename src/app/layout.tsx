@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const inter = Inter({
@@ -83,6 +84,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         {children}
+        <Analytics />
       </body>
     </html>
   )
