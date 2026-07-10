@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pet-euhz.vercel.app/sitemap.xml

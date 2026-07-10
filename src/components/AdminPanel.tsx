@@ -135,6 +135,36 @@ export default function AdminPanel({
       if (prevCount.current > 0 && data.length > prevCount.current && notificationsOn) {
         const newest = data[0]
         try {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.connect(gain)
+          gain.connect(ctx.destination)
+          osc.frequency.value = 880
+          osc.type = 'sine'
+          gain.gain.setValueAtTime(0, ctx.currentTime)
+          gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.02)
+          gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4)
+          osc.start(ctx.currentTime)
+          osc.stop(ctx.currentTime + 0.4)
+          setTimeout(() => {
+            const osc2 = ctx.createOscillator()
+            const gain2 = ctx.createGain()
+            osc2.connect(gain2)
+            gain2.connect(ctx.destination)
+            osc2.frequency.value = 1108.73
+            osc2.type = 'sine'
+            gain2.gain.setValueAtTime(0, ctx.currentTime + 0.45)
+            gain2.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.47)
+            gain2.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.7)
+            osc2.start(ctx.currentTime + 0.45)
+            osc2.stop(ctx.currentTime + 0.7)
+          }, 400)
+        } catch {}
+
+        try {
+        const newest = data[0]
+        try {
           new Notification('🐾 Nueva reserva recibida!', {
             body: `${newest.name} agendó "${newest.service}" para ${newest.petName}`,
             icon: '/icons/icon-192.svg',
@@ -922,6 +952,7 @@ export default function AdminPanel({
         isOpen={!!editingReservation}
         onClose={() => setEditingReservation(null)}
         reservation={editingReservation}
+        reservations={reservations}
         key={editingReservation?.id || 'none'}
       />
 

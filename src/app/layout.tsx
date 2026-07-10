@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Paseos Quebrada | Paseos caninos en Zona Quebrada',
     description:
-      '🐾 Paseos supervisados para perros en Zona Quebrada, Cuautitlán. Desde $80.',
+      '🐾 Paseos supervisados para perros en Zona Quebrada, Cuautitlán. Desde $30.',
   },
   robots: {
     index: true,

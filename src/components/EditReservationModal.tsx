@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
@@ -12,10 +12,12 @@ export default function EditReservationModal({
   isOpen,
   onClose,
   reservation,
+  reservations = [],
 }: {
   isOpen: boolean
   onClose: () => void
   reservation: Reservation | null
+  reservations?: Reservation[]
 }) {
   const [form, setForm] = useState({
     date: reservation?.date || '',
@@ -41,6 +43,21 @@ export default function EditReservationModal({
     } catch {}
     setSaving(false)
   }
+
+  const conflictMessage = useMemo(() => {
+    if (!form.date || !form.time || !form.service) return ''
+    const conflict = reservations.find(
+      (r) =>
+        r.id !== reservation?.id &&
+        r.date === form.date &&
+        r.time === form.time &&
+        r.status !== 'completed'
+    )
+    if (conflict) {
+      return `⚠ Ya hay una reserva de ${conflict.name} para ${conflict.petName} el ${form.date} a las ${form.time}`
+    }
+    return ''
+  }, [form.date, form.time, form.service, reservations, reservation?.id])
 
   return (
     <AnimatePresence>
@@ -101,6 +118,12 @@ export default function EditReservationModal({
                   ))}
                 </select>
               </div>
+
+              {conflictMessage && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-xs text-red-400">{conflictMessage}</p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs text-white/40 mb-1">Estado</label>
