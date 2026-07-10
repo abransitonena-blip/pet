@@ -4,10 +4,14 @@ export interface ServiceOption {
 }
 
 export const SERVICES: ServiceOption[] = [
-  { name: 'Paseo Individual (30 min)', price: 40 },
-  { name: 'Paseo Extendido (1 hora)', price: 70 },
-  { name: 'Paseo + Adiestramiento (1 hora)', price: 90 },
-  { name: 'Paquete Semanal (6 paseos)', price: 400 },
+  { name: 'Paseo Individual (30 min)', price: 30 },
+  { name: 'Paseo Extendido (1 hora)', price: 50 },
+  { name: 'Paseo Grupal (45 min)', price: 35 },
+  { name: 'Paseo + Adiestramiento (1 hora)', price: 60 },
+  { name: 'Ruta Premium (90 min)', price: 70 },
+  { name: 'Paseo Express (20 min)', price: 20 },
+  { name: 'Paquete Semanal (6 paseos)', price: 150 },
+  { name: 'Paseo + Reporte (45 min)', price: 40 },
 ]
 
 export const SERVICE_NAMES = SERVICES.map((s) => s.name)

@@ -19,8 +19,12 @@ import { SERVICES } from '@/lib/services'
 const serviceMeta = [
   { icon: FaWalking, title: 'Paseo Individual', description: 'Paseo personalizado de 30 min. Atención 1 a 1, ruta por Zona Quebrada.', duration: '30 min' },
   { icon: FaClock, title: 'Paseo Extendido', description: '1 hora de paseo con juegos, ejercicios y mucho tiempo al aire libre.', duration: '1 hora' },
-  { icon: FaStar, title: 'Paseo + Adiestramiento', description: 'Paseo de 1 hora + enseñanza de comandos básicos en el parque. Tu perro aprende mientras se ejercita.', duration: '1 hora' },
-  { icon: FaSun, title: 'Paquete Semanal', description: '6 paseos individuales de lunes a sábado. Precio especial por paquete. ¡Ahorra!', duration: '6 paseos' },
+  { icon: FaUsers, title: 'Paseo Grupal', description: 'Paseo en grupo supervisado. Tu perro socializa mientras se ejercita.', duration: '45 min' },
+  { icon: FaStar, title: 'Paseo + Adiestramiento', description: 'Paseo de 1 hora + enseñanza de comandos básicos en el parque.', duration: '1 hora' },
+  { icon: FaTree, title: 'Ruta Premium', description: 'Ruta especial de 90 min por zonas arboladas de Cuautitlán.', duration: '90 min' },
+  { icon: FaPaw, title: 'Paseo Express', description: 'Paseo rápido de 20 min para necesidades básicas. Ideal para emergencias.', duration: '20 min' },
+  { icon: FaSun, title: 'Paquete Semanal', description: '6 paseos individuales lunes a sábado. Precio especial.', duration: '6 paseos' },
+  { icon: FaDog, title: 'Paseo + Reporte', description: 'Paseo individual + fotos y video de tu perro. Reporte por WhatsApp.', duration: '45 min' },
 ]
 
 const services = serviceMeta.map((meta, i) => ({

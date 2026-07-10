@@ -79,10 +79,16 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                 <FaWhatsapp size={14} />
                 5523053772
               </a>
-              <p className="flex items-center gap-2">
+              <a
+                href="https://maps.app.goo.gl/oS5fBwZdyTYAk7U3A"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-red-400 transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+              >
                 <FaMapMarkerAlt size={14} style={{ color: 'var(--primary)' }} />
                 Zona Quebrada, Cuautitlán
-              </p>
+              </a>
               <Link href="/cancelar" className="flex items-center gap-2 hover:text-red-400 transition-colors text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <FaTimes size={14} />
                 Cancelar reserva

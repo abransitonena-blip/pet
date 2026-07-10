@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: '%s | Paseos Quebrada',
   },
   description:
-    '🐾 Paseos supervisados para perros en Zona Quebrada, Cuautitlán. Desde $40, horario flexible Lunes a Sábado. Ejercicio y adiestramiento para tu mejor amigo.',
+    '🐾 Paseos supervisados para perros en Zona Quebrada, Cuautitlán. Desde $20, horario flexible Lunes a Sábado. Ejercicio, adiestramiento y diversión.',
   keywords: [
     'paseos para perros',
     'Cuautitlán',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Paseos Quebrada | Paseos caninos en Zona Quebrada',
     description:
-      '🐾 Paseos supervisados para perros en Zona Quebrada, Cuautitlán. Desde $40. Ejercicio y adiestramiento garantizados.',
+      '🐾 Paseos supervisados para perros en Zona Quebrada, Cuautitlán. Desde $20. Ejercicio y adiestramiento garantizados.',
     url: siteUrl,
     siteName: 'Paseos Quebrada',
     locale: 'es_MX',

@@ -6,7 +6,7 @@ import { FaWhatsapp, FaMapMarkerAlt, FaClock, FaPhone, FaFacebook, FaInstagram, 
 const contacts = [
   { icon: FaWhatsapp, label: 'WhatsApp', value: '5523053772', href: 'https://wa.me/5215523053772', color: 'text-green-400' },
   { icon: FaPhone, label: 'Teléfono', value: '5523053772', href: 'tel:5523053772', color: 'text-primary' },
-  { icon: FaMapMarkerAlt, label: 'Zona Quebrada, Cuautitlán', value: 'Estado de México', href: null, color: 'text-red-400' },
+  { icon: FaMapMarkerAlt, label: 'Zona Quebrada, Cuautitlán', value: 'Estado de México', href: 'https://maps.app.goo.gl/oS5fBwZdyTYAk7U3A', color: 'text-red-400' },
   { icon: FaClock, label: 'Lun - Sáb', value: '7:00 AM - 7:00 PM', href: null, color: 'text-secondary' },
 ]
 
