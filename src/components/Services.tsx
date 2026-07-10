@@ -17,19 +17,19 @@ import {
 import { SERVICES } from '@/lib/services'
 
 const serviceMeta = [
-  { icon: FaWalking, title: 'Paseo Individual', description: 'Paseo personalizado de 30 min. Atención 1 a 1, ruta por Zona Quebrada.', duration: '30 min' },
-  { icon: FaClock, title: 'Paseo Extendido', description: '1 hora de paseo con juegos, ejercicios y mucho tiempo al aire libre.', duration: '1 hora' },
-  { icon: FaUsers, title: 'Paseo Grupal', description: 'Paseo en grupo supervisado. Tu perro socializa mientras se ejercita.', duration: '45 min' },
-  { icon: FaStar, title: 'Paseo + Adiestramiento', description: 'Paseo de 1 hora + enseñanza de comandos básicos en el parque.', duration: '1 hora' },
-  { icon: FaTree, title: 'Ruta Premium', description: 'Ruta especial de 90 min por zonas arboladas de Cuautitlán.', duration: '90 min' },
-  { icon: FaPaw, title: 'Paseo Express', description: 'Paseo rápido de 20 min para necesidades básicas. Ideal para emergencias.', duration: '20 min' },
-  { icon: FaSun, title: 'Paquete Semanal', description: '6 paseos individuales lunes a sábado. Precio especial.', duration: '6 paseos' },
-  { icon: FaDog, title: 'Paseo + Reporte', description: 'Paseo individual + fotos y video de tu perro. Reporte por WhatsApp.', duration: '45 min' },
+  { icon: FaWalking, title: 'Paseo Individual', description: 'Paseo personalizado de 30 min con atención 1 a 1. Ejercicio moderado por Zona Quebrada con supervisión constante.', duration: '30 min' },
+  { icon: FaClock, title: 'Paseo Extendido', description: 'Una hora completa de paseo con juegos, ejercicios y una ruta más larga para que tu perro gaste toda su energía.', duration: '1 hora' },
+  { icon: FaUsers, title: 'Paseo Grupal', description: 'Paseo en grupos pequeños de máximo 4 perros. Socialización supervisada mientras hacen ejercicio juntos.', duration: '45 min' },
+  { icon: FaStar, title: 'Paseo + Adiestramiento', description: 'Paseo de 1 hora combinado con entrenamiento de comandos básicos usando refuerzo positivo. Tu perro aprende mientras se ejercita.', duration: '1 hora' },
+  { icon: FaPaw, title: 'Paseo Express', description: 'Paseo rápido de 20 min para necesidades básicas. Perfecto como complemento entre comidas o antes de dormir.', duration: '20 min' },
+  { icon: FaDog, title: 'Paseo + Reporte', description: 'Paseo individual de 45 min con fotos, video y reporte detallado del recorrido enviado por WhatsApp.', duration: '45 min' },
+  { icon: FaSun, title: 'Paquete Semanal', description: '6 paseos de lunes a sábado, tú eliges el horario cada día. Precio especial por paquete con ahorro garantizado.', duration: '6 paseos', popular: true },
 ]
 
 const services = serviceMeta.map((meta, i) => ({
   ...meta,
   price: `$${SERVICES[i]?.price.toLocaleString() || '0'}`,
+  highlights: SERVICES[i]?.highlights || [],
 }))
 
 export default function Services() {
@@ -80,6 +80,12 @@ export default function Services() {
                 <div className="absolute -top-12 -right-12 w-24 h-24 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-all duration-500" />
 
                 <div className="relative z-10">
+                  {(service as any).popular && (
+                    <div className="absolute top-3 right-3 z-20 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary to-amber-600 text-white text-[9px] font-semibold uppercase tracking-wider">
+                      Más popular
+                    </div>
+                  )}
+
                   <motion.div
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
@@ -88,12 +94,23 @@ export default function Services() {
                     <Icon className="text-xl text-primary" />
                   </motion.div>
 
-                  <h3 className="text-lg font-semibold text-white mb-2">
+                  <h3 className="text-lg font-semibold text-white mb-1">
                     {service.title}
                   </h3>
-                  <p className="text-sm text-white/50 mb-4 leading-relaxed">
+                  <p className="text-sm text-white/50 mb-3 leading-relaxed">
                     {service.description}
                   </p>
+
+                  {service.highlights.length > 0 && (
+                    <ul className="space-y-1 mb-4">
+                      {service.highlights.map((h: string, j: number) => (
+                        <li key={j} className="text-xs text-white/40 flex items-center gap-1.5">
+                          <FaPaw className="text-primary shrink-0" size={8} />
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
 
                   <div className="flex items-center justify-between pt-4 border-t border-white/5">
                     <span className="text-2xl font-bold gradient-text">
