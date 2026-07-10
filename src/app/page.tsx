@@ -27,6 +27,7 @@ import ReferralSection from '@/components/ReferralSection'
 import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import PWARegister from '@/components/PWARegister'
 import ContactSection from '@/components/ContactSection'
+import BannerDisplay from '@/components/BannerDisplay'
 
 function HomeContent() {
   const [showAdmin, setShowAdmin] = useState(false)
@@ -93,6 +94,7 @@ function HomeContent() {
   return (
     <>
       <PWARegister />
+      <BannerDisplay />
       {!loaded && <Preloader />}
       <main className="relative min-h-screen">
         <FloatingParticles />

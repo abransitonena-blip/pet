@@ -12,6 +12,7 @@ import {
   deleteDoc,
   updateDoc,
   setDoc,
+  serverTimestamp,
 } from 'firebase/firestore'
 import {
   FaTimes,
@@ -41,6 +42,7 @@ import CalendarView from './CalendarView'
 import { getMessagingInstance } from '@/firebase/config'
 import AdminGallery from './AdminGallery'
 import AdminCoupons from './AdminCoupons'
+import AdminBanner from './AdminBanner'
 import type { Reservation } from '@/types'
 
 
@@ -79,6 +81,10 @@ export default function AdminPanel({
   const [quickMsgInput, setQuickMsgInput] = useState('')
   const [showQuickMsg, setShowQuickMsg] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
+  const [historyPhone, setHistoryPhone] = useState('')
+  const [historyReservations, setHistoryReservations] = useState<Reservation[]>([])
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const prevCount = useRef(0)
 
   const requestNotificationPermission = async () => {
@@ -169,8 +175,20 @@ export default function AdminPanel({
 
   const handleComplete = async (id: string) => {
     try {
-      await updateDoc(doc(db, 'reservations', id), { status: 'completed' })
+      await updateDoc(doc(db, 'reservations', id), { status: 'completed', completedAt: serverTimestamp() })
     } catch {}
+  }
+
+  const handlePaymentToggle = async (id: string, current: string | undefined) => {
+    await updateDoc(doc(db, 'reservations', id), { paymentStatus: current === 'paid' ? 'pending' : 'paid' })
+  }
+
+  const viewHistory = async (phone: string) => {
+    setHistoryPhone(phone)
+    const { query, where, getDocs } = await import('firebase/firestore')
+    const q = query(collection(db, 'reservations'), where('phone', '==', phone), orderBy('createdAt', 'desc'))
+    const snap = await getDocs(q)
+    setHistoryReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
   }
 
   const handleRestore = async (id: string) => {
@@ -235,25 +253,34 @@ export default function AdminPanel({
     URL.revokeObjectURL(url)
   }
 
+  const filteredByDate = useMemo(() => {
+    if (!dateFrom && !dateTo) return reservations
+    return reservations.filter((r) => {
+      if (dateFrom && r.date < dateFrom) return false
+      if (dateTo && r.date > dateTo) return false
+      return true
+    })
+  }, [reservations, dateFrom, dateTo])
+
   const totalRevenue = useMemo(() => {
-    return reservations
+    return filteredByDate
       .filter((r) => r.status === 'completed')
       .reduce((sum, r) => sum + getServicePrice(r.service), 0)
-  }, [reservations])
+  }, [filteredByDate])
 
   const pendingRevenue = useMemo(() => {
-    return reservations
+    return filteredByDate
       .filter((r) => r.status === 'pending' || !r.status)
       .reduce((sum, r) => sum + getServicePrice(r.service), 0)
-  }, [reservations])
+  }, [filteredByDate])
 
   const serviceCounts = useMemo(() => {
     const counts: Record<string, number> = {}
-    reservations.forEach((r) => {
+    filteredByDate.forEach((r) => {
       counts[r.service] = (counts[r.service] || 0) + 1
     })
     return Object.entries(counts).sort((a, b) => b[1] - a[1])
-  }, [reservations])
+  }, [filteredByDate])
 
   const dailyCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -264,7 +291,7 @@ export default function AdminPanel({
       const key = `${d.getDate()}/${d.getMonth() + 1}`
       counts[key] = 0
     }
-    reservations.forEach((r) => {
+    filteredByDate.forEach((r) => {
       if (r.date) {
         const parts = r.date.split('-')
         if (parts.length === 3) {
@@ -274,7 +301,7 @@ export default function AdminPanel({
       }
     })
     return Object.entries(counts)
-  }, [reservations])
+  }, [filteredByDate])
 
   const maxDailyCount = Math.max(...dailyCounts.map(([, c]) => c), 1)
 
@@ -528,10 +555,21 @@ export default function AdminPanel({
                             </div>
                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/50">
                               <span>🐾 {res.petName}</span>
-                              <span>📞 {res.phone}</span>
+                              <button onClick={() => viewHistory(res.phone)} className="hover:text-primary transition-colors flex items-center gap-1" title="Ver historial">
+                                📞 {res.phone}
+                              </button>
                               <span>📋 {res.service}</span>
                               <span>📅 {res.date}</span>
                               <span>⏰ {res.time}</span>
+                              <button
+                                onClick={() => handlePaymentToggle(res.id, res.paymentStatus)}
+                                className={`text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-all ${
+                                  res.paymentStatus === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                                }`}
+                                title={res.paymentStatus === 'paid' ? 'Pagado' : 'Pendiente de pago'}
+                              >
+                                {res.paymentStatus === 'paid' ? '✓ Pagado' : '⏳ Pendiente'}
+                              </button>
                             </div>
                             {res.notes && (
                               <p className="text-xs text-white/30 mt-1">📝 {res.notes}</p>
@@ -756,27 +794,7 @@ export default function AdminPanel({
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="glass-card p-4">
-                      <h4 className="text-sm font-semibold text-white mb-3">⚡ Acciones rápidas</h4>
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => setShowQuickMsg(true)}
-                          className="w-full text-left text-xs px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
-                        >
-                          <FaPaperPlane size={10} /> Enviar mensaje rápido
-                        </button>
-                        <button
-                          onClick={() => { setShowGallery(true); setTab('reservas') }}
-                          className="w-full text-left text-xs px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
-                        >
-                          <FaImage size={10} /> Subir fotos a la galería
-                        </button>
-                        <button
-                          onClick={() => setTab('cupones')}
-                          className="w-full text-left text-xs px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
-                        >
-                          <FaTag size={10} /> Crear cupón de descuento
-                        </button>
-                      </div>
+                      <AdminBanner />
                     </div>
                     <div className="glass-card p-4">
                       <h4 className="text-sm font-semibold text-white mb-3">📊 Totales generales</h4>
@@ -798,18 +816,36 @@ export default function AdminPanel({
 
               {tab === 'estadisticas' && (
                 <div className="space-y-6">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-white/40">Desde</label>
+                      <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none focus:border-primary" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-white/40">Hasta</label>
+                      <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none focus:border-primary" />
+                    </div>
+                    {(dateFrom || dateTo) && (
+                      <button onClick={() => { setDateFrom(''); setDateTo('') }}
+                        className="text-xs text-white/30 hover:text-white transition-all">
+                        Limpiar filtro
+                      </button>
+                    )}
+                  </div>
                   <div className="grid sm:grid-cols-3 gap-4">
                     {[
-                      { label: 'Reservas totales', value: reservations.length, icon: FaCalendarAlt, color: 'from-primary to-amber-600' },
-                      { label: 'Completadas', value: completedCount, icon: FaCheck, color: 'from-green-500 to-emerald-600' },
-                      { label: 'Pendientes', value: pendingCount, icon: FaSpinner, color: 'from-secondary to-orange-500' },
-                      { label: 'En camino', value: enCaminoCount, icon: FaDog, color: 'from-blue-500 to-indigo-600' },
-                      { label: 'Paseando', value: paseandoCount, icon: FaWalking, color: 'from-purple-500 to-violet-600' },
+                      { label: 'Reservas totales', value: filteredByDate.length, icon: FaCalendarAlt, color: 'from-primary to-amber-600' },
+                      { label: 'Completadas', value: filteredByDate.filter((r) => r.status === 'completed').length, icon: FaCheck, color: 'from-green-500 to-emerald-600' },
+                      { label: 'Pendientes', value: filteredByDate.filter((r) => r.status === 'pending' || !r.status).length, icon: FaSpinner, color: 'from-secondary to-orange-500' },
+                      { label: 'En camino', value: filteredByDate.filter((r) => r.status === 'en_camino').length, icon: FaDog, color: 'from-blue-500 to-indigo-600' },
+                      { label: 'Paseando', value: filteredByDate.filter((r) => r.status === 'paseando').length, icon: FaWalking, color: 'from-purple-500 to-violet-600' },
                       { label: 'Reseñas', value: reviews.length, icon: FaStar, color: 'from-pink-500 to-rose-600' },
                       { label: 'Calificación', value: avgRating, icon: FaStar, color: 'from-yellow-500 to-amber-600' },
-                      { label: 'Perros', value: new Set(reservations.map((r) => r.petName)).size, icon: FaDog, color: 'from-cyan-500 to-blue-600' },
-                      { label: '💰 Ingresos cobrados', value: `$${totalRevenue.toLocaleString()}`, icon: FaChartBar, color: 'from-emerald-500 to-green-600' },
-                      { label: '⏳ Por cobrar', value: `$${pendingRevenue.toLocaleString()}`, icon: FaChartBar, color: 'from-amber-500 to-orange-600' },
+                      { label: 'Perros', value: new Set(filteredByDate.map((r) => r.petName)).size, icon: FaDog, color: 'from-cyan-500 to-blue-600' },
+                      { label: '💰 Ingresos cobrados', value: `$${filteredByDate.filter((r) => r.status === 'completed').reduce((sum, r) => sum + getServicePrice(r.service), 0).toLocaleString()}`, icon: FaChartBar, color: 'from-emerald-500 to-green-600' },
+                      { label: '⏳ Por cobrar', value: `$${filteredByDate.filter((r) => r.status === 'pending' || !r.status).reduce((sum, r) => sum + getServicePrice(r.service), 0).toLocaleString()}`, icon: FaChartBar, color: 'from-amber-500 to-orange-600' },
                     ].map((stat) => {
                       const Icon = stat.icon
                       return (
@@ -888,6 +924,61 @@ export default function AdminPanel({
         reservation={editingReservation}
         key={editingReservation?.id || 'none'}
       />
+
+      <AnimatePresence>
+        {historyPhone && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setHistoryPhone('')}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-white/5">
+                <h3 className="text-lg font-bold text-white">📋 Historial — {historyPhone}</h3>
+                <button onClick={() => setHistoryPhone('')} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-all">
+                  <FaTimes size={12} />
+                </button>
+              </div>
+              <div className="p-5 space-y-3 max-h-[60vh] overflow-y-auto">
+                {historyReservations.length === 0 ? (
+                  <p className="text-center text-white/30 py-8 text-sm">Sin historial</p>
+                ) : (
+                  historyReservations.map((r) => (
+                    <div key={r.id} className="glass p-3 rounded-xl">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-semibold text-white">{r.petName}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                          r.status === 'completed' ? 'bg-green-500/20 text-green-400' : r.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 'bg-secondary/20 text-secondary'
+                        }`}>
+                          {r.status === 'completed' ? 'Completada' : r.status === 'cancelled' ? 'Cancelada' : 'Pendiente'}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/50">
+                        <span>📋 {r.service}</span>
+                        <span>📅 {r.date}</span>
+                        <span>⏰ {r.time}</span>
+                        {r.paymentStatus && (
+                          <span className={r.paymentStatus === 'paid' ? 'text-green-400' : 'text-yellow-400'}>
+                            {r.paymentStatus === 'paid' ? '✓ Pagado' : '⏳ Pendiente'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   )
 }

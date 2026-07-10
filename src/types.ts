@@ -14,4 +14,5 @@ export interface Reservation {
   history?: { status: string; timestamp: string }[]
   createdAt?: { seconds: number; nanoseconds: number }
   completedAt?: { seconds: number; nanoseconds: number } | string
+  paymentStatus?: 'pending' | 'paid'
 }
