@@ -542,8 +542,21 @@ export default function AdminPanel({
                   </div>
 
                   {loading ? (
-                    <div className="flex items-center justify-center py-20">
-                      <FaSpinner className="animate-spin text-primary text-2xl" />
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="glass p-4 rounded-xl animate-pulse">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="h-4 w-28 bg-white/5 rounded" />
+                            <div className="h-4 w-16 bg-white/5 rounded-full" />
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            <div className="h-3 w-20 bg-white/5 rounded" />
+                            <div className="h-3 w-28 bg-white/5 rounded" />
+                            <div className="h-3 w-24 bg-white/5 rounded" />
+                            <div className="h-3 w-16 bg-white/5 rounded" />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : filteredReservations.length === 0 ? (
                     <div className="text-center py-20 text-white/30">
