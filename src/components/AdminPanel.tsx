@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db } from '@/firebase/config'
 import {
@@ -35,14 +35,17 @@ import {
   FaWalking,
   FaTag,
   FaHome,
+  FaDollarSign,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
+import { usePrices } from '@/context/PricesContext'
 import EditReservationModal from './EditReservationModal'
 import CalendarView from './CalendarView'
 import { getMessagingInstance } from '@/firebase/config'
 import AdminGallery from './AdminGallery'
 import AdminCoupons from './AdminCoupons'
 import AdminBanner from './AdminBanner'
+import AdminPrices from './AdminPrices'
 import type { Reservation } from '@/types'
 
 
@@ -56,7 +59,7 @@ interface AdminReview {
   petName?: string
 }
 
-type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones' | 'resumen'
+type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones' | 'resumen' | 'precios'
 
 export default function AdminPanel({
   isOpen,
@@ -86,6 +89,7 @@ export default function AdminPanel({
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const prevCount = useRef(0)
+  const { prices } = usePrices()
 
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) return
@@ -290,17 +294,21 @@ export default function AdminPanel({
     })
   }, [reservations, dateFrom, dateTo])
 
+  const getEffectivePrice = useCallback((serviceName: string) => {
+    return prices[serviceName] ?? getServicePrice(serviceName)
+  }, [prices])
+
   const totalRevenue = useMemo(() => {
     return filteredByDate
       .filter((r) => r.status === 'completed')
-      .reduce((sum, r) => sum + getServicePrice(r.service), 0)
-  }, [filteredByDate])
+      .reduce((sum, r) => sum + getEffectivePrice(r.service), 0)
+  }, [filteredByDate, getEffectivePrice])
 
   const pendingRevenue = useMemo(() => {
     return filteredByDate
       .filter((r) => r.status === 'pending' || !r.status)
-      .reduce((sum, r) => sum + getServicePrice(r.service), 0)
-  }, [filteredByDate])
+      .reduce((sum, r) => sum + getEffectivePrice(r.service), 0)
+  }, [filteredByDate, getEffectivePrice])
 
   const serviceCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -482,6 +490,7 @@ export default function AdminPanel({
                 { id: 'resenas' as Tab, label: 'Reseñas', icon: FaStar },
                 { id: 'estadisticas' as Tab, label: 'Estadísticas', icon: FaChartBar },
                 { id: 'cupones' as Tab, label: 'Cupones', icon: FaTag },
+                { id: 'precios' as Tab, label: 'Precios', icon: FaDollarSign },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -854,6 +863,9 @@ export default function AdminPanel({
               {tab === 'cupones' && (
                 <AdminCoupons />
               )}
+              {tab === 'precios' && (
+                <AdminPrices />
+              )}
 
               {tab === 'estadisticas' && (
                 <div className="space-y-6">
@@ -885,8 +897,8 @@ export default function AdminPanel({
                       { label: 'Reseñas', value: reviews.length, icon: FaStar, color: 'from-pink-500 to-rose-600' },
                       { label: 'Calificación', value: avgRating, icon: FaStar, color: 'from-yellow-500 to-amber-600' },
                       { label: 'Perros', value: new Set(filteredByDate.map((r) => r.petName)).size, icon: FaDog, color: 'from-cyan-500 to-blue-600' },
-                      { label: '💰 Ingresos cobrados', value: `$${filteredByDate.filter((r) => r.status === 'completed').reduce((sum, r) => sum + getServicePrice(r.service), 0).toLocaleString()}`, icon: FaChartBar, color: 'from-emerald-500 to-green-600' },
-                      { label: '⏳ Por cobrar', value: `$${filteredByDate.filter((r) => r.status === 'pending' || !r.status).reduce((sum, r) => sum + getServicePrice(r.service), 0).toLocaleString()}`, icon: FaChartBar, color: 'from-amber-500 to-orange-600' },
+                      { label: '💰 Ingresos cobrados', value: `$${filteredByDate.filter((r) => r.status === 'completed').reduce((sum, r) => sum + getEffectivePrice(r.service), 0).toLocaleString()}`, icon: FaChartBar, color: 'from-emerald-500 to-green-600' },
+                      { label: '⏳ Por cobrar', value: `$${filteredByDate.filter((r) => r.status === 'pending' || !r.status).reduce((sum, r) => sum + getEffectivePrice(r.service), 0).toLocaleString()}`, icon: FaChartBar, color: 'from-amber-500 to-orange-600' },
                     ].map((stat) => {
                       const Icon = stat.icon
                       return (

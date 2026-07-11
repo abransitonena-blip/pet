@@ -14,6 +14,7 @@ import {
   FaUsers,
 } from 'react-icons/fa'
 
+import { usePrices } from '@/context/PricesContext'
 import { SERVICES } from '@/lib/services'
 
 const serviceMeta = [
@@ -26,15 +27,16 @@ const serviceMeta = [
   { icon: FaSun, title: 'Paquete Semanal', description: '6 paseos de lunes a sábado, tú eliges el horario cada día. Precio especial por paquete con ahorro garantizado.', duration: '6 paseos', popular: true },
 ]
 
-const services = serviceMeta.map((meta, i) => ({
-  ...meta,
-  price: `$${SERVICES[i]?.price.toLocaleString() || '0'}`,
-  highlights: SERVICES[i]?.highlights || [],
-}))
-
 export default function Services() {
+  const { prices } = usePrices()
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
+
+  const services = serviceMeta.map((meta, i) => ({
+    ...meta,
+    price: `$${(prices[SERVICES[i]?.name] || SERVICES[i]?.price || 0).toLocaleString()}`,
+    highlights: SERVICES[i]?.highlights || [],
+  }))
 
   return (
     <section id="servicios" className="relative py-24 sm:py-32" ref={ref}>

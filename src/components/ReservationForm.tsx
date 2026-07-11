@@ -6,6 +6,7 @@ import { db } from '@/firebase/config'
 import { collection, addDoc, serverTimestamp, getDocs, query, where, limit } from 'firebase/firestore'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { SERVICE_NAMES, getServicePrice } from '@/lib/services'
+import { usePrices } from '@/context/PricesContext'
 import AvailabilityCalendar from './AvailabilityCalendar'
 import { showPushNotification } from './PWARegister'
 import {
@@ -38,6 +39,7 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
   })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const { prices } = usePrices()
   const [couponStatus, setCouponStatus] = useState<{ valid: boolean; msg: string; discount?: number; type?: 'percentage' | 'fixed' } | null>(null)
   const [checkingCoupon, setCheckingCoupon] = useState(false)
 
@@ -79,7 +81,7 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
     e.preventDefault()
     setSending(true)
 
-    const basePrice = getServicePrice(form.service)
+    const basePrice = prices[form.service] ?? getServicePrice(form.service)
     let discountAmount = 0
     if (couponStatus?.valid && couponStatus.discount) {
       discountAmount = couponStatus.type === 'percentage' ? Math.round(basePrice * couponStatus.discount / 100) : couponStatus.discount
