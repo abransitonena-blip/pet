@@ -119,6 +119,25 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
     window.open(waUrl, '_blank')
 
     setSending(false)
+    setTimeout(() => {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const notes = [523.25, 659.25, 783.99]
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.connect(gain)
+          gain.connect(ctx.destination)
+          osc.frequency.value = freq
+          osc.type = 'sine'
+          gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12)
+          gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + i * 0.12 + 0.04)
+          gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.12 + 0.3)
+          osc.start(ctx.currentTime + i * 0.12)
+          osc.stop(ctx.currentTime + i * 0.12 + 0.3)
+        })
+      } catch {}
+    }, 100)
     setSent(true)
     setCouponStatus(null)
     setForm({
