@@ -285,7 +285,24 @@ export default function AdminPanel({
     URL.revokeObjectURL(url)
   }
 
-  const filteredByDate = useMemo(() => {
+  const filteredByDate
+  const exportJSON = () => {
+    const data = {
+      exportedAt: new Date().toISOString(),
+      totalReservations: reservations.length,
+      totalReviews: reviews.length,
+      reservations,
+      reviews,
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "respaldo-paseos-quebrada-" + new Date().toISOString().split("T")[0] + ".json"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+ = useMemo(() => {
     if (!dateFrom && !dateTo) return reservations
     return reservations.filter((r) => {
       if (dateFrom && r.date < dateFrom) return false
