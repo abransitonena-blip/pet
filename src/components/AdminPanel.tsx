@@ -163,8 +163,6 @@ export default function AdminPanel({
         } catch {}
 
         try {
-        const newest = data[0]
-        try {
           new Notification('🐾 Nueva reserva recibida!', {
             body: `${newest.name} agendó "${newest.service}" para ${newest.petName}`,
             icon: '/icons/icon-192.svg',
