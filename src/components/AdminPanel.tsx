@@ -36,6 +36,7 @@ import {
   FaTag,
   FaHome,
   FaDollarSign,
+  FaCog,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
@@ -46,6 +47,7 @@ import AdminGallery from './AdminGallery'
 import AdminCoupons from './AdminCoupons'
 import AdminBanner from './AdminBanner'
 import AdminPrices from './AdminPrices'
+import AdminConfig from './AdminConfig'
 import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
 
@@ -60,7 +62,7 @@ interface AdminReview {
   petName?: string
 }
 
-type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones' | 'resumen' | 'precios'
+type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones' | 'resumen' | 'precios' | 'config'
 
 export default function AdminPanel({
   isOpen,
@@ -553,6 +555,7 @@ export default function AdminPanel({
                 { id: 'estadisticas' as Tab, label: 'Estadísticas', icon: FaChartBar },
                 { id: 'cupones' as Tab, label: 'Cupones', icon: FaTag },
                 { id: 'precios' as Tab, label: 'Precios', icon: FaDollarSign },
+                { id: 'config' as Tab, label: 'Config', icon: FaCog },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -927,6 +930,9 @@ export default function AdminPanel({
               )}
               {tab === 'precios' && (
                 <AdminPrices />
+              )}
+              {tab === 'config' && (
+                <AdminConfig />
               )}
 
               {tab === 'estadisticas' && (
