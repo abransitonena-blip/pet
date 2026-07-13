@@ -84,6 +84,7 @@ export default function AdminPanel({
   const [quickMsgInput, setQuickMsgInput] = useState('')
   const [showQuickMsg, setShowQuickMsg] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
+    const [confirmDelete, setConfirmDelete] = useState<{id: string; col: "reservations" | "reviews"} | null>(null)
   const [historyPhone, setHistoryPhone] = useState('')
   const [historyReservations, setHistoryReservations] = useState<Reservation[]>([])
   const [dateFrom, setDateFrom] = useState('')
@@ -199,12 +200,19 @@ export default function AdminPanel({
     }
   }, [isOpen])
 
-  const handleDelete = async (id: string, col: 'reservations' | 'reviews') => {
-    try {
-      await deleteDoc(doc(db, col, id))
+  const handleDelete = async (id: string, col: "reservations" | "reviews") => {
+    setConfirmDelete({ id, col })(doc(db, col, id))
     } catch {}
   }
 
+  
+  const executeDelete = async () => {
+    if (!confirmDelete) return
+    try {
+      await deleteDoc(doc(db, confirmDelete.col, confirmDelete.id))
+      setConfirmDelete(null)
+    } catch {}
+  }
   const handleComplete = async (id: string) => {
     try {
       await updateDoc(doc(db, 'reservations', id), { status: 'completed', completedAt: serverTimestamp() })
@@ -212,7 +220,12 @@ export default function AdminPanel({
   }
 
   const handlePaymentToggle = async (id: string, current: string | undefined) => {
-    await updateDoc(doc(db, 'reservations', id), { paymentStatus: current === 'paid' ? 'pending' : 'paid' })
+    const newStatus = current === "paid" ? "pending" : "paid"
+    setReservations((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, paymentStatus: newStatus } : r))
+    )
+    try {
+      await updateDoc(doc(db, 'reservations', id), { paymentStatus: current === 'paid' ? 'pending' : 'paid' })
   }
 
   const viewHistory = async (phone: string) => {
@@ -996,7 +1009,47 @@ export default function AdminPanel({
         key={editingReservation?.id || 'none'}
       />
 
+
       <AnimatePresence>
+        {confirmDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setConfirmDelete(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl shadow-red-500/10"
+            >
+              <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                <FaTrash className="text-red-400" size={18} />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Eliminar reserva</h3>
+              <p className="text-sm text-white/50 mb-6">Esta acci\u00f3n no se puede deshacer. \u00bfEst\u00e1s seguro?</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="flex-1 py-2.5 rounded-xl text-sm text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={executeDelete}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-red-500 to-red-700 text-white hover:opacity-90 transition-all"
+                >
+                  S\u00ed, eliminar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+            <AnimatePresence>
         {historyPhone && (
           <motion.div
             initial={{ opacity: 0 }}

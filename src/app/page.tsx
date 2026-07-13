@@ -27,6 +27,7 @@ import ReferralSection from '@/components/ReferralSection'
 import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import PWARegister from '@/components/PWARegister'
 import ContactSection from '@/components/ContactSection'
+import ScrollToTop from '@/components/ScrollToTop'
 import BannerDisplay from '@/components/BannerDisplay'
 
 function HomeContent() {

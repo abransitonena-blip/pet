@@ -289,6 +289,7 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
                   value={form.date}
                   onChange={handleChange}
                   required
+                  min={new Date().toISOString().split("T")[0]}
                   className="input-field"
                 />
               </div>

@@ -89,6 +89,7 @@ export default function EditReservationModal({
                   <label className="block text-xs text-white/40 mb-1">Fecha</label>
                   <input
                     type="date"
+                    min={new Date().toISOString().split("T")[0]}
                     value={form.date}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
