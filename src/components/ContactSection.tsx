@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
-import { useConfig } from '@/context/ConfigContext'
 import { FaWhatsapp, FaMapMarkerAlt, FaClock, FaPhone, FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa'
 
 export default function ContactSection() {
