@@ -71,22 +71,21 @@ function HomeContent() {
     }).catch(() => {})
   }, [user])
 
-  // Delayed check: 2s after mount, see if user is authed but has no client doc
+  // Delayed check: 2s after user is set, see if authed but has no client doc
   useEffect(() => {
+    if (!user) return
     const timer = setTimeout(async () => {
-      const u = auth.currentUser
-      if (!u) return
       try {
-        const snap = await getDoc(doc(db, 'clients', u.uid))
+        const snap = await getDoc(doc(db, 'clients', user.uid))
         if (!snap.exists() && localStorage.getItem('pq_google_pending')) {
           localStorage.removeItem('pq_google_pending')
-          setPendingGoogleUser(u)
+          setPendingGoogleUser(user)
           setShowClientAuth(true)
         }
       } catch {}
     }, 2000)
     return () => clearTimeout(timer)
-  }, [])
+  }, [user])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
