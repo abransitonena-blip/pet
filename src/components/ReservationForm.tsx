@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { db } from '@/firebase/config'
 import { collection, addDoc, serverTimestamp, getDocs, query, where, limit } from 'firebase/firestore'
@@ -40,6 +40,10 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const { prices } = usePrices()
+  
+  const [honeypot, setHoneypot] = useState("")
+  const lastSubmit = useRef(0)
+  const [rateError, setRateError] = useState("")
   const [couponStatus, setCouponStatus] = useState<{ valid: boolean; msg: string; discount?: number; type?: 'percentage' | 'fixed' } | null>(null)
   const [checkingCoupon, setCheckingCoupon] = useState(false)
 
@@ -80,6 +84,14 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSending(true)
+    if (honeypot) return
+    if (Date.now() - lastSubmit.current < 30000) {
+      setRateError("Espera un momento antes de enviar otra reserva")
+      setSending(false)
+      return
+    }
+    setRateError("")
+    lastSubmit.current = Date.now()
 
     const basePrice = prices[form.service] ?? getServicePrice(form.service)
     let discountAmount = 0
@@ -155,6 +167,7 @@ export default function ReservationForm({ onPhoneChange }: { onPhoneChange?: (ph
     })
 
     setTimeout(() => setSent(false), 5000)
+    setRateError("")
   }
 
   return (

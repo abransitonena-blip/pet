@@ -7,6 +7,7 @@ import { db } from '@/firebase/config'
 import { FaTimes } from 'react-icons/fa'
 import type { Reservation } from '@/types'
 import { SERVICE_NAMES } from '@/lib/services'
+import { logChange } from '@/lib/audit'
 
 export default function EditReservationModal({
   isOpen,
@@ -34,11 +35,20 @@ export default function EditReservationModal({
     if (!reservation) return
     setSaving(true)
     try {
+      const changes: Record<string, any> = {}
+      Object.keys(form).forEach((key) => {
+        if ((form as any)[key] !== (reservation as any)[key]) {
+          changes[key] = { from: (reservation as any)[key], to: (form as any)[key] }
+        }
+      })
       const updates: any = { ...form }
-      if (form.status === 'completed' && reservation.status !== 'completed') {
+      if (form.status === "completed" && reservation.status !== "completed") {
         updates.completedAt = serverTimestamp()
       }
-      await updateDoc(doc(db, 'reservations', reservation.id), updates)
+      await updateDoc(doc(db, "reservations", reservation.id), updates)
+      if (Object.keys(changes).length > 0) {
+        logChange("edit", reservation.id, changes)
+      }
       onClose()
     } catch {}
     setSaving(false)

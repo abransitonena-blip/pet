@@ -46,6 +46,7 @@ import AdminGallery from './AdminGallery'
 import AdminCoupons from './AdminCoupons'
 import AdminBanner from './AdminBanner'
 import AdminPrices from './AdminPrices'
+import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
 
 
@@ -90,6 +91,32 @@ export default function AdminPanel({
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const prevCount = useRef(0)
+  const IDLE_TIMEOUT = 30 * 60 * 1000
+  const lastActivity = useRef(Date.now())
+
+  useEffect(() => {
+    const resetTimer = () => { lastActivity.current = Date.now() }
+    window.addEventListener("mousemove", resetTimer, { passive: true })
+    window.addEventListener("keydown", resetTimer, { passive: true })
+    window.addEventListener("touchstart", resetTimer, { passive: true })
+    window.addEventListener("scroll", resetTimer, { passive: true })
+    return () => {
+      window.removeEventListener("mousemove", resetTimer)
+      window.removeEventListener("keydown", resetTimer)
+      window.removeEventListener("touchstart", resetTimer)
+      window.removeEventListener("scroll", resetTimer)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivity.current > IDLE_TIMEOUT && onLogout) {
+        onLogout()
+      }
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [isOpen, onLogout])
   const { prices } = usePrices()
 
   const requestNotificationPermission = async () => {
@@ -208,6 +235,7 @@ export default function AdminPanel({
   const executeDelete = async () => {
     if (!confirmDelete) return
     try {
+      logChange("delete", confirmDelete.id, { col: confirmDelete.col })
       await deleteDoc(doc(db, confirmDelete.col, confirmDelete.id))
       setConfirmDelete(null)
     } catch {}
@@ -224,6 +252,7 @@ export default function AdminPanel({
       prev.map((r) => (r.id === id ? { ...r, paymentStatus: newStatus } : r))
     )
     try {
+      logChange("payment_toggle", id, { from: current, to: newStatus })
       await updateDoc(doc(db, "reservations", id), { paymentStatus: newStatus })
     } catch {
       setReservations((prev) =>
