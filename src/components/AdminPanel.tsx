@@ -297,7 +297,6 @@ export default function AdminPanel({
     URL.revokeObjectURL(url)
   }
 
-  const filteredByDate
   const exportJSON = () => {
     const data = {
       exportedAt: new Date().toISOString(),
@@ -314,7 +313,7 @@ export default function AdminPanel({
     a.click()
     URL.revokeObjectURL(url)
   }
- = useMemo(() => {
+  const filteredByDate = useMemo(() => {
     if (!dateFrom && !dateTo) return reservations
     return reservations.filter((r) => {
       if (dateFrom && r.date < dateFrom) return false
