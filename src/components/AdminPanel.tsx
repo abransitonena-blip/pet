@@ -201,8 +201,7 @@ export default function AdminPanel({
   }, [isOpen])
 
   const handleDelete = async (id: string, col: "reservations" | "reviews") => {
-    setConfirmDelete({ id, col })(doc(db, col, id))
-    } catch {}
+    setConfirmDelete({ id, col })
   }
 
   
