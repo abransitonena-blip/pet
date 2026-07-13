@@ -43,6 +43,7 @@ export const DEFAULT_CONFIG: SiteConfig = {
     { title: 'Descanso', text: 'Después del paseo, deja que tu perro descanse en un lugar tranquilo.', icon: '😴' },
     { title: 'Recompensa', text: 'Un premio después del paseo refuerza su buena conducta.', icon: '🦴' },
   ],
+  faq: [],
   termsContent: `TÉRMINOS Y CONDICIONES
 
 1. SERVICIOS
