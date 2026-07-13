@@ -52,6 +52,23 @@
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(230, 126, 34, 0.5);
   }
+
+  @media (max-width: 640px) {
+    .section-title {
+      font-size: 1.75rem !important;
+      line-height: 1.2 !important;
+    }
+    .section-subtitle {
+      font-size: 0.875rem !important;
+    }
+    .glass-card {
+      padding: 1rem !important;
+    }
+    .btn-primary {
+      padding: 0.625rem 1.25rem !important;
+      font-size: 0.8125rem !important;
+    }
+  }
 }
 
 @layer base {

@@ -65,7 +65,8 @@ function HomeContent() {
       e.preventDefault()
       const el = document.querySelector(href)
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        const y = el.getBoundingClientRect().top + window.scrollY - 90
+        window.scrollTo({ top: y, behavior: 'smooth' })
       }
     }
     document.addEventListener('click', handleClick)

@@ -97,7 +97,7 @@ export default function Gallery() {
           </p>
         </motion.div>
 
-        <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
+        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
           {images.map((img, i) => (
             <motion.div
               key={img.url}

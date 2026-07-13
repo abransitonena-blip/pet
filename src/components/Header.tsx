@@ -158,15 +158,15 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-72 max-w-[85vw] md:hidden z-50 overflow-y-auto"
+              className="fixed inset-y-0 right-0 w-[85vw] max-w-sm md:hidden z-50 overflow-y-auto"
               style={{
                 background: 'var(--bg-card)',
                 borderLeft: '1px solid var(--border)',
                 boxShadow: '-8px 0 32px rgba(0,0,0,0.3)',
               }}
             >
-              <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border)' }}>
-                <span className="font-bold gradient-text text-lg">Menú</span>
+              <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+                <span className="font-bold gradient-text text-base">Menú</span>
                 <button
                   onClick={closeMobile}
                   className="w-8 h-8 rounded-full flex items-center justify-center touch-action-manipulation"
@@ -175,13 +175,13 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
                   <FaTimes size={14} />
                 </button>
               </div>
-              <div className="p-5 flex flex-col gap-2">
+              <div className="p-4 flex flex-col gap-1">
                 {navLinks.map((link) => (
                   <a
                     key={link.href}
                     href={link.href}
                     onClick={closeMobile}
-                    className="text-base py-3 px-4 rounded-xl transition-all touch-action-manipulation"
+                    className="text-base py-3 px-4 rounded-xl transition-all touch-action-manipulation active:scale-[0.98]"
                     style={{ color: 'var(--text-secondary)' }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'var(--glass-bg)'
@@ -195,11 +195,11 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
                     {link.label}
                   </a>
                 ))}
-                <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
                   <a
                     href="#reservar"
                     onClick={closeMobile}
-                    className="btn-primary text-center block text-sm"
+                    className="btn-primary text-center block text-sm py-3"
                   >
                     Reservar paseo
                   </a>

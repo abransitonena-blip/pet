@@ -450,6 +450,7 @@ export default function AdminPanel({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
             className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden shadow-2xl shadow-primary/10 touch-action-manipulation"
             style={{ willChange: 'transform, opacity' }}
           >
