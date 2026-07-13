@@ -37,6 +37,7 @@ import {
   FaHome,
   FaDollarSign,
   FaCog,
+  FaClock,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
