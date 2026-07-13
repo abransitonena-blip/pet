@@ -30,6 +30,7 @@ import PWARegister from '@/components/PWARegister'
 import ContactSection from '@/components/ContactSection'
 import ScrollToTop from '@/components/ScrollToTop'
 import BannerDisplay from '@/components/BannerDisplay'
+import ClientPanel from '@/components/ClientPanel'
 
 function HomeContent() {
   const [showAdmin, setShowAdmin] = useState(false)
@@ -149,11 +150,10 @@ function HomeContent() {
               setTimeout(() => document.getElementById('reservar')?.scrollIntoView({ behavior: 'smooth' }), 300)
             }} />
             <WalkReminder />
-            <div>
+            <div className="flex flex-col gap-4">
+              <ClientPanel phone={userPhone} />
               <LoyaltyProgram phone={userPhone} />
-              <div className="mt-4">
-                <ReferralSection phone={userPhone} />
-              </div>
+              <ReferralSection phone={userPhone} />
             </div>
           </div>
         </div>
