@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaDog, FaSun, FaMoon, FaTimes } from 'react-icons/fa'
+import { FaDog, FaSun, FaMoon, FaTimes, FaUser } from 'react-icons/fa'
 import { useTheme } from '@/context/ThemeContext'
 
 const navLinks = [
@@ -14,7 +14,7 @@ const navLinks = [
   { label: 'Reservar', href: '#reservar' },
 ]
 
-export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void }) {
+export default function Header({ onAdminTrigger, onClientLogin, clientLoggedIn }: { onAdminTrigger: () => void; onClientLogin: () => void; clientLoggedIn: boolean }) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [logoClickCount, setLogoClickCount] = useState(0)
@@ -100,6 +100,19 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
             style={{ color: 'var(--text-secondary)' }}
           >
             {theme === 'dark' ? <FaSun size={16} /> : <FaMoon size={16} />}
+          </button>
+
+          <button
+            onClick={onClientLogin}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all touch-action-manipulation hidden sm:flex"
+            style={{
+              background: clientLoggedIn ? 'var(--glass-bg)' : 'var(--glass-bg)',
+              color: clientLoggedIn ? 'var(--text-primary)' : 'var(--text-secondary)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <FaUser size={10} />
+            {clientLoggedIn ? 'Mi cuenta' : 'Iniciar sesión'}
           </button>
 
           <motion.a
@@ -196,13 +209,22 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
                   </a>
                 ))}
                 <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <a
-                    href="#reservar"
-                    onClick={closeMobile}
-                    className="btn-primary text-center block text-sm py-3"
+                  <button
+                    onClick={() => { closeMobile(); onClientLogin(); }}
+                    className="w-full text-sm py-3 px-4 rounded-xl transition-all text-left touch-action-manipulation"
+                    style={{ color: clientLoggedIn ? 'var(--text-primary)' : 'var(--text-secondary)' }}
                   >
-                    Reservar paseo
-                  </a>
+                    {clientLoggedIn ? 'Mi cuenta' : 'Iniciar sesión'}
+                  </button>
+                  <div className="mt-1">
+                    <a
+                      href="#reservar"
+                      onClick={closeMobile}
+                      className="btn-primary text-center block text-sm py-3"
+                    >
+                      Reservar paseo
+                    </a>
+                  </div>
                 </div>
               </div>
             </motion.div>

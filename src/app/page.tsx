@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth'
-import { auth } from '@/firebase/config'
+import { auth, db } from '@/firebase/config'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { useEscapeKey } from '@/lib/useEscapeKey'
+import { doc, getDoc } from 'firebase/firestore'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import HowItWorks from '@/components/HowItWorks'
@@ -30,6 +31,8 @@ import PWARegister from '@/components/PWARegister'
 import ContactSection from '@/components/ContactSection'
 import ScrollToTop from '@/components/ScrollToTop'
 import BannerDisplay from '@/components/BannerDisplay'
+import ClientAuth from '@/components/ClientAuth'
+import ClientDashboard from '@/components/ClientDashboard'
 import ClientPanel from '@/components/ClientPanel'
 
 function HomeContent() {
@@ -42,6 +45,8 @@ function HomeContent() {
   const [showTerms, setShowTerms] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [userPhone, setUserPhone] = useState('')
+  const [clientUid, setClientUid] = useState<string | null>(null)
+  const [showClientAuth, setShowClientAuth] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 800)
@@ -55,6 +60,13 @@ function HomeContent() {
     })
     return unsub
   }, [])
+
+  useEffect(() => {
+    if (!user) { setClientUid(null); return }
+    getDoc(doc(db, 'clients', user.uid)).then((snap) => {
+      if (snap.exists()) setClientUid(user.uid)
+    })
+  }, [user])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -98,6 +110,10 @@ function HomeContent() {
     await signOut(auth)
     setShowAdmin(false)
   }
+  const handleClientLogout = async () => {
+    await signOut(auth)
+    setClientUid(null)
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleLogin()
@@ -121,7 +137,7 @@ function HomeContent() {
       {!loaded && <Preloader />}
       <main className="relative min-h-screen">
         <FloatingParticles />
-        <Header onAdminTrigger={triggerAdmin} />
+        <Header onAdminTrigger={triggerAdmin} onClientLogin={() => setShowClientAuth(true)} clientLoggedIn={!!clientUid} />
         <Hero />
         <HowItWorks />
         <Services />
@@ -151,7 +167,11 @@ function HomeContent() {
             }} />
             <WalkReminder />
             <div className="flex flex-col gap-4">
-              <ClientPanel phone={userPhone} />
+              {clientUid ? (
+                <ClientDashboard onLogout={handleClientLogout} />
+              ) : (
+                <ClientPanel phone={userPhone} />
+              )}
               <LoyaltyProgram phone={userPhone} />
               <ReferralSection phone={userPhone} />
             </div>
@@ -169,6 +189,11 @@ function HomeContent() {
           onLogout={handleLogout}
         />
         <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
+        <ClientAuth
+          isOpen={showClientAuth}
+          onClose={() => setShowClientAuth(false)}
+          onSuccess={(uid) => setClientUid(uid)}
+        />
       </main>
 
       {showLogin && !user && (
