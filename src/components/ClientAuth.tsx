@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { FaTimes, FaSpinner, FaUser, FaEnvelope, FaLock, FaDog, FaPhone } from 'react-icons/fa'
+import { FaTimes, FaSpinner, FaUser, FaEnvelope, FaLock, FaDog, FaPhone, FaGoogle } from 'react-icons/fa'
 
 export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess: (uid: string) => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -15,6 +15,9 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
   const [phone, setPhone] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [googleUser, setGoogleUser] = useState<any>(null)
+  const [needsPhone, setNeedsPhone] = useState(false)
 
   const reset = () => {
     setEmail('')
@@ -22,6 +25,54 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
     setName('')
     setPhone('')
     setError('')
+    setGoogleUser(null)
+    setNeedsPhone(false)
+  }
+
+  const handleGoogle = async () => {
+    setError('')
+    setGoogleLoading(true)
+    try {
+      const provider = new GoogleAuthProvider()
+      const cred = await signInWithPopup(auth, provider)
+      const user = cred.user
+      const snap = await getDoc(doc(db, 'clients', user.uid))
+
+      if (snap.exists()) {
+        onSuccess(user.uid)
+        onClose()
+      } else {
+        setGoogleUser(user)
+        setName(user.displayName || '')
+        setNeedsPhone(true)
+      }
+    } catch (e: any) {
+      if (e.code !== 'auth/popup-closed-by-user') {
+        setError('Error al iniciar con Google')
+      }
+    }
+    setGoogleLoading(false)
+  }
+
+  const finishGoogleSignup = async () => {
+    if (!phone.trim() || phone.trim().length < 10) {
+      setError('Ingresa un teléfono válido (mín 10 dígitos)')
+      return
+    }
+    setLoading(true)
+    try {
+      await setDoc(doc(db, 'clients', googleUser.uid), {
+        name: googleUser.displayName || '',
+        email: googleUser.email || '',
+        phone: phone.trim(),
+        createdAt: new Date().toISOString(),
+      })
+      onSuccess(googleUser.uid)
+      onClose()
+    } catch {
+      setError('Error al guardar tus datos')
+    }
+    setLoading(false)
   }
 
   const handleLogin = async () => {
@@ -85,6 +136,13 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
     setError('')
   }
 
+  const handleBack = () => {
+    setGoogleUser(null)
+    setNeedsPhone(false)
+    setPhone('')
+    setError('')
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -108,75 +166,113 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
               <div className="flex items-center gap-2">
                 <FaDog className="text-primary" size={18} />
                 <span className="text-sm font-bold gradient-text">
-                  {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
+                  {needsPhone ? 'Completa tu registro' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
                 </span>
               </div>
-              <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--glass-bg)' }}>
+              <button onClick={() => { if (needsPhone) signOut(auth); onClose(); }} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--glass-bg)' }}>
                 <FaTimes size={12} />
               </button>
             </div>
 
-            <div className="space-y-3">
-              {mode === 'register' && (
-                <>
-                  <div>
-                    <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Nombre</label>
-                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
-                      <FaUser className="text-white/20" size={12} />
-                      <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
-                        placeholder="Tu nombre" />
-                    </div>
+            {needsPhone ? (
+              <div className="space-y-3">
+                <p className="text-xs text-white/40">Solo falta tu WhatsApp para completar el registro</p>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>WhatsApp</label>
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
+                    <FaPhone className="text-white/20" size={12} />
+                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                      className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
+                      placeholder="5523053772" />
                   </div>
-                  <div>
-                    <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>WhatsApp</label>
-                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
-                      <FaPhone className="text-white/20" size={12} />
-                      <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                        className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
-                        placeholder="5523053772" />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <div>
-                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Correo electrónico</label>
-                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
-                  <FaEnvelope className="text-white/20" size={12} />
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
-                    placeholder="correo@ejemplo.com" />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Contraseña</label>
-                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
-                  <FaLock className="text-white/20" size={12} />
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
-                    placeholder="••••••••" />
-                </div>
-              </div>
-
-              {error && <p className="text-red-400 text-xs">{error}</p>}
-
-              <button
-                onClick={mode === 'login' ? handleLogin : handleRegister}
-                disabled={loading || !email.trim() || !password.trim()}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                {loading && <FaSpinner className="animate-spin" size={14} />}
-                {mode === 'login' ? 'Entrar' : 'Crear cuenta'}
-              </button>
-
-              <div className="text-center pt-2">
-                <button onClick={toggleMode} className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {mode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+                {error && <p className="text-red-400 text-xs">{error}</p>}
+                <button onClick={finishGoogleSignup} disabled={loading}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                >
+                  {loading && <FaSpinner className="animate-spin" size={14} />}
+                  Guardar y entrar
+                </button>
+                <button onClick={() => { signOut(auth); handleBack(); }} className="w-full text-xs py-1.5" style={{ color: 'var(--text-muted)' }}>
+                  Volver
                 </button>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-3">
+                <button onClick={handleGoogle} disabled={googleLoading}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                >
+                  {googleLoading ? <FaSpinner className="animate-spin" size={14} /> : <FaGoogle size={14} />}
+                  Continuar con Google
+                </button>
+
+                <div className="flex items-center gap-3 py-1">
+                  <span className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>o con correo</span>
+                  <span className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                </div>
+
+                {mode === 'register' && (
+                  <>
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Nombre</label>
+                      <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
+                        <FaUser className="text-white/20" size={12} />
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+                          className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
+                          placeholder="Tu nombre" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>WhatsApp</label>
+                      <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
+                        <FaPhone className="text-white/20" size={12} />
+                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                          className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
+                          placeholder="5523053772" />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Correo electrónico</label>
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
+                    <FaEnvelope className="text-white/20" size={12} />
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
+                      placeholder="correo@ejemplo.com" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Contraseña</label>
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
+                    <FaLock className="text-white/20" size={12} />
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
+                      placeholder="••••••••" />
+                  </div>
+                </div>
+
+                {error && <p className="text-red-400 text-xs">{error}</p>}
+
+                <button onClick={mode === 'login' ? handleLogin : handleRegister}
+                  disabled={loading || !email.trim() || !password.trim()}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                >
+                  {loading && <FaSpinner className="animate-spin" size={14} />}
+                  {mode === 'login' ? 'Entrar' : 'Crear cuenta'}
+                </button>
+
+                <div className="text-center pt-2">
+                  <button onClick={toggleMode} className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    {mode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}
