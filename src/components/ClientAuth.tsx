@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
-  GoogleAuthProvider, signInWithRedirect, signOut,
+  GoogleAuthProvider, signInWithPopup, signOut,
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
@@ -47,10 +47,10 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
     setGoogleLoading(true)
     try {
       const provider = new GoogleAuthProvider()
-      localStorage.setItem('pq_google_pending', '1')
-      await signInWithRedirect(auth, provider)
+      // localStorage.setItem('pq_google_pending', '1')
+      await signInWithPopup(auth, provider)
     } catch (e: any) {
-      localStorage.removeItem('pq_google_pending')
+      // localStorage.removeItem('pq_google_pending')
       setError('Error: ' + (e.message || 'intenta de nuevo'))
       setGoogleLoading(false)
     }

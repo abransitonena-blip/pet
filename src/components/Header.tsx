@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaDog, FaSun, FaMoon, FaTimes, FaUser } from 'react-icons/fa'
+import { FaDog, FaSun, FaMoon, FaUser } from 'react-icons/fa'
 import { useTheme } from '@/context/ThemeContext'
 
 const navLinks = [
@@ -26,14 +26,7 @@ export default function Header({ onAdminTrigger, onClientLogin, clientLoggedIn }
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => { document.body.style.overflow = '' }
-  }, [mobileOpen])
+
 
   const handleLogoClick = () => {
     const newCount = logoClickCount + 1
@@ -104,7 +97,7 @@ export default function Header({ onAdminTrigger, onClientLogin, clientLoggedIn }
 
           <button
             onClick={onClientLogin}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all touch-action-manipulation hidden sm:flex"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all touch-action-manipulation"
             style={{
               background: clientLoggedIn ? 'var(--glass-bg)' : 'var(--glass-bg)',
               color: clientLoggedIn ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -112,7 +105,7 @@ export default function Header({ onAdminTrigger, onClientLogin, clientLoggedIn }
             }}
           >
             <FaUser size={10} />
-            {clientLoggedIn ? 'Mi cuenta' : 'Iniciar sesión'}
+            <span className="hidden sm:inline">{clientLoggedIn ? 'Mi cuenta' : 'Iniciar sesión'}</span>
           </button>
 
           <motion.a
@@ -122,7 +115,7 @@ export default function Header({ onAdminTrigger, onClientLogin, clientLoggedIn }
             transition={{ delay: 0.4 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="btn-primary text-sm !py-2 !px-5 hidden sm:block"
+            className="btn-primary text-sm !py-2 !px-5"
           >
             Reservar paseo
           </motion.a>
@@ -155,80 +148,41 @@ export default function Header({ onAdminTrigger, onClientLogin, clientLoggedIn }
 
       <AnimatePresence>
         {mobileOpen && (
-          <>
-            <motion.div
-              key="mobile-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm md:hidden z-40"
-              onClick={closeMobile}
-            />
-            <motion.div
-              key="mobile-drawer"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 w-[85vw] max-w-sm md:hidden z-50 overflow-y-auto"
-              style={{
-                background: 'var(--bg-card)',
-                borderLeft: '1px solid var(--border)',
-                boxShadow: '-8px 0 32px rgba(0,0,0,0.3)',
-              }}
-            >
-              <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border)' }}>
-                <span className="font-bold gradient-text text-base">Menú</span>
-                <button
+          <motion.div
+            key="mobile-dropdown"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full left-0 right-0 md:hidden overflow-hidden"
+            style={{
+              background: 'var(--bg-card)',
+              borderBottom: '1px solid var(--border)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+          >
+            <div className="p-3 flex flex-wrap gap-1">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
                   onClick={closeMobile}
-                  className="w-8 h-8 rounded-full flex items-center justify-center touch-action-manipulation"
-                  style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}
+                  className="text-sm py-2 px-3 rounded-lg transition-all touch-action-manipulation"
+                  style={{ color: 'var(--text-secondary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--glass-bg)'
+                    e.currentTarget.style.color = 'var(--text-primary)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = 'var(--text-secondary)'
+                  }}
                 >
-                  <FaTimes size={14} />
-                </button>
-              </div>
-              <div className="p-4 flex flex-col gap-1">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={closeMobile}
-                    className="text-base py-3 px-4 rounded-xl transition-all touch-action-manipulation active:scale-[0.98]"
-                    style={{ color: 'var(--text-secondary)' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'var(--glass-bg)'
-                      e.currentTarget.style.color = 'var(--text-primary)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent'
-                      e.currentTarget.style.color = 'var(--text-secondary)'
-                    }}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-                <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <button
-                    onClick={() => { closeMobile(); onClientLogin(); }}
-                    className="w-full text-sm py-3 px-4 rounded-xl transition-all text-left touch-action-manipulation"
-                    style={{ color: clientLoggedIn ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                  >
-                    {clientLoggedIn ? 'Mi cuenta' : 'Iniciar sesión'}
-                  </button>
-                  <div className="mt-1">
-                    <a
-                      href="#reservar"
-                      onClick={closeMobile}
-                      className="btn-primary text-center block text-sm py-3"
-                    >
-                      Reservar paseo
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </>
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.header>

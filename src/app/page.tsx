@@ -63,28 +63,17 @@ function HomeContent() {
     return unsub
   }, [])
 
-  // Check client doc when user changes
+  // Check if user is signed in but has no client doc
   useEffect(() => {
     if (!user) return
     getDoc(doc(db, 'clients', user.uid)).then((snap) => {
-      if (snap.exists()) setClientUid(user.uid)
+      if (snap.exists()) {
+        setClientUid(user.uid)
+      } else {
+        setPendingGoogleUser(user)
+        setShowClientAuth(true)
+      }
     }).catch(() => {})
-  }, [user])
-
-  // Delayed check: 2s after user is set, see if authed but has no client doc
-  useEffect(() => {
-    if (!user) return
-    const timer = setTimeout(async () => {
-      try {
-        const snap = await getDoc(doc(db, 'clients', user.uid))
-        if (!snap.exists() && localStorage.getItem('pq_google_pending')) {
-          localStorage.removeItem('pq_google_pending')
-          setPendingGoogleUser(user)
-          setShowClientAuth(true)
-        }
-      } catch {}
-    }, 2000)
-    return () => clearTimeout(timer)
   }, [user])
 
   useEffect(() => {
