@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth'
 import { auth } from '@/firebase/config'
 import { ThemeProvider } from '@/context/ThemeContext'
+import { useEscapeKey } from '@/lib/useEscapeKey'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import HowItWorks from '@/components/HowItWorks'
@@ -42,7 +43,7 @@ function HomeContent() {
   const [userPhone, setUserPhone] = useState('')
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoaded(true), 2000)
+    const timer = setTimeout(() => setLoaded(true), 800)
     return () => clearTimeout(timer)
   }, [])
 
@@ -53,6 +54,25 @@ function HomeContent() {
     })
     return unsub
   }, [])
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const link = target.closest('a[href^="#"]')
+      if (!link) return
+      const href = (link as HTMLAnchorElement).getAttribute('href')
+      if (!href || href === '#') return
+      e.preventDefault()
+      const el = document.querySelector(href)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [])
+
+  useEscapeKey(() => setShowLogin(false), showLogin && !user)
 
   const handleLogin = async () => {
     setLoginError('')

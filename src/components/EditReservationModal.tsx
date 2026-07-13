@@ -8,6 +8,7 @@ import { FaTimes } from 'react-icons/fa'
 import type { Reservation } from '@/types'
 import { SERVICE_NAMES } from '@/lib/services'
 import { logChange } from '@/lib/audit'
+import { useEscapeKey } from '@/lib/useEscapeKey'
 
 export default function EditReservationModal({
   isOpen,
@@ -30,6 +31,7 @@ export default function EditReservationModal({
     status: reservation?.status || 'pending',
   })
   const [saving, setSaving] = useState(false)
+  useEscapeKey(onClose, isOpen)
 
   const handleSave = async () => {
     if (!reservation) return

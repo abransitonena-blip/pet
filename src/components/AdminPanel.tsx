@@ -49,6 +49,7 @@ import AdminBanner from './AdminBanner'
 import AdminPrices from './AdminPrices'
 import AdminConfig from './AdminConfig'
 import { logChange } from '@/lib/audit'
+import { useEscapeKey } from '@/lib/useEscapeKey'
 import type { Reservation } from '@/types'
 
 
@@ -95,11 +96,21 @@ export default function AdminPanel({
   const [dateTo, setDateTo] = useState('')
   const prevCount = useRef(0)
   const IDLE_TIMEOUT = 30 * 60 * 1000
+  const WARNING_TIME = 25 * 60 * 1000
   const lastActivity = useRef(Date.now())
   const tabsRef = useRef<HTMLDivElement>(null)
+  const [sessionWarning, setSessionWarning] = useState(false)
+
+  useEscapeKey(() => setConfirmDelete(null), !!confirmDelete)
+  useEscapeKey(() => setHistoryPhone(''), !!historyPhone)
+  useEscapeKey(() => setShowMobileSidebar(false), showMobileSidebar)
+  useEscapeKey(onClose, isOpen)
 
   useEffect(() => {
-    const resetTimer = () => { lastActivity.current = Date.now() }
+    const resetTimer = () => {
+      lastActivity.current = Date.now()
+      setSessionWarning(false)
+    }
     window.addEventListener("mousemove", resetTimer, { passive: true })
     window.addEventListener("keydown", resetTimer, { passive: true })
     window.addEventListener("touchstart", resetTimer, { passive: true })
@@ -115,7 +126,11 @@ export default function AdminPanel({
   useEffect(() => {
     if (!isOpen) return
     const interval = setInterval(() => {
-      if (Date.now() - lastActivity.current > IDLE_TIMEOUT && onLogout) {
+      const idle = Date.now() - lastActivity.current
+      if (idle > WARNING_TIME && idle <= IDLE_TIMEOUT) {
+        setSessionWarning(true)
+      }
+      if (idle > IDLE_TIMEOUT && onLogout) {
         onLogout()
       }
     }, 60000)
@@ -1227,6 +1242,40 @@ export default function AdminPanel({
                   ))
                 )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {sessionWarning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setSessionWarning(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl"
+            >
+              <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-4">
+                <FaClock className="text-secondary" size={20} />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">¿Sigues ahí?</h3>
+              <p className="text-sm text-white/50 mb-6">
+                Tu sesión está por expirar por inactividad. Mueve el mouse o toca la pantalla para continuar.
+              </p>
+              <button
+                onClick={() => setSessionWarning(false)}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all"
+              >
+                Seguir aquí
+              </button>
             </motion.div>
           </motion.div>
         )}
