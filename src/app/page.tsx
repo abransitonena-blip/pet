@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User, getRedirectResult } from 'firebase/auth'
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth'
 import { auth, db } from '@/firebase/config'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { useEscapeKey } from '@/lib/useEscapeKey'
@@ -63,24 +63,20 @@ function HomeContent() {
   }, [])
 
   useEffect(() => {
-    getRedirectResult(auth).then((result) => {
-      if (result?.user) {
-        getDoc(doc(db, 'clients', result.user.uid)).then((snap) => {
-          if (snap.exists()) {
-            setClientUid(result.user.uid)
-          } else {
-            setPendingGoogleUser(result.user)
-            setShowClientAuth(true)
-          }
-        })
-      }
-    }).catch(() => {})
-  }, [])
-
-  useEffect(() => {
     if (!user) { setClientUid(null); return }
+
     getDoc(doc(db, 'clients', user.uid)).then((snap) => {
-      if (snap.exists()) setClientUid(user.uid)
+      if (snap.exists()) {
+        setClientUid(user.uid)
+        return
+      }
+      // No client doc → check if they just came from Google
+      // sessionStorage flag is set by ClientAuth before redirect
+      if (typeof window !== 'undefined' && sessionStorage.getItem('pq_google_pending')) {
+        sessionStorage.removeItem('pq_google_pending')
+        setPendingGoogleUser(user)
+        setShowClientAuth(true)
+      }
     })
   }, [user])
 
