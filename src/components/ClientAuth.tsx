@@ -47,10 +47,10 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
     setGoogleLoading(true)
     try {
       const provider = new GoogleAuthProvider()
-      sessionStorage.setItem('pq_google_pending', '1')
+      localStorage.setItem('pq_google_pending', '1')
       await signInWithRedirect(auth, provider)
     } catch (e: any) {
-      sessionStorage.removeItem('pq_google_pending')
+      localStorage.removeItem('pq_google_pending')
       setError('Error: ' + (e.message || 'intenta de nuevo'))
       setGoogleLoading(false)
     }

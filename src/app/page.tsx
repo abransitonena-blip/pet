@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User, getRedirectResult } from 'firebase/auth'
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth'
 import { auth, db } from '@/firebase/config'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { useEscapeKey } from '@/lib/useEscapeKey'
@@ -54,22 +54,6 @@ function HomeContent() {
     return () => clearTimeout(timer)
   }, [])
 
-  // On mount, check for Google redirect result
-  useEffect(() => {
-    getRedirectResult(auth).then((result) => {
-      if (!result?.user) return
-      const uid = result.user.uid
-      getDoc(doc(db, 'clients', uid)).then((snap) => {
-        if (snap.exists()) {
-          setClientUid(uid)
-        } else {
-          setPendingGoogleUser(result.user)
-          setShowClientAuth(true)
-        }
-      })
-    }).catch(() => {})
-  }, [])
-
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u)
@@ -79,20 +63,30 @@ function HomeContent() {
     return unsub
   }, [])
 
-  // Check client doc when user changes, and handle pending Google sign-ups
+  // Check client doc when user changes
   useEffect(() => {
     if (!user) return
-    
     getDoc(doc(db, 'clients', user.uid)).then((snap) => {
-      if (snap.exists()) {
-        setClientUid(user.uid)
-      } else if (sessionStorage.getItem('pq_google_pending')) {
-        sessionStorage.removeItem('pq_google_pending')
-        setPendingGoogleUser(user)
-        setShowClientAuth(true)
-      }
+      if (snap.exists()) setClientUid(user.uid)
     }).catch(() => {})
   }, [user])
+
+  // Delayed check: 2s after mount, see if user is authed but has no client doc
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      const u = auth.currentUser
+      if (!u) return
+      try {
+        const snap = await getDoc(doc(db, 'clients', u.uid))
+        if (!snap.exists() && localStorage.getItem('pq_google_pending')) {
+          localStorage.removeItem('pq_google_pending')
+          setPendingGoogleUser(u)
+          setShowClientAuth(true)
+        }
+      } catch {}
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
