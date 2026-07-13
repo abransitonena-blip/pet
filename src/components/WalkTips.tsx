@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaLightbulb, FaPaw, FaDog, FaHeart, FaShieldAlt, FaBone } from 'react-icons/fa'
+import { useConfig } from '@/context/ConfigContext'
 
-const tips = [
+const tips = config.walkTips.length > 0 ? config.walkTips : [
   {
     icon: FaDog,
     title: 'Hidratación antes del paseo',
@@ -38,6 +39,7 @@ const tips = [
 ]
 
 export default function WalkTips() {
+  const { config } = useConfig()
   return (
     <section className="relative py-24 sm:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

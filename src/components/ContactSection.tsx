@@ -1,22 +1,25 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useConfig } from '@/context/ConfigContext'
+import { useConfig } from '@/context/ConfigContext'
 import { FaWhatsapp, FaMapMarkerAlt, FaClock, FaPhone, FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa'
 
-const contacts = [
-  { icon: FaWhatsapp, label: 'WhatsApp', value: '5523053772', href: 'https://wa.me/5215523053772', color: 'text-green-400' },
-  { icon: FaPhone, label: 'Teléfono', value: '5523053772', href: 'tel:5523053772', color: 'text-primary' },
-  { icon: FaMapMarkerAlt, label: 'Zona Quebrada, Cuautitlán', value: 'Estado de México', href: 'https://maps.app.goo.gl/oS5fBwZdyTYAk7U3A', color: 'text-red-400' },
-  { icon: FaClock, label: 'Lun - Sáb', value: '7:00 AM - 7:00 PM', href: null, color: 'text-secondary' },
-]
-
-const socials = [
-  { icon: FaFacebook, label: 'Facebook', href: '#', color: 'hover:text-blue-500' },
-  { icon: FaInstagram, label: 'Instagram', href: 'https://www.instagram.com/pet___ap?igsh=Z2I2OWgxb2x1eTc1', color: 'hover:text-pink-500' },
-  { icon: FaTiktok, label: 'TikTok', href: '#', color: 'hover:text-white' },
-]
-
 export default function ContactSection() {
+  const { config } = useConfig()
+
+  const contacts = [
+    { icon: FaWhatsapp, label: 'WhatsApp', value: config.whatsapp, href: 'https://wa.me/52' + config.whatsapp, color: 'text-green-400' },
+    { icon: FaPhone, label: 'Teléfono', value: config.whatsapp, href: 'tel:' + config.whatsapp, color: 'text-primary' },
+    { icon: FaMapMarkerAlt, label: 'Zona Quebrada, Cuautitlán', value: 'Estado de México', href: 'https://maps.app.goo.gl/oS5fBwZdyTYAk7U3A', color: 'text-red-400' },
+    { icon: FaClock, label: 'Lun - Sáb', value: '7:00 AM - 7:00 PM', href: null, color: 'text-secondary' },
+  ]
+
+  const socials = [
+    { icon: FaFacebook, label: 'Facebook', href: config.facebook || '#', color: 'hover:text-blue-500' },
+    { icon: FaInstagram, label: 'Instagram', href: config.instagram || '#', color: 'hover:text-pink-500' },
+    { icon: FaTiktok, label: 'TikTok', href: config.tiktok || '#', color: 'hover:text-white' },
+  ]
   return (
     <section id="contacto" className="relative py-24 sm:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

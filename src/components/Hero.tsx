@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react'
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { FaDog, FaMapMarkerAlt, FaPaw, FaStar } from 'react-icons/fa'
+import { useConfig } from '@/context/ConfigContext'
 
 export default function Hero() {
+  const { config } = useConfig()
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [topReviews, setTopReviews] = useState<{ name: string; text: string; rating: number }[]>([])
 
@@ -83,23 +85,14 @@ export default function Hero() {
           variants={item}
           className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
         >
-          <span className="flex items-center justify-center gap-3">
-            <FaDog className="text-primary inline-block" />
-            <span className="gradient-text animate-gradient">
-              Paseos Caninos
-            </span>
-            <FaDog className="text-primary inline-block scale-x-[-1]" />
-          </span>
-          <br />
-          <span className="text-white">en Zona Quebrada</span>
+          <span className="text-white">{config.heroTitle}</span>
         </motion.h1>
 
         <motion.p
           variants={item}
           className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10"
         >
-          Paseos supervisados y ejercicio para tu perro en Zona Quebrada, Cuautitlán.
-          Precios accesibles, horario flexible y mucho amor canino.
+          {config.heroSubtitle}
         </motion.p>
 
         <motion.div variants={item} className="flex flex-col sm:flex-row gap-4 justify-center">

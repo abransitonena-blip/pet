@@ -3,8 +3,10 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaDog, FaMapMarkerAlt, FaWhatsapp, FaInstagram, FaFacebook, FaTimes } from 'react-icons/fa'
+import { useConfig } from '@/context/ConfigContext'
 
 export default function Footer({ onTerms }: { onTerms: () => void }) {
+  const { config } = useConfig()
   return (
     <footer
       className="relative"
@@ -70,7 +72,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             </h3>
             <div className="space-y-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
               <a
-                href="https://wa.me/5215523053772"
+                href={`https://wa.me/521${config.whatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 hover:text-green-400 transition-colors"
@@ -108,7 +110,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             <div className="flex gap-3">
               {[
                 { icon: FaWhatsapp, href: 'https://wa.me/5215523053772', color: 'hover:text-green-400' },
-                { icon: FaInstagram, href: 'https://www.instagram.com/pet___ap', color: 'hover:text-pink-400' },
+                /* will fix manually */,
                 { icon: FaFacebook, href: '#', color: 'hover:text-blue-400' },
               ].map(({ icon: Icon, href, color }) => (
                 <a

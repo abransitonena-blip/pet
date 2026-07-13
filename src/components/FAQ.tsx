@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaChevronDown, FaQuestionCircle } from 'react-icons/fa'
+import { useConfig } from '@/context/ConfigContext'
 
-const faqs = [
+const faqs = config.faq.length > 0 ? config.faq.map((f: any) => ({ q: f.question, a: f.answer })) : [
   {
     q: '¿En qué horario realizan los paseos?',
     a: 'Operamos de Lunes a Sábado, de 7:00 AM a 7:00 PM. Los paseos se agendan según disponibilidad. Domingos solo con cita previa.',
@@ -40,6 +41,7 @@ const faqs = [
 ]
 
 export default function FAQ() {
+  const { config } = useConfig()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
