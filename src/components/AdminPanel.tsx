@@ -38,6 +38,7 @@ import {
   FaDollarSign,
   FaCog,
   FaClock,
+  FaComments,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
@@ -52,6 +53,7 @@ import AdminConfig from './AdminConfig'
 import { logChange } from '@/lib/audit'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import type { Reservation } from '@/types'
+import AdminChat from './AdminChat'
 
 
 
@@ -64,7 +66,7 @@ interface AdminReview {
   petName?: string
 }
 
-type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones' | 'resumen' | 'precios' | 'config'
+type Tab = 'reservas' | 'calendario' | 'resenas' | 'estadisticas' | 'cupones' | 'resumen' | 'precios' | 'config' | 'chat'
 
 export default function AdminPanel({
   isOpen,
@@ -587,6 +589,7 @@ export default function AdminPanel({
                 { id: 'cupones' as Tab, label: 'Cupones', icon: FaTag },
                 { id: 'precios' as Tab, label: 'Precios', icon: FaDollarSign },
                 { id: 'config' as Tab, label: 'Config', icon: FaCog },
+                { id: 'chat' as Tab, label: 'Chat', icon: FaComments },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -652,6 +655,7 @@ export default function AdminPanel({
                         { id: 'cupones' as Tab, label: 'Cupones', icon: FaTag },
                         { id: 'precios' as Tab, label: 'Precios', icon: FaDollarSign },
                         { id: 'config' as Tab, label: 'Config', icon: FaCog },
+                        { id: 'chat' as Tab, label: 'Chat', icon: FaComments },
                       ].map(({ id, label, icon: Icon }) => (
                         <button
                           key={id}
@@ -1041,6 +1045,9 @@ export default function AdminPanel({
               )}
               {tab === 'config' && (
                 <AdminConfig />
+              )}
+              {tab === 'chat' && (
+                <AdminChat />
               )}
 
               {tab === 'estadisticas' && (

@@ -34,6 +34,7 @@ import BannerDisplay from '@/components/BannerDisplay'
 import ClientAuth from '@/components/ClientAuth'
 import ClientDashboard from '@/components/ClientDashboard'
 import ClientPanel from '@/components/ClientPanel'
+import ChatWidget from '@/components/ChatWidget'
 
 function HomeContent() {
   const [showAdmin, setShowAdmin] = useState(false)
@@ -189,6 +190,7 @@ function HomeContent() {
         <ReservationForm onPhoneChange={setUserPhone} />
         <ContactSection />
         <Footer onTerms={() => setShowTerms(true)} />
+        <ChatWidget clientUid={clientUid} onLoginRequired={() => setShowClientAuth(true)} />
         <WhatsAppButton />
         <AdminPanel
           isOpen={showAdmin}
