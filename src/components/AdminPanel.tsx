@@ -224,7 +224,12 @@ export default function AdminPanel({
       prev.map((r) => (r.id === id ? { ...r, paymentStatus: newStatus } : r))
     )
     try {
-      await updateDoc(doc(db, 'reservations', id), { paymentStatus: current === 'paid' ? 'pending' : 'paid' })
+      await updateDoc(doc(db, "reservations", id), { paymentStatus: newStatus })
+    } catch {
+      setReservations((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, paymentStatus: current } : r))
+      )
+    }
   }
 
   const viewHistory = async (phone: string) => {
