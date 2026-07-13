@@ -218,7 +218,7 @@ export default function AdminPanel({
     } catch {}
   }
 
-  const handlePaymentToggle = async (id: string, current: string | undefined) => {
+  const handlePaymentToggle = async (id: string, current: "pending" | "paid" | undefined) => {
     const newStatus = current === "paid" ? "pending" : "paid"
     setReservations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, paymentStatus: newStatus } : r))
