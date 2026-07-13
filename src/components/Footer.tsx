@@ -110,8 +110,8 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             <div className="flex gap-3">
               {[
                 { icon: FaWhatsapp, href: 'https://wa.me/5215523053772', color: 'hover:text-green-400' },
-                /* will fix manually */,
-                { icon: FaFacebook, href: '#', color: 'hover:text-blue-400' },
+                { icon: FaInstagram, href: config.instagram || '#', color: 'hover:text-pink-400' },
+                { icon: FaFacebook, href: config.facebook || '#', color: 'hover:text-blue-400' },
               ].map(({ icon: Icon, href, color }) => (
                 <a
                   key={href}
