@@ -1,13 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
+import {
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
+  GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult,
+} from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { FaTimes, FaSpinner, FaUser, FaEnvelope, FaLock, FaDog, FaPhone, FaGoogle } from 'react-icons/fa'
 
-export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess: (uid: string) => void }) {
+interface Props {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: (uid: string) => void
+  needsPhoneUser?: any
+}
+
+export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser }: Props) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -16,17 +26,20 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [googleUser, setGoogleUser] = useState<any>(null)
   const [needsPhone, setNeedsPhone] = useState(false)
+  const [googleUser, setGoogleUser] = useState<any>(null)
+
+  useEffect(() => {
+    if (needsPhoneUser) {
+      setGoogleUser(needsPhoneUser)
+      setName(needsPhoneUser.displayName || '')
+      setNeedsPhone(true)
+    }
+  }, [needsPhoneUser])
 
   const reset = () => {
-    setEmail('')
-    setPassword('')
-    setName('')
-    setPhone('')
-    setError('')
-    setGoogleUser(null)
-    setNeedsPhone(false)
+    setEmail(''); setPassword(''); setName(''); setPhone('')
+    setError(''); setGoogleUser(null); setNeedsPhone(false)
   }
 
   const handleGoogle = async () => {
@@ -34,29 +47,16 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
     setGoogleLoading(true)
     try {
       const provider = new GoogleAuthProvider()
-      const cred = await signInWithPopup(auth, provider)
-      const user = cred.user
-      const snap = await getDoc(doc(db, 'clients', user.uid))
-
-      if (snap.exists()) {
-        onSuccess(user.uid)
-        onClose()
-      } else {
-        setGoogleUser(user)
-        setName(user.displayName || '')
-        setNeedsPhone(true)
-      }
+      await signInWithRedirect(auth, provider)
     } catch (e: any) {
-      if (e.code !== 'auth/popup-closed-by-user') {
-        setError('Error al iniciar con Google')
-      }
+      setError('Error: ' + (e.message || 'intenta de nuevo'))
+      setGoogleLoading(false)
     }
-    setGoogleLoading(false)
   }
 
   const finishGoogleSignup = async () => {
     if (!phone.trim() || phone.trim().length < 10) {
-      setError('Ingresa un teléfono válido (mín 10 dígitos)')
+      setError('Teléfono inválido (mín 10 dígitos)')
       return
     }
     setLoading(true)
@@ -69,34 +69,26 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
       })
       onSuccess(googleUser.uid)
       onClose()
-    } catch {
-      setError('Error al guardar tus datos')
-    }
+    } catch { setError('Error al guardar tus datos') }
     setLoading(false)
   }
 
   const handleLogin = async () => {
-    setError('')
-    setLoading(true)
+    setError(''); setLoading(true)
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password)
-      const docSnap = await getDoc(doc(db, 'clients', cred.user.uid))
-      if (!docSnap.exists()) {
-        await signInWithEmailAndPassword(auth, '', '')
+      const snap = await getDoc(doc(db, 'clients', cred.user.uid))
+      if (!snap.exists()) {
+        await signOut(auth)
         setError('Esta cuenta no es de cliente')
-        setLoading(false)
-        return
+        setLoading(false); return
       }
-      onSuccess(cred.user.uid)
-      onClose()
+      onSuccess(cred.user.uid); onClose()
     } catch (e: any) {
-      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
         setError('Correo o contraseña incorrectos')
-      } else if (e.code === 'auth/invalid-email') {
-        setError('Correo inválido')
-      } else {
-        setError('Error al iniciar sesión')
-      }
+      else if (e.code === 'auth/invalid-email') setError('Correo inválido')
+      else setError('Error al iniciar sesión')
     }
     setLoading(false)
   }
@@ -104,44 +96,26 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
   const handleRegister = async () => {
     setError('')
     if (!name.trim()) { setError('Ingresa tu nombre'); return }
-    if (!phone.trim() || phone.trim().length < 10) { setError('Teléfono inválido (mín 10 dígitos)'); return }
+    if (!phone.trim() || phone.trim().length < 10) { setError('Teléfono inválido'); return }
     setLoading(true)
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password)
       await updateProfile(cred.user, { displayName: name })
       await setDoc(doc(db, 'clients', cred.user.uid), {
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
+        name: name.trim(), email: email.trim(), phone: phone.trim(),
         createdAt: new Date().toISOString(),
       })
-      onSuccess(cred.user.uid)
-      onClose()
+      onSuccess(cred.user.uid); onClose()
     } catch (e: any) {
-      if (e.code === 'auth/email-already-in-use') {
-        setError('Este correo ya está registrado')
-      } else if (e.code === 'auth/weak-password') {
-        setError('La contraseña debe tener al menos 6 caracteres')
-      } else if (e.code === 'auth/invalid-email') {
-        setError('Correo inválido')
-      } else {
-        setError('Error al registrarse')
-      }
+      if (e.code === 'auth/email-already-in-use') setError('Correo ya registrado')
+      else if (e.code === 'auth/weak-password') setError('Mínimo 6 caracteres')
+      else if (e.code === 'auth/invalid-email') setError('Correo inválido')
+      else setError('Error al registrarse')
     }
     setLoading(false)
   }
 
-  const toggleMode = () => {
-    setMode(mode === 'login' ? 'register' : 'login')
-    setError('')
-  }
-
-  const handleBack = () => {
-    setGoogleUser(null)
-    setNeedsPhone(false)
-    setPhone('')
-    setError('')
-  }
+  const toggleMode = () => { setMode(mode === 'login' ? 'register' : 'login'); setError('') }
 
   return (
     <AnimatePresence>
@@ -169,14 +143,14 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
                   {needsPhone ? 'Completa tu registro' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
                 </span>
               </div>
-              <button onClick={() => { if (needsPhone) signOut(auth); onClose(); }} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--glass-bg)' }}>
+              <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--glass-bg)' }}>
                 <FaTimes size={12} />
               </button>
             </div>
 
-            {needsPhone ? (
+            {needsPhone && googleUser ? (
               <div className="space-y-3">
-                <p className="text-xs text-white/40">Solo falta tu WhatsApp para completar el registro</p>
+                <p className="text-xs text-white/40">Solo falta tu WhatsApp para completar el registro con Google</p>
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>WhatsApp</label>
                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
@@ -192,9 +166,6 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
                 >
                   {loading && <FaSpinner className="animate-spin" size={14} />}
                   Guardar y entrar
-                </button>
-                <button onClick={() => { signOut(auth); handleBack(); }} className="w-full text-xs py-1.5" style={{ color: 'var(--text-muted)' }}>
-                  Volver
                 </button>
               </div>
             ) : (
@@ -237,7 +208,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess }: { isOpen: boo
                 )}
 
                 <div>
-                  <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Correo electrónico</label>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Correo</label>
                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
                     <FaEnvelope className="text-white/20" size={12} />
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth'
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User, getRedirectResult } from 'firebase/auth'
 import { auth, db } from '@/firebase/config'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { useEscapeKey } from '@/lib/useEscapeKey'
@@ -47,6 +47,7 @@ function HomeContent() {
   const [userPhone, setUserPhone] = useState('')
   const [clientUid, setClientUid] = useState<string | null>(null)
   const [showClientAuth, setShowClientAuth] = useState(false)
+  const [pendingGoogleUser, setPendingGoogleUser] = useState<any>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 800)
@@ -59,6 +60,21 @@ function HomeContent() {
       if (u) setShowLogin(false)
     })
     return unsub
+  }, [])
+
+  useEffect(() => {
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        getDoc(doc(db, 'clients', result.user.uid)).then((snap) => {
+          if (snap.exists()) {
+            setClientUid(result.user.uid)
+          } else {
+            setPendingGoogleUser(result.user)
+            setShowClientAuth(true)
+          }
+        })
+      }
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -191,8 +207,9 @@ function HomeContent() {
         <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
         <ClientAuth
           isOpen={showClientAuth}
-          onClose={() => setShowClientAuth(false)}
+          onClose={() => { setShowClientAuth(false); setPendingGoogleUser(null) }}
           onSuccess={(uid) => setClientUid(uid)}
+          needsPhoneUser={pendingGoogleUser}
         />
       </main>
 
