@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaDog, FaSun, FaMoon } from 'react-icons/fa'
+import { FaDog, FaSun, FaMoon, FaTimes } from 'react-icons/fa'
 import { useTheme } from '@/context/ThemeContext'
 
 const navLinks = [
@@ -22,9 +22,18 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
 
   const handleLogoClick = () => {
     const newCount = logoClickCount + 1
@@ -36,6 +45,8 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
     setTimeout(() => setLogoClickCount(0), 2000)
   }
 
+  const closeMobile = useCallback(() => setMobileOpen(false), [])
+
   return (
     <motion.header
       initial={{ y: -100 }}
@@ -43,18 +54,13 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       style={{
-        background: scrolled
-          ? 'var(--bg-primary)'
-          : 'transparent',
+        background: scrolled ? 'var(--bg-primary)' : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
         borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
       }}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-        <button
-          onClick={handleLogoClick}
-          className="flex items-center gap-2 group"
-        >
+        <button onClick={handleLogoClick} className="flex items-center gap-2 group touch-action-manipulation">
           <motion.div
             whileHover={{ rotate: 360 }}
             transition={{ duration: 0.6 }}
@@ -62,7 +68,7 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
           >
             <FaDog />
           </motion.div>
-          <span className="text-lg font-bold hidden sm:block">
+          <span className="text-lg font-bold hidden sm:block" style={{ willChange: 'auto' }}>
             <span className="gradient-text">Paseos</span>
             <span style={{ color: 'var(--text-secondary)' }} className="ml-1">Quebrada</span>
           </span>
@@ -90,7 +96,7 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
         <div className="flex items-center gap-3">
           <button
             onClick={toggle}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 touch-action-manipulation"
             style={{ color: 'var(--text-secondary)' }}
           >
             {theme === 'dark' ? <FaSun size={16} /> : <FaMoon size={16} />}
@@ -110,7 +116,8 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden relative w-8 h-8 flex items-center justify-center"
+            className="md:hidden relative w-8 h-8 flex items-center justify-center touch-action-manipulation"
+            aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
           >
             <div className="flex flex-col gap-1.5">
               <motion.span
@@ -135,39 +142,71 @@ export default function Header({ onAdminTrigger }: { onAdminTrigger: () => void 
 
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden overflow-hidden"
-            style={{
-              background: 'var(--bg-primary)',
-              borderTop: '1px solid var(--border)',
-            }}
-          >
-            <div className="px-4 py-6 flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="text-lg py-2 transition-colors"
-                  style={{ color: 'var(--text-secondary)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+          <>
+            <motion.div
+              key="mobile-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm md:hidden z-40"
+              onClick={closeMobile}
+            />
+            <motion.div
+              key="mobile-drawer"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 h-full w-72 max-w-[85vw] md:hidden z-50 overflow-y-auto"
+              style={{
+                background: 'var(--bg-card)',
+                borderLeft: '1px solid var(--border)',
+                boxShadow: '-8px 0 32px rgba(0,0,0,0.3)',
+              }}
+            >
+              <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border)' }}>
+                <span className="font-bold gradient-text text-lg">Menú</span>
+                <button
+                  onClick={closeMobile}
+                  className="w-8 h-8 rounded-full flex items-center justify-center touch-action-manipulation"
+                  style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}
                 >
-                  {link.label}
-                </a>
-              ))}
-              <a
-                href="#reservar"
-                onClick={() => setMobileOpen(false)}
-                className="btn-primary text-center mt-2"
-              >
-                Reservar paseo
-              </a>
-            </div>
-          </motion.div>
+                  <FaTimes size={14} />
+                </button>
+              </div>
+              <div className="p-5 flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={closeMobile}
+                    className="text-base py-3 px-4 rounded-xl transition-all touch-action-manipulation"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--glass-bg)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+                <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                  <a
+                    href="#reservar"
+                    onClick={closeMobile}
+                    className="btn-primary text-center block text-sm"
+                  >
+                    Reservar paseo
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </motion.header>

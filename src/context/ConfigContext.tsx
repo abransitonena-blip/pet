@@ -22,12 +22,14 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'admin', 'config'), (snap) => {
-      if (snap.exists()) {
-        setConfig((prev) => ({ ...prev, ...snap.data() } as SiteConfig))
-      }
-    })
-    return unsub
+    try {
+      const unsub = onSnapshot(doc(db, 'admin', 'config'), (snap) => {
+        if (snap.exists()) {
+          setConfig((prev) => ({ ...prev, ...snap.data() } as SiteConfig))
+        }
+      })
+      return unsub
+    } catch { return () => {} }
   }, [])
 
   const updateConfig = async (partial: Partial<SiteConfig>) => {

@@ -21,13 +21,15 @@ export function PricesProvider({ children }: { children: ReactNode }) {
   const [prices, setPrices] = useState<Record<string, number>>(DEFAULT_PRICES)
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'admin', 'prices'), (snap) => {
-      if (snap.exists()) {
-        const data = snap.data() as Record<string, number>
-        setPrices((prev) => ({ ...prev, ...data }))
-      }
-    })
-    return unsub
+    try {
+      const unsub = onSnapshot(doc(db, 'admin', 'prices'), (snap) => {
+        if (snap.exists()) {
+          const data = snap.data() as Record<string, number>
+          setPrices((prev) => ({ ...prev, ...data }))
+        }
+      })
+      return unsub
+    } catch { return () => {} }
   }, [])
 
   const savePrices = async (newPrices: Record<string, number>) => {

@@ -87,7 +87,8 @@ export default function AdminPanel({
   const [quickMsgInput, setQuickMsgInput] = useState('')
   const [showQuickMsg, setShowQuickMsg] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
-    const [confirmDelete, setConfirmDelete] = useState<{id: string; col: "reservations" | "reviews"} | null>(null)
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<{id: string; col: "reservations" | "reviews"} | null>(null)
   const [historyPhone, setHistoryPhone] = useState('')
   const [historyReservations, setHistoryReservations] = useState<Reservation[]>([])
   const [dateFrom, setDateFrom] = useState('')
@@ -95,6 +96,7 @@ export default function AdminPanel({
   const prevCount = useRef(0)
   const IDLE_TIMEOUT = 30 * 60 * 1000
   const lastActivity = useRef(Date.now())
+  const tabsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const resetTimer = () => { lastActivity.current = Date.now() }
@@ -227,7 +229,7 @@ export default function AdminPanel({
       unsub()
       unsub2()
     }
-  }, [isOpen])
+  }, [isOpen, notificationsOn])
 
   const handleDelete = async (id: string, col: "reservations" | "reviews") => {
     setConfirmDelete({ id, col })
@@ -431,73 +433,82 @@ export default function AdminPanel({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden shadow-2xl shadow-primary/10"
+            className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden shadow-2xl shadow-primary/10 touch-action-manipulation"
+            style={{ willChange: 'transform, opacity' }}
           >
-            <div className="flex items-center justify-between p-6 border-b border-white/5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center text-white font-bold text-sm">
+            <div className="flex items-center justify-between p-3 sm:p-6 border-b border-white/5">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <button
+                  onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+                  className="md:hidden w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all touch-action-manipulation"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm shrink-0">
                   A
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">Panel Admin</h2>
-                  <p className="text-xs text-white/40">Gestión de Paseos Quebrada</p>
+                <div className="min-w-0">
+                  <h2 className="text-sm sm:text-lg font-bold text-white truncate">Panel Admin</h2>
+                  <p className="text-[10px] sm:text-xs text-white/40 truncate">Gestión de Paseos Quebrada</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 <button
                   onClick={() => setShowGallery(!showGallery)}
-                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all ${
+                  className={`hidden sm:flex items-center gap-1.5 text-xs px-2 sm:px-3 py-1.5 rounded-full transition-all ${
                     showGallery ? 'bg-primary/20 text-primary' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
                   }`}
                   title="Galería de fotos"
                 >
                   <FaImage size={12} />
-                  Fotos
+                  <span className="hidden sm:inline">Fotos</span>
                 </button>
                 <button
                   onClick={() => setShowQuickMsg(!showQuickMsg)}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                  className="hidden sm:flex items-center gap-1.5 text-xs px-2 sm:px-3 py-1.5 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
                   title="Enviar WhatsApp"
                 >
                   <FaPaperPlane size={12} />
-                  Mensaje
+                  <span className="hidden sm:inline">Mensaje</span>
                 </button>
                 <button
                   onClick={exportCSV}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                  className="hidden sm:flex items-center gap-1.5 text-xs px-2 sm:px-3 py-1.5 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
                   title="Exportar reservas CSV"
                 >
                   <FaDownload size={12} />
-                  CSV
+                  <span className="hidden sm:inline">CSV</span>
                 </button>
                 <button
                   onClick={requestNotificationPermission}
-                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-all ${
+                  className={`hidden sm:flex items-center gap-1.5 text-xs px-2 sm:px-3 py-1.5 rounded-full transition-all ${
                     notificationsOn
                       ? 'bg-green-500/20 text-green-400'
                       : 'bg-white/5 text-white/40 hover:text-white/60'
                   }`}
                 >
                   <FaBell size={12} />
-                  {notificationsOn ? 'Notificaciones activas' : 'Activar notificaciones'}
+                  <span className="hidden sm:inline">{notificationsOn ? 'Notificaciones activas' : 'Activar notificaciones'}</span>
                 </button>
                 {user && (
-                  <span className="text-xs text-white/30 hidden sm:block">{user.email}</span>
+                  <span className="text-xs text-white/30 hidden lg:block max-w-[120px] truncate">{user.email}</span>
                 )}
                 {onLogout && (
                   <button
                     onClick={onLogout}
-                    className="w-8 h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-all"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-all touch-action-manipulation"
                     title="Cerrar sesión"
                   >
-                    <FaSignOutAlt size={12} />
+                    <FaSignOutAlt size={11} />
                   </button>
                 )}
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all touch-action-manipulation"
                 >
-                  <FaTimes />
+                  <FaTimes size={12} />
                 </button>
               </div>
             </div>
@@ -518,7 +529,7 @@ export default function AdminPanel({
                 animate={{ height: 'auto', opacity: 1 }}
                 className="border-b border-white/5 overflow-hidden"
               >
-                <div className="p-4 flex items-center gap-3">
+                <div className="p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <input
                     type="tel"
                     placeholder="WhatsApp del cliente"
@@ -534,19 +545,21 @@ export default function AdminPanel({
                     onKeyDown={(e) => e.key === 'Enter' && sendQuickMessage()}
                     className="flex-[2] bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
                   />
-                  <button
-                    onClick={sendQuickMessage}
-                    disabled={!quickMsgNumber || !quickMsgInput}
-                    className="shrink-0 px-4 py-2 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all disabled:opacity-30"
-                  >
-                    <FaPaperPlane size={12} />
-                  </button>
-                  <button onClick={() => setShowQuickMsg(false)} className="shrink-0 text-white/30 hover:text-white text-xs">Cerrar</button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={sendQuickMessage}
+                      disabled={!quickMsgNumber || !quickMsgInput}
+                      className="flex-1 sm:shrink-0 px-4 py-2 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all disabled:opacity-30 touch-action-manipulation"
+                    >
+                      <FaPaperPlane size={12} />
+                    </button>
+                    <button onClick={() => setShowQuickMsg(false)} className="shrink-0 text-white/30 hover:text-white text-xs">Cerrar</button>
+                  </div>
                 </div>
               </motion.div>
             )}
 
-            <div className="flex border-b border-white/5">
+            <div className="hidden md:flex border-b border-white/5 overflow-x-auto scrollbar-none" ref={tabsRef}>
               {[
                 { id: 'resumen' as Tab, label: 'Resumen', icon: FaHome },
                 { id: 'reservas' as Tab, label: 'Reservas', icon: FaCalendarAlt },
@@ -560,7 +573,7 @@ export default function AdminPanel({
                 <button
                   key={id}
                   onClick={() => setTab(id)}
-                  className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all relative ${
+                  className={`flex items-center gap-2 px-3 lg:px-6 py-3 text-xs lg:text-sm font-medium transition-all relative whitespace-nowrap touch-action-manipulation ${
                     tab === id ? 'text-primary' : 'text-white/40 hover:text-white/60'
                   }`}
                 >
@@ -576,6 +589,83 @@ export default function AdminPanel({
               ))}
             </div>
 
+            <AnimatePresence>
+              {showMobileSidebar && (
+                <>
+                  <motion.div
+                    key="sidebar-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm md:hidden"
+                    onClick={() => setShowMobileSidebar(false)}
+                  />
+                  <motion.div
+                    key="sidebar-drawer"
+                    initial={{ x: '-100%' }}
+                    animate={{ x: 0 }}
+                    exit={{ x: '-100%' }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="fixed top-0 left-0 h-full w-64 max-w-[75vw] z-[310] md:hidden overflow-y-auto"
+                    style={{
+                      background: 'var(--bg-card)',
+                      borderRight: '1px solid var(--border)',
+                      boxShadow: '8px 0 32px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+                      <span className="font-bold gradient-text text-sm">Navegación</span>
+                      <button
+                        onClick={() => setShowMobileSidebar(false)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center touch-action-manipulation"
+                        style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}
+                      >
+                        <FaTimes size={11} />
+                      </button>
+                    </div>
+                    <div className="p-3 flex flex-col gap-1">
+                      {[
+                        { id: 'resumen' as Tab, label: 'Resumen', icon: FaHome },
+                        { id: 'reservas' as Tab, label: 'Reservas', icon: FaCalendarAlt },
+                        { id: 'calendario' as Tab, label: 'Calendario', icon: FaDog },
+                        { id: 'resenas' as Tab, label: 'Reseñas', icon: FaStar },
+                        { id: 'estadisticas' as Tab, label: 'Estadísticas', icon: FaChartBar },
+                        { id: 'cupones' as Tab, label: 'Cupones', icon: FaTag },
+                        { id: 'precios' as Tab, label: 'Precios', icon: FaDollarSign },
+                        { id: 'config' as Tab, label: 'Config', icon: FaCog },
+                      ].map(({ id, label, icon: Icon }) => (
+                        <button
+                          key={id}
+                          onClick={() => { setTab(id); setShowMobileSidebar(false) }}
+                          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all touch-action-manipulation ${
+                            tab === id
+                              ? 'text-primary'
+                              : 'text-white/40 hover:text-white/60'
+                          }`}
+                          style={tab === id ? { background: 'var(--glass-bg)' } : {}}
+                        >
+                          <Icon size={14} />
+                          {label}
+                        </button>
+                      ))}
+                      <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                        {onLogout && (
+                          <button
+                            onClick={() => { onLogout(); setShowMobileSidebar(false) }}
+                            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all touch-action-manipulation"
+                          >
+                            <FaSignOutAlt size={14} />
+                            Cerrar sesión
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+
             <div className="overflow-y-auto max-h-[calc(85vh-130px)] p-6">
               {tab === 'reservas' && (
                 <div className="space-y-3">
@@ -590,12 +680,12 @@ export default function AdminPanel({
                         className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
                       />
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none w-full sm:w-auto pb-1">
                       {(['all', 'pending', 'en_camino', 'paseando', 'completed'] as const).map((s) => (
                         <button
                           key={s}
                           onClick={() => setStatusFilter(s)}
-                          className={`text-xs px-2 py-1.5 rounded-lg transition-all ${
+                          className={`text-xs whitespace-nowrap px-2 py-1.5 rounded-lg transition-all touch-action-manipulation ${
                             statusFilter === s
                               ? s === 'completed'
                                 ? 'bg-green-500/20 text-green-400'
@@ -843,7 +933,7 @@ export default function AdminPanel({
                     initial="hidden"
                     animate="visible"
                     variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
-                    className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3"
+                    className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3"
                   >
                     {[
                       { label: 'Hoy', value: reservations.filter((r) => r.date === new Date().toISOString().split('T')[0] && r.status !== 'cancelled').length, color: 'from-primary to-amber-600' },
@@ -907,7 +997,7 @@ export default function AdminPanel({
                     })()}
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="glass-card p-4">
                       <AdminBanner />
                     </div>
@@ -955,7 +1045,7 @@ export default function AdminPanel({
                       </button>
                     )}
                   </div>
-                  <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                     {[
                       { label: 'Reservas totales', value: filteredByDate.length, icon: FaCalendarAlt, color: 'from-primary to-amber-600' },
                       { label: 'Completadas', value: filteredByDate.filter((r) => r.status === 'completed').length, icon: FaCheck, color: 'from-green-500 to-emerald-600' },

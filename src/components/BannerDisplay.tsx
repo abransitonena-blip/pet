@@ -11,10 +11,12 @@ export default function BannerDisplay() {
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'admin', 'banner'), (snap) => {
-      if (snap.exists()) setBanner(snap.data() as { message: string; active: boolean })
-    })
-    return unsub
+    try {
+      const unsub = onSnapshot(doc(db, 'admin', 'banner'), (snap) => {
+        if (snap.exists()) setBanner(snap.data() as { message: string; active: boolean })
+      })
+      return unsub
+    } catch { return () => {} }
   }, [])
 
   if (!banner?.active || !banner.message || dismissed) return null
