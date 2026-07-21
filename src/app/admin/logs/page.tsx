@@ -63,7 +63,7 @@ export default function AdminLogsPage() {
     return result
   }, [logs, searchQuery, actionFilter])
 
-  const uniqueActions = useMemo(() => [...new Set(logs.map((l) => l.action))].sort(), [logs])
+  const uniqueActions = useMemo(() => Array.from(new Set(logs.map((l) => l.action))).sort(), [logs])
 
   const formatTimestamp = (ts: { seconds: number; nanoseconds: number } | null) => {
     if (!ts) return '—'
