@@ -49,6 +49,7 @@ function HomeContent() {
   const [clientUid, setClientUid] = useState<string | null>(null)
   const [showClientAuth, setShowClientAuth] = useState(false)
   const [pendingGoogleUser, setPendingGoogleUser] = useState<any>(null)
+  const [formActive, setFormActive] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 800)
@@ -187,11 +188,11 @@ function HomeContent() {
           </div>
         </div>
 
-        <ReservationForm onPhoneChange={setUserPhone} />
+        <ReservationForm onPhoneChange={setUserPhone} onFocusChange={setFormActive} />
         <ContactSection />
         <Footer onTerms={() => setShowTerms(true)} />
         <ChatWidget clientUid={clientUid} onLoginRequired={() => setShowClientAuth(true)} />
-        <WhatsAppButton />
+        <WhatsAppButton hidden={formActive} />
         <AdminPanel
           isOpen={showAdmin}
           onClose={() => setShowAdmin(false)}

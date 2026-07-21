@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaWhatsapp, FaTimes } from 'react-icons/fa'
 
-export default function WhatsAppButton() {
+export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
   const [show, setShow] = useState(false)
   const [tooltip, setTooltip] = useState(false)
 
@@ -15,7 +15,7 @@ export default function WhatsAppButton() {
 
   return (
     <AnimatePresence>
-      {show && (
+      {show && !hidden && (
         <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
           <AnimatePresence>
             {tooltip && (
