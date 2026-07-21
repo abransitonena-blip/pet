@@ -218,7 +218,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const set = useCallback(<K extends keyof typeof form>(key: K, val: string) => {
     setForm((p: typeof form) => ({ ...p, [key]: val }))
     if (key === 'phone') onPhoneChange?.(val)
-    if (errors[key]) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n })
+    if (errors[key as string]) setErrors((prev) => { const n = { ...prev }; delete n[key as string]; return n })
   }, [onPhoneChange, errors])
 
   const goNext = () => { setDirection(1); setStep((s) => Math.min(s + 1, 5)) }
