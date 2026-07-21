@@ -28,7 +28,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                 <FaDog />
               </div>
               <span className="text-lg font-bold">
-                <span className="gradient-text">Paseos Quebrada</span>
+                <span className="text-brand-400">PET Ap</span>
               </span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
@@ -131,9 +131,9 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
           className="mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ borderTop: '1px solid var(--border)' }}
         >
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            © 2024 Paseos Quebrada. Todos los derechos reservados.
-          </p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              &copy; {new Date().getFullYear()} PET Ap. Todos los derechos reservados.
+            </p>
           <div className="flex items-center gap-4">
             <button
               onClick={onTerms}

@@ -59,8 +59,8 @@ export interface SiteConfig {
 }
 
 export const DEFAULT_CONFIG: SiteConfig = {
-  heroTitle: 'Paseos caninos en Zona Quebrada 🐾',
-  heroSubtitle: 'Paseos supervisados de lunes a sábado. Ejercicio, diversión y mucho amor para tu mejor amigo.',
+  heroTitle: 'Tu perro merece más que un paseo',
+  heroSubtitle: 'Paseos supervisados con fotos, mapa y reporte en tiempo real. Porque saber que está bien, no tiene precio.',
   sectionDescriptions: {
     services: 'Todos nuestros paseos son supervisados, seguros y pensados para la felicidad de tu perro.',
     howItWorks: 'Reserva en 3 simples pasos y nosotros nos encargamos del resto.',

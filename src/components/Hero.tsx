@@ -4,169 +4,143 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { FaDog, FaMapMarkerAlt, FaPaw, FaStar } from 'react-icons/fa'
+import { FaMapMarkerAlt, FaStar } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
+import Avatar from '@/components/ui/Avatar'
+
+const stagger = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+}
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+}
 
 export default function Hero() {
   const { config } = useConfig()
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [topReviews, setTopReviews] = useState<{ name: string; text: string; rating: number }[]>([])
+  const [topReview, setTopReview] = useState<{ name: string; text: string; rating: number } | null>(null)
 
   useEffect(() => {
-    const q = query(collection(db, 'reviews'), orderBy('rating', 'desc'), limit(3))
+    const q = query(collection(db, 'reviews'), orderBy('rating', 'desc'), limit(5))
     getDocs(q)
       .then((snap) => {
         const data = snap.docs.map((d) => d.data() as { name: string; text: string; rating: number })
-        setTopReviews(data.filter((r) => r.text?.length > 10))
+        const best = data.find((r) => r.text?.length > 15)
+        if (best) setTopReview(best)
       })
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
-    const handleMouse = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight })
-    }
-    window.addEventListener('mousemove', handleMouse)
-    return () => window.removeEventListener('mousemove', handleMouse)
-  }, [])
-
-  const stagger = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15 },
-    },
-  }
-
-  const item = {
-    hidden: { opacity: 0, y: 40 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
-  }
-
   return (
-    <section
-      id="hero"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
-    >
-      <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          background: `radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(230, 126, 34, 0.25) 0%, transparent 60%)`,
-        }}
-      />
-
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{ y: [0, -30, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{ y: [0, 30, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl"
-        />
+    <section id="hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
+      {/* Subtle gradient bg */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-500/[0.04] rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-success-500/[0.03] rounded-full blur-3xl" />
       </div>
 
       <motion.div
         variants={stagger}
         initial="hidden"
         animate="show"
-        className="relative z-10 max-w-5xl mx-auto px-4 text-center"
+        className="relative z-10 max-w-4xl mx-auto px-4 text-center"
       >
+        {/* Location badge */}
         <motion.div variants={item} className="mb-6 flex items-center justify-center gap-2">
-          <FaMapMarkerAlt className="text-primary" size={14} />
-          <span className="inline-block px-4 py-1.5 rounded-full text-xs font-medium bg-primary/10 border border-primary/20 text-primary/80 uppercase tracking-wider">
+          <FaMapMarkerAlt className="text-brand-500" size={12} />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-brand-500/10 border border-brand-500/15 text-brand-400 uppercase tracking-wider">
             Zona Quebrada, Cuautitlán
           </span>
         </motion.div>
 
-        <motion.h1
-          variants={item}
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
-        >
-          <span className="text-white">{config.heroTitle}</span>
+        {/* Headline */}
+        <motion.h1 variants={item} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight">
+          <span style={{ color: 'var(--text-primary)' }}>
+            {config.heroTitle || 'Tu perro merece más que un paseo'}
+          </span>
         </motion.h1>
 
-        <motion.p
-          variants={item}
-          className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10"
-        >
-          {config.heroSubtitle}
+        {/* Subhead */}
+        <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          {config.heroSubtitle || 'Paseos supervisados con fotos, mapa y reporte en tiempo real. Porque saber que está bien, no tiene precio.'}
         </motion.p>
 
-        <motion.div variants={item} className="flex flex-col sm:flex-row gap-4 justify-center">
+        {/* CTAs */}
+        <motion.div variants={item} className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
           <motion.a
             href="#reservar"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn-primary text-lg"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="btn-primary"
           >
             Reserva tu paseo
           </motion.a>
           <motion.a
             href="#servicios"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn-secondary text-lg"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="btn-secondary"
           >
-            Ver paquetes
+            Ver planes
           </motion.a>
         </motion.div>
 
-        <motion.div
-          variants={item}
-          className="mt-16 flex items-center justify-center gap-8 sm:gap-16"
-        >
+        {/* Stats inline */}
+        <motion.div variants={item} className="flex items-center justify-center gap-8 sm:gap-12 mb-10">
           {[
-            { value: '50+', label: 'Perros felices', icon: FaDog },
-            { value: '4.9', label: 'Calificación', icon: FaPaw },
-            { value: '2 años', label: 'Paseando', icon: FaPaw },
-          ].map((stat) => {
-            const Icon = stat.icon
-            return (
-              <div key={stat.label} className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold gradient-text flex items-center justify-center gap-2">
-                  {stat.value}
-                </div>
-                <div className="text-xs sm:text-sm text-white/40 mt-1">{stat.label}</div>
-              </div>
-            )
-          })}
+            { value: '50+', label: 'Perros felices' },
+            { value: '4.9★', label: 'Calificación' },
+            { value: '$30', label: 'Desde' },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <div className="text-xl sm:text-2xl font-bold gradient-text">{stat.value}</div>
+              <div className="text-[11px] sm:text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
+            </div>
+          ))}
         </motion.div>
 
-        {topReviews.length > 0 && (
-          <motion.div
-            variants={item}
-            className="mt-12 grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto"
-          >
-            {topReviews.map((rev, i) => (
-              <div key={i} className="glass-card p-4 text-center">
-                <div className="flex items-center justify-center gap-0.5 mb-2">
-                  {Array.from({ length: rev.rating }).map((_, j) => (
-                    <FaStar key={j} className="text-secondary" size={10} />
-                  ))}
-                </div>
-                <p className="text-xs text-white/50 line-clamp-3 mb-2">&ldquo;{rev.text}&rdquo;</p>
-                <p className="text-xs text-white/60 font-medium">- {rev.name}</p>
+        {/* Best review card */}
+        {topReview && (
+          <motion.div variants={item} className="max-w-md mx-auto">
+            <div className="rounded-2xl p-4 sm:p-5 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center justify-center gap-0.5 mb-2">
+                {Array.from({ length: topReview.rating }).map((_, j) => (
+                  <FaStar key={j} className="text-brand-400" size={12} />
+                ))}
               </div>
-            ))}
+              <p className="text-sm mb-3 leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>
+                &ldquo;{topReview.text}&rdquo;
+              </p>
+              <div className="flex items-center justify-center gap-2">
+                <Avatar name={topReview.name} size="sm" />
+                <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{topReview.name}</span>
+              </div>
+            </div>
           </motion.div>
         )}
       </motion.div>
 
+      {/* Scroll indicator */}
       <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
       >
-        <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center">
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-5 h-8 border-2 rounded-full flex justify-center"
+          style={{ borderColor: 'var(--text-muted)' }}
+        >
           <motion.div
-            animate={{ y: [0, 12, 0] }}
+            animate={{ y: [0, 10, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-1.5 h-3 bg-primary rounded-full mt-2"
+            className="w-1 h-2.5 bg-brand-500 rounded-full mt-1.5"
           />
-        </div>
+        </motion.div>
       </motion.div>
     </section>
   )
