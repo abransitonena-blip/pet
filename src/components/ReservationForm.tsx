@@ -221,8 +221,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     if (errors[key as string]) setErrors((prev) => { const n = { ...prev }; delete n[key as string]; return n })
   }, [onPhoneChange, errors])
 
-  const goNext = () => { setDirection(1); setStep((s) => Math.min(s + 1, 5)) }
-  const goBack = () => { setDirection(-1); setStep((s) => Math.max(s - 1, 1)) }
+  const goNext = () => { setDirection(1); setStep((s: number) => Math.min(s + 1, 5)) }
+  const goBack = () => { setDirection(-1); setStep((s: number) => Math.max(s - 1, 1)) }
   const goToStep = (target: number) => { setDirection(target > step ? 1 : -1); setStep(target) }
 
   const validateField = useCallback((key: string, val: string) => {
