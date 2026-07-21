@@ -1,10 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { collection, query, where, getDocs, updateDoc, doc, getDoc } from 'firebase/firestore'
 import { db, auth } from '@/firebase/config'
-import { FaDog, FaTimes, FaSpinner, FaCalendarAlt, FaHistory, FaUser, FaSignOutAlt, FaPaw, FaTrash } from 'react-icons/fa'
+import { FaDog, FaTimes, FaSpinner, FaCalendarAlt, FaHistory, FaUser, FaSignOutAlt, FaPaw, FaTrash, FaCamera, FaMapMarkerAlt, FaChevronDown, FaChevronUp } from 'react-icons/fa'
+
+interface WalkMedia {
+  photo: string
+  lat: number
+  lng: number
+  timestamp?: { seconds: number; nanoseconds: number }
+}
 
 interface Reservation {
   id: string
@@ -14,6 +21,9 @@ interface Reservation {
   date: string
   time: string
   status: string
+  walkCheckIn?: WalkMedia
+  walkCheckOut?: WalkMedia
+  walkNotes?: string
 }
 
 interface ClientData {
@@ -38,6 +48,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
   const [clientData, setClientData] = useState<ClientData | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState<string | null>(null)
+  const [selectedWalk, setSelectedWalk] = useState<Reservation | null>(null)
 
   useEffect(() => {
     const user = auth.currentUser
@@ -162,14 +173,24 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                 <FaHistory size={9} /> Historial ({past.length})
               </p>
               <div className="space-y-1 max-h-40 overflow-y-auto">
-                {past.slice(0, 10).map((r) => (
+                {past.slice(0, 20).map((r) => (
                   <div key={r.id} className="flex items-center justify-between py-1.5">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-xs text-white/60 truncate">{r.petName} · {SERVICE_LABELS[r.service] || r.service} · {r.date}</span>
                     </div>
-                    <span className="text-[10px] shrink-0" style={{ color: r.status === 'completed' ? '#22c55e' : '#ef4444' }}>
-                      {r.status === 'completed' ? '✓' : '✗'}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {r.status === 'completed' && r.walkCheckIn && (
+                        <button onClick={() => setSelectedWalk(r)}
+                          className="text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-full"
+                          style={{ background: 'rgba(230,126,34,0.15)', color: '#E67E22' }}
+                        >
+                          <FaCamera size={8} /> Ver
+                        </button>
+                      )}
+                      <span className="text-[10px]" style={{ color: r.status === 'completed' ? '#22c55e' : '#ef4444' }}>
+                        {r.status === 'completed' ? '✓' : '✗'}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -177,6 +198,74 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
           )}
         </div>
       )}
+
+      <AnimatePresence>
+        {selectedWalk && selectedWalk.walkCheckIn && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
+            onClick={() => setSelectedWalk(null)}
+          >
+            <div
+              className="rounded-2xl overflow-hidden w-full max-w-sm max-h-[80vh] overflow-y-auto"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b sticky top-0 z-10"
+                style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}
+              >
+                <span className="text-sm font-bold">🐾 {selectedWalk.petName}</span>
+                <button onClick={() => setSelectedWalk(null)}
+                  className="w-7 h-7 rounded-full flex items-center justify-center"
+                  style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}
+                >
+                  <FaTimes size={12} />
+                </button>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <p className="text-xs font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                    <FaCamera size={11} /> Inicio del paseo
+                  </p>
+                  <img src={selectedWalk.walkCheckIn.photo} alt="Check-in"
+                    className="w-full h-48 object-cover rounded-xl" />
+                  <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                    <FaMapMarkerAlt size={9} />
+                    {selectedWalk.walkCheckIn.lat.toFixed(6)}, {selectedWalk.walkCheckIn.lng.toFixed(6)}
+                  </p>
+                </div>
+                {selectedWalk.walkCheckOut && (
+                  <div>
+                    <p className="text-xs font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                      <FaCamera size={11} /> Fin del paseo
+                    </p>
+                    <img src={selectedWalk.walkCheckOut.photo} alt="Check-out"
+                      className="w-full h-48 object-cover rounded-xl" />
+                    <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                      <FaMapMarkerAlt size={9} />
+                      {selectedWalk.walkCheckOut.lat.toFixed(6)}, {selectedWalk.walkCheckOut.lng.toFixed(6)}
+                    </p>
+                  </div>
+                )}
+                {selectedWalk.walkNotes && (
+                  <div>
+                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Notas</p>
+                    <p className="text-sm p-3 rounded-xl" style={{ background: 'var(--glass-bg)', color: 'var(--text-primary)' }}>
+                      {selectedWalk.walkNotes}
+                    </p>
+                  </div>
+                )}
+                <div className="text-center text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  {SERVICE_LABELS[selectedWalk.service] || selectedWalk.service} · {selectedWalk.date} · {selectedWalk.time}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

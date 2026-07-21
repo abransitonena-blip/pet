@@ -36,3 +36,10 @@ export interface ChatMessage {
   senderRole: 'admin' | 'client'
   timestamp?: { seconds: number; nanoseconds: number }
 }
+
+export interface WalkMedia {
+  photo: string
+  lat: number
+  lng: number
+  timestamp: { seconds: number; nanoseconds: number }
+}

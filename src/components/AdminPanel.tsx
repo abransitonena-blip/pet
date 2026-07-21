@@ -38,6 +38,7 @@ import {
   FaDollarSign,
   FaCog,
   FaClock,
+  FaCamera,
   FaComments,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
@@ -54,6 +55,7 @@ import { logChange } from '@/lib/audit'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import type { Reservation } from '@/types'
 import AdminChat from './AdminChat'
+import WalkSessionModal from './WalkSessionModal'
 
 
 
@@ -103,6 +105,8 @@ export default function AdminPanel({
   const lastActivity = useRef(Date.now())
   const tabsRef = useRef<HTMLDivElement>(null)
   const [sessionWarning, setSessionWarning] = useState(false)
+  const [walkSessionReservation, setWalkSessionReservation] = useState<Reservation | null>(null)
+  const [walkSessionMode, setWalkSessionMode] = useState<'check_in' | 'check_out'>('check_in')
 
   useEscapeKey(() => setConfirmDelete(null), !!confirmDelete)
   useEscapeKey(() => setHistoryPhone(''), !!historyPhone)
@@ -836,18 +840,18 @@ export default function AdminPanel({
                             )}
                             {res.status === 'en_camino' && (
                               <button
-                                onClick={() => updateDoc(doc(db, 'reservations', res.id), { status: 'paseando' })}
+                                onClick={() => { setWalkSessionReservation(res as Reservation); setWalkSessionMode('check_in') }}
                                 className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 flex items-center justify-center transition-all"
-                                title="Paseando"
+                                title="Iniciar paseo (foto + GPS)"
                               >
-                                <FaWalking size={12} />
+                                <FaCamera size={12} />
                               </button>
                             )}
                             {res.status === 'paseando' && (
                               <button
-                                onClick={() => handleComplete(res.id)}
+                                onClick={() => { setWalkSessionReservation(res as Reservation); setWalkSessionMode('check_out') }}
                                 className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 flex items-center justify-center transition-all"
-                                title="Completar"
+                                title="Terminar paseo (foto + GPS)"
                               >
                                 <FaCheck size={12} />
                               </button>
@@ -1161,6 +1165,14 @@ export default function AdminPanel({
         reservations={reservations}
         key={editingReservation?.id || 'none'}
       />
+      {walkSessionReservation && (
+        <WalkSessionModal
+          isOpen={!!walkSessionReservation}
+          onClose={() => setWalkSessionReservation(null)}
+          reservation={walkSessionReservation}
+          mode={walkSessionMode}
+        />
+      )}
 
 
       <AnimatePresence>
