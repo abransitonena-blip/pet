@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaDog, FaMapMarkerAlt, FaWhatsapp, FaInstagram, FaFacebook, FaTimes } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
+import { formatBusinessHours } from '@/lib/defaultConfig'
 
 export default function Footer({ onTerms }: { onTerms: () => void }) {
   const { config } = useConfig()
@@ -46,18 +47,12 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
               Horarios de paseos
             </h3>
             <div className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-              <p className="flex justify-between">
-                <span>Lun - Vie</span>
-                <span>7:00 - 20:00</span>
-              </p>
-              <p className="flex justify-between">
-                <span>Sábado</span>
-                <span>8:00 - 18:00</span>
-              </p>
-              <p className="flex justify-between">
-                <span>Domingo</span>
-                <span>9:00 - 14:00</span>
-              </p>
+              {formatBusinessHours().map((h) => (
+                <p key={h.weekday} className="flex justify-between">
+                  <span>{h.weekday}</span>
+                  <span>{h.hours}</span>
+                </p>
+              ))}
             </div>
           </motion.div>
 

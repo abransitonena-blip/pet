@@ -6,7 +6,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { FaTimes } from 'react-icons/fa'
 import type { Reservation } from '@/types'
-import { SERVICE_NAMES } from '@/lib/services'
+import { SERVICE_NAMES, normalizeServiceName } from '@/lib/services'
 import { logChange } from '@/lib/audit'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 
@@ -24,7 +24,7 @@ export default function EditReservationModal({
   const [form, setForm] = useState({
     date: reservation?.date || '',
     time: reservation?.time || '',
-    service: reservation?.service || '',
+    service: normalizeServiceName(reservation?.service || ''),
     notes: reservation?.notes || '',
     internalNotes: reservation?.internalNotes || '',
     assignedWalker: reservation?.assignedWalker || '',

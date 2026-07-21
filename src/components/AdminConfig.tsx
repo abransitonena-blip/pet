@@ -12,6 +12,7 @@ import {
   FaChevronUp,
   FaExclamationTriangle,
 } from 'react-icons/fa'
+import { BUSINESS_HOURS, generateTimeSlots } from '@/lib/defaultConfig'
 
 type Section = 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'maintenance'
 
@@ -143,7 +144,7 @@ function HoursEditor({ config, updateConfig, saving }: any) {
   const save = () => updateConfig({ availableSlots: slots })
 
   const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
-  const allHours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00']
+  const allHours = generateTimeSlots('lunes')
 
   const toggleHour = (day: string, hour: string) => {
     const current = slots[day] || []
@@ -156,29 +157,34 @@ function HoursEditor({ config, updateConfig, saving }: any) {
 
   return (
     <div className="space-y-3">
-      {days.map((day) => (
-        <div key={day}>
-          <p className="text-xs font-medium text-white/60 mb-1.5 capitalize">{day}</p>
-          <div className="flex flex-wrap gap-1">
-            {allHours.map((hour) => {
-              const active = (slots[day] || []).includes(hour)
-              return (
-                <button
-                  key={hour}
-                  onClick={() => toggleHour(day, hour)}
-                  className={`text-[10px] px-2 py-1 rounded-md transition-all ${
-                    active
-                      ? 'bg-primary/20 text-primary border border-primary/30'
-                      : 'bg-white/5 text-white/30 border border-white/5 hover:border-white/20'
-                  }`}
-                >
-                  {hour}
-                </button>
-              )
-            })}
+      {days.map((day) => {
+        const dayHours = BUSINESS_HOURS[day]
+        return (
+          <div key={day}>
+            <p className="text-xs font-medium text-white/60 mb-1.5 capitalize">
+              {day} {dayHours ? `(${dayHours.open} - ${dayHours.close})` : '(Cerrado)'}
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {allHours.map((hour) => {
+                const active = (slots[day] || []).includes(hour)
+                return (
+                  <button
+                    key={hour}
+                    onClick={() => toggleHour(day, hour)}
+                    className={`text-[10px] px-2 py-1 rounded-md transition-all ${
+                      active
+                        ? 'bg-primary/20 text-primary border border-primary/30'
+                        : 'bg-white/5 text-white/30 border border-white/5 hover:border-white/20'
+                    }`}
+                  >
+                    {hour}
+                  </button>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
       <SaveButton onClick={save} saving={saving} />
     </div>
   )

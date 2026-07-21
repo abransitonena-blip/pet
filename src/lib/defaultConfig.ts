@@ -1,3 +1,43 @@
+export interface DayHours {
+  open: string
+  close: string
+}
+
+export const BUSINESS_HOURS: Record<string, DayHours | null> = {
+  lunes:     { open: '07:00', close: '19:00' },
+  martes:    { open: '07:00', close: '19:00' },
+  miercoles: { open: '07:00', close: '19:00' },
+  jueves:    { open: '07:00', close: '19:00' },
+  viernes:   { open: '07:00', close: '19:00' },
+  sabado:    { open: '08:00', close: '18:00' },
+  domingo:   null,
+}
+
+export function generateTimeSlots(dayOfWeek: string): string[] {
+  const hours = BUSINESS_HOURS[dayOfWeek]
+  if (!hours) return []
+  const [openH] = hours.open.split(':').map(Number)
+  const [closeH] = hours.close.split(':').map(Number)
+  const slots: string[] = []
+  for (let h = openH; h < closeH; h++) {
+    slots.push(`${String(h).padStart(2, '0')}:00`)
+  }
+  return slots
+}
+
+export function formatBusinessHours(): { weekday: string; hours: string }[] {
+  return [
+    { weekday: 'Lun - Vie', hours: '7:00 - 19:00' },
+    { weekday: 'Sábado', hours: '8:00 - 18:00' },
+  ]
+}
+
+export function getDayOfWeek(dateStr: string): string {
+  const date = new Date(dateStr + 'T12:00:00')
+  const days = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
+  return days[date.getDay()]
+}
+
 export interface SiteConfig {
   heroTitle: string
   heroSubtitle: string
@@ -31,26 +71,35 @@ export const DEFAULT_CONFIG: SiteConfig = {
   facebook: '',
   tiktok: '',
   availableSlots: {
-    lunes: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
-    martes: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
-    miercoles: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
-    jueves: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
-    viernes: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
-    sabado: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+    lunes:     generateTimeSlots('lunes'),
+    martes:    generateTimeSlots('martes'),
+    miercoles: generateTimeSlots('miercoles'),
+    jueves:    generateTimeSlots('jueves'),
+    viernes:   generateTimeSlots('viernes'),
+    sabado:    generateTimeSlots('sabado'),
   },
   walkTips: [
     { title: 'Hidratación', text: 'Asegúrate de que tu perro tenga agua fresca antes y después del paseo.', icon: '💧' },
     { title: 'Descanso', text: 'Después del paseo, deja que tu perro descanse en un lugar tranquilo.', icon: '😴' },
     { title: 'Recompensa', text: 'Un premio después del paseo refuerza su buena conducta.', icon: '🦴' },
   ],
-  faq: [],
+  faq: [
+    { question: '¿En qué horario realizan los paseos?', answer: 'Operamos de Lunes a Viernes de 7:00 AM a 7:00 PM, y Sábados de 8:00 AM a 6:00 PM. Los paseos se agendan según disponibilidad.' },
+    { question: '¿Qué pasa si llueve?', answer: 'En caso de lluvia ligera, el paseo se realiza normalmente (a los perros les encanta). Si hay tormenta o condiciones peligrosas, te contactaremos para reprogramar sin costo.' },
+    { question: '¿Cómo funcionan las cancelaciones?', answer: 'Puedes cancelar sin costo hasta 2 horas antes del paseo. Cancelaciones tardías o no-show pueden generar un cargo del 50%. Entendemos emergencias, háblanos.' },
+    { question: '¿Pasean perros de todas las tallas?', answer: '¡Claro! Desde chihuahuas hasta grandes daneses. Agrupamos por tamaño y temperamento para la seguridad de todos.' },
+    { question: '¿Qué incluye el Paseo + Reporte?', answer: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video, mapa del recorrido y ejercicios personalizados.' },
+    { question: '¿Cómo pago?', answer: 'Aceptamos efectivo, transferencia bancaria y depósito. El pago se acuerda al momento de agendar.' },
+    { question: '¿Zona Quebrada es la única zona?', answer: 'Sí, actualmente cubrimos exclusivamente Zona Quebrada en Cuautitlán. Esto nos permite dar un servicio más rápido y personalizado.' },
+    { question: '¿Mi perro necesita estar vacunado?', answer: 'Sí, pedimos que los perros estén al día con sus vacunas (múltiple y antirrábica) para la seguridad de todos los peludos.' },
+  ],
   termsContent: `TÉRMINOS Y CONDICIONES
 
 1. SERVICIOS
 Paseos Quebrada ofrece servicios de paseo canino en Zona Quebrada, Cuautitlán. Los paseos son supervisados por personal capacitado.
 
 2. HORARIOS
-Los paseos se realizan de lunes a sábado en horarios previamente acordados. Domingo no hay servicio.
+Los paseos se realizan de lunes a viernes de 7:00 AM a 7:00 PM, y sábados de 8:00 AM a 6:00 PM. Domingo no hay servicio.
 
 3. CANCELACIONES
 Puedes cancelar tu reserva sin costo hasta 2 horas antes del paseo. Cancelaciones tardías pueden generar cargos.

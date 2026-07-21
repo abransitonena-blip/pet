@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
 import { FaWhatsapp, FaMapMarkerAlt, FaClock, FaPhone, FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa'
+import { formatBusinessHours } from '@/lib/defaultConfig'
 
 export default function ContactSection() {
   const { config } = useConfig()
@@ -11,7 +12,7 @@ export default function ContactSection() {
     { icon: FaWhatsapp, label: 'WhatsApp', value: config.whatsapp, href: 'https://wa.me/52' + config.whatsapp, color: 'text-green-400' },
     { icon: FaPhone, label: 'Teléfono', value: config.whatsapp, href: 'tel:' + config.whatsapp, color: 'text-primary' },
     { icon: FaMapMarkerAlt, label: 'Zona Quebrada, Cuautitlán', value: 'Estado de México', href: 'https://maps.app.goo.gl/oS5fBwZdyTYAk7U3A', color: 'text-red-400' },
-    { icon: FaClock, label: 'Lun - Sáb', value: '7:00 AM - 7:00 PM', href: null, color: 'text-secondary' },
+    { icon: FaClock, label: formatBusinessHours().map((h) => h.weekday).join(' | '), value: formatBusinessHours().map((h) => h.hours).join(' | '), href: null, color: 'text-secondary' },
   ]
 
   const socials = [

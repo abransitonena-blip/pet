@@ -58,7 +58,7 @@ const fallbackReviews = [
     id: '5',
     name: 'Laura Jiménez',
     rating: 5,
-    text: 'Los paseos premium son una experiencia única. Mi perra Mimi explora rutas nuevas cada semana.',
+    text: 'Los paseos con reporte son una experiencia única. Mi perra Mimi explora rutas nuevas cada semana.',
     date: '2024-05-20',
     petName: 'Mimi',
   },

@@ -15,28 +15,22 @@ import {
 } from 'react-icons/fa'
 
 import { usePrices } from '@/context/PricesContext'
-import { SERVICES } from '@/lib/services'
+import { SERVICES, calculateSavings } from '@/lib/services'
 
-const serviceMeta = [
-  { icon: FaWalking, title: 'Paseo Individual', description: 'Paseo personalizado de 30 min con atención 1 a 1. Ejercicio moderado por Zona Quebrada con supervisión constante.', duration: '30 min' },
-  { icon: FaClock, title: 'Paseo Extendido', description: 'Una hora completa de paseo con juegos, ejercicios y una ruta más larga para que tu perro gaste toda su energía.', duration: '1 hora' },
-  { icon: FaUsers, title: 'Paseo Grupal', description: 'Paseo en grupos pequeños de máximo 4 perros. Socialización supervisada mientras hacen ejercicio juntos.', duration: '45 min' },
-  { icon: FaStar, title: 'Paseo + Adiestramiento', description: 'Paseo de 1 hora combinado con entrenamiento de comandos básicos usando refuerzo positivo. Tu perro aprende mientras se ejercita.', duration: '1 hora' },
-  { icon: FaPaw, title: 'Paseo Express', description: 'Paseo rápido de 20 min para necesidades básicas. Perfecto como complemento entre comidas o antes de dormir.', duration: '20 min' },
-  { icon: FaDog, title: 'Paseo + Reporte', description: 'Paseo individual de 45 min con fotos, video y reporte detallado del recorrido enviado por WhatsApp.', duration: '45 min' },
-  { icon: FaSun, title: 'Paquete Semanal', description: '6 paseos de lunes a sábado, tú eliges el horario cada día. Precio especial por paquete con ahorro garantizado.', duration: '6 paseos', popular: true },
-]
+const ICON_MAP: Record<string, typeof FaDog> = {
+  'Paseo Individual': FaWalking,
+  'Paseo Extendido': FaClock,
+  'Paseo Grupal': FaUsers,
+  'Paseo + Adiestramiento': FaStar,
+  'Paseo Express': FaPaw,
+  'Paseo + Reporte': FaDog,
+  'Paquete Semanal': FaSun,
+}
 
 export default function Services() {
   const { prices } = usePrices()
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-
-  const services = serviceMeta.map((meta, i) => ({
-    ...meta,
-    price: `$${(prices[SERVICES[i]?.name] || SERVICES[i]?.price || 0).toLocaleString()}`,
-    highlights: SERVICES[i]?.highlights || [],
-  }))
 
   return (
     <section id="servicios" className="relative py-24 sm:py-32" ref={ref}>
@@ -65,11 +59,13 @@ export default function Services() {
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {services.map((service, i) => {
-            const Icon = service.icon
+          {SERVICES.map((svc, i) => {
+            const Icon = ICON_MAP[svc.name] || FaPaw
+            const price = prices[svc.name] ?? svc.price
+            const { savings } = calculateSavings(svc.name, prices['Paseo Individual'] ?? 30)
             return (
               <motion.div
-                key={service.title}
+                key={svc.name}
                 initial={{ opacity: 0, y: 40 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
@@ -82,7 +78,7 @@ export default function Services() {
                 <div className="absolute -top-12 -right-12 w-24 h-24 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-all duration-500" />
 
                 <div className="relative z-10">
-                  {(service as any).popular && (
+                  {svc.quantity && savings > 0 && (
                     <div className="absolute top-3 right-3 z-20 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary to-amber-600 text-white text-[9px] font-semibold uppercase tracking-wider">
                       Más popular
                     </div>
@@ -97,15 +93,15 @@ export default function Services() {
                   </motion.div>
 
                   <h3 className="text-lg font-semibold text-white mb-1">
-                    {service.title}
+                    {svc.name}
                   </h3>
                   <p className="text-sm text-white/50 mb-3 leading-relaxed">
-                    {service.description}
+                    {svc.mainBenefit} · {svc.modality}
                   </p>
 
-                  {service.highlights.length > 0 && (
+                  {svc.highlights && svc.highlights.length > 0 && (
                     <ul className="space-y-1 mb-4">
-                      {service.highlights.map((h: string, j: number) => (
+                      {svc.highlights.map((h: string, j: number) => (
                         <li key={j} className="text-xs text-white/40 flex items-center gap-1.5">
                           <FaPaw className="text-primary shrink-0" size={8} />
                           {h}
@@ -116,11 +112,11 @@ export default function Services() {
 
                   <div className="flex items-center justify-between pt-4 border-t border-white/5">
                     <span className="text-2xl font-bold gradient-text">
-                      {service.price}
+                      ${price.toLocaleString()}
                     </span>
                     <span className="text-xs text-white/40 flex items-center gap-1">
                       <FaClock size={10} />
-                      {service.duration}
+                      {svc.duration}
                     </span>
                   </div>
                 </div>

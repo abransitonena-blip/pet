@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { doc, onSnapshot, setDoc } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { SERVICES } from '@/lib/services'
+import { SERVICES, normalizeServiceName } from '@/lib/services'
 
 const DEFAULT_PRICES = Object.fromEntries(SERVICES.map((s) => [s.name, s.price]))
 
@@ -24,7 +24,11 @@ export function PricesProvider({ children }: { children: ReactNode }) {
     try {
       const unsub = onSnapshot(doc(db, 'admin', 'prices'), (snap) => {
         if (snap.exists()) {
-          const data = snap.data() as Record<string, number>
+          const raw = snap.data() as Record<string, number>
+          const data: Record<string, number> = {}
+          for (const [key, val] of Object.entries(raw)) {
+            data[normalizeServiceName(key)] = val
+          }
           setPrices((prev) => ({ ...prev, ...data }))
         }
       })

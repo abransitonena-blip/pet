@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaTimes, FaDog, FaShieldAlt, FaHeart, FaWhatsapp, FaLock, FaPaw, FaCalendarAlt, FaStar } from 'react-icons/fa'
 import { useEscapeKey } from '@/lib/useEscapeKey'
+import { formatBusinessHours } from '@/lib/defaultConfig'
 
 const sections = [
   {
@@ -13,7 +14,7 @@ const sections = [
   {
     icon: FaCalendarAlt,
     title: '¿Cómo reservar?',
-    content: 'Reservar es muy fácil: llena el formulario en nuestra página o escríbenos directo por WhatsApp al 5523053772. Te confirmaremos el horario disponible y listo. En temporada alta te recomendamos reservar con al menos 24 horas de anticipación para asegurar tu lugar.',
+    content: 'Reservar es muy fácil: llena el formulario en nuestra página o escríbenos directo por WhatsApp al 5523053772. Te confirmaremos el horario disponible y listo.',
   },
   {
     icon: FaTimes,
@@ -43,7 +44,7 @@ const sections = [
   {
     icon: FaWhatsapp,
     title: 'Atención al cliente',
-    content: 'Estamos disponibles por WhatsApp de lunes a sábado de 7:00 AM a 8:00 PM, y domingos de 9:00 AM a 2:00 PM. Fuera de horario puedes dejarnos un mensaje y te responderemos en cuanto abramos. Tu opinión nos ayuda a mejorar — después de cada paseo puedes calificar el servicio y dejar tus comentarios.',
+    content: `Estamos disponibles por WhatsApp ${formatBusinessHours().map((h) => `${h.weekday} de ${h.hours}`).join(' y ')}. Fuera de horario puedes dejarnos un mensaje y te responderemos en cuanto abramos. Tu opinión nos ayuda a mejorar — después de cada paseo puedes calificar el servicio y dejar tus comentarios.`,
   },
 ]
 
