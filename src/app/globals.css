@@ -169,6 +169,18 @@
   .gpu { transform: translateZ(0); will-change: transform; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-bounce-slow, .animate-wag, .animate-gradient, .shimmer-bg {
+    animation: none !important;
+  }
+}
+
 .animate-gradient {
   background-size: 300% 300%;
   animation: gradient 3s ease infinite;

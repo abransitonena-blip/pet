@@ -124,7 +124,7 @@ function BookingSummary({ step, form, prices, couponStatus }: {
     <>
       {/* Desktop: sticky sidebar */}
       <div className="hidden lg:block">
-        <div className="sticky top-24 glass-card p-5 rounded-2xl">
+        <div className="sticky top-24 glass-card p-5 rounded-2xl" aria-label="Resumen de la reserva">
           <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Resumen</h4>
           {summaryContent}
         </div>
@@ -229,7 +229,12 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     switch (key) {
       case 'petName': return val.trim() ? '' : 'Escribe el nombre de tu mascota'
       case 'name': return val.trim() ? '' : 'Escribe tu nombre'
-      case 'phone': return val.replace(/\D/g, '').length >= 10 ? '' : 'Necesitamos un número de 10 dígitos'
+      case 'phone': {
+        const digits = val.replace(/\D/g, '')
+        if (digits.length < 10) return 'Necesitamos un número de 10 dígitos'
+        if (digits.length === 10 && !/^[2-9]/.test(digits)) return 'El número debe iniciar con 2-9'
+        return ''
+      }
       default: return ''
     }
   }, [])
@@ -248,7 +253,10 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
       case 1: return !!form.service
       case 2: return !!form.date && !!form.time
       case 3: return !!form.petName.trim()
-      case 4: return !!form.name.trim() && form.phone.replace(/\D/g, '').length >= 10
+      case 4: {
+        const digits = form.phone.replace(/\D/g, '')
+        return !!form.name.trim() && digits.length >= 10 && /^[2-9]/.test(digits)
+      }
       default: return true
     }
   }, [step, form])
@@ -665,32 +673,40 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                             </div>
 
                             <div className="space-y-2">
-                              <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                                <FaDog size={13} className="text-primary" /> Tipo de mascota
-                              </label>
-                              <div className="grid grid-cols-3 gap-3">
-                                {PET_TYPES.map((pt) => {
-                                  const selected = form.petType === pt.value
-                                  return (
-                                    <button
-                                      key={pt.value}
-                                      type="button"
-                                      onClick={() => set('petType', pt.value)}
-                                      className="flex flex-col items-center gap-2 py-4 rounded-xl border transition-all duration-200"
-                                      style={{
-                                        background: selected ? 'rgba(230,126,34,0.1)' : 'var(--glass-bg)',
-                                        borderColor: selected ? '#E67E22' : 'var(--border)',
-                                        minHeight: '44px',
-                                      }}
-                                    >
-                                      <span className="text-2xl">{pt.emoji}</span>
-                                      <span className="text-xs font-medium" style={{ color: selected ? '#E67E22' : 'var(--text-secondary)' }}>
-                                        {pt.label}
-                                      </span>
-                                    </button>
-                                  )
-                                })}
-                              </div>
+                              <fieldset>
+                                <legend className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                  <FaDog size={13} className="text-primary" /> Tipo de mascota
+                                </legend>
+                                <div className="grid grid-cols-3 gap-3" role="radiogroup">
+                                  {PET_TYPES.map((pt) => {
+                                    const selected = form.petType === pt.value
+                                    return (
+                                      <label
+                                        key={pt.value}
+                                        className="relative flex flex-col items-center gap-2 py-4 rounded-xl border transition-all duration-200 cursor-pointer"
+                                        style={{
+                                          background: selected ? 'rgba(230,126,34,0.1)' : 'var(--glass-bg)',
+                                          borderColor: selected ? '#E67E22' : 'var(--border)',
+                                          minHeight: '44px',
+                                        }}
+                                      >
+                                        <input
+                                          type="radio"
+                                          name="petType"
+                                          value={pt.value}
+                                          checked={selected}
+                                          onChange={() => set('petType', pt.value)}
+                                          className="sr-only"
+                                        />
+                                        <span className="text-2xl">{pt.emoji}</span>
+                                        <span className="text-xs font-medium" style={{ color: selected ? '#E67E22' : 'var(--text-secondary)' }}>
+                                          {pt.label}
+                                        </span>
+                                      </label>
+                                    )
+                                  })}
+                                </div>
+                              </fieldset>
                             </div>
                           </div>
                         </div>
@@ -749,7 +765,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 style={{
                                   background: 'var(--glass-bg)',
-                                  borderColor: errors.phone ? '#ef4444' : form.phone.replace(/\D/g, '').length >= 10 ? 'rgba(34,197,94,0.4)' : 'var(--border)',
+                                  borderColor: errors.phone ? '#ef4444' : form.phone.replace(/\D/g, '').length >= 10 && /^[2-9]/.test(form.phone.replace(/\D/g, '')) ? 'rgba(34,197,94,0.4)' : 'var(--border)',
                                   color: 'var(--text-primary)',
                                 }}
                               />
@@ -758,7 +774,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                   <FaTimes size={10} /> {errors.phone}
                                 </p>
                               )}
-                              {!errors.phone && form.phone.replace(/\D/g, '').length >= 10 && (
+                              {!errors.phone && form.phone.replace(/\D/g, '').length >= 10 && /^[2-9]/.test(form.phone.replace(/\D/g, '')) && (
                                 <p className="text-xs text-green-400 flex items-center gap-1">
                                   <FaCheck size={10} /> Número válido
                                 </p>

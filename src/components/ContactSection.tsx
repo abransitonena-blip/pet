@@ -62,7 +62,7 @@ export default function ContactSection() {
                 </div>
               )
               return c.href ? (
-                <a key={i} href={c.href} target="_blank" rel="noopener noreferrer">
+                <a key={i} href={c.href} target="_blank" rel="noopener noreferrer" aria-label={`${c.label} (abre en nueva ventana)`}>
                   {content}
                 </a>
               ) : (
@@ -79,6 +79,7 @@ export default function ContactSection() {
                     href={s.href}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={`${s.label} (abre en nueva ventana)`}
                     className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 ${s.color} transition-all hover:bg-white/10`}
                   >
                     <Icon size={16} />

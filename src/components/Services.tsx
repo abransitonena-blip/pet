@@ -95,12 +95,15 @@ export default function Services() {
                   <h3 className="text-lg font-semibold text-white mb-1">
                     {svc.name}
                   </h3>
+                  <p className="text-xs text-primary/80 mb-1 font-medium">
+                    Recomendado para: {svc.recommendedFor}
+                  </p>
                   <p className="text-sm text-white/50 mb-3 leading-relaxed">
                     {svc.mainBenefit} · {svc.modality}
                   </p>
 
                   {svc.highlights && svc.highlights.length > 0 && (
-                    <ul className="space-y-1 mb-4">
+                    <ul className="space-y-1 mb-3">
                       {svc.highlights.map((h: string, j: number) => (
                         <li key={j} className="text-xs text-white/40 flex items-center gap-1.5">
                           <FaPaw className="text-primary shrink-0" size={8} />
@@ -108,6 +111,12 @@ export default function Services() {
                         </li>
                       ))}
                     </ul>
+                  )}
+
+                  {svc.disclaimer && (
+                    <p className="text-[10px] text-white/30 mb-3 italic leading-relaxed">
+                      {svc.disclaimer}
+                    </p>
                   )}
 
                   <div className="flex items-center justify-between pt-4 border-t border-white/5">

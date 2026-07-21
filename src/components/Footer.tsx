@@ -113,6 +113,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={href.includes('instagram') ? 'Instagram (abre en nueva ventana)' : href.includes('facebook') ? 'Facebook (abre en nueva ventana)' : 'WhatsApp (abre en nueva ventana)'}
                   className={`w-10 h-10 rounded-full glass flex items-center justify-center transition-all duration-300 hover:scale-110 ${color}`}
                   style={{ color: 'var(--text-secondary)' }}
                 >

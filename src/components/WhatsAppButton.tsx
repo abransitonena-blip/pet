@@ -35,6 +35,7 @@ export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
             href={`https://wa.me/5215523053772?text=¡Hola!%20Quiero%20agendar%20un%20paseo%20para%20mi%20perro%20🐾`}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Contactar por WhatsApp para reservar paseo"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             whileHover={{ scale: 1.1 }}
