@@ -19,7 +19,7 @@ export default function NotFound() {
           <FaDog /> Volver al inicio
         </Link>
         <div className="mt-12 flex items-center justify-center gap-2 text-white/20 text-xs">
-          <FaPaw /> Paseos Quebrada <FaPaw />
+          <FaPaw /> PET Ap <FaPaw />
         </div>
       </div>
     </div>

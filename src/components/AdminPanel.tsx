@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db } from '@/firebase/config'
+import { brand } from '@/lib/brand'
 import {
   collection,
   query,
@@ -431,7 +432,7 @@ export default function AdminPanel({
 
   const openWhatsApp = (phone: string, name: string) => {
     const cleaned = phone.replace(/\D/g, '')
-    const url = `https://wa.me/52${cleaned}?text=Hola ${encodeURIComponent(name)}, soy de Paseos Quebrada 🐾`
+    const url = `https://wa.me/52${cleaned}?text=Hola ${encodeURIComponent(name)}, soy de PET Ap 🐾`
     window.open(url, '_blank')
   }
 
@@ -475,7 +476,7 @@ export default function AdminPanel({
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-sm sm:text-lg font-bold text-white truncate">Panel Admin</h2>
-                  <p className="text-[10px] sm:text-xs text-white/40 truncate">Gestión de Paseos Quebrada</p>
+                          <p className="text-[10px] sm:text-xs text-white/40 truncate">Gestión de PET Ap</p>
                 </div>
               </div>
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -947,7 +948,7 @@ export default function AdminPanel({
                         const todays = reservations.filter((r) => r.date === today && r.status !== 'cancelled' && r.status !== 'completed')
                         if (todays.length === 0) return
                         const msg = todays.map((r) => `🐾 ${r.petName} - ${r.service} - ${r.time}`).join('\n')
-                        window.open(`https://wa.me/5215523053772?text=${encodeURIComponent('📋 *Reservas de hoy:*\n\n' + msg)}`, '_blank')
+                        window.open(`https://wa.me/${brand.whatsapp}?text=${encodeURIComponent('📋 *Reservas de hoy:*\n\n' + msg)}`, '_blank')
                       }}
                       className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
                     >

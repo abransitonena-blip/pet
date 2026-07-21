@@ -6,7 +6,8 @@ import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { FaDog, FaGoogle, FaEnvelope, FaLock, FaSpinner, FaShieldAlt, FaUser } from 'react-icons/fa'
+import { FaDog, FaGoogle, FaEnvelope, FaLock, FaSpinner, FaUser } from 'react-icons/fa'
+import { brand } from '@/lib/brand'
 
 type Mode = 'select' | 'familia' | 'equipo'
 
@@ -42,6 +43,13 @@ export default function LoginPage() {
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password)
       if (role === 'admin') {
+        const userSnap = await getDoc(doc(db, 'users', cred.user.uid))
+        const isAdmin = userSnap.exists() && userSnap.data()?.role === 'admin'
+        if (!isAdmin) {
+          setError('Acceso no autorizado')
+          await auth.signOut()
+          return
+        }
         router.push('/admin')
       } else {
         const snap = await getDoc(doc(db, 'clients', cred.user.uid))
@@ -78,14 +86,14 @@ export default function LoginPage() {
             <FaDog />
           </div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-            {mode === 'select' && 'Bienvenido a PET Ap'}
+            {mode === 'select' && 'Bienvenido a ' + brand.name}
             {mode === 'familia' && 'Familia PET'}
-            {mode === 'equipo' && 'Equipo PET'}
+            {mode === 'equipo' && 'Acceso Equipo'}
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {mode === 'select' && 'Elige cómo quieres acceder'}
             {mode === 'familia' && 'Accede para ver tus reservas, fotos y más'}
-            {mode === 'equipo' && 'Panel de administración y operaciones'}
+            {mode === 'equipo' && 'Panel de administración'}
           </p>
         </div>
 
@@ -117,28 +125,13 @@ export default function LoginPage() {
               </div>
             </button>
 
-            {/* Equipo PET */}
+            {/* Equipo PET — discreet link */}
             <button
               onClick={() => setMode('equipo')}
-              className="w-full rounded-2xl p-5 text-left transition-all duration-200 hover:border-accent-500/30 group"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-white/60"
+              style={{ color: 'var(--text-muted)' }}
             >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-accent-500/10 flex items-center justify-center text-accent-400 shrink-0">
-                  <FaShieldAlt size={20} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
-                    Equipo PET
-                  </h3>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                    Centro de operaciones, gestión de reservas, clientes, finanzas y analítica.
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-2 text-[10px] font-medium text-accent-400">
-                    <span>Credenciales seguras</span>
-                  </div>
-                </div>
-              </div>
+              Acceso equipo →
             </button>
           </div>
         )}

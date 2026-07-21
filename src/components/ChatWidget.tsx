@@ -144,7 +144,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
                 >
                   <div className="flex items-center gap-2">
                     <FaComments size={16} className="text-white" />
-                    <span className="text-sm font-semibold text-white">Chat Paseos Quebrada</span>
+                    <span className="text-sm font-semibold text-white">Chat PET Ap</span>
                   </div>
                   <button
                     onClick={() => setOpen(false)}

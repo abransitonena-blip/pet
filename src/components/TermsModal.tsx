@@ -9,12 +9,12 @@ const sections = [
   {
     icon: FaDog,
     title: 'Nuestro compromiso contigo',
-    content: 'En Paseos Quebrada nos apasiona lo que hacemos. Cada paseo es una experiencia pensada para la felicidad y el bienestar de tu perro. Nuestro equipo está capacitado en manejo canino y primeros auxilios básicos, para que tú estés tranquilo mientras tu lomito se divierte.',
+    content: 'En PET Ap nos apasiona lo que hacemos. Cada paseo es una experiencia pensada para la felicidad y el bienestar de tu perro. Nuestro equipo está capacitado en manejo canino y primeros auxilios básicos, para que tú estés tranquilo mientras tu lomito se divierte.',
   },
   {
     icon: FaCalendarAlt,
     title: '¿Cómo reservar?',
-    content: 'Reservar es muy fácil: llena el formulario en nuestra página o escríbenos directo por WhatsApp al 5523053772. Te confirmaremos el horario disponible y listo.',
+    content: 'Reservar es muy fácil: llena el formulario en nuestra página o escríbenos directo por WhatsApp. Te confirmaremos el horario disponible y listo.',
   },
   {
     icon: FaTimes,
@@ -39,7 +39,7 @@ const sections = [
   {
     icon: FaStar,
     title: 'Precios justos',
-    content: 'Todos nuestros precios están en pesos mexicanos (MXN) e incluyen IVA. Creemos en precios accesibles para la comunidad de Zona Quebrada, Cuautitlán. Si algún día ajustamos nuestras tarifas, respetamos el precio acordado en reservaciones ya confirmadas. Los cupones y descuentos tienen vigencia y términos específicos que se indican al momento de aplicarlos.',
+    content: 'Todos nuestros precios están en pesos mexicanos (MXN) e incluyen IVA. Creemos en precios accesibles para que más perros disfruten de paseos supervisados. Si algún día ajustamos nuestras tarifas, respetamos el precio acordado en reservaciones ya confirmadas. Los cupones y descuentos tienen vigencia y términos específicos que se indican al momento de aplicarlos.',
   },
   {
     icon: FaWhatsapp,
@@ -80,7 +80,7 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Términos y condiciones</h2>
-                  <p className="text-xs text-white/40">Paseos Quebrada — Zona Quebrada, Cuautitlán</p>
+                  <p className="text-xs text-white/40">PET Ap</p>
                 </div>
               </div>
               <button

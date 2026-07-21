@@ -13,7 +13,7 @@ export default function ReferralSection({ phone }: { phone?: string }) {
     if (!phone) return
     const link = `${window.location.origin}?ref=${phone.replace(/\D/g, '')}`
     setReferralLink(link)
-    setReferralMessage(`🐾 ¡Te recomiendo Paseos Quebrada! Paseos caninos en Zona Quebrada, Cuautitlán. Agenda aquí: ${link}`)
+    setReferralMessage(`🐾 ¡Te recomiendo PET Ap! Paseos caninos supervisados. Agenda aquí: ${link}`)
   }, [phone])
 
   const copyLink = () => {

@@ -20,7 +20,7 @@ const steps = [
     icon: FaWalking,
     title: '3. ¡A pasear!',
     description:
-      'Pasamos por tu perro, lo llevamos a pasear por Zona Quebrada, juega, corre y se divierte.',
+      'Pasamos por tu perro, lo llevamos a pasear, juega, corre y se divierte.',
   },
   {
     icon: FaMapMarkerAlt,
@@ -57,7 +57,7 @@ export default function HowItWorks() {
             Así de <span className="gradient-text">fácil</span> es
           </h2>
           <p className="section-subtitle">
-            En solo 5 pasos tu perro estará disfrutando de su paseo por Zona Quebrada.
+            En solo 5 pasos tu perro estará disfrutando de su paseo.
           </p>
         </motion.div>
 

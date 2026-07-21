@@ -12,7 +12,6 @@ const DEFAULT_FAQS = [
   { q: '¿Pasean perros de todas las tallas?', a: '¡Claro! Desde chihuahuas hasta grandes daneses. Agrupamos por tamaño y temperamento para la seguridad de todos.' },
   { q: '¿Qué incluye el Paseo + Reporte?', a: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video, mapa del recorrido y ejercicios personalizados.' },
   { q: '¿Cómo pago?', a: 'Aceptamos efectivo, transferencia bancaria y depósito. El pago se acuerda al momento de agendar.' },
-  { q: '¿Zona Quebrada es la única zona?', a: 'Sí, actualmente cubrimos exclusivamente Zona Quebrada en Cuautitlán. Esto nos permite dar un servicio más rápido y personalizado.' },
   { q: '¿Mi perro necesita estar vacunado?', a: 'Sí, pedimos que los perros estén al día con sus vacunas (múltiple y antirrábica) para la seguridad de todos los peludos.' },
 ]
 

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { FaMapMarkerAlt, FaStar } from 'react-icons/fa'
+import { FaStar, FaDog } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
 import Avatar from '@/components/ui/Avatar'
 
@@ -47,11 +47,11 @@ export default function Hero() {
         animate="show"
         className="relative z-10 max-w-4xl mx-auto px-4 text-center"
       >
-        {/* Location badge */}
+        {/* Brand badge */}
         <motion.div variants={item} className="mb-6 flex items-center justify-center gap-2">
-          <FaMapMarkerAlt className="text-brand-500" size={12} />
+          <FaDog className="text-brand-500" size={12} />
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-brand-500/10 border border-brand-500/15 text-brand-400 uppercase tracking-wider">
-            Zona Quebrada, Cuautitlán
+            Paseos y bienestar canino
           </span>
         </motion.div>
 
@@ -64,7 +64,7 @@ export default function Hero() {
 
         {/* Subhead */}
         <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          {config.heroSubtitle || 'Paseos supervisados con fotos, mapa y reporte en tiempo real. Porque saber que está bien, no tiene precio.'}
+          {config.heroSubtitle || 'Paseos caninos supervisados con tecnología. Fotos, mapa y reporte en tiempo real. Porque saber que está bien, no tiene precio.'}
         </motion.p>
 
         {/* CTAs */}

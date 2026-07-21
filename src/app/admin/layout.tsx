@@ -43,8 +43,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.push('/login')
         return
       }
-      // Check if user has admin access (check Firestore or custom claim)
-      // For now, just verify they exist
+      const userSnap = await getDoc(doc(db, 'users', user.uid))
+      const isAdmin = userSnap.exists() && userSnap.data()?.role === 'admin'
+      if (!isAdmin) {
+        await signOut(auth)
+        router.push('/login')
+        return
+      }
       setLoading(false)
     })
     return unsub

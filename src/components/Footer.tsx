@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { FaDog, FaMapMarkerAlt, FaWhatsapp, FaInstagram, FaFacebook, FaTimes } from 'react-icons/fa'
+import { FaDog, FaWhatsapp, FaInstagram, FaFacebook, FaTimes, FaEnvelope } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
 import { formatBusinessHours } from '@/lib/defaultConfig'
 
@@ -32,7 +32,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
               </span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Paseos caninos supervisados en Zona Quebrada, Cuautitlán.
+              Paseos caninos supervisados con tecnología.
               Precios accesibles, mucho amor y ejercicio para tu perro.
             </p>
           </motion.div>
@@ -67,24 +67,22 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             </h3>
             <div className="space-y-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
               <a
-                href={`https://wa.me/521${config.whatsapp}`}
+                href={`https://wa.me/${config.whatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 hover:text-green-400 transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 <FaWhatsapp size={14} />
-                5523053772
+                {config.whatsapp.replace(/521?/, '')}
               </a>
               <a
-                href="https://maps.app.goo.gl/oS5fBwZdyTYAk7U3A"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:text-red-400 transition-colors"
+                href="mailto:ap9871888@gmail.com"
+                className="flex items-center gap-2 hover:text-brand-400 transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                <FaMapMarkerAlt size={14} style={{ color: 'var(--primary)' }} />
-                Zona Quebrada, Cuautitlán
+                <FaEnvelope size={14} />
+                ap9871888@gmail.com
               </a>
               <Link href="/cancelar" className="flex items-center gap-2 hover:text-red-400 transition-colors text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <FaTimes size={14} />
@@ -104,7 +102,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             </h3>
             <div className="flex gap-3">
               {[
-                { icon: FaWhatsapp, href: 'https://wa.me/5215523053772', color: 'hover:text-green-400' },
+                { icon: FaWhatsapp, href: `https://wa.me/${config.whatsapp}`, color: 'hover:text-green-400' },
                 { icon: FaInstagram, href: config.instagram || '#', color: 'hover:text-pink-400' },
                 { icon: FaFacebook, href: config.facebook || '#', color: 'hover:text-blue-400' },
               ].map(({ icon: Icon, href, color }) => (
@@ -145,8 +143,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
               Términos y condiciones
             </button>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Hecho con <FaDog style={{ color: 'var(--primary)' }} className="inline" size={10} /> para los
-              perros de Cuautitlán
+              Hecho con <FaDog style={{ color: 'var(--primary)' }} className="inline" size={10} /> para los perros
             </p>
           </div>
         </motion.div>

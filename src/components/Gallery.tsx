@@ -21,7 +21,7 @@ const fallbackImages = [
   { url: 'https://placedog.net/640/480?random=4', title: 'Rocky explorando', dog: 'Rocky' },
   { url: 'https://placedog.net/640/480?random=5', title: 'Mimi feliz después del paseo', dog: 'Mimi' },
   { url: 'https://placedog.net/640/480?random=6', title: 'Thor corriendo libre', dog: 'Thor' },
-  { url: 'https://placedog.net/640/480?random=7', title: 'Paseo grupal en Quebrada', dog: 'Coco' },
+  { url: 'https://placedog.net/640/480?random=7', title: 'Paseo grupal', dog: 'Coco' },
   { url: 'https://placedog.net/640/480?random=8', title: 'Nala disfrutando el sol', dog: 'Nala' },
 ]
 

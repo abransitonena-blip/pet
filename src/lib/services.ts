@@ -20,7 +20,7 @@ export const SERVICES: ServiceOption[] = [
     mainBenefit: 'Atención personalizada',
     recommendedFor: 'Cuidado diario',
     icon: '🐕',
-    highlights: ['Atención personalizada 1 a 1', 'Ruta por Zona Quebrada', 'Ejercicio moderado', 'Supervisión constante'],
+    highlights: ['Atención personalizada 1 a 1', 'Ruta personalizada', 'Ejercicio moderado', 'Supervisión constante'],
   },
   {
     name: 'Paseo Extendido',

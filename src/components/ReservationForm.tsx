@@ -58,7 +58,6 @@ function clearDraft() {
 function BookingSummary({ step, form, prices, couponStatus }: {
   step: number; form: any; prices: Record<string, number>; couponStatus: any
 }) {
-  const [expanded, setExpanded] = useState(false)
   const svc = getServiceMeta(form.service)
   const basePrice = form.service ? (prices[form.service] ?? getServicePrice(form.service)) : 0
   const discountAmount = couponStatus?.valid && couponStatus.discount
@@ -69,6 +68,22 @@ function BookingSummary({ step, form, prices, couponStatus }: {
   const hasData = form.service || form.date || form.petName || form.name
 
   if (!hasData) return null
+
+  // Steps 1-4: show minimal one-liner only on mobile
+  if (step < 5) {
+    return (
+      <div className="lg:hidden mb-4">
+        {form.service && (
+          <div className="flex items-center justify-center gap-2 text-xs py-2 px-3 rounded-xl"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+            <span>{svc?.icon || '🐾'}</span>
+            <span style={{ color: 'var(--text-secondary)' }}>{form.service}</span>
+            {basePrice > 0 && <span className="font-medium" style={{ color: 'var(--text-primary)' }}>${finalPrice.toLocaleString()} MXN</span>}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   const summaryContent = (
     <div className="space-y-2">
@@ -122,42 +137,12 @@ function BookingSummary({ step, form, prices, couponStatus }: {
 
   return (
     <>
-      {/* Desktop: sticky sidebar */}
+      {/* Desktop: sticky sidebar (only on step 5) */}
       <div className="hidden lg:block">
         <div className="sticky top-24 glass-card p-5 rounded-2xl" aria-label="Resumen de la reserva">
           <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Resumen</h4>
           {summaryContent}
         </div>
-      </div>
-
-      {/* Mobile: expandable compact summary */}
-      <div className="lg:hidden mb-4">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between p-3 rounded-xl text-sm"
-          style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}
-        >
-          <span className="flex items-center gap-2 font-medium" style={{ color: 'var(--text-primary)' }}>
-            <FaTag size={12} className="text-primary" />
-            Resumen {form.service ? `— ${form.service}` : ''}
-          </span>
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{expanded ? 'Ocultar' : 'Ver'}</span>
-        </button>
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="p-3 mt-2 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-                {summaryContent}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </>
   )
@@ -323,7 +308,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     const finalPrice = basePrice - discountAmount
 
     const petTypeLabel = PET_TYPES.find((p) => p.value === form.petType)?.label || form.petType
-    let message = `🐾 *Nuevo Paseo — Paseos Quebrada*\n`
+    let message = `🐾 *Nuevo Paseo — PET Ap*\n`
     message += `👤 *Nombre:* ${form.name}\n`
     message += `📱 *Teléfono:* ${form.phone}\n`
     message += `🐶 *Mascota:* ${form.petName} (${petTypeLabel})\n`
@@ -426,13 +411,13 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                     <motion.div
                       animate={{
                         scale: step === s.num ? 1.1 : 1,
-                        background: step < s.num ? 'linear-gradient(135deg, #22c55e, #16a34a)' : step === s.num ? 'linear-gradient(135deg, #E67E22, #D35400)' : 'var(--glass-bg)',
+                        background: step > s.num ? 'linear-gradient(135deg, #22c55e, #16a34a)' : step === s.num ? 'linear-gradient(135deg, #E67E22, #D35400)' : 'var(--glass-bg)',
                       }}
                       transition={{ duration: 0.3 }}
                       className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border"
                       style={{
-                        borderColor: step <= s.num ? 'transparent' : 'var(--border)',
-                        color: step <= s.num ? '#fff' : 'var(--text-muted)',
+                        borderColor: step >= s.num ? 'transparent' : 'var(--border)',
+                        color: step >= s.num ? '#fff' : 'var(--text-muted)',
                       }}
                     >
                       {step > s.num ? <FaCheck size={12} /> : s.num}

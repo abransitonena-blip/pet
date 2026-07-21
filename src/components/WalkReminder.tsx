@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaBell, FaCheckCircle } from 'react-icons/fa'
+import { brand } from '@/lib/brand'
 
 export default function WalkReminder() {
   const [phone, setPhone] = useState('')
@@ -10,7 +11,7 @@ export default function WalkReminder() {
 
   const handleSave = () => {
     if (phone.replace(/\D/g, '').length < 10) return
-    const reminderUrl = `https://wa.me/5215523053772?text=${encodeURIComponent(
+    const reminderUrl = `https://wa.me/${brand.whatsapp}?text=${encodeURIComponent(
       '🐾 Hola, quiero activar el recordatorio para mi paseo. Mi número es: ' + phone
     )}`
     window.open(reminderUrl, '_blank')

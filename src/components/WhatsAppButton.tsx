@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaWhatsapp, FaTimes } from 'react-icons/fa'
+import { brand } from '@/lib/brand'
 
 export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
   const [show, setShow] = useState(false)
@@ -32,7 +33,7 @@ export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
           </AnimatePresence>
 
           <motion.a
-            href={`https://wa.me/5215523053772?text=¡Hola!%20Quiero%20agendar%20un%20paseo%20para%20mi%20perro%20🐾`}
+            href={`https://wa.me/${brand.whatsapp}?text=¡Hola!%20Quiero%20agendar%20un%20paseo%20para%20mi%20perro%20🐾`}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Contactar por WhatsApp para reservar paseo"

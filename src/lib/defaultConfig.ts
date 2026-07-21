@@ -1,3 +1,5 @@
+import { brand } from '@/lib/brand'
+
 export interface DayHours {
   open: string
   close: string
@@ -60,13 +62,13 @@ export interface SiteConfig {
 
 export const DEFAULT_CONFIG: SiteConfig = {
   heroTitle: 'Tu perro merece más que un paseo',
-  heroSubtitle: 'Paseos supervisados con fotos, mapa y reporte en tiempo real. Porque saber que está bien, no tiene precio.',
+  heroSubtitle: 'Paseos caninos supervisados con tecnología. Fotos, mapa y reporte en tiempo real. Porque saber que está bien, no tiene precio.',
   sectionDescriptions: {
     services: 'Todos nuestros paseos son supervisados, seguros y pensados para la felicidad de tu perro.',
     howItWorks: 'Reserva en 3 simples pasos y nosotros nos encargamos del resto.',
     faq: 'Respuestas a las preguntas más frecuentes sobre nuestros servicios.',
   },
-  whatsapp: '5523053772',
+  whatsapp: brand.whatsappRaw,
   instagram: 'https://www.instagram.com/pet___ap',
   facebook: '',
   tiktok: '',
@@ -90,13 +92,12 @@ export const DEFAULT_CONFIG: SiteConfig = {
     { question: '¿Pasean perros de todas las tallas?', answer: '¡Claro! Desde chihuahuas hasta grandes daneses. Agrupamos por tamaño y temperamento para la seguridad de todos.' },
     { question: '¿Qué incluye el Paseo + Reporte?', answer: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video, mapa del recorrido y ejercicios personalizados.' },
     { question: '¿Cómo pago?', answer: 'Aceptamos efectivo, transferencia bancaria y depósito. El pago se acuerda al momento de agendar.' },
-    { question: '¿Zona Quebrada es la única zona?', answer: 'Sí, actualmente cubrimos exclusivamente Zona Quebrada en Cuautitlán. Esto nos permite dar un servicio más rápido y personalizado.' },
     { question: '¿Mi perro necesita estar vacunado?', answer: 'Sí, pedimos que los perros estén al día con sus vacunas (múltiple y antirrábica) para la seguridad de todos los peludos.' },
   ],
   termsContent: `TÉRMINOS Y CONDICIONES
 
 1. SERVICIOS
-Paseos Quebrada ofrece servicios de paseo canino en Zona Quebrada, Cuautitlán. Los paseos son supervisados por personal capacitado.
+PET Ap ofrece servicios de paseo canino. Los paseos son supervisados por personal capacitado.
 
 2. HORARIOS
 Los paseos se realizan de lunes a viernes de 7:00 AM a 7:00 PM, y sábados de 8:00 AM a 6:00 PM. Domingo no hay servicio.
@@ -105,7 +106,7 @@ Los paseos se realizan de lunes a viernes de 7:00 AM a 7:00 PM, y sábados de 8:
 Puedes cancelar tu reserva sin costo hasta 2 horas antes del paseo. Cancelaciones tardías pueden generar cargos.
 
 4. RESPONSABILIDAD
-Paseos Quebrada se compromete a cuidar de tu perro durante el paseo. No nos hacemos responsables por condiciones preexistentes de salud.
+PET Ap se compromete a cuidar de tu perro durante el paseo. No nos hacemos responsables por condiciones preexistentes de salud.
 
 5. PAGOS
 Los pagos se realizan en efectivo o transferencia el día del paseo.`,

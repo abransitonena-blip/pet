@@ -12,26 +12,16 @@ const inter = Inter({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-euhz.vercel.app'
 const siteName = 'PET Ap'
-const siteDescription = '🐾 Paseos supervisados con fotos, mapa y reporte en tiempo real. Tu perro merece más que un paseo. Zona Quebrada, Cuautitlán.'
+const siteDescription = 'Paseos caninos supervisados con tecnología. Fotos, mapa y reporte en tiempo real. Tu perro merece más que un paseo.'
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
-  name: 'Paseos Quebrada',
+  name: 'PET Ap',
   description: siteDescription,
   url: siteUrl,
   telephone: '+525523053772',
+  email: 'ap9871888@gmail.com',
   image: `${siteUrl}/og-image.png`,
-  areaServed: {
-    '@type': 'City',
-    name: 'Cuautitlán',
-    sameAs: 'https://es.wikipedia.org/wiki/Cuautitl%C3%A1n',
-  },
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Cuautitlán',
-    addressRegion: 'Estado de México',
-    addressCountry: 'MX',
-  },
   openingHoursSpecification: [
     { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: BUSINESS_HOURS.lunes!.open, closes: BUSINESS_HOURS.lunes!.close },
     { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: BUSINESS_HOURS.sabado!.open, closes: BUSINESS_HOURS.sabado!.close },
@@ -44,26 +34,24 @@ const jsonLd = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'PET Ap | Paseos caninos con tecnología en Cuautitlán',
+    default: 'PET Ap | Paseos caninos con tecnología',
     template: '%s | PET Ap',
   },
   description: siteDescription,
   keywords: [
     'paseos para perros',
-    'Cuautitlán',
-    'zona quebrada',
     'paseos caninos',
     'cuidado de perros',
     'paseador de perros',
-    'paseo canino cuautitlan',
     'pet ap',
-    'paseos quebrada',
+    'bienestar canino',
+    'paseo canino',
   ],
   authors: [{ name: 'PET Ap' }],
   metadataBase: new URL(siteUrl),
   openGraph: {
     title: 'PET Ap | Tu perro merece más que un paseo',
-    description: '🐾 Paseos supervisados con fotos, mapa y reporte en tiempo real. Desde $30.',
+    description: 'Paseos caninos supervisados con tecnología. Desde $30.',
     url: siteUrl,
     siteName: 'PET Ap',
     locale: 'es_MX',
@@ -73,7 +61,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'PET Ap | Tu perro merece más que un paseo',
-    description: '🐾 Paseos supervisados con fotos, mapa y reporte en tiempo real.',
+    description: 'Paseos caninos supervisados con tecnología.',
   },
   robots: {
     index: true,
@@ -98,8 +86,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="PET Ap" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="geo.region" content="MX-MEX" />
-        <meta name="geo.placename" content="Cuautitlán" />
+        <meta name="geo.region" content="MX" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-HQTMCZX66M" />
         <script dangerouslySetInnerHTML={{
