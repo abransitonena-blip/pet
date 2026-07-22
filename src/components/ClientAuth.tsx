@@ -57,7 +57,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
   }
 
   const finishGoogleSignup = async () => {
-    if (!phone.trim() || phone.trim().length < 10) {
+    if (!googleUser || !phone.trim() || phone.trim().length < 10) {
       setError('Teléfono inválido (mín 10 dígitos)')
       return
     }
