@@ -5,7 +5,7 @@ import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import {
-  FaRobot, FaTrendingUp, FaTrendingDown, FaLightbulb, FaCalendarAlt,
+  FaRobot, FaArrowUp, FaArrowDown, FaLightbulb, FaCalendarAlt,
   FaDog, FaDollarSign, FaClock, FaStar, FaArrowRight, FaBrain,
 } from 'react-icons/fa'
 import type { Reservation } from '@/types'
@@ -55,14 +55,14 @@ export default function AdminIAPage() {
       result.push({
         type: 'trend', title: 'Reservas en crecimiento',
         description: `Las reservas aumentaron ${pct}% en los últimos 7 días comparado con la semana anterior.`,
-        metric: `+${pct}%`, icon: <FaTrendingUp size={16} />, color: 'text-success-400',
+        metric: `+${pct}%`, icon: <FaArrowUp size={16} />, color: 'text-success-400',
       })
     } else if (last7.length < prev7.length && prev7.length > 0) {
       const pct = Math.round(((prev7.length - last7.length) / prev7.length) * 100)
       result.push({
         type: 'alert', title: 'Reservas en declive',
         description: `Las reservas disminuyeron ${pct}% esta semana. Considera promociones.`,
-        metric: `-${pct}%`, icon: <FaTrendingDown size={16} />, color: 'text-danger-400',
+        metric: `-${pct}%`, icon: <FaArrowDown size={16} />, color: 'text-danger-400',
       })
     }
 

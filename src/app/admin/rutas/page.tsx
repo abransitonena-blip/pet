@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import { FaMapMarkedAlt, FaDog, FaClock, FaUser, FaNavigation, FaCamera, FaFilter, FaCheck } from 'react-icons/fa'
+import { FaMapMarkedAlt, FaDog, FaClock, FaUser, FaLocationArrow, FaCamera, FaFilter, FaCheck } from 'react-icons/fa'
 import type { Reservation } from '@/types'
 
 interface WalkPoint {
@@ -107,7 +107,7 @@ export default function AdminRutasPage() {
         {[
           { label: 'Rutas registradas', value: stats.total, icon: FaMapMarkedAlt },
           { label: 'Completadas', value: stats.completed, icon: FaCheck },
-          { label: 'Distancia promedio', value: formatDistance(stats.avgDistance), icon: FaNavigation },
+          { label: 'Distancia promedio', value: formatDistance(stats.avgDistance), icon: FaLocationArrow },
           { label: 'Distancia total', value: formatDistance(stats.totalDistance), icon: FaDog },
         ].map((s, i) => {
           const Icon = s.icon
@@ -185,7 +185,7 @@ export default function AdminRutasPage() {
                       {route.walkCheckIn && (
                         <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
                           <p className="text-[10px] font-medium mb-1 text-success-400 flex items-center gap-1">
-                            <FaNavigation size={8} /> Check-in
+                            <FaLocationArrow size={8} /> Check-in
                           </p>
                           <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
                             {route.walkCheckIn.lat.toFixed(6)}, {route.walkCheckIn.lng.toFixed(6)}
@@ -200,7 +200,7 @@ export default function AdminRutasPage() {
                       {route.walkCheckOut && (
                         <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
                           <p className="text-[10px] font-medium mb-1 text-danger-400 flex items-center gap-1">
-                            <FaNavigation size={8} /> Check-out
+                            <FaLocationArrow size={8} /> Check-out
                           </p>
                           <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
                             {route.walkCheckOut.lat.toFixed(6)}, {route.walkCheckOut.lng.toFixed(6)}
