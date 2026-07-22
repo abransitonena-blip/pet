@@ -202,7 +202,7 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
   const save = () => updateConfig({ walkTips: tips })
 
   const addTip = () => setTips([...tips, { title: '', text: '', icon: '🐾' }])
-  const removeTip = (i: number) => setTips(tips.filter((_: unknown, idx: number) => idx !== i))
+  const removeTip = (i: number) => setTips(tips.filter((_: { title: string; text: string; icon: string }, idx: number) => idx !== i))
   const updateTip = (i: number, field: string, value: string) => {
     const updated = [...tips]
     updated[i] = { ...updated[i], [field]: value }
@@ -211,7 +211,7 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
 
   return (
     <div className="space-y-3">
-      {tips.map((tip: string, i: number) => (
+      {tips.map((tip: { title: string; text: string; icon: string }, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
           <div className="flex-1 space-y-2">
             <input value={tip.icon} onChange={(e) => updateTip(i, 'icon', e.target.value)} className="w-10 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs text-center" placeholder="Icono" />
@@ -281,7 +281,7 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
   const save = () => updateConfig({ walkers })
 
   const addWalker = () => setWalkers([...walkers, { name: '', phone: '' }])
-  const removeWalker = (i: number) => setWalkers(walkers.filter((_: unknown, idx: number) => idx !== i))
+  const removeWalker = (i: number) => setWalkers(walkers.filter((_: { name: string; phone: string }, idx: number) => idx !== i))
   const updateWalker = (i: number, field: string, value: string) => {
     const updated = [...walkers]
     updated[i] = { ...updated[i], [field]: value }
@@ -290,7 +290,7 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
 
   return (
     <div className="space-y-3">
-      {walkers.map((w: string, i: number) => (
+      {walkers.map((w: { name: string; phone: string }, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
           <div className="flex-1 flex gap-2">
             <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Nombre" />
