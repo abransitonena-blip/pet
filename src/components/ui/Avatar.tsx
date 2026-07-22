@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 interface AvatarProps {
   name: string
   src?: string
@@ -23,11 +25,15 @@ export default function Avatar({ name, src, size = 'md', className = '' }: Avata
 
   if (src) {
     return (
-      <img
-        src={src}
-        alt={name}
-        className={`rounded-full object-cover ${sizeStyles[size]} ${className}`}
-      />
+      <div className={`relative rounded-full overflow-hidden ${sizeStyles[size]} ${className}`}>
+        <Image
+          src={src}
+          alt={name}
+          fill
+          sizes="48px"
+          className="object-cover"
+        />
+      </div>
     )
   }
 

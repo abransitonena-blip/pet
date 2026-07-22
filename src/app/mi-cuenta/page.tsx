@@ -96,7 +96,7 @@ export default function MisReservasPage() {
                 <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
                   res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
                   res.status === 'pending' ? 'bg-brand-500/15 text-brand-400' :
-                  'bg-white/10 text-slate-400'
+                   'bg-white/10 text-[var(--text-muted)]'
                 }`}>
                   {res.status === 'completed' ? 'Completado' : res.status === 'pending' ? 'Pendiente' : res.status}
                 </span>

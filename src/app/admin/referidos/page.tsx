@@ -187,7 +187,7 @@ export default function AdminReferidosPage() {
                   <span className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{r.refereeName}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[r.status] || 'bg-white/10 text-slate-400'}`}>
+                  <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[r.status] || 'bg-white/10 text-[var(--text-muted)]'}`}>
                     {r.status === 'pending' ? 'Pendiente' : r.status === 'completed' ? 'Completado' : 'Recompensado'}
                   </span>
                   <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>${r.rewardAmount} MXN</span>

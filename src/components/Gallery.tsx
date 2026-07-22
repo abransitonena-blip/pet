@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collection, query, orderBy, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
+import Image from 'next/image'
 import { FaDog, FaPaw, FaTimes, FaChevronLeft, FaChevronRight, FaHeart } from 'react-icons/fa'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 
@@ -114,11 +115,12 @@ export default function Gallery() {
                 {!loaded.has(i) && (
                   <div className="absolute inset-0 skeleton" />
                 )}
-                <img
+                <Image
                   src={img.url}
                   alt={img.title}
-                  className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${loaded.has(i) ? 'opacity-100' : 'opacity-0'}`}
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className={`object-cover transition-all duration-700 group-hover:scale-110 ${loaded.has(i) ? 'opacity-100' : 'opacity-0'}`}
                   onLoad={() => handleImgLoad(i)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-400">
@@ -193,9 +195,11 @@ export default function Gallery() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative w-full h-full flex items-center justify-center rounded-2xl overflow-hidden">
-                <img
+                <Image
                   src={images[selected].url}
                   alt={images[selected].title}
+                  width={1200}
+                  height={800}
                   className="max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-2xl shadow-2xl"
                 />
               </div>
