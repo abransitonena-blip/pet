@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
+import { ReservationsProvider } from '@/context/ReservationsContext'
 import { motion } from 'framer-motion'
 import {
   FaDog, FaTachometerAlt, FaCalendarAlt, FaUsers, FaPaw, FaWalking,
@@ -72,6 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
+    <ReservationsProvider>
     <div className="min-h-screen flex" style={{ background: 'var(--bg-primary)' }}>
       {/* Sidebar */}
       <motion.aside
@@ -203,5 +205,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </main>
       </div>
     </div>
+    </ReservationsProvider>
   )
 }
