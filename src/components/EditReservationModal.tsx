@@ -40,9 +40,10 @@ export default function EditReservationModal({
     try {
       const changes: Record<string, { from: unknown; to: unknown }> = {}
       Object.keys(form).forEach((key) => {
-        const k = key as keyof Reservation
-        if (form[k] !== reservation[k]) {
-          changes[key] = { from: reservation[k], to: form[k] }
+        const fk = key as keyof typeof form
+        const rv = (reservation as Record<string, unknown>)[key]
+        if (form[fk] !== rv) {
+          changes[key] = { from: rv, to: form[fk] }
         }
       })
       const updates: Record<string, unknown> = { ...form }
