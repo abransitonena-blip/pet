@@ -1,10 +1,17 @@
-const CACHE = 'pq-v2'
+const CACHE = 'pet-v1'
 
 const ASSETS = [
   '/',
   '/manifest.json',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg',
+]
+
+const EXCLUDE_HOSTS = [
+  'firestore.googleapis.com',
+  'firebaseapp.com',
+  'firebaseio.com',
+  'googleapis.com',
 ]
 
 self.addEventListener('install', (e) => {
@@ -21,13 +28,17 @@ self.addEventListener('activate', (e) => {
 })
 
 self.addEventListener('fetch', (e) => {
+  const url = new URL(e.request.url)
+  if (EXCLUDE_HOSTS.some((host) => url.hostname.includes(host))) return
+  if (e.request.method !== 'GET') return
+
   e.respondWith(
     caches.match(e.request).then((r) => r || fetch(e.request).catch(() => new Response('Offline', { status: 503 })))
   )
 })
 
 self.addEventListener('push', (e) => {
-  const data = e.data?.json() || { title: '🐾 Paseos Quebrada', body: 'Nueva actualización', icon: '/icons/icon-192.svg' }
+  const data = e.data?.json() || { title: '🐾 PET Ap', body: 'Nueva actualización', icon: '/icons/icon-192.svg' }
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
