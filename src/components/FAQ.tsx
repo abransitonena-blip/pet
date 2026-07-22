@@ -18,7 +18,7 @@ const DEFAULT_FAQS = [
 export default function FAQ() {
   const { config } = useConfig()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
-  const faqs = config.faq.length > 0 ? config.faq.map((f: any) => ({ q: f.question, a: f.answer })) : DEFAULT_FAQS
+  const faqs = config.faq.length > 0 ? config.faq.map((f: { question: string; answer: string }) => ({ q: f.question, a: f.answer })) : DEFAULT_FAQS
 
   return (
     <section id="faq" className="relative py-24 sm:py-32">

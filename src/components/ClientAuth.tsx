@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
-  GoogleAuthProvider, signInWithPopup, signOut,
+  GoogleAuthProvider, signInWithPopup, signOut, type User,
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
@@ -14,7 +14,7 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   onSuccess: (uid: string) => void
-  needsPhoneUser?: any
+  needsPhoneUser?: User | null
 }
 
 export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser }: Props) {
@@ -27,7 +27,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [needsPhone, setNeedsPhone] = useState(false)
-  const [googleUser, setGoogleUser] = useState<any>(null)
+  const [googleUser, setGoogleUser] = useState<User | null>(null)
 
   useEffect(() => {
     if (needsPhoneUser) {
@@ -49,9 +49,9 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
       const provider = new GoogleAuthProvider()
       // localStorage.setItem('pq_google_pending', '1')
       await signInWithPopup(auth, provider)
-    } catch (e: any) {
-      // localStorage.removeItem('pq_google_pending')
-      setError('Error: ' + (e.message || 'intenta de nuevo'))
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'intenta de nuevo'
+      setError('Error: ' + msg)
       setGoogleLoading(false)
     }
   }
@@ -86,10 +86,11 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
         setLoading(false); return
       }
       onSuccess(cred.user.uid); onClose()
-    } catch (e: any) {
-      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
+    } catch (e: unknown) {
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential')
         setError('Correo o contraseña incorrectos')
-      else if (e.code === 'auth/invalid-email') setError('Correo inválido')
+      else if (code === 'auth/invalid-email') setError('Correo inválido')
       else setError('Error al iniciar sesión')
     }
     setLoading(false)
@@ -108,10 +109,11 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
         createdAt: new Date().toISOString(),
       })
       onSuccess(cred.user.uid); onClose()
-    } catch (e: any) {
-      if (e.code === 'auth/email-already-in-use') setError('Correo ya registrado')
-      else if (e.code === 'auth/weak-password') setError('Mínimo 6 caracteres')
-      else if (e.code === 'auth/invalid-email') setError('Correo inválido')
+    } catch (e: unknown) {
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      if (code === 'auth/email-already-in-use') setError('Correo ya registrado')
+      else if (code === 'auth/weak-password') setError('Mínimo 6 caracteres')
+      else if (code === 'auth/invalid-email') setError('Correo inválido')
       else setError('Error al registrarse')
     }
     setLoading(false)

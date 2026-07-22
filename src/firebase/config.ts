@@ -17,7 +17,9 @@ const db = getFirestore(app)
 const auth = getAuth(app)
 const storage = getStorage(app)
 
-let _messaging: any = null
+import type { Messaging } from 'firebase/messaging'
+
+let _messaging: Messaging | null = null
 
 export async function getMessagingInstance() {
   if (typeof window !== 'undefined' && !_messaging) {

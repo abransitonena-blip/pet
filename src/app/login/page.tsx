@@ -31,7 +31,7 @@ export default function LoginPage() {
       } else {
         setError('Esta cuenta no tiene un perfil de familia registrado')
       }
-    } catch (e: any) {
+    } catch {
       setError('Error al iniciar sesión con Google')
     }
     setLoading(false)
@@ -60,10 +60,11 @@ export default function LoginPage() {
           await auth.signOut()
         }
       }
-    } catch (e: any) {
-      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+    } catch (e: unknown) {
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
         setError('Correo o contraseña incorrectos')
-      } else if (e.code === 'auth/invalid-email') {
+      } else if (code === 'auth/invalid-email') {
         setError('Correo inválido')
       } else {
         setError('Error al iniciar sesión')

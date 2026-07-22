@@ -3,6 +3,13 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
+import type { SiteConfig } from '@/lib/defaultConfig'
+
+type EditorProps = {
+  config: SiteConfig
+  updateConfig: (partial: Partial<SiteConfig>) => Promise<void>
+  saving: boolean
+}
 import {
   FaSave,
   FaTimes,
@@ -72,8 +79,8 @@ function SectionContent({
   saving,
 }: {
   section: Section
-  config: any
-  updateConfig: any
+  config: import('@/lib/defaultConfig').SiteConfig
+  updateConfig: (partial: Partial<import('@/lib/defaultConfig').SiteConfig>) => Promise<void>
   saving: boolean
 }) {
   switch (section) {
@@ -98,7 +105,7 @@ function SectionContent({
   }
 }
 
-function HeroEditor({ config, updateConfig, saving }: any) {
+function HeroEditor({ config, updateConfig, saving }: EditorProps) {
   const [heroTitle, setHeroTitle] = useState(config.heroTitle)
   const [heroSubtitle, setHeroSubtitle] = useState(config.heroSubtitle)
   const [desc, setDesc] = useState(config.sectionDescriptions)
@@ -119,7 +126,7 @@ function HeroEditor({ config, updateConfig, saving }: any) {
   )
 }
 
-function SocialEditor({ config, updateConfig, saving }: any) {
+function SocialEditor({ config, updateConfig, saving }: EditorProps) {
   const [whatsapp, setWhatsapp] = useState(config.whatsapp)
   const [instagram, setInstagram] = useState(config.instagram)
   const [facebook, setFacebook] = useState(config.facebook)
@@ -138,7 +145,7 @@ function SocialEditor({ config, updateConfig, saving }: any) {
   )
 }
 
-function HoursEditor({ config, updateConfig, saving }: any) {
+function HoursEditor({ config, updateConfig, saving }: EditorProps) {
   const [slots, setSlots] = useState(config.availableSlots)
 
   const save = () => updateConfig({ availableSlots: slots })
@@ -190,13 +197,13 @@ function HoursEditor({ config, updateConfig, saving }: any) {
   )
 }
 
-function TipsEditor({ config, updateConfig, saving }: any) {
+function TipsEditor({ config, updateConfig, saving }: EditorProps) {
   const [tips, setTips] = useState(config.walkTips)
 
   const save = () => updateConfig({ walkTips: tips })
 
   const addTip = () => setTips([...tips, { title: '', text: '', icon: '🐾' }])
-  const removeTip = (i: number) => setTips(tips.filter((_: any, idx: number) => idx !== i))
+  const removeTip = (i: number) => setTips(tips.filter((_: unknown, idx: number) => idx !== i))
   const updateTip = (i: number, field: string, value: string) => {
     const updated = [...tips]
     updated[i] = { ...updated[i], [field]: value }
@@ -205,7 +212,7 @@ function TipsEditor({ config, updateConfig, saving }: any) {
 
   return (
     <div className="space-y-3">
-      {tips.map((tip: any, i: number) => (
+      {tips.map((tip: string, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
           <div className="flex-1 space-y-2">
             <input value={tip.icon} onChange={(e) => updateTip(i, 'icon', e.target.value)} className="w-10 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs text-center" placeholder="Icono" />
@@ -223,13 +230,13 @@ function TipsEditor({ config, updateConfig, saving }: any) {
   )
 }
 
-function FAQEditor({ config, updateConfig, saving }: any) {
+function FAQEditor({ config, updateConfig, saving }: EditorProps) {
   const [faq, setFaq] = useState(config.faq)
 
   const save = () => updateConfig({ faq })
 
   const addItem = () => setFaq([...faq, { question: '', answer: '' }])
-  const removeItem = (i: number) => setFaq(faq.filter((_: any, idx: number) => idx !== i))
+  const removeItem = (i: number) => setFaq(faq.filter((_: unknown, idx: number) => idx !== i))
   const updateItem = (i: number, field: string, value: string) => {
     const updated = [...faq]
     updated[i] = { ...updated[i], [field]: value }
@@ -238,7 +245,7 @@ function FAQEditor({ config, updateConfig, saving }: any) {
 
   return (
     <div className="space-y-3">
-      {faq.map((item: any, i: number) => (
+      {faq.map((item: { question: string; answer: string }, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
           <div className="flex-1 space-y-2">
             <input value={item.question} onChange={(e) => updateItem(i, 'question', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Pregunta" />
@@ -255,7 +262,7 @@ function FAQEditor({ config, updateConfig, saving }: any) {
   )
 }
 
-function TermsEditor({ config, updateConfig, saving }: any) {
+function TermsEditor({ config, updateConfig, saving }: EditorProps) {
   const [content, setContent] = useState(config.termsContent)
   const save = () => updateConfig({ termsContent: content })
 
@@ -269,13 +276,13 @@ function TermsEditor({ config, updateConfig, saving }: any) {
   )
 }
 
-function WalkersEditor({ config, updateConfig, saving }: any) {
+function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
   const [walkers, setWalkers] = useState(config.walkers)
 
   const save = () => updateConfig({ walkers })
 
   const addWalker = () => setWalkers([...walkers, { name: '', phone: '' }])
-  const removeWalker = (i: number) => setWalkers(walkers.filter((_: any, idx: number) => idx !== i))
+  const removeWalker = (i: number) => setWalkers(walkers.filter((_: unknown, idx: number) => idx !== i))
   const updateWalker = (i: number, field: string, value: string) => {
     const updated = [...walkers]
     updated[i] = { ...updated[i], [field]: value }
@@ -284,7 +291,7 @@ function WalkersEditor({ config, updateConfig, saving }: any) {
 
   return (
     <div className="space-y-3">
-      {walkers.map((w: any, i: number) => (
+      {walkers.map((w: string, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
           <div className="flex-1 flex gap-2">
             <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Nombre" />
@@ -301,7 +308,7 @@ function WalkersEditor({ config, updateConfig, saving }: any) {
   )
 }
 
-function MaintenanceEditor({ config, updateConfig, saving }: any) {
+function MaintenanceEditor({ config, updateConfig, saving }: EditorProps) {
   const [enabled, setEnabled] = useState(config.maintenance)
 
   const save = () => updateConfig({ maintenance: enabled })

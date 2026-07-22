@@ -45,6 +45,9 @@ export default function AdminReservas() {
   const [dateTo, setDateTo] = useState('')
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [historyReservations, setHistoryReservations] = useState<Reservation[]>([])
+  const [historyPhone, setHistoryPhone] = useState('')
+  const [showHistory, setShowHistory] = useState(false)
   const { prices } = usePrices()
 
   useEffect(() => {
@@ -121,8 +124,10 @@ export default function AdminReservas() {
   const viewHistory = async (phone: string) => {
     const q = query(collection(db, 'reservations'), where('phone', '==', phone), orderBy('createdAt', 'desc'))
     const snap = await getDocs(q)
-    // Could show history modal - for now just log
-    console.log('History:', snap.docs.map((d) => d.data()))
+    const history = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    setHistoryReservations(history as Reservation[])
+    setHistoryPhone(phone)
+    setShowHistory(true)
   }
 
   const exportCSV = () => {
@@ -336,6 +341,46 @@ export default function AdminReservas() {
                 <button onClick={() => setConfirmDelete(null)} className="flex-1 btn-secondary !text-xs">Cancelar</button>
                 <button onClick={handleDelete} className="flex-1 btn-primary !text-xs !bg-danger-500 hover:!bg-danger-600">Eliminar</button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* History Modal */}
+      <AnimatePresence>
+        {showHistory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60" onClick={() => setShowHistory(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative rounded-2xl p-6 w-full max-w-lg max-h-[70vh] overflow-y-auto"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Historial · {historyPhone}</h3>
+                <button onClick={() => setShowHistory(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                  <FaTimes size={14} />
+                </button>
+              </div>
+              {historyReservations.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin historial</p>
+              ) : (
+                <div className="space-y-2">
+                  {historyReservations.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{r.service} · {r.petName}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.date} {r.time}</p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[r.status] || 'bg-white/10 text-slate-400'}`}>
+                        {STATUS_LABELS[r.status] || r.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           </div>
         )}

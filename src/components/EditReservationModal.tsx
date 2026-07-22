@@ -37,13 +37,14 @@ export default function EditReservationModal({
     if (!reservation) return
     setSaving(true)
     try {
-      const changes: Record<string, any> = {}
+      const changes: Record<string, { from: unknown; to: unknown }> = {}
       Object.keys(form).forEach((key) => {
-        if ((form as any)[key] !== (reservation as any)[key]) {
-          changes[key] = { from: (reservation as any)[key], to: (form as any)[key] }
+        const k = key as keyof Reservation
+        if (form[k] !== reservation[k]) {
+          changes[key] = { from: reservation[k], to: form[k] }
         }
       })
-      const updates: any = { ...form }
+      const updates: Record<string, unknown> = { ...form }
       if (form.status === "completed" && reservation.status !== "completed") {
         updates.completedAt = serverTimestamp()
       }

@@ -47,7 +47,7 @@ function loadDraft() {
   } catch { return null }
 }
 
-function saveDraft(data: any) {
+function saveDraft(data: Record<string, unknown>) {
   try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)) } catch {}
 }
 
@@ -56,7 +56,7 @@ function clearDraft() {
 }
 
 function BookingSummary({ step, form, prices, couponStatus }: {
-  step: number; form: any; prices: Record<string, number>; couponStatus: any
+  step: number; form: Record<string, string>; prices: Record<string, number>; couponStatus: { valid?: boolean; discount?: number; type?: string } | null
 }) {
   const svc = getServiceMeta(form.service)
   const basePrice = form.service ? (prices[form.service] ?? getServicePrice(form.service)) : 0
