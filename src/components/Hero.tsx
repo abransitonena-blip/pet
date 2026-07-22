@@ -50,7 +50,7 @@ export default function Hero() {
         {/* Brand badge */}
         <motion.div variants={item} className="mb-6 flex items-center justify-center gap-2">
           <FaDog className="text-brand-500" size={12} />
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-brand-500/10 border border-brand-500/15 text-brand-400 uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-brand-500/10 border border-brand-500/15 text-brand-400 uppercase tracking-wider">
             Paseos y bienestar canino
           </span>
         </motion.div>
@@ -96,7 +96,7 @@ export default function Hero() {
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-xl sm:text-2xl font-bold gradient-text">{stat.value}</div>
-              <div className="text-[11px] sm:text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
+              <div className="text-xs sm:text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
             </div>
           ))}
         </motion.div>

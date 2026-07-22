@@ -125,7 +125,7 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
             </motion.div>
 
             <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-              <p className="text-[10px] text-white/30">Última actualización: Julio 2024</p>
+              <p className="text-2xs text-white/30">Última actualización: Julio 2024</p>
               <button
                 onClick={onClose}
                 className="text-xs px-4 py-2 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-all"

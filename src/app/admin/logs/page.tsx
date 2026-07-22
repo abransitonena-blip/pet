@@ -125,7 +125,7 @@ export default function AdminLogsPage() {
               className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-white/[0.02]"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${ACTION_COLORS[log.action] || 'bg-white/10 text-white/40'}`}>
+              <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${ACTION_COLORS[log.action] || 'bg-white/10 text-white/40'}`}>
                 {ACTION_LABELS[log.action] || log.action}
               </span>
               <div className="flex-1 min-w-0">
@@ -138,7 +138,7 @@ export default function AdminLogsPage() {
                   )}
                 </p>
               </div>
-              <span className="text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>
+              <span className="text-2xs shrink-0" style={{ color: 'var(--text-muted)' }}>
                 {formatTimestamp(log.timestamp)}
               </span>
             </div>

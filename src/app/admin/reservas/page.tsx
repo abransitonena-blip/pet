@@ -252,7 +252,7 @@ export default function AdminReservas() {
                       {STATUS_LABELS[res.status] || res.status}
                     </Badge>
                     {res.assignedWalker && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
                         🦮 {res.assignedWalker}
                       </span>
                     )}

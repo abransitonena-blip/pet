@@ -203,7 +203,7 @@ export default function AdminIAPage() {
             <div className="flex items-end justify-between gap-2 h-32">
               {heatmap.map((h, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>{h.count}</span>
+                  <span className="text-2xs font-medium" style={{ color: 'var(--text-muted)' }}>{h.count}</span>
                   <div
                     className="w-full rounded-t-lg transition-all"
                     style={{
@@ -211,7 +211,7 @@ export default function AdminIAPage() {
                       background: h.intensity > 0.7 ? 'var(--primary)' : h.intensity > 0.3 ? 'rgba(230,126,34,0.4)' : 'rgba(230,126,34,0.15)',
                     }}
                   />
-                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{h.day}</span>
+                  <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{h.day}</span>
                 </div>
               ))}
             </div>
@@ -234,7 +234,7 @@ export default function AdminIAPage() {
                         background: h.intensity > 0.7 ? 'var(--primary)' : h.intensity > 0.3 ? 'rgba(230,126,34,0.4)' : 'rgba(230,126,34,0.15)',
                       }}
                     />
-                    <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{h.hour}h</span>
+                    <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{h.hour}h</span>
                   </div>
                 ))}
               </div>

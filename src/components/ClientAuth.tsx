@@ -184,7 +184,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
 
                 <div className="flex items-center gap-3 py-1">
                   <span className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>o con correo</span>
+                  <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>o con correo</span>
                   <span className="flex-1 h-px" style={{ background: 'var(--border)' }} />
                 </div>
 

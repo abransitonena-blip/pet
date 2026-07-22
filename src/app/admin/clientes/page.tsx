@@ -136,7 +136,7 @@ export default function AdminClientesPage() {
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
                     {c.reservations.length > 1 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-success-500/15 text-success-400 font-medium">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-success-500/15 text-success-400 font-medium">
                         Recurrente
                       </span>
                     )}

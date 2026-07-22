@@ -177,7 +177,7 @@ function HoursEditor({ config, updateConfig, saving }: EditorProps) {
                   <button
                     key={hour}
                     onClick={() => toggleHour(day, hour)}
-                    className={`text-[10px] px-2 py-1 rounded-md transition-all ${
+                    className={`text-2xs px-2 py-1 rounded-md transition-all ${
                       active
                         ? 'bg-primary/20 text-primary border border-primary/30'
                         : 'bg-white/5 text-white/30 border border-white/5 hover:border-white/20'

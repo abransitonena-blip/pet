@@ -56,7 +56,7 @@ export default function AdminPrices() {
           >
             <div className="flex-1 min-w-0 mr-4">
               <p className="text-sm font-medium text-white truncate">{service.name}</p>
-              <p className="text-[10px] text-white/30">
+              <p className="text-2xs text-white/30">
                 Predeterminado: ${DEFAULT_PRICES[service.name]}
               </p>
             </div>

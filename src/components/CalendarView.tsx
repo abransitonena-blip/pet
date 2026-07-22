@@ -94,7 +94,7 @@ export default function CalendarView({ reservations }: { reservations: Reservati
                     <div key={idx} className="w-1 h-1 rounded-full bg-primary" />
                   ))}
                   {dayReservations.length > 3 && (
-                    <span className="text-[8px] text-primary">+{dayReservations.length - 3}</span>
+                    <span className="text-2xs text-primary">+{dayReservations.length - 3}</span>
                   )}
                 </div>
               )}

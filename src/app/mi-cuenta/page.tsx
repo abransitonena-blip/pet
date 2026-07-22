@@ -93,7 +93,7 @@ export default function MisReservasPage() {
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{res.petName} · {res.date}</p>
                   </div>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
                   res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
                   res.status === 'pending' ? 'bg-brand-500/15 text-brand-400' :
                   'bg-white/10 text-slate-400'

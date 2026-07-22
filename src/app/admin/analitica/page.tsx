@@ -128,9 +128,9 @@ export default function AdminAnaliticaPage() {
               { label: 'Calificación', value: `${analytics.avgRating} ★`, trend: `${analytics.totalReviews} reseñas`, trendUp: true, color: '#7C3AED' },
             ].map((kpi) => (
               <div key={kpi.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <p className="text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>{kpi.label}</p>
+                <p className="text-2xs mb-1" style={{ color: 'var(--text-muted)' }}>{kpi.label}</p>
                 <p className="text-2xl font-bold" style={{ color: kpi.color }}>{kpi.value}</p>
-                <p className={`text-[10px] mt-0.5 ${kpi.trendUp ? 'text-success-400' : 'text-danger-400'}`}>
+                <p className={`text-2xs mt-0.5 ${kpi.trendUp ? 'text-success-400' : 'text-danger-400'}`}>
                   {kpi.trend}
                 </p>
               </div>
@@ -153,7 +153,7 @@ export default function AdminAnaliticaPage() {
                 {analytics.totalClients > 0 ? Math.round((analytics.returningClients / analytics.totalClients) * 100) : 0}%
               </span>
             </div>
-            <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-2xs mt-1" style={{ color: 'var(--text-muted)' }}>
               {analytics.returningClients} de {analytics.totalClients} clientes han repetido
             </p>
           </div>
@@ -185,12 +185,12 @@ export default function AdminAnaliticaPage() {
               <div className="flex items-end gap-1 h-32">
                 {Object.entries(analytics.dayOfWeekCounts).map(([day, count]) => (
                   <div key={day} className="flex-1 flex flex-col items-center gap-1">
-                    <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>{count}</span>
+                    <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{count}</span>
                     <div
                       className="w-full rounded-t bg-blue-500/50 min-h-[2px]"
                       style={{ height: `${(count / maxDayCount) * 100}%` }}
                     />
-                    <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{day}</span>
+                    <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{day}</span>
                   </div>
                 ))}
               </div>

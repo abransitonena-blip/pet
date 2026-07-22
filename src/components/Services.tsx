@@ -78,7 +78,7 @@ export default function Services() {
 
                 <div className="relative z-10">
                   {svc.quantity && savings > 0 && (
-                    <div className="absolute top-3 right-3 z-20 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary to-amber-600 text-white text-[9px] font-semibold uppercase tracking-wider">
+                    <div className="absolute top-3 right-3 z-20 px-2 py-0.5 rounded-full bg-gradient-to-r from-primary to-amber-600 text-white text-2xs font-semibold uppercase tracking-wider">
                       Más popular
                     </div>
                   )}
@@ -113,7 +113,7 @@ export default function Services() {
                   )}
 
                   {svc.disclaimer && (
-                    <p className="text-[10px] mb-3 italic leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-2xs mb-3 italic leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                       {svc.disclaimer}
                     </p>
                   )}

@@ -88,7 +88,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
           <div>
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Mi cuenta</h3>
             {clientData && (
-              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{clientData.email}</p>
+              <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>{clientData.email}</p>
             )}
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
         <div className="space-y-4">
           {active.length > 0 && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-2xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                 <FaCalendarAlt size={9} /> Próximos paseos ({active.length})
               </p>
               <div className="space-y-2">
@@ -130,7 +130,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                         <FaDog className="text-primary" size={10} />
                         <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{r.petName}</span>
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full"
+                      <span className="text-2xs px-2 py-0.5 rounded-full"
                         style={{
                           background: r.status === 'en_camino' ? 'rgba(59,130,246,0.15)' : r.status === 'paseando' ? 'rgba(139,92,246,0.15)' : 'rgba(245,158,11,0.15)',
                           color: r.status === 'en_camino' ? '#3b82f6' : r.status === 'paseando' ? '#8b5cf6' : '#f59e0b',
@@ -172,7 +172,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
 
           {past.length > 0 && (
             <div className="pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-              <p className="text-[10px] uppercase tracking-wider font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-2xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                 <FaHistory size={9} /> Historial ({past.length})
               </p>
               <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -184,13 +184,13 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                     <div className="flex items-center gap-2 shrink-0">
                       {r.status === 'completed' && r.walkCheckIn && (
                         <button onClick={() => setSelectedWalk(r)}
-                          className="text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-full"
+                          className="text-2xs flex items-center gap-1 px-2 py-0.5 rounded-full"
                           style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
                         >
                           <FaCamera size={8} /> Ver
                         </button>
                       )}
-                      <span className="text-[10px]" style={{ color: r.status === 'completed' ? 'var(--color-success)' : 'var(--color-error)' }}>
+                      <span className="text-2xs" style={{ color: r.status === 'completed' ? 'var(--color-success)' : 'var(--color-error)' }}>
                         {r.status === 'completed' ? '✓' : '✗'}
                       </span>
                     </div>
@@ -235,7 +235,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                   </p>
                   <Image src={selectedWalk.walkCheckIn.photo} alt="Check-in"
                     width={400} height={192} unoptimized className="w-full h-48 object-cover rounded-xl" />
-                  <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-2xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                     <FaMapMarkerAlt size={9} />
                     {selectedWalk.walkCheckIn.lat.toFixed(6)}, {selectedWalk.walkCheckIn.lng.toFixed(6)}
                   </p>
@@ -247,7 +247,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                     </p>
                     <Image src={selectedWalk.walkCheckOut.photo} alt="Check-out"
                       width={400} height={192} unoptimized className="w-full h-48 object-cover rounded-xl" />
-                    <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-2xs mt-1.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                       <FaMapMarkerAlt size={9} />
                       {selectedWalk.walkCheckOut.lat.toFixed(6)}, {selectedWalk.walkCheckOut.lng.toFixed(6)}
                     </p>
@@ -261,7 +261,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                     </p>
                   </div>
                 )}
-                <div className="text-center text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                <div className="text-center text-2xs" style={{ color: 'var(--text-muted)' }}>
                   {SERVICE_LABELS[selectedWalk.service] || selectedWalk.service} · {selectedWalk.date} · {selectedWalk.time}
                 </div>
               </div>

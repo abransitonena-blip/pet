@@ -100,12 +100,12 @@ export default function AdminResenasPage() {
               <FaStar key={i} size={12} className={i <= Math.round(Number(stats.avg)) ? 'text-brand-400' : 'text-white/10'} />
             ))}
           </div>
-          <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Promedio</p>
+          <p className="text-2xs mt-1" style={{ color: 'var(--text-muted)' }}>Promedio</p>
         </div>
         <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Distribución</p>
           {[5, 4, 3, 2, 1].map((stars) => (
-            <div key={stars} className="flex items-center gap-2 text-[10px] mb-0.5">
+            <div key={stars} className="flex items-center gap-2 text-2xs mb-0.5">
               <span style={{ color: 'var(--text-muted)', width: 12 }}>{stars}</span>
               <FaStar className="text-brand-400" size={8} />
               <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
@@ -162,7 +162,7 @@ export default function AdminResenasPage() {
                         <FaStar key={`empty-${i}`} className="text-white/10" size={10} />
                       ))}
                     </div>
-                    <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{rev.date}</span>
+                    <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{rev.date}</span>
                   </div>
                   <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{rev.text}</p>
                   {rev.petName && (

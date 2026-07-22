@@ -166,12 +166,12 @@ export default function AdminRutasPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {hasBoth && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-success-500/15 text-success-400 font-medium">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-success-500/15 text-success-400 font-medium">
                         {formatDuration(route.walkCheckIn!, route.walkCheckOut!)}
                       </span>
                     )}
                     {!hasBoth && route.walkCheckIn && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-medium">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-medium">
                         En curso
                       </span>
                     )}
@@ -184,14 +184,14 @@ export default function AdminRutasPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {route.walkCheckIn && (
                         <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
-                          <p className="text-[10px] font-medium mb-1 text-success-400 flex items-center gap-1">
+                          <p className="text-2xs font-medium mb-1 text-success-400 flex items-center gap-1">
                             <FaLocationArrow size={8} /> Check-in
                           </p>
                           <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
                             {route.walkCheckIn.lat.toFixed(6)}, {route.walkCheckIn.lng.toFixed(6)}
                           </p>
                           {route.walkCheckIn.photo && (
-                            <a href={route.walkCheckIn.photo} target="_blank" rel="noopener noreferrer" className="text-[10px] text-brand-400 flex items-center gap-1 mt-1">
+                            <a href={route.walkCheckIn.photo} target="_blank" rel="noopener noreferrer" className="text-2xs text-brand-400 flex items-center gap-1 mt-1">
                               <FaCamera size={8} /> Ver foto
                             </a>
                           )}
@@ -199,14 +199,14 @@ export default function AdminRutasPage() {
                       )}
                       {route.walkCheckOut && (
                         <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
-                          <p className="text-[10px] font-medium mb-1 text-danger-400 flex items-center gap-1">
+                          <p className="text-2xs font-medium mb-1 text-danger-400 flex items-center gap-1">
                             <FaLocationArrow size={8} /> Check-out
                           </p>
                           <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
                             {route.walkCheckOut.lat.toFixed(6)}, {route.walkCheckOut.lng.toFixed(6)}
                           </p>
                           {route.walkCheckOut.photo && (
-                            <a href={route.walkCheckOut.photo} target="_blank" rel="noopener noreferrer" className="text-[10px] text-brand-400 flex items-center gap-1 mt-1">
+                            <a href={route.walkCheckOut.photo} target="_blank" rel="noopener noreferrer" className="text-2xs text-brand-400 flex items-center gap-1 mt-1">
                               <FaCamera size={8} /> Ver foto
                             </a>
                           )}
@@ -215,7 +215,7 @@ export default function AdminRutasPage() {
                     </div>
                     {route.walkNotes && (
                       <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
-                        <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Notas del paseo</p>
+                        <p className="text-2xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Notas del paseo</p>
                         <p className="text-xs" style={{ color: 'var(--text-primary)' }}>{route.walkNotes}</p>
                       </div>
                     )}

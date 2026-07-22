@@ -127,7 +127,7 @@ export default function CancelarPage() {
                       <div className="flex items-center gap-2 mb-2">
                         <FaDog className="text-primary" size={12} />
                         <span className="text-sm font-semibold text-white">{r.petName}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                        <span className={`text-2xs px-2 py-0.5 rounded-full ${
                           r.status === 'en_camino' ? 'bg-blue-500/20 text-blue-400' : r.status === 'paseando' ? 'bg-purple-500/20 text-purple-400' : 'bg-secondary/20 text-secondary'
                         }`}>
                           {r.status === 'en_camino' ? 'En camino' : r.status === 'paseando' ? 'Paseando' : 'Pendiente'}

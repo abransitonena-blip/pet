@@ -71,7 +71,7 @@ export default function AvailabilityCalendar({ date, onSelect }: { date?: string
           })}
         </div>
       )}
-      <p className="text-[10px] text-white/20 mt-2 text-center">
+      <p className="text-2xs text-white/20 mt-2 text-center">
         {availableSlots.length} de {timeSlots.length} horarios disponibles
       </p>
     </div>

@@ -173,7 +173,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
                         }}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-                        <p className="text-[10px] mt-1 opacity-50 text-right">
+                        <p className="text-2xs mt-1 opacity-50 text-right">
                           {formatTime(msg.timestamp)}
                         </p>
                       </div>
@@ -235,7 +235,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
               <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
                 style={{ background: '#e74c3c' }}
               >
-                <span className="text-[10px] font-bold text-white">{unread}</span>
+                <span className="text-2xs font-bold text-white">{unread}</span>
               </div>
             )}
           </button>

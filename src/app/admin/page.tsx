@@ -179,13 +179,13 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                       {res.petName || 'Sin nombre'}
                     </p>
-                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                       {res.service} · {res.time || '—'}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 font-medium">
+                  <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 font-medium">
                     Pendiente
                   </span>
                   <a

@@ -82,7 +82,7 @@ export default function LoyaltyProgram({ phone }: { phone?: string }) {
         </div>
       )}
 
-      <p className="text-[10px] text-white/20 text-center mt-4">
+      <p className="text-2xs text-white/20 text-center mt-4">
         {FREE_AFTER} paseos completados = 1 paseo individual gratis 🐾
       </p>
     </div>

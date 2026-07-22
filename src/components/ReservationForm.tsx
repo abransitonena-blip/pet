@@ -422,7 +422,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                     >
                       {step > s.num ? <FaCheck size={12} /> : s.num}
                     </motion.div>
-                    <span className="text-[10px] sm:text-xs font-medium hidden sm:block"
+                    <span className="text-2xs sm:text-xs font-medium hidden sm:block"
                       style={{ color: step >= s.num ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                       {s.label}
                     </span>
@@ -510,7 +510,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                         {svc.name}
                                       </span>
                                       {svc.quantity && savings > 0 && (
-                                        <span                                     className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: 'var(--color-success)' }}>
+                                        <span                                     className="text-2xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: 'var(--color-success)' }}>
                                           Ahorra ${savings}
                                         </span>
                                       )}
@@ -773,7 +773,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                               style={{ color: 'var(--text-muted)' }}
                             >
                               <FaInfoCircle size={12} />
-                              {showNotes ? 'Ocultar notas' : '¿Algo que debamos saber?'} <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>(opcional)</span>
+                              {showNotes ? 'Ocultar notas' : '¿Algo que debamos saber?'} <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>(opcional)</span>
                             </button>
                             <AnimatePresence>
                               {showNotes && (
@@ -910,7 +910,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                           <div className="mb-5">
                             <button type="button" onClick={() => setShowCoupon(!showCoupon)}
                               className="flex items-center gap-2 text-xs mb-2 transition-colors" style={{ color: 'var(--text-muted)' }}>
-                              <FaTicketAlt size={12} /> ¿Tienes un cupón? <span className="text-[10px]">(opcional)</span>
+                              <FaTicketAlt size={12} /> ¿Tienes un cupón? <span className="text-2xs">(opcional)</span>
                             </button>
                             <AnimatePresence>
                               {showCoupon && (

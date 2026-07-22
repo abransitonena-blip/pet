@@ -137,7 +137,7 @@ export default function AdminCoupons() {
                       {c.type === 'percentage' ? `${c.discount}%` : `$${c.discount}`}
                     </span>
                   </div>
-                  <p className="text-[10px] text-white/30">
+                  <p className="text-2xs text-white/30">
                     Usado {c.usedCount} veces {c.maxUses > 0 ? `/ ${c.maxUses}` : '• sin límite'}
                   </p>
                 </div>

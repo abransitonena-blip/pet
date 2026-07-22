@@ -119,7 +119,7 @@ export default function AdminChat() {
                   }}
                 >
                   <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-                  <p className="text-[10px] mt-1 opacity-60 text-right">
+                  <p className="text-2xs mt-1 opacity-60 text-right">
                     {formatTime(msg.timestamp)}
                   </p>
                 </div>
@@ -182,7 +182,7 @@ export default function AdminChat() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium truncate">{conv.clientName || 'Cliente'}</span>
-                    <span className="text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>
+                    <span className="text-2xs shrink-0" style={{ color: 'var(--text-muted)' }}>
                       {formatTime(conv.lastTimestamp)}
                     </span>
                   </div>
@@ -196,7 +196,7 @@ export default function AdminChat() {
                   <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                     style={{ background: '#E67E22' }}
                   >
-                    <span className="text-[10px] font-bold text-white">{conv.unreadAdmin}</span>
+                    <span className="text-2xs font-bold text-white">{conv.unreadAdmin}</span>
                   </div>
                 )}
               </button>

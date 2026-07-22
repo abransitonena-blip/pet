@@ -117,7 +117,7 @@ export default function LoginPage() {
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                     Reserva paseos, revisa fotos del recorrido, gestiona tus perros y historial.
                   </p>
-                  <div className="flex items-center gap-1.5 mt-2 text-[10px] font-medium text-brand-400">
+                  <div className="flex items-center gap-1.5 mt-2 text-2xs font-medium text-brand-400">
                     <span>Continuar con Google</span>
                     <span>·</span>
                     <span>o correo</span>
@@ -152,7 +152,7 @@ export default function LoginPage() {
 
               <div className="flex items-center gap-3 py-1">
                 <span className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>o con correo</span>
+                <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>o con correo</span>
                 <span className="flex-1 h-px" style={{ background: 'var(--border)' }} />
               </div>
 

@@ -80,7 +80,7 @@ export default function ClientPanel({ phone }: { phone: string }) {
           <FaCalendarAlt className="text-primary" size={14} />
           <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Mis reservas</h3>
           {reservations.length > 0 && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+            <span className="text-2xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
               {active.length} activa{active.length !== 1 ? 's' : ''}
             </span>
           )}
@@ -107,7 +107,7 @@ export default function ClientPanel({ phone }: { phone: string }) {
         >
           {active.length > 0 && (
             <>
-              <p className="text-[10px] uppercase tracking-wider font-medium" style={{ color: 'var(--text-muted)' }}>Próximos paseos</p>
+              <p className="text-2xs uppercase tracking-wider font-medium" style={{ color: 'var(--text-muted)' }}>Próximos paseos</p>
               {active.map((r) => (
                 <motion.div
                   key={r.id}
@@ -122,7 +122,7 @@ export default function ClientPanel({ phone }: { phone: string }) {
                       <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{r.petName}</span>
                     </div>
                     <span
-                      className="text-[10px] px-2 py-0.5 rounded-full"
+                      className="text-2xs px-2 py-0.5 rounded-full"
                       style={{ background: STATUS_MAP[r.status]?.bg || 'rgba(255,255,255,0.1)', color: STATUS_MAP[r.status]?.color || 'white' }}
                     >
                       {STATUS_MAP[r.status]?.label || r.status}
@@ -150,7 +150,7 @@ export default function ClientPanel({ phone }: { phone: string }) {
 
           {past.length > 0 && (
             <div className="mt-4 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-              <p className="text-[10px] uppercase tracking-wider font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-2xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                 <FaHistory size={9} /> Historial ({past.length})
               </p>
               {past.slice(0, 5).map((r) => (
@@ -158,7 +158,7 @@ export default function ClientPanel({ phone }: { phone: string }) {
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{r.petName} · {SERVICE_LABELS[r.service] || r.service}</span>
                   </div>
-                  <span className="text-[10px] shrink-0" style={{ color: r.status === 'completed' ? '#22c55e' : '#ef4444' }}>
+                  <span className="text-2xs shrink-0" style={{ color: r.status === 'completed' ? '#22c55e' : '#ef4444' }}>
                     {r.status === 'completed' ? '✓' : '✗'}
                   </span>
                 </div>

@@ -114,7 +114,7 @@ export default function AdminPerrosPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.name}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
+                    <span className="text-2xs px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
                       {p.type}
                     </span>
                   </div>
@@ -126,7 +126,7 @@ export default function AdminPerrosPage() {
                   {p.services.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {p.services.map((s) => (
-                        <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400">
+                        <span key={s} className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400">
                           {s}
                         </span>
                       ))}
@@ -146,7 +146,7 @@ export default function AdminPerrosPage() {
                           <span style={{ color: 'var(--text-muted)' }}>{r.date} {r.time}</span>
                           <span style={{ color: 'var(--text-primary)' }}>{r.service}</span>
                         </div>
-                        {r.paymentStatus === 'paid' && <span className="text-success-400 text-[10px]">✓ Pagado</span>}
+                        {r.paymentStatus === 'paid' && <span className="text-success-400 text-2xs">✓ Pagado</span>}
                       </div>
                     ))}
                   </div>

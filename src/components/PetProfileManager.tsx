@@ -103,7 +103,7 @@ export default function PetProfileManager({ onSelect }: { onSelect?: (profile: P
             </div>
             <div className="flex items-center gap-1 shrink-0">
               {onSelect && (
-                <span className="text-[10px] text-primary/60">Usar</span>
+                <span className="text-2xs text-primary/60">Usar</span>
               )}
               <button
                 onClick={(e) => { e.stopPropagation(); handleEdit(profile) }}

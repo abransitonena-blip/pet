@@ -177,7 +177,7 @@ export default function AdminFinanzasPage() {
             ].map((s) => (
               <div key={s.label} className="rounded-xl p-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                 <p className="text-lg font-bold" style={{ color: s.color }}>{s.value}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
+                <p className="text-2xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
               </div>
             ))}
           </div>
@@ -193,7 +193,7 @@ export default function AdminFinanzasPage() {
                     style={{ height: `${(d.revenue / maxRevenue) * 100}%` }}
                     title={`${d.label}: $${d.revenue} (${d.count} reservas)`}
                   />
-                  <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>{d.label}</span>
+                  <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{d.label}</span>
                 </div>
               ))}
             </div>

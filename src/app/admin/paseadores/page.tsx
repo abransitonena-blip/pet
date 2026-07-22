@@ -142,7 +142,7 @@ export default function AdminPaseadoresPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{w.name}</span>
                       {w.inProgress > 0 && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium">
+                        <span className="text-2xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium">
                           En paseo
                         </span>
                       )}
@@ -175,7 +175,7 @@ export default function AdminPaseadoresPage() {
 
               {/* Progress bar */}
               <div className="mt-3">
-                <div className="flex items-center justify-between text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>
+                <div className="flex items-center justify-between text-2xs mb-1" style={{ color: 'var(--text-muted)' }}>
                   <span>Completadas</span>
                   <span>{w.totalAssigned > 0 ? Math.round((w.completed / w.totalAssigned) * 100) : 0}%</span>
                 </div>
