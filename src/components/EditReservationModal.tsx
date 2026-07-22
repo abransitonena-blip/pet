@@ -9,6 +9,7 @@ import type { Reservation } from '@/types'
 import { SERVICE_NAMES, normalizeServiceName } from '@/lib/services'
 import { logChange } from '@/lib/audit'
 import { useEscapeKey } from '@/lib/useEscapeKey'
+import { useToast } from '@/context/ToastContext'
 
 export default function EditReservationModal({
   isOpen,
@@ -31,6 +32,7 @@ export default function EditReservationModal({
     status: reservation?.status || 'pending',
   })
   const [saving, setSaving] = useState(false)
+  const { toast } = useToast()
   useEscapeKey(onClose, isOpen)
 
   const handleSave = async () => {
@@ -55,7 +57,8 @@ export default function EditReservationModal({
         logChange("edit", reservation.id, changes)
       }
       onClose()
-    } catch {}
+      toast('Reserva guardada')
+    } catch { toast('Error al guardar reserva', 'error') }
     setSaving(false)
   }
 

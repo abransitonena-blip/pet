@@ -5,6 +5,7 @@ import { db } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
 import { FaStar, FaTrash, FaDownload, FaSpinner, FaSearch } from 'react-icons/fa'
 import { logChange } from '@/lib/audit'
+import { useToast } from '@/context/ToastContext'
 
 interface AdminReview {
   id: string
@@ -20,6 +21,7 @@ export default function AdminResenasPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     const q = query(collection(db, 'reviews'), orderBy('date', 'desc'))
@@ -57,7 +59,8 @@ export default function AdminResenasPage() {
     try {
       logChange('delete', id, { col: 'reviews' })
       await deleteDoc(doc(db, 'reviews', id))
-    } catch {}
+      toast('Reseña eliminada')
+    } catch { toast('Error al eliminar reseña', 'error') }
     setDeleting(null)
   }
 

@@ -6,6 +6,7 @@ import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, Timesta
 import { db } from '@/firebase/config'
 import Image from 'next/image'
 import { FaUpload, FaTrash, FaImage, FaLink, FaSpinner } from 'react-icons/fa'
+import { useToast } from '@/context/ToastContext'
 
 interface GalleryImage {
   id: string
@@ -22,6 +23,7 @@ export default function AdminGallery() {
   const [uploading, setUploading] = useState(false)
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [url, setUrl] = useState('')
+  const { toast } = useToast()
 
   useEffect(() => {
     const q = query(collection(db, 'gallery-images'), orderBy('createdAt', 'desc'))
@@ -54,38 +56,49 @@ export default function AdminGallery() {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
-    const reader = new FileReader()
-    reader.onload = async () => {
-      const compressed = await compressImage(reader.result as string)
-      await addDoc(collection(db, 'gallery-images'), {
-        url: compressed,
-        title: title.trim() || '🐾 Cliente feliz',
-        dog: dog.trim() || '',
-        createdAt: Timestamp.now(),
-      })
-      setUploading(false)
-      setTitle('')
-      setDog('')
-    }
-    reader.readAsDataURL(file)
+    try {
+      const reader = new FileReader()
+      reader.onload = async () => {
+        try {
+          const compressed = await compressImage(reader.result as string)
+          await addDoc(collection(db, 'gallery-images'), {
+            url: compressed,
+            title: title.trim() || '🐾 Cliente feliz',
+            dog: dog.trim() || '',
+            createdAt: Timestamp.now(),
+          })
+          setTitle('')
+          setDog('')
+          toast('Foto subida')
+        } catch { toast('Error al subir foto', 'error') }
+        setUploading(false)
+      }
+      reader.readAsDataURL(file)
+    } catch { setUploading(false); toast('Error al procesar imagen', 'error') }
   }
 
   const handleUrl = async () => {
     if (!url.trim()) return
-    await addDoc(collection(db, 'gallery-images'), {
-      url: url.trim(),
-      title: title.trim() || '🐾 Cliente feliz',
-      dog: dog.trim() || '',
-      createdAt: Timestamp.now(),
-    })
-    setUrl('')
-    setTitle('')
-    setDog('')
-    setShowUrlInput(false)
+    try {
+      await addDoc(collection(db, 'gallery-images'), {
+        url: url.trim(),
+        title: title.trim() || '🐾 Cliente feliz',
+        dog: dog.trim() || '',
+        createdAt: Timestamp.now(),
+      })
+      setUrl('')
+      setTitle('')
+      setDog('')
+      setShowUrlInput(false)
+      toast('Imagen agregada')
+    } catch { toast('Error al agregar imagen', 'error') }
   }
 
   const handleDelete = async (id: string) => {
-    await deleteDoc(doc(db, 'gallery-images', id))
+    try {
+      await deleteDoc(doc(db, 'gallery-images', id))
+      toast('Imagen eliminada')
+    } catch { toast('Error al eliminar imagen', 'error') }
   }
 
   return (

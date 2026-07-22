@@ -13,7 +13,7 @@ interface BadgeProps {
 const variantStyles: Record<BadgeVariant, string> = {
   default: 'bg-white/[0.06] text-slate-400',
   success: 'bg-success-500/15 text-success-400',
-  warning: 'bg-brand-500/15 text-brand-400',
+  warning: 'bg-amber-500/15 text-amber-400',
   danger: 'bg-danger-500/15 text-danger-400',
   info: 'bg-blue-500/15 text-blue-400',
   brand: 'bg-brand-500/15 text-brand-400',

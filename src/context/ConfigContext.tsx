@@ -37,7 +37,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     try {
       await setDoc(doc(db, 'admin', 'config'), { ...config, ...partial })
       setConfig((prev) => ({ ...prev, ...partial }))
-    } catch {}
+    } catch (e) { console.error('Error updating config:', e) }
     setSaving(false)
   }
 

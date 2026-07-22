@@ -22,7 +22,7 @@ export default function StatCard({ label, value, icon, change, trend = 'neutral'
           {icon}
         </div>
         {change !== undefined && trend !== 'neutral' && (
-          <span className={`flex items-center gap-0.5 text-xs font-medium ${trend === 'up' ? 'text-success-400' : 'text-danger-400'}`}>
+          <span className="flex items-center gap-0.5 text-xs font-medium" style={{ color: trend === 'up' ? 'var(--color-success)' : 'var(--color-danger)' }}>
             {trend === 'up' ? <FaArrowUp size={10} /> : <FaArrowDown size={10} />}
             {Math.abs(change)}%
           </span>

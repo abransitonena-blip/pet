@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { FaTag, FaPlus, FaTrash, FaSpinner, FaPercent, FaDollarSign, FaToggleOn, FaToggleOff } from 'react-icons/fa'
+import { useToast } from '@/context/ToastContext'
 
 interface Coupon {
   id: string
@@ -24,6 +25,7 @@ export default function AdminCoupons() {
   const [type, setType] = useState<'percentage' | 'fixed'>('percentage')
   const [maxUses, setMaxUses] = useState('0')
   const [creating, setCreating] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     const q = query(collection(db, 'coupons'), orderBy('createdAt', 'desc'))
@@ -36,24 +38,30 @@ export default function AdminCoupons() {
   const handleCreate = async () => {
     if (!code.trim() || !discount) return
     setCreating(true)
-    await addDoc(collection(db, 'coupons'), {
-      code: code.trim().toUpperCase(),
-      discount: Number(discount),
-      type,
-      active: true,
-      maxUses: Number(maxUses) || 0,
-      usedCount: 0,
-      createdAt: Timestamp.now(),
-    })
-    setCode('')
-    setDiscount('')
-    setType('percentage')
-    setMaxUses('0')
+    try {
+      await addDoc(collection(db, 'coupons'), {
+        code: code.trim().toUpperCase(),
+        discount: Number(discount),
+        type,
+        active: true,
+        maxUses: Number(maxUses) || 0,
+        usedCount: 0,
+        createdAt: Timestamp.now(),
+      })
+      setCode('')
+      setDiscount('')
+      setType('percentage')
+      setMaxUses('0')
+      toast('Cupón creado')
+    } catch { toast('Error al crear cupón', 'error') }
     setCreating(false)
   }
 
   const toggleActive = async (c: Coupon) => {
-    await updateDoc(doc(db, 'coupons', c.id), { active: !c.active })
+    try {
+      await updateDoc(doc(db, 'coupons', c.id), { active: !c.active })
+      toast('Cupón actualizado')
+    } catch { toast('Error al actualizar cupón', 'error') }
   }
 
   return (
@@ -142,7 +150,7 @@ export default function AdminCoupons() {
                   {c.active ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
                 </button>
                 <button
-                  onClick={() => deleteDoc(doc(db, 'coupons', c.id))}
+                  onClick={async () => { try { await deleteDoc(doc(db, 'coupons', c.id)); toast('Cupón eliminado') } catch { toast('Error al eliminar cupón', 'error') } }}
                   className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-all" style={{ color: 'var(--color-danger)' }}
                 >
                   <FaTrash size={10} />

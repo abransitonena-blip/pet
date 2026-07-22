@@ -6,6 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { FaWalking, FaUser, FaPhone, FaCalendarAlt, FaDog, FaWhatsapp, FaSpinner } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
 import { useReservations } from '@/context/ReservationsContext'
+import { useToast } from '@/context/ToastContext'
 import type { Reservation } from '@/types'
 
 interface WalkerStats {
@@ -24,6 +25,7 @@ export default function AdminPaseadoresPage() {
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [adding, setAdding] = useState(false)
+  const { toast } = useToast()
 
   const walkerStats: WalkerStats[] = useMemo(() => {
     const walkers = config.walkers || []
@@ -47,16 +49,22 @@ export default function AdminPaseadoresPage() {
   const handleAddWalker = async () => {
     if (!newName.trim() || !newPhone.trim()) return
     setAdding(true)
-    const updatedWalkers = [...(config.walkers || []), { name: newName.trim(), phone: newPhone.trim() }]
-    await updateConfig({ walkers: updatedWalkers })
-    setNewName('')
-    setNewPhone('')
+    try {
+      const updatedWalkers = [...(config.walkers || []), { name: newName.trim(), phone: newPhone.trim() }]
+      await updateConfig({ walkers: updatedWalkers })
+      setNewName('')
+      setNewPhone('')
+      toast('Paseador agregado')
+    } catch { toast('Error al agregar paseador', 'error') }
     setAdding(false)
   }
 
   const handleRemoveWalker = async (index: number) => {
-    const updatedWalkers = (config.walkers || []).filter((_, i) => i !== index)
-    await updateConfig({ walkers: updatedWalkers })
+    try {
+      const updatedWalkers = (config.walkers || []).filter((_, i) => i !== index)
+      await updateConfig({ walkers: updatedWalkers })
+      toast('Paseador eliminado')
+    } catch { toast('Error al eliminar paseador', 'error') }
   }
 
   const openWhatsApp = (phone: string) => {

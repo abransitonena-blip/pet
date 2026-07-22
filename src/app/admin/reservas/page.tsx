@@ -15,6 +15,8 @@ import {
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
+import { useToast } from '@/context/ToastContext'
+import Badge from '@/components/ui/Badge'
 import EditReservationModal from '@/components/EditReservationModal'
 import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
@@ -49,6 +51,7 @@ export default function AdminReservas() {
   const [historyPhone, setHistoryPhone] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const { prices } = usePrices()
+  const { toast } = useToast()
 
   const filtered = useMemo(() => {
     let result = reservations
@@ -87,7 +90,8 @@ export default function AdminReservas() {
   const handleComplete = async (id: string) => {
     try {
       await updateDoc(doc(db, 'reservations', id), { status: 'completed', completedAt: serverTimestamp() })
-    } catch {}
+      toast('Reserva completada')
+    } catch { toast('Error al completar reserva', 'error') }
   }
 
   const handlePaymentToggle = async (id: string, current: 'pending' | 'paid' | undefined) => {
@@ -95,7 +99,8 @@ export default function AdminReservas() {
     try {
       logChange('payment_toggle', id, { from: current, to: newStatus })
       await updateDoc(doc(db, 'reservations', id), { paymentStatus: newStatus })
-    } catch {}
+      toast('Pago actualizado')
+    } catch { toast('Error al actualizar pago', 'error') }
   }
 
   const handleDelete = async () => {
@@ -104,7 +109,8 @@ export default function AdminReservas() {
       logChange('delete', confirmDelete, { col: 'reservations' })
       await deleteDoc(doc(db, 'reservations', confirmDelete))
       setConfirmDelete(null)
-    } catch {}
+      toast('Reserva eliminada')
+    } catch { toast('Error al eliminar reserva', 'error') }
   }
 
   const openWhatsApp = (phone: string, name: string) => {
@@ -242,9 +248,9 @@ export default function AdminReservas() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.name}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[res.status] || 'bg-white/10 text-white/40'}`}>
+                    <Badge variant={res.status === 'completed' ? 'success' : res.status === 'en_camino' ? 'info' : res.status === 'cancelled' ? 'danger' : res.status === 'paseando' ? 'info' : 'brand'} className="normal-case tracking-normal">
                       {STATUS_LABELS[res.status] || res.status}
-                    </span>
+                    </Badge>
                     {res.assignedWalker && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
                         🦮 {res.assignedWalker}
@@ -282,7 +288,7 @@ export default function AdminReservas() {
                     <FaEdit size={12} />
                   </button>
                   {(res.status === 'pending') && (
-                    <button onClick={() => updateDoc(doc(db, 'reservations', res.id), { status: 'en_camino' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
+                    <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'en_camino' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
                       <FaArrowRight size={12} />
                     </button>
                   )}
@@ -292,7 +298,7 @@ export default function AdminReservas() {
                     </button>
                   )}
                   {res.status === 'completed' && (
-                    <button onClick={() => updateDoc(doc(db, 'reservations', res.id), { status: 'pending' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Restaurar">
+                    <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'pending' }); toast('Estado restaurado') } catch { toast('Error al restaurar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Restaurar">
                       <FaUndo size={11} />
                     </button>
                   )}
@@ -365,9 +371,9 @@ export default function AdminReservas() {
                         <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{r.service} · {r.petName}</p>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.date} {r.time}</p>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[r.status] || 'bg-white/10 text-slate-400'}`}>
+                      <Badge variant={r.status === 'completed' ? 'success' : r.status === 'en_camino' ? 'info' : r.status === 'cancelled' ? 'danger' : r.status === 'paseando' ? 'info' : 'brand'} className="normal-case tracking-normal">
                         {STATUS_LABELS[r.status] || r.status}
-                      </span>
+                      </Badge>
                     </div>
                   ))}
                 </div>

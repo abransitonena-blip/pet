@@ -6,6 +6,7 @@ import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { FaUserFriends, FaPlus, FaTrash, FaWhatsapp, FaCopy, FaCheck, FaSpinner } from 'react-icons/fa'
 import { brand } from '@/lib/brand'
+import { useToast } from '@/context/ToastContext'
 
 interface Referral {
   id: string
@@ -25,6 +26,7 @@ export default function AdminReferidosPage() {
   const [newRef, setNewRef] = useState({ referrerName: '', referrerPhone: '', refereeName: '', refereePhone: '' })
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState('')
+  const { toast } = useToast()
 
   useEffect(() => {
     const q = query(collection(db, 'referrals'), orderBy('createdAt', 'desc'))
@@ -57,18 +59,25 @@ export default function AdminReferidosPage() {
       })
       setNewRef({ referrerName: '', referrerPhone: '', refereeName: '', refereePhone: '' })
       setShowAdd(false)
-    } catch {}
+      toast('Referido creado')
+    } catch { toast('Error al crear referido', 'error') }
     setSaving(false)
   }
 
   const handleDelete = async (id: string) => {
-    await deleteDoc(doc(db, 'referrals', id))
+    try {
+      await deleteDoc(doc(db, 'referrals', id))
+      toast('Referido eliminado')
+    } catch { toast('Error al eliminar referido', 'error') }
   }
 
   const handleStatus = async (id: string, status: Referral['status']) => {
-    await import('firebase/firestore').then(({ updateDoc, doc: d }) =>
-      updateDoc(d(db, 'referrals', id), { status })
-    )
+    try {
+      await import('firebase/firestore').then(({ updateDoc, doc: d }) =>
+        updateDoc(d(db, 'referrals', id), { status })
+      )
+      toast('Estado actualizado')
+    } catch { toast('Error al actualizar estado', 'error') }
   }
 
   const copyLink = (phone: string) => {
