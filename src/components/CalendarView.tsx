@@ -117,7 +117,7 @@ export default function CalendarView({ reservations }: { reservations: Reservati
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-semibold text-white">{r.name}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  r.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-secondary/20 text-secondary'
+                  r.status === 'completed' ? 'bg-green-500/20' : 'bg-secondary/20 text-secondary'
                 }`}>
                   {r.status === 'completed' ? 'Completada' : 'Pendiente'}
                 </span>

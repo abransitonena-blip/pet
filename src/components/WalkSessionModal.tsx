@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { db, storage } from '@/firebase/config'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import Image from 'next/image'
 import { FaCamera, FaMapMarkerAlt, FaTimes, FaCheck, FaStop, FaSpinner, FaImage } from 'react-icons/fa'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import type { Reservation } from '@/types'
@@ -133,7 +134,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -168,7 +169,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
             </label>
             {photo ? (
               <div className="relative rounded-xl overflow-hidden">
-                <img src={photo} alt="Captura" className="w-full h-48 object-cover" />
+                <Image src={photo} alt="Captura" width={400} height={192} unoptimized className="w-full h-48 object-cover" />
                 <button onClick={() => { setPhoto(null); setPhotoFile(null) }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white"
                 >
@@ -190,7 +191,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
                     <div className="w-10 h-10 rounded-full border-2 border-black" />
                   </button>
                   <button onClick={() => { stopCamera(); setPreviewing(false) }}
-                    className="px-4 py-2 rounded-full text-xs font-semibold bg-red-500/30 text-red-300"
+                    className="px-4 py-2 rounded-full text-xs font-semibold bg-red-500/30" style={{ color: 'var(--color-danger)' }}
                   >
                     Cancelar
                   </button>
@@ -225,7 +226,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
             {location ? (
               <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
                 {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
-                <span className="ml-2 text-green-500">✓ Capturada</span>
+                <span className="ml-2" style={{ color: 'var(--color-success)' }}>✓ Capturada</span>
               </p>
             ) : (
               <p className="text-xs" style={{ color: locationError ? '#ef4444' : 'var(--text-muted)' }}>

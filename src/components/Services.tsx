@@ -38,7 +38,7 @@ export default function Services() {
         <div className="absolute bottom-20 right-10 text-primary/5 text-8xl -rotate-12">🐾</div>
         <div className="absolute top-1/2 left-1/4 text-primary/[0.03] text-9xl">🐕</div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}

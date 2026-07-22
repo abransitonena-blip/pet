@@ -32,9 +32,11 @@ export default function AdminBanner() {
     <div className="glass p-4 rounded-xl">
       <div className="flex items-center gap-2 mb-3">
         <FaBullhorn className="text-primary" size={14} />
-        <h4 className="text-sm font-semibold text-white">Banner de promociones</h4>
+        <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Banner de promociones</h4>
       </div>
+      <label htmlFor="admin-banner-msg" className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Mensaje del banner</label>
       <textarea
+        id="admin-banner-msg"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Ej: 🎉 20% de descuento en tu primer paseo"

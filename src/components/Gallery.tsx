@@ -72,7 +72,7 @@ export default function Gallery() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="section-container relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -151,7 +151,7 @@ export default function Gallery() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
+            className="fixed inset-0 z-[var(--z-overlay)] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
             onClick={close}
           >
             <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-20">

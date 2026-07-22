@@ -135,7 +135,7 @@ export default function ReviewForm() {
         </div>
 
         {error && (
-          <p className="text-red-400 text-xs text-center">{error}</p>
+          <p className="text-xs text-center" style={{ color: 'var(--color-danger)' }}>{error}</p>
         )}
         <motion.button
           type="submit"

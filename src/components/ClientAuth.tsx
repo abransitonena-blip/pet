@@ -128,7 +128,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+           className="fixed inset-0 z-[var(--z-overlay)] flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
           onClick={onClose}
         >
@@ -164,7 +164,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
                       placeholder="5523053772" />
                   </div>
                 </div>
-                {error && <p className="text-red-400 text-xs">{error}</p>}
+                {error && <p className="text-xs" style={{ color: 'var(--color-danger)' }}>{error}</p>}
                 <button onClick={finishGoogleSignup} disabled={loading}
                   className="w-full py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
                 >
@@ -231,7 +231,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
                   </div>
                 </div>
 
-                {error && <p className="text-red-400 text-xs">{error}</p>}
+                {error && <p className="text-xs" style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
                 <button onClick={mode === 'login' ? handleLogin : handleRegister}
                   disabled={loading || !email.trim() || !password.trim()}

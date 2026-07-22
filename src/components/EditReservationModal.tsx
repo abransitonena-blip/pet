@@ -81,7 +81,7 @@ export default function EditReservationModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[var(--z-overlay)] bg-black/80 flex items-center justify-center p-4"
           onClick={onClose}
         >
           <motion.div
@@ -137,7 +137,7 @@ export default function EditReservationModal({
 
               {conflictMessage && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <p className="text-xs text-red-400">{conflictMessage}</p>
+                   <p className="text-xs" style={{ color: 'var(--color-danger)' }}>{conflictMessage}</p>
                 </div>
               )}
 

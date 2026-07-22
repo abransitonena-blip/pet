@@ -113,7 +113,7 @@ export default function PetProfileManager({ onSelect }: { onSelect?: (profile: P
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); handleDelete(profile.id) }}
-                className="text-xs text-white/30 hover:text-red-400 px-1"
+                className="text-xs px-1 hover:opacity-80" style={{ color: 'var(--text-muted)' }}
               >
                 <FaTrash size={10} />
               </button>
@@ -132,7 +132,7 @@ export default function PetProfileManager({ onSelect }: { onSelect?: (profile: P
           >
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-white/40 mb-1">Nombre del perro</label>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Nombre del perro</label>
                 <input
                   type="text"
                   value={editing.name}
@@ -142,7 +142,7 @@ export default function PetProfileManager({ onSelect }: { onSelect?: (profile: P
                 />
               </div>
               <div>
-                <label className="block text-xs text-white/40 mb-1">Tipo</label>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Tipo</label>
                 <select
                   value={editing.type}
                   onChange={(e) => setEditing({ ...editing, type: e.target.value })}
@@ -156,7 +156,7 @@ export default function PetProfileManager({ onSelect }: { onSelect?: (profile: P
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-white/40 mb-1">Tu nombre</label>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Tu nombre</label>
                 <input
                   type="text"
                   value={editing.ownerName}
@@ -166,7 +166,7 @@ export default function PetProfileManager({ onSelect }: { onSelect?: (profile: P
                 />
               </div>
               <div>
-                <label className="block text-xs text-white/40 mb-1">WhatsApp</label>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>WhatsApp</label>
                 <input
                   type="tel"
                   value={editing.phone}
@@ -177,7 +177,7 @@ export default function PetProfileManager({ onSelect }: { onSelect?: (profile: P
               </div>
             </div>
             <div>
-              <label className="block text-xs text-white/40 mb-1">Notas</label>
+              <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Notas</label>
               <input
                 type="text"
                 value={editing.notes}

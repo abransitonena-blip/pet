@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collection, query, where, getDocs, updateDoc, doc, getDoc } from 'firebase/firestore'
 import { db, auth } from '@/firebase/config'
+import Image from 'next/image'
 import { FaDog, FaTimes, FaSpinner, FaCalendarAlt, FaHistory, FaUser, FaSignOutAlt, FaCamera, FaMapMarkerAlt } from 'react-icons/fa'
 
 interface WalkMedia {
@@ -147,7 +148,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                       <button
                         onClick={() => cancelReservation(r.id)}
                         disabled={cancelling === r.id}
-                        className="mt-2 text-xs text-red-400/60 hover:text-red-400 transition-all flex items-center gap-1"
+                        className="mt-2 text-xs transition-all flex items-center gap-1" style={{ color: 'var(--color-danger)', opacity: 0.6 }}
                       >
                         {cancelling === r.id ? <FaSpinner className="animate-spin" size={10} /> : <FaTimes size={10} />}
                         Cancelar
@@ -207,7 +208,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[var(--z-overlay)] flex items-center justify-center p-4"
             style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
             onClick={() => setSelectedWalk(null)}
           >
@@ -232,8 +233,8 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                   <p className="text-xs font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                     <FaCamera size={11} /> Inicio del paseo
                   </p>
-                  <img src={selectedWalk.walkCheckIn.photo} alt="Check-in"
-                    className="w-full h-48 object-cover rounded-xl" />
+                  <Image src={selectedWalk.walkCheckIn.photo} alt="Check-in"
+                    width={400} height={192} unoptimized className="w-full h-48 object-cover rounded-xl" />
                   <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                     <FaMapMarkerAlt size={9} />
                     {selectedWalk.walkCheckIn.lat.toFixed(6)}, {selectedWalk.walkCheckIn.lng.toFixed(6)}
@@ -244,8 +245,8 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                     <p className="text-xs font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                       <FaCamera size={11} /> Fin del paseo
                     </p>
-                    <img src={selectedWalk.walkCheckOut.photo} alt="Check-out"
-                      className="w-full h-48 object-cover rounded-xl" />
+                    <Image src={selectedWalk.walkCheckOut.photo} alt="Check-out"
+                      width={400} height={192} unoptimized className="w-full h-48 object-cover rounded-xl" />
                     <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                       <FaMapMarkerAlt size={9} />
                       {selectedWalk.walkCheckOut.lat.toFixed(6)}, {selectedWalk.walkCheckOut.lng.toFixed(6)}

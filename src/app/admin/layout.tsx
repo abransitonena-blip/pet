@@ -143,7 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+         <div className="fixed inset-0 z-[var(--z-overlay)] lg:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
           <div className="absolute left-0 top-0 bottom-0 w-64 p-3 overflow-y-auto" style={{ background: 'var(--bg-card)' }}>
             <div className="flex items-center gap-3 mb-6 px-3">

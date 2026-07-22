@@ -23,13 +23,15 @@ export default function WalkReminder() {
     <div className="glass-card p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-3">
         <FaBell className="text-primary" size={16} />
-        <h3 className="text-sm font-semibold text-white">Recordatorio por WhatsApp</h3>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Recordatorio por WhatsApp</h3>
       </div>
-      <p className="text-xs text-white/50 mb-3 leading-relaxed">
+      <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         Te enviamos un mensaje por WhatsApp antes de tu paseo para que no se te olvide 🐾
       </p>
       <div className="flex items-center gap-2">
+        <label htmlFor="walk-reminder-phone" className="sr-only">Tu número de WhatsApp</label>
         <input
+          id="walk-reminder-phone"
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
@@ -49,7 +51,7 @@ export default function WalkReminder() {
         <motion.p
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-green-400 text-xs mt-2 text-center"
+          className="text-xs mt-2 text-center" style={{ color: 'var(--color-success)' }}
         >
           ¡Te enviaremos un recordatorio antes del paseo!
         </motion.p>

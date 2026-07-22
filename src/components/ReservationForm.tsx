@@ -122,7 +122,7 @@ function BookingSummary({ step, form, prices, couponStatus }: {
             <span>Subtotal</span><span>${basePrice.toLocaleString()}</span>
           </div>
           {discountAmount > 0 && (
-            <div className="flex justify-between text-sm text-green-400">
+            <div className="flex justify-between text-sm" style={{ color: 'var(--color-success)' }}>
               <span>Descuento</span><span>-${discountAmount.toLocaleString()}</span>
             </div>
           )}
@@ -375,7 +375,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
   return (
     <section id="reservar" className="relative py-24 sm:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="section-container">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -547,7 +547,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
                           <div className="space-y-2 mb-6">
                             <label htmlFor="reservation-date" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                              <FaCalendarAlt size={13} className="text-primary" /> Fecha <span className="text-red-400">*</span>
+                                    <FaCalendarAlt size={13} className="text-primary" /> Fecha <span style={{ color: 'var(--color-danger)' }}>*</span>
                             </label>
                             <input
                               id="reservation-date"
@@ -573,7 +573,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                           {form.date && (
                             <div className="space-y-2">
                               <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                                <FaClock size={13} className="text-primary" /> Hora <span className="text-red-400">*</span>
+                                    <FaClock size={13} className="text-primary" /> Hora <span style={{ color: 'var(--color-danger)' }}>*</span>
                                 {loadingSlots && <FaSpinner className="animate-spin" size={11} />}
                               </label>
                               {timeSlots.length === 0 ? (
@@ -626,7 +626,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                           <div className="space-y-5">
                             <div className="space-y-2">
                               <label htmlFor="pet-name" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                                <FaPaw size={13} className="text-primary" /> Nombre <span className="text-red-400">*</span>
+                                    <FaPaw size={13} className="text-primary" /> Nombre <span style={{ color: 'var(--color-danger)' }}>*</span>
                               </label>
                               <input
                                 id="pet-name"
@@ -646,12 +646,12 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 }}
                               />
                               {errors.petName && touched.petName && (
-                                <p id="pet-name-error" className="text-xs text-red-400 flex items-center gap-1" role="alert">
+                                <p id="pet-name-error" className="text-xs flex items-center gap-1" role="alert" style={{ color: 'var(--color-danger)' }}>
                                   <FaTimes size={10} /> {errors.petName}
                                 </p>
                               )}
                               {!errors.petName && form.petName && (
-                                <p className="text-xs text-green-400 flex items-center gap-1">
+                                <p className="text-xs flex items-center gap-1" style={{ color: 'var(--color-success)' }}>
                                   <FaCheck size={10} /> ¡Qué bonito nombre!
                                 </p>
                               )}
@@ -706,7 +706,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                           <div className="space-y-4">
                             <div className="space-y-2">
                               <label htmlFor="owner-name" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                                <FaUser size={13} className="text-primary" /> Tu nombre <span className="text-red-400">*</span>
+                                    <FaUser size={13} className="text-primary" /> Tu nombre <span style={{ color: 'var(--color-danger)' }}>*</span>
                               </label>
                               <input
                                 id="owner-name"
@@ -726,7 +726,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 }}
                               />
                               {errors.name && touched.name && (
-                                <p id="name-error" className="text-xs text-red-400 flex items-center gap-1" role="alert">
+                                <p id="name-error" className="text-xs flex items-center gap-1" role="alert" style={{ color: 'var(--color-danger)' }}>
                                   <FaTimes size={10} /> {errors.name}
                                 </p>
                               )}
@@ -734,7 +734,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
                             <div className="space-y-2">
                               <label htmlFor="owner-phone" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                                <FaPhone size={13} className="text-primary" /> WhatsApp <span className="text-red-400">*</span>
+                                    <FaPhone size={13} className="text-primary" /> WhatsApp <span style={{ color: 'var(--color-danger)' }}>*</span>
                               </label>
                               <input
                                 id="owner-phone"
@@ -755,12 +755,12 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 }}
                               />
                               {errors.phone && touched.phone && (
-                                <p id="phone-error" className="text-xs text-red-400 flex items-center gap-1" role="alert">
+                                <p id="phone-error" className="text-xs flex items-center gap-1" role="alert" style={{ color: 'var(--color-danger)' }}>
                                   <FaTimes size={10} /> {errors.phone}
                                 </p>
                               )}
                               {!errors.phone && form.phone.replace(/\D/g, '').length >= 10 && /^[2-9]/.test(form.phone.replace(/\D/g, '')) && (
-                                <p className="text-xs text-green-400 flex items-center gap-1">
+                                <p className="text-xs flex items-center gap-1" style={{ color: 'var(--color-success)' }}>
                                   <FaCheck size={10} /> Número válido
                                 </p>
                               )}
@@ -931,8 +931,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                     />
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                       {checkingCoupon ? <FaSpinner className="animate-spin" size={13} style={{ color: 'var(--text-muted)' }} />
-                                        : couponStatus?.valid ? <FaCheck size={13} className="text-green-400" />
-                                        : couponStatus && !couponStatus.valid ? <FaTimes size={13} className="text-red-400" /> : null}
+                                        : couponStatus?.valid ? <FaCheck size={13} style={{ color: 'var(--color-success)' }} />
+                                        : couponStatus && !couponStatus.valid ? <FaTimes size={13} style={{ color: 'var(--color-danger)' }} /> : null}
                                     </div>
                                   </div>
                                   {couponStatus && (
@@ -1023,7 +1023,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
         {/* Mobile: Fixed bottom CTA */}
         {!sent && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 px-4 pb-[env(safe-area-inset-bottom)]"
+           <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[var(--z-sticky)] px-4 pb-[env(safe-area-inset-bottom)]"
             style={{ background: 'var(--bg-primary)', borderTop: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between py-3">
               {step > 1 ? (

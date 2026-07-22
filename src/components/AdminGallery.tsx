@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
+import Image from 'next/image'
 import { FaUpload, FaTrash, FaImage, FaLink, FaSpinner } from 'react-icons/fa'
 
 interface GalleryImage {
@@ -163,7 +164,7 @@ export default function AdminGallery() {
               animate={{ opacity: 1, scale: 1 }}
               className="relative group aspect-square rounded-xl overflow-hidden bg-white/5"
             >
-              <img src={img.url} alt={img.title} className="w-full h-full object-cover" />
+              <Image src={img.url} alt={img.title} width={300} height={300} unoptimized className="w-full h-full object-cover" />
               <button
                 onClick={() => handleDelete(img.id)}
                 className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"

@@ -120,7 +120,7 @@ export default function AdminCoupons() {
             >
               <div className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.active ? 'bg-green-500/20' : 'bg-white/5'}`}>
-                  {c.type === 'percentage' ? <FaPercent className={c.active ? 'text-green-400' : 'text-white/30'} size={12} /> : <FaDollarSign className={c.active ? 'text-green-400' : 'text-white/30'} size={12} />}
+                  {c.type === 'percentage' ? <FaPercent size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} /> : <FaDollarSign size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} />}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -137,13 +137,13 @@ export default function AdminCoupons() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => toggleActive(c)}
-                  className={`transition-all ${c.active ? 'text-green-400' : 'text-white/30'}`}
+                  className="transition-all" style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }}
                 >
                   {c.active ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
                 </button>
                 <button
                   onClick={() => deleteDoc(doc(db, 'coupons', c.id))}
-                  className="w-7 h-7 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-all"
+                  className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-all" style={{ color: 'var(--color-danger)' }}
                 >
                   <FaTrash size={10} />
                 </button>

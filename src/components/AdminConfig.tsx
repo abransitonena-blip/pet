@@ -218,7 +218,7 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
             <input value={tip.title} onChange={(e) => updateTip(i, 'title', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Título" />
             <textarea value={tip.text} onChange={(e) => updateTip(i, 'text', e.target.value)} rows={2} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" placeholder="Texto" />
           </div>
-          <button onClick={() => removeTip(i)} className="text-red-400 hover:text-red-300 p-1"><FaTrash size={10} /></button>
+           <button onClick={() => removeTip(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
         </div>
       ))}
       <button onClick={addTip} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
@@ -250,7 +250,7 @@ function FAQEditor({ config, updateConfig, saving }: EditorProps) {
             <input value={item.question} onChange={(e) => updateItem(i, 'question', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Pregunta" />
             <textarea value={item.answer} onChange={(e) => updateItem(i, 'answer', e.target.value)} rows={3} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" placeholder="Respuesta" />
           </div>
-          <button onClick={() => removeItem(i)} className="text-red-400 hover:text-red-300 p-1"><FaTrash size={10} /></button>
+           <button onClick={() => removeItem(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
         </div>
       ))}
       <button onClick={addItem} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
@@ -296,7 +296,7 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
             <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Nombre" />
             <input value={w.phone} onChange={(e) => updateWalker(i, 'phone', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Teléfono" />
           </div>
-          <button onClick={() => removeWalker(i)} className="text-red-400 hover:text-red-300 p-1"><FaTrash size={10} /></button>
+           <button onClick={() => removeWalker(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
         </div>
       ))}
       <button onClick={addWalker} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
@@ -325,8 +325,8 @@ function MaintenanceEditor({ config, updateConfig, saving }: EditorProps) {
       </div>
       {enabled && (
         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
-          <FaExclamationTriangle className="text-red-400 shrink-0 mt-0.5" size={12} />
-          <p className="text-xs text-red-400">El sitio mostrará una pantalla de mantenimiento. Los clientes no podrán acceder a la página principal.</p>
+           <FaExclamationTriangle className="shrink-0 mt-0.5" size={12} style={{ color: 'var(--color-danger)' }} />
+           <p className="text-xs" style={{ color: 'var(--color-danger)' }}>El sitio mostrará una pantalla de mantenimiento. Los clientes no podrán acceder a la página principal.</p>
         </div>
       )}
       <SaveButton onClick={save} saving={saving} />

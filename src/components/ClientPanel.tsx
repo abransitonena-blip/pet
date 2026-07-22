@@ -137,7 +137,7 @@ export default function ClientPanel({ phone }: { phone: string }) {
                     <button
                       onClick={() => cancelReservation(r.id)}
                       disabled={cancelling === r.id}
-                      className="mt-2 text-xs text-red-400/60 hover:text-red-400 transition-all flex items-center gap-1"
+                      className="mt-2 text-xs transition-all flex items-center gap-1" style={{ color: 'var(--color-danger)', opacity: 0.6 }}
                     >
                       {cancelling === r.id ? <FaSpinner className="animate-spin" size={10} /> : <FaTimes size={10} />}
                       Cancelar

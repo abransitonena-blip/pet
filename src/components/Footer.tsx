@@ -16,7 +16,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
         background: 'var(--bg-primary)',
       }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="section-container py-16">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

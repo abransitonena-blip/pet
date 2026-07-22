@@ -119,7 +119,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
   return (
     <AnimatePresence>
       {show && (
-        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+        <div className="fixed bottom-6 right-6 z-[var(--z-sticky)] flex flex-col items-end gap-3">
           <AnimatePresence>
             {open && (
               <motion.div

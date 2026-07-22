@@ -40,7 +40,7 @@ export default function Header() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-[var(--z-sticky)] transition-all duration-300"
       style={{
         background: scrolled ? 'var(--bg-card)' : 'transparent',
         backdropFilter: scrolled ? 'blur(16px)' : 'none',

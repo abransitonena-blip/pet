@@ -58,7 +58,7 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[400] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-[var(--z-overlay)] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={onClose}
         >
           <motion.div
