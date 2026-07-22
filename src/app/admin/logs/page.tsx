@@ -9,7 +9,7 @@ interface AuditLog {
   id: string
   action: string
   reservationId: string
-  details: Record<string, any>
+  details: Record<string, unknown>
   userId: string
   timestamp: { seconds: number; nanoseconds: number } | null
 }

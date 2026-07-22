@@ -339,7 +339,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     clearDraft()
     setTimeout(() => {
       try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
         ;[523.25, 659.25, 783.99].forEach((freq, i) => {
           const osc = ctx.createOscillator()
           const gain = ctx.createGain()

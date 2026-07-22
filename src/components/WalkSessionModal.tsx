@@ -110,7 +110,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
       await uploadBytes(storageRef, photoFile)
       const url = await getDownloadURL(storageRef)
 
-      const updateData: Record<string, any> = {}
+      const updateData: Record<string, unknown> = {}
       if (mode === 'check_in') {
         updateData.walkCheckIn = { photo: url, lat: location.lat, lng: location.lng, timestamp: serverTimestamp() }
         updateData.status = 'paseando'

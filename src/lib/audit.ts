@@ -4,7 +4,7 @@ import { db } from '@/firebase/config'
 export async function logChange(
   action: string,
   reservationId: string,
-  details: Record<string, any>,
+  details: Record<string, unknown>,
   userId?: string
 ) {
   try {
