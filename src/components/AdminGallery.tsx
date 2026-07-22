@@ -35,7 +35,7 @@ export default function AdminGallery() {
 
   const compressImage = (dataUrl: string, maxW = 800, maxH = 800, quality = 0.7): Promise<string> => {
     return new Promise((resolve) => {
-      const img = new Image()
+      const img = document.createElement('img')
       img.onload = () => {
         let w = img.width, h = img.height
         if (w > maxW || h > maxH) {
