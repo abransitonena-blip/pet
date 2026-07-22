@@ -112,7 +112,7 @@ export default function Gallery() {
             >
               <div className="relative w-full overflow-hidden" style={{ aspectRatio: i % 3 === 0 ? '3/4' : i % 3 === 1 ? '4/3' : '1/1' }}>
                 {!loaded.has(i) && (
-                  <div className="absolute inset-0 bg-white/5 animate-pulse" />
+                  <div className="absolute inset-0 skeleton" />
                 )}
                 <img
                   src={img.url}
@@ -161,6 +161,7 @@ export default function Gallery() {
               <button
                 onClick={close}
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all backdrop-blur-sm"
+                aria-label="Cerrar galería"
               >
                 <FaTimes size={16} />
               </button>
@@ -169,6 +170,7 @@ export default function Gallery() {
             <button
               onClick={(e) => { e.stopPropagation(); prev() }}
               className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all backdrop-blur-sm z-20"
+              aria-label="Imagen anterior"
             >
               <FaChevronLeft size={16} />
             </button>
@@ -176,6 +178,7 @@ export default function Gallery() {
             <button
               onClick={(e) => { e.stopPropagation(); next() }}
               className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all backdrop-blur-sm z-20"
+              aria-label="Imagen siguiente"
             >
               <FaChevronRight size={16} />
             </button>

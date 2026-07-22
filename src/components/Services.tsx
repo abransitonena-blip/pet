@@ -91,20 +91,20 @@ export default function Services() {
                     <Icon className="text-xl text-primary" />
                   </motion.div>
 
-                  <h3 className="text-lg font-semibold text-white mb-1">
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
                     {svc.name}
                   </h3>
                   <p className="text-xs text-primary/80 mb-1 font-medium">
                     Recomendado para: {svc.recommendedFor}
                   </p>
-                  <p className="text-sm text-white/50 mb-3 leading-relaxed">
+                  <p className="text-sm mb-3 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                     {svc.mainBenefit} · {svc.modality}
                   </p>
 
                   {svc.highlights && svc.highlights.length > 0 && (
                     <ul className="space-y-1 mb-3">
                       {svc.highlights.map((h: string, j: number) => (
-                        <li key={j} className="text-xs text-white/40 flex items-center gap-1.5">
+                        <li key={j} className="text-xs flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
                           <FaPaw className="text-primary shrink-0" size={8} />
                           {h}
                         </li>
@@ -113,16 +113,16 @@ export default function Services() {
                   )}
 
                   {svc.disclaimer && (
-                    <p className="text-[10px] text-white/30 mb-3 italic leading-relaxed">
+                    <p className="text-[10px] mb-3 italic leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                       {svc.disclaimer}
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                     <span className="text-2xl font-bold gradient-text">
                       ${price.toLocaleString()}
                     </span>
-                    <span className="text-xs text-white/40 flex items-center gap-1">
+                    <span className="text-xs flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                       <FaClock size={10} />
                       {svc.duration}
                     </span>
@@ -139,7 +139,7 @@ export default function Services() {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="text-center mt-12"
         >
-          <p className="text-white/40 text-sm">
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             *Precios especiales por paquete. Pregunta por nuestras promociones semanales.
           </p>
         </motion.div>

@@ -8,6 +8,10 @@ export default function FloatingParticles() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) return
+
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
@@ -48,7 +52,7 @@ export default function FloatingParticles() {
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(230, 126, 34, ${p.opacity})`
+        ctx.fillStyle = `rgba(217, 119, 6, ${p.opacity})`
         ctx.fill()
       })
       frameId = requestAnimationFrame(animate)

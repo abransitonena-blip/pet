@@ -42,7 +42,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
               transition={{ duration: 1.5, ease: 'easeInOut' }}
               className="h-1 rounded-full mx-auto overflow-hidden"
               style={{
-                background: "rgba(230, 126, 34, 0.2)",
+                background: "var(--color-primary-glow)",
               }}
             >
               <motion.div

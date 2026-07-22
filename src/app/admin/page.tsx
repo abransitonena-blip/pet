@@ -33,6 +33,12 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
+    const todayDate = new Date()
+    const weekStart = new Date(todayDate)
+    weekStart.setDate(todayDate.getDate() - todayDate.getDay())
+    const weekStartStr = weekStart.toISOString().split('T')[0]
+    const monthStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
+    const monthStartStr = monthStart.toISOString().split('T')[0]
 
     // Today's reservations
     const todayQ = query(
@@ -57,16 +63,37 @@ export default function AdminDashboard() {
       setUpcomingReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
     })
 
+    // This week's reservations (all statuses)
+    const weekQ = query(
+      collection(db, 'reservations'),
+      where('date', '>=', weekStartStr),
+      where('date', '<=', today),
+    )
+    const unsubWeek = onSnapshot(weekQ, (snap) => {
+      setStats((prev) => ({ ...prev, weekReservations: snap.size }))
+    })
+
+    // This month's reservations (all statuses)
+    const monthQ = query(
+      collection(db, 'reservations'),
+      where('date', '>=', monthStartStr),
+      where('date', '<=', today),
+    )
+    const unsubMonth = onSnapshot(monthQ, (snap) => {
+      setStats((prev) => ({ ...prev, monthReservations: snap.size }))
+    })
+
     // Total clients
-    const clientsQ = query(collection(db, 'clients'), limit(1))
+    const clientsQ = query(collection(db, 'clients'))
     const unsubClients = onSnapshot(clientsQ, (snap) => {
-      // Note: This is approximate. For exact count, use a counter doc.
       setStats((prev) => ({ ...prev, totalClients: snap.size }))
     })
 
     return () => {
       unsubToday()
       unsubPending()
+      unsubWeek()
+      unsubMonth()
       unsubClients()
     }
   }, [])
@@ -74,7 +101,7 @@ export default function AdminDashboard() {
   const statCards = [
     { label: 'Paseos hoy', value: stats.todayReservations, icon: FaCalendarAlt, color: '#D97706' },
     { label: 'Pendientes', value: stats.pendingReservations, icon: FaClock, color: '#3b82f6' },
-    { label: 'Total reservas', value: stats.monthReservations, icon: FaDog, color: '#059669' },
+    { label: 'Reservas del mes', value: stats.monthReservations, icon: FaDog, color: '#059669' },
     { label: 'Clientes', value: stats.totalClients, icon: FaUsers, color: '#7C3AED' },
   ]
 

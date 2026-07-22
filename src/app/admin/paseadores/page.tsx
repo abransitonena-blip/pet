@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore'
+import { doc, updateDoc } from 'firebase/firestore'
 import { FaWalking, FaUser, FaPhone, FaCalendarAlt, FaDog, FaWhatsapp, FaSpinner } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
+import { useReservations } from '@/context/ReservationsContext'
 import type { Reservation } from '@/types'
 
 interface WalkerStats {
@@ -19,20 +20,10 @@ interface WalkerStats {
 
 export default function AdminPaseadoresPage() {
   const { config, updateConfig, saving } = useConfig()
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading] = useState(true)
+  const { reservations, loading } = useReservations()
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [adding, setAdding] = useState(false)
-
-  useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, (snap) => {
-      setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
-  }, [])
 
   const walkerStats: WalkerStats[] = useMemo(() => {
     const walkers = config.walkers || []

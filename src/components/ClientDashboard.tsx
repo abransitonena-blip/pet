@@ -85,15 +85,17 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
         <div className="flex items-center gap-2">
           <FaUser className="text-primary" size={14} />
           <div>
-            <h3 className="text-sm font-semibold text-white">Mi cuenta</h3>
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Mi cuenta</h3>
             {clientData && (
-              <p className="text-[10px] text-white/30">{clientData.email}</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{clientData.email}</p>
             )}
           </div>
         </div>
         <button
           onClick={onLogout}
-          className="flex items-center gap-1 text-xs text-white/30 hover:text-red-400 transition-all"
+          className="flex items-center gap-1 text-xs transition-all" style={{ color: 'var(--text-muted)' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-error)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
         >
           <FaSignOutAlt size={10} />
           Salir
@@ -103,7 +105,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-8">
           <FaSpinner className="animate-spin text-primary" size={16} />
-          <span className="text-xs text-white/30">Cargando...</span>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Cargando...</span>
         </div>
       )}
 
@@ -111,7 +113,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
         <div className="space-y-4">
           {active.length > 0 && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-white/20 font-medium mb-2 flex items-center gap-1">
+              <p className="text-[10px] uppercase tracking-wider font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                 <FaCalendarAlt size={9} /> Próximos paseos ({active.length})
               </p>
               <div className="space-y-2">
@@ -125,7 +127,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                     <div className="flex items-center justify-between gap-2 mb-1.5">
                       <div className="flex items-center gap-1.5">
                         <FaDog className="text-primary" size={10} />
-                        <span className="text-sm font-medium text-white">{r.petName}</span>
+                        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{r.petName}</span>
                       </div>
                       <span className="text-[10px] px-2 py-0.5 rounded-full"
                         style={{
@@ -136,7 +138,7 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
                         {r.status === 'en_camino' ? 'En camino' : r.status === 'paseando' ? 'Paseando' : 'Pendiente'}
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/40">
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
                       <span>{SERVICE_LABELS[r.service] || r.service}</span>
                       <span>{r.date}</span>
                       <span>{r.time}</span>
@@ -159,8 +161,8 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
 
           {active.length === 0 && (
             <div className="text-center py-4">
-              <FaDog className="text-white/10 mx-auto mb-2" size={24} />
-              <p className="text-xs text-white/30">No tienes paseos próximos</p>
+              <FaDog className="mx-auto mb-2" style={{ color: 'var(--text-muted)', opacity: 0.3 }} size={24} />
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No tienes paseos próximos</p>
               <a href="#reservar" className="text-xs text-primary hover:underline mt-1 inline-block">
                 Reserva uno ahora
               </a>
@@ -169,25 +171,25 @@ export default function ClientDashboard({ onLogout }: { onLogout: () => void }) 
 
           {past.length > 0 && (
             <div className="pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-              <p className="text-[10px] uppercase tracking-wider text-white/20 font-medium mb-2 flex items-center gap-1">
+              <p className="text-[10px] uppercase tracking-wider font-medium mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                 <FaHistory size={9} /> Historial ({past.length})
               </p>
               <div className="space-y-1 max-h-40 overflow-y-auto">
                 {past.slice(0, 20).map((r) => (
                   <div key={r.id} className="flex items-center justify-between py-1.5">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs text-white/60 truncate">{r.petName} · {SERVICE_LABELS[r.service] || r.service} · {r.date}</span>
+                      <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{r.petName} · {SERVICE_LABELS[r.service] || r.service} · {r.date}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {r.status === 'completed' && r.walkCheckIn && (
                         <button onClick={() => setSelectedWalk(r)}
                           className="text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-full"
-                          style={{ background: 'rgba(230,126,34,0.15)', color: '#E67E22' }}
+                          style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
                         >
                           <FaCamera size={8} /> Ver
                         </button>
                       )}
-                      <span className="text-[10px]" style={{ color: r.status === 'completed' ? '#22c55e' : '#ef4444' }}>
+                      <span className="text-[10px]" style={{ color: r.status === 'completed' ? 'var(--color-success)' : 'var(--color-error)' }}>
                         {r.status === 'completed' ? '✓' : '✗'}
                       </span>
                     </div>

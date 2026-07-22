@@ -411,7 +411,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                     <motion.div
                       animate={{
                         scale: step === s.num ? 1.1 : 1,
-                        background: step > s.num ? 'linear-gradient(135deg, #22c55e, #16a34a)' : step === s.num ? 'linear-gradient(135deg, #E67E22, #D35400)' : 'var(--glass-bg)',
+                        background: step > s.num ? 'linear-gradient(135deg, var(--color-success), #059669)' : step === s.num ? 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))' : 'var(--glass-bg)',
                       }}
                       transition={{ duration: 0.3 }}
                       className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border"
@@ -429,7 +429,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                   </div>
                   {i < STEP_META.length - 1 && (
                     <div className="flex-1 h-[2px] mx-1 sm:mx-2 rounded-full transition-colors duration-500"
-                      style={{ background: step > s.num ? '#22c55e' : 'var(--border)' }} />
+                      style={{ background: step > s.num ? 'var(--color-success)' : 'var(--border)' }} />
                   )}
                 </div>
               ))}
@@ -462,7 +462,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                         animate={{ scale: 1 }}
                         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                         className="w-20 h-20 rounded-full flex items-center justify-center"
-                        style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+                        style={{ background: 'linear-gradient(135deg, var(--color-success), #059669)' }}
                       >
                         <FaCheckCircle size={36} className="text-white" />
                       </motion.div>
@@ -489,9 +489,9 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                   key={svc.name}
                                   className="relative flex items-start gap-3 p-4 rounded-xl text-left transition-all duration-200 border cursor-pointer"
                                   style={{
-                                    background: selected ? 'rgba(230,126,34,0.1)' : 'var(--glass-bg)',
-                                    borderColor: selected ? '#E67E22' : 'var(--border)',
-                                    boxShadow: selected ? '0 0 0 1px #E67E22, 0 4px 16px rgba(230,126,34,0.15)' : 'none',
+                                    background: selected ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                    borderColor: selected ? 'var(--color-primary)' : 'var(--border)',
+                                    boxShadow: selected ? '0 0 0 1px var(--color-primary), 0 4px 16px var(--color-primary-glow)' : 'none',
                                     minHeight: '44px',
                                   }}
                                 >
@@ -510,7 +510,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                         {svc.name}
                                       </span>
                                       {svc.quantity && savings > 0 && (
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#22c55e' }}>
+                                        <span                                     className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: 'var(--color-success)' }}>
                                           Ahorra ${savings}
                                         </span>
                                       )}
@@ -527,7 +527,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
                                       className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-1"
-                                      style={{ background: '#E67E22' }}
+                                      style={{ background: 'var(--color-primary)' }}
                                     >
                                       <FaCheck size={12} className="text-white" />
                                     </motion.div>
@@ -593,9 +593,9 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                         onClick={() => set('time', slot)}
                                         className="relative py-2.5 rounded-lg text-sm font-medium transition-all duration-200 border"
                                         style={{
-                                          background: booked ? 'rgba(239,68,68,0.05)' : selected ? 'rgba(230,126,34,0.15)' : 'var(--glass-bg)',
-                                          borderColor: selected ? '#E67E22' : booked ? 'rgba(239,68,68,0.15)' : 'var(--border)',
-                                          color: booked ? 'rgba(239,68,68,0.4)' : selected ? '#E67E22' : 'var(--text-secondary)',
+                                          background: booked ? 'var(--color-error-light)' : selected ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                          borderColor: selected ? 'var(--color-primary)' : booked ? 'var(--color-error)' : 'var(--border)',
+                                          color: booked ? 'var(--color-error)' : selected ? 'var(--color-primary)' : 'var(--text-secondary)',
                                           cursor: booked ? 'not-allowed' : 'pointer',
                                           textDecoration: booked ? 'line-through' : 'none',
                                           minHeight: '44px',
@@ -641,7 +641,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 style={{
                                   background: 'var(--glass-bg)',
-                                  borderColor: errors.petName ? '#ef4444' : form.petName ? 'rgba(34,197,94,0.4)' : 'var(--border)',
+                                  borderColor: errors.petName ? 'var(--color-error)' : form.petName ? 'var(--color-success)' : 'var(--border)',
                                   color: 'var(--text-primary)',
                                 }}
                               />
@@ -670,8 +670,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                         key={pt.value}
                                         className="relative flex flex-col items-center gap-2 py-4 rounded-xl border transition-all duration-200 cursor-pointer"
                                         style={{
-                                          background: selected ? 'rgba(230,126,34,0.1)' : 'var(--glass-bg)',
-                                          borderColor: selected ? '#E67E22' : 'var(--border)',
+                                          background: selected ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                          borderColor: selected ? 'var(--color-primary)' : 'var(--border)',
                                           minHeight: '44px',
                                         }}
                                       >
@@ -684,7 +684,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                           className="sr-only"
                                         />
                                         <span className="text-2xl">{pt.emoji}</span>
-                                        <span className="text-xs font-medium" style={{ color: selected ? '#E67E22' : 'var(--text-secondary)' }}>
+                                        <span className="text-xs font-medium" style={{ color: selected ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
                                           {pt.label}
                                         </span>
                                       </label>
@@ -721,7 +721,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 style={{
                                   background: 'var(--glass-bg)',
-                                  borderColor: errors.name ? '#ef4444' : form.name ? 'rgba(34,197,94,0.4)' : 'var(--border)',
+                                  borderColor: errors.name ? 'var(--color-error)' : form.name ? 'var(--color-success)' : 'var(--border)',
                                   color: 'var(--text-primary)',
                                 }}
                               />
@@ -750,7 +750,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 style={{
                                   background: 'var(--glass-bg)',
-                                  borderColor: errors.phone ? '#ef4444' : form.phone.replace(/\D/g, '').length >= 10 && /^[2-9]/.test(form.phone.replace(/\D/g, '')) ? 'rgba(34,197,94,0.4)' : 'var(--border)',
+                                  borderColor: errors.phone ? 'var(--color-error)' : form.phone.replace(/\D/g, '').length >= 10 && /^[2-9]/.test(form.phone.replace(/\D/g, '')) ? 'var(--color-success)' : 'var(--border)',
                                   color: 'var(--text-primary)',
                                 }}
                               />
@@ -895,7 +895,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 </div>
                               )}
                               {discountAmount > 0 && (
-                                <div className="flex justify-between text-sm text-green-400">
+            <div className="flex justify-between text-sm" style={{ color: 'var(--color-success)' }}>
                                   <span>Descuento ({form.coupon.toUpperCase()})</span><span>-${discountAmount.toLocaleString()}</span>
                                 </div>
                               )}
@@ -925,7 +925,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                       className="w-full px-4 py-2.5 pr-10 rounded-xl text-sm border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
                                       style={{
                                         background: 'var(--glass-bg)',
-                                        borderColor: couponStatus?.valid ? '#22c55e' : couponStatus && !couponStatus.valid ? '#ef4444' : 'var(--border)',
+                                        borderColor: couponStatus?.valid ? 'var(--color-success)' : couponStatus && !couponStatus.valid ? 'var(--color-error)' : 'var(--border)',
                                         color: 'var(--text-primary)',
                                       }}
                                     />
@@ -936,7 +936,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                     </div>
                                   </div>
                                   {couponStatus && (
-                                    <p className={`text-xs mt-1 ${couponStatus.valid ? 'text-green-400' : 'text-red-400'}`}>
+                                    <p className="text-xs mt-1" style={{ color: couponStatus.valid ? 'var(--color-success)' : 'var(--color-error)' }}>
                                       {couponStatus.msg}
                                     </p>
                                   )}
@@ -948,8 +948,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                           {/* Trust Signals */}
                           <div className="grid grid-cols-2 gap-2 mb-5">
                             {[
-                              { icon: <FaStar size={12} />, text: '4.9/5 — 250+ paseos', color: '#E67E22' },
-                              { icon: <FaBolt size={12} />, text: 'Respuesta en 5 min', color: '#22c55e' },
+                              { icon: <FaStar size={12} />, text: '4.9/5 — 250+ paseos', color: 'var(--color-primary)' },
+                              { icon: <FaBolt size={12} />, text: 'Respuesta en 5 min', color: 'var(--color-success)' },
                               { icon: <FaShieldAlt size={12} />, text: 'Paseadores verificados', color: '#3b82f6' },
                               { icon: <FaHeart size={12} />, text: 'Seguro para mascotas', color: '#ec4899' },
                             ].map((badge, i) => (
@@ -966,7 +966,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                             Confirmaremos la disponibilidad contigo por WhatsApp.
                           </p>
 
-                          {rateError && <p className="text-xs text-red-400 text-center mb-3">{rateError}</p>}
+                          {rateError && <p className="text-xs text-center mb-3" style={{ color: 'var(--color-error)' }}>{rateError}</p>}
                         </div>
                       )}
                     </>
@@ -994,7 +994,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                       onClick={goNext}
                       disabled={!canProceed}
                       className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                      style={{ background: 'linear-gradient(135deg, #E67E22, #D35400)', minHeight: '44px' }}
+                      style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', minHeight: '44px' }}
                     >
                       {ctaLabel} <FaArrowRight size={12} />
                     </button>
@@ -1004,7 +1004,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                       onClick={handleSubmit}
                       disabled={!canProceed || sending}
                       className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                      style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 4px 16px rgba(34,197,94,0.3)', minHeight: '44px' }}
+                      style={{ background: 'linear-gradient(135deg, var(--color-success), #059669)', boxShadow: '0 4px 16px var(--color-success-light)', minHeight: '44px' }}
                     >
                       {sending ? <><FaSpinner className="animate-spin" size={14} /> Enviando...</> : <><FaWhatsapp size={14} /> Confirmar por WhatsApp</>}
                     </button>
@@ -1043,7 +1043,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                   onClick={goNext}
                   disabled={!canProceed}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  style={{ background: 'linear-gradient(135deg, #E67E22, #D35400)', minHeight: '44px' }}
+                  style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', minHeight: '44px' }}
                 >
                   {ctaLabel} <FaArrowRight size={12} />
                 </button>
@@ -1053,7 +1053,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                   onClick={handleSubmit}
                   disabled={!canProceed || sending}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', minHeight: '44px' }}
+                  style={{ background: 'linear-gradient(135deg, var(--color-success), #059669)', minHeight: '44px' }}
                 >
                   {sending ? <><FaSpinner className="animate-spin" size={14} /> ...</> : <><FaWhatsapp size={14} /> Confirmar</>}
                 </button>

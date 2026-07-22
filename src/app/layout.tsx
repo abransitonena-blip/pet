@@ -25,6 +25,7 @@ const jsonLd = {
   openingHoursSpecification: [
     { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: BUSINESS_HOURS.lunes!.open, closes: BUSINESS_HOURS.lunes!.close },
     { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: BUSINESS_HOURS.sabado!.open, closes: BUSINESS_HOURS.sabado!.close },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Sunday', opens: '00:00', closes: '00:00', description: 'Cerrado' },
   ],
   priceRange: '$$',
   sameAs: [
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
     siteName: 'PET Ap',
     locale: 'es_MX',
     type: 'website',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    images: [{ url: `${siteUrl}/og-image.png`, width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -94,7 +95,12 @@ export default function RootLayout({
         }} />
       </head>
       <body className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-        <Providers>{children}</Providers>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-brand-500 focus:text-white focus:outline-none">
+          Saltar al contenido principal
+        </a>
+        <Providers>
+          <main id="main-content">{children}</main>
+        </Providers>
       </body>
     </html>
   )

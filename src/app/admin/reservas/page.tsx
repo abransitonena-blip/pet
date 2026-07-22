@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db } from '@/firebase/config'
 import {
-  collection, query, orderBy, onSnapshot, doc, updateDoc,
-  deleteDoc, serverTimestamp, where, getDocs,
+  doc, updateDoc,
+  deleteDoc, serverTimestamp, where, getDocs, collection, query as fsQuery, orderBy as fsOrderBy,
 } from 'firebase/firestore'
 import {
   FaSearch, FaFilter, FaDog, FaWhatsapp, FaEdit, FaTrash,
@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
+import { useReservations } from '@/context/ReservationsContext'
 import EditReservationModal from '@/components/EditReservationModal'
 import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
@@ -37,8 +38,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function AdminReservas() {
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading] = useState(true)
+  const { reservations, loading } = useReservations()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [dateFrom, setDateFrom] = useState('')
@@ -49,15 +49,6 @@ export default function AdminReservas() {
   const [historyPhone, setHistoryPhone] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const { prices } = usePrices()
-
-  useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, (snap) => {
-      setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
-  }, [])
 
   const filtered = useMemo(() => {
     let result = reservations
@@ -122,7 +113,7 @@ export default function AdminReservas() {
   }
 
   const viewHistory = async (phone: string) => {
-    const q = query(collection(db, 'reservations'), where('phone', '==', phone), orderBy('createdAt', 'desc'))
+    const q = fsQuery(collection(db, 'reservations'), where('phone', '==', phone), fsOrderBy('createdAt', 'desc'))
     const snap = await getDocs(q)
     const history = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
     setHistoryReservations(history as Reservation[])

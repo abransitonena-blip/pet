@@ -6,6 +6,7 @@ import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
 import { FaChartLine, FaCalendarAlt, FaDog, FaUsers, FaStar } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
+import { useReservations } from '@/context/ReservationsContext'
 import type { Reservation } from '@/types'
 
 interface Review {
@@ -15,24 +16,16 @@ interface Review {
 }
 
 export default function AdminAnaliticaPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([])
+  const { reservations, loading } = useReservations()
   const [reviews, setReviews] = useState<Review[]>([])
-  const [loading, setLoading] = useState(true)
   const { prices } = usePrices()
 
   useEffect(() => {
-    const q1 = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
-    const unsub1 = onSnapshot(q1, (snap) => {
-      setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
-      setLoading(false)
-    }, () => setLoading(false))
-
     const q2 = query(collection(db, 'reviews'), orderBy('date', 'desc'))
     const unsub2 = onSnapshot(q2, (snap) => {
       setReviews(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Review)))
     })
-
-    return () => { unsub1(); unsub2() }
+    return () => { unsub2() }
   }, [])
 
   const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? getServicePrice(serviceName)

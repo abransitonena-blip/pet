@@ -42,7 +42,7 @@ export default function Header() {
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       style={{
-        background: scrolled ? 'rgba(15, 23, 42, 0.85)' : 'transparent',
+        background: scrolled ? 'var(--bg-card)' : 'transparent',
         backdropFilter: scrolled ? 'blur(16px)' : 'none',
         borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
       }}

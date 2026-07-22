@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+import { useState, useMemo } from 'react'
+import { useReservations } from '@/context/ReservationsContext'
 import { FaSearch, FaPaw, FaDog, FaCalendarAlt, FaUser } from 'react-icons/fa'
 import type { Reservation } from '@/types'
 
@@ -18,19 +17,9 @@ interface PetProfile {
 }
 
 export default function AdminPerrosPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading] = useState(true)
+  const { reservations, loading } = useReservations()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedPet, setSelectedPet] = useState<PetProfile | null>(null)
-
-  useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, (snap) => {
-      setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
-  }, [])
 
   const pets = useMemo(() => {
     const map = new Map<string, PetProfile>()

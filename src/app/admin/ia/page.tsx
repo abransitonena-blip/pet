@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   FaRobot, FaArrowUp, FaArrowDown, FaLightbulb, FaCalendarAlt,
   FaDog, FaDollarSign, FaClock, FaStar, FaArrowRight, FaBrain,
 } from 'react-icons/fa'
+import { useReservations } from '@/context/ReservationsContext'
 import type { Reservation } from '@/types'
 
 interface Insight {
@@ -22,17 +21,7 @@ interface Insight {
 const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 export default function AdminIAPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, (snap) => {
-      setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
-  }, [])
+  const { reservations, loading } = useReservations()
 
   const insights = useMemo((): Insight[] => {
     if (reservations.length === 0) return []

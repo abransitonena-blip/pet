@@ -147,9 +147,9 @@ export default function Reviews() {
                 key={i}
                 className="glass-card p-6 w-80 h-48 animate-pulse"
               >
-                <div className="h-4 bg-white/5 rounded w-3/4 mb-4" />
-                <div className="h-3 bg-white/5 rounded w-full mb-2" />
-                <div className="h-3 bg-white/5 rounded w-2/3" />
+                <div className="skeleton h-4 rounded w-3/4 mb-4" />
+                <div className="skeleton h-3 rounded w-full mb-2" />
+                <div className="skeleton h-3 rounded w-2/3" />
               </div>
             ))}
           </div>
@@ -170,17 +170,14 @@ export default function Reviews() {
                     {Array.from({ length: 5 }).map((_, j) => (
                       <FaStar
                         key={j}
-                        className={
-                          j < review.rating
-                            ? 'text-secondary'
-                            : 'text-white/10'
-                        }
+                        className={j < review.rating ? 'text-secondary' : 'opacity-20'}
+                        style={j >= review.rating ? { color: 'var(--text-muted)' } : undefined}
                         size={14}
                         aria-hidden="true"
                       />
                     ))}
                   </div>
-                  <p className="text-sm text-white/70 mb-4 leading-relaxed line-clamp-3">
+                  <p className="text-sm mb-4 leading-relaxed line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
                     {review.text}
                   </p>
                   <div className="flex items-center gap-2">
@@ -188,9 +185,9 @@ export default function Reviews() {
                       {review.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{review.name}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{review.name}</p>
                       {review.petName && (
-                        <p className="text-xs text-white/40 flex items-center gap-1">
+                        <p className="text-xs flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                           <FaPaw className="text-primary" size={10} />
                           {review.petName}
                         </p>
@@ -212,17 +209,14 @@ export default function Reviews() {
                     {Array.from({ length: 5 }).map((_, j) => (
                       <FaStar
                         key={j}
-                        className={
-                          j < review.rating
-                            ? 'text-secondary'
-                            : 'text-white/10'
-                        }
+                        className={j < review.rating ? 'text-secondary' : 'opacity-20'}
+                        style={j >= review.rating ? { color: 'var(--text-muted)' } : undefined}
                         size={14}
                         aria-hidden="true"
                       />
                     ))}
                   </div>
-                  <p className="text-sm text-white/70 mb-4 leading-relaxed line-clamp-3">
+                  <p className="text-sm mb-4 leading-relaxed line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
                     {review.text}
                   </p>
                   <div className="flex items-center gap-2">
@@ -230,9 +224,9 @@ export default function Reviews() {
                       {review.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{review.name}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{review.name}</p>
                       {review.petName && (
-                        <p className="text-xs text-white/40 flex items-center gap-1">
+                        <p className="text-xs flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                           <FaPaw className="text-primary" size={10} />
                           {review.petName}
                         </p>
@@ -251,8 +245,9 @@ export default function Reviews() {
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
                     i === currentIndex
                       ? 'bg-primary w-6'
-                      : 'bg-white/20 hover:bg-white/40'
+                      : 'hover:opacity-60'
                   }`}
+                  style={i !== currentIndex ? { background: 'var(--text-muted)' } : undefined}
                 />
               ))}
             </div>

@@ -48,8 +48,7 @@ export default function HowItWorks() {
           className="text-center mb-16"
         >
           <span
-            className="text-sm uppercase tracking-widest font-medium"
-            style={{ color: "rgba(230, 126, 34, 0.8)" }}
+            className="text-sm uppercase tracking-widest font-medium text-primary/80"
           >
             Cómo funciona
           </span>
@@ -86,7 +85,7 @@ export default function HowItWorks() {
                   transition={{ duration: 0.6 }}
                   className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-white text-xl"
                   style={{
-                    background: `linear-gradient(135deg, var(--primary), #D35400)`,
+                    background: 'linear-gradient(135deg, var(--primary), var(--color-primary-hover))',
                   }}
                 >
                   <Icon />

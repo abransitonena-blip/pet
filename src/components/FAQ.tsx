@@ -53,7 +53,7 @@ export default function FAQ() {
                 aria-controls={`faq-answer-${i}`}
                 className="w-full glass-card p-4 sm:p-5 text-left flex items-center justify-between gap-4 transition-all hover:bg-white/[0.03]"
               >
-                <span className="flex items-center gap-3 text-sm sm:text-base font-medium text-white">
+                <span className="flex items-center gap-3 text-sm sm:text-base font-medium" style={{ color: 'var(--text-primary)' }}>
                   <FaQuestionCircle className="text-primary shrink-0" size={14} />
                   {faq.q}
                 </span>
@@ -62,7 +62,7 @@ export default function FAQ() {
                   transition={{ duration: 0.2 }}
                   className="shrink-0"
                 >
-                  <FaChevronDown className="text-white/30" size={12} />
+                  <FaChevronDown style={{ color: 'var(--text-muted)' }} size={12} />
                 </motion.div>
               </button>
               <AnimatePresence>
@@ -76,7 +76,7 @@ export default function FAQ() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-4 sm:px-5 pb-4 pt-2 text-sm text-white/50 leading-relaxed border-t border-white/5 mx-4 sm:mx-5">
+                    <div className="px-4 sm:px-5 pb-4 pt-2 text-sm leading-relaxed border-t mx-4 sm:mx-5" style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}>
                       {faq.a}
                     </div>
                   </motion.div>

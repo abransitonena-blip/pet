@@ -269,7 +269,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
             disabled={!photo || !location || saving}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-30 transition-all flex items-center justify-center gap-2"
             style={{
-              background: 'linear-gradient(135deg, #E67E22, #D35400)',
+              background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
             }}
           >
             {saving ? (

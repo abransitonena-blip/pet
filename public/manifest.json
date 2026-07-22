@@ -1,11 +1,11 @@
 {
-  "name": "Paseos Quebrada",
-  "short_name": "Paseos Q",
-  "description": "Paseos caninos en Zona Quebrada, Cuautitlán. Agenda el paseo de tu perro fácil y rápido.",
+  "name": "PET Ap — Bienestar Canino",
+  "short_name": "PET Ap",
+  "description": "Plataforma de bienestar canino. Agenda paseos, reportes y seguimiento en tiempo real.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0f",
-  "theme_color": "#e67e22",
+  "background_color": "#0F172A",
+  "theme_color": "#D97706",
   "orientation": "portrait-primary",
   "icons": [
     {

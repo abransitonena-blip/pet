@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+import { useState, useMemo } from 'react'
+import { useReservations } from '@/context/ReservationsContext'
 import { FaSearch, FaUsers, FaWhatsapp, FaDog, FaCalendarAlt, FaMoneyBill } from 'react-icons/fa'
+import { getServicePrice } from '@/lib/services'
+import { usePrices } from '@/context/PricesContext'
 import type { Reservation } from '@/types'
 
 interface Client {
@@ -16,19 +17,10 @@ interface Client {
 }
 
 export default function AdminClientesPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading] = useState(true)
+  const { reservations, loading } = useReservations()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
-
-  useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, (snap) => {
-      setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
-  }, [])
+  const { prices } = usePrices()
 
   const clients = useMemo(() => {
     const map = new Map<string, Client>()
@@ -47,11 +39,11 @@ export default function AdminClientesPage() {
       const c = map.get(key)!
       c.reservations.push(r)
       if (!c.petNames.includes(r.petName)) c.petNames.push(r.petName)
-      if (r.paymentStatus === 'paid') c.totalSpent += 30
+      if (r.paymentStatus === 'paid') c.totalSpent += prices[r.service] ?? getServicePrice(r.service)
       if (r.date > c.lastVisit) c.lastVisit = r.date
     })
     return Array.from(map.values()).sort((a, b) => b.reservations.length - a.reservations.length)
-  }, [reservations])
+  }, [reservations, prices])
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return clients

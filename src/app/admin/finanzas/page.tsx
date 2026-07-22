@@ -1,29 +1,18 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
-import { FaDollarSign, FaCalendarAlt, FaChartBar, FaDownload, FaFilter } from 'react-icons/fa'
+import { useState, useMemo } from 'react'
+import { FaDollarSign, FaChartBar, FaDownload, FaFilter } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
+import { useReservations } from '@/context/ReservationsContext'
 import type { Reservation } from '@/types'
 
 export default function AdminFinanzasPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading] = useState(true)
+  const { reservations, loading } = useReservations()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [datePreset, setDatePreset] = useState<'all' | 'today' | 'week' | 'month' | 'year'>('all')
   const { prices } = usePrices()
-
-  useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
-    const unsub = onSnapshot(q, (snap) => {
-      setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
-  }, [])
 
   const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? getServicePrice(serviceName)
 
