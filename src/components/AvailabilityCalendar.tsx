@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { db } from '@/firebase/config'
 import { collection, query, where, getDocs } from 'firebase/firestore'
-import { FaClock, FaCheck, FaTimes } from 'react-icons/fa'
+import { FaCheck, FaTimes } from 'react-icons/fa'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
 
 export default function AvailabilityCalendar({ date, onSelect }: { date?: string; onSelect?: (time: string) => void }) {

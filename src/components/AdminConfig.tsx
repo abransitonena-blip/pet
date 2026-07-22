@@ -12,7 +12,6 @@ type EditorProps = {
 }
 import {
   FaSave,
-  FaTimes,
   FaPlus,
   FaTrash,
   FaChevronDown,

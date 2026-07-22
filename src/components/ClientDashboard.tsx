@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { collection, query, where, getDocs, updateDoc, doc, getDoc } from 'firebase/firestore'
 import { db, auth } from '@/firebase/config'
-import { FaDog, FaTimes, FaSpinner, FaCalendarAlt, FaHistory, FaUser, FaSignOutAlt, FaPaw, FaTrash, FaCamera, FaMapMarkerAlt, FaChevronDown, FaChevronUp } from 'react-icons/fa'
+import { FaDog, FaTimes, FaSpinner, FaCalendarAlt, FaHistory, FaUser, FaSignOutAlt, FaCamera, FaMapMarkerAlt } from 'react-icons/fa'
 
 interface WalkMedia {
   photo: string

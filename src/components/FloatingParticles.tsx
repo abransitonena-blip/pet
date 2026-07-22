@@ -34,6 +34,8 @@ export default function FloatingParticles() {
       })
     }
 
+    let frameId: number
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       particles.forEach((p) => {
@@ -49,17 +51,20 @@ export default function FloatingParticles() {
         ctx.fillStyle = `rgba(230, 126, 34, ${p.opacity})`
         ctx.fill()
       })
-      requestAnimationFrame(animate)
+      frameId = requestAnimationFrame(animate)
     }
 
-    animate()
+    frameId = requestAnimationFrame(animate)
 
     const handleResize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
     }
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      cancelAnimationFrame(frameId)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   return (

@@ -27,11 +27,6 @@ function HomeContent() {
   const [loaded, setLoaded] = useState(false)
   const [formActive, setFormActive] = useState(false)
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoaded(true), 600)
-    return () => clearTimeout(timer)
-  }, [])
-
   // Smooth scroll for anchor links
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -55,7 +50,7 @@ function HomeContent() {
     <>
       <PWARegister />
       <BannerDisplay />
-      {!loaded && <Preloader />}
+      <Preloader onComplete={() => setLoaded(true)} />
       <main className="relative min-h-screen">
         <Header />
         <Hero />

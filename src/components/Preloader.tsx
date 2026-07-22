@@ -4,21 +4,24 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaDog } from 'react-icons/fa'
 
-export default function Preloader() {
-  const [loading, setLoading] = useState(true)
+export default function Preloader({ onComplete }: { onComplete?: () => void }) {
+  const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000)
+    const timer = setTimeout(() => {
+      setVisible(false)
+      onComplete?.()
+    }, 1800)
     return () => clearTimeout(timer)
-  }, [])
+  }, [onComplete])
 
   return (
     <AnimatePresence>
-      {loading && (
+      {visible && (
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           className="fixed inset-0 z-[9999] flex items-center justify-center"
           style={{ background: 'var(--bg-primary)' }}
         >
@@ -36,7 +39,7 @@ export default function Preloader() {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: 200 }}
-              transition={{ duration: 2, ease: 'easeInOut' }}
+              transition={{ duration: 1.5, ease: 'easeInOut' }}
               className="h-1 rounded-full mx-auto overflow-hidden"
               style={{
                 background: "rgba(230, 126, 34, 0.2)",

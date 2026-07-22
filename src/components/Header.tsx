@@ -26,6 +26,15 @@ export default function Header() {
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
   return (
     <motion.header
       initial={{ y: -100 }}

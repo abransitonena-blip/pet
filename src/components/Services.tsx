@@ -7,7 +7,6 @@ import {
   FaDog,
   FaPaw,
   FaWalking,
-  FaTree,
   FaSun,
   FaClock,
   FaStar,

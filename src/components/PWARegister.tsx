@@ -21,7 +21,9 @@ export function showPushNotification(title: string, body: string, url = '/') {
 export default function PWARegister() {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
-    navigator.serviceWorker.register('/sw.js')
+
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+
     const params = new URLSearchParams({
       apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
       authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
@@ -30,7 +32,7 @@ export default function PWARegister() {
       messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
       appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
     })
-    navigator.serviceWorker.register('/firebase-messaging-sw.js?' + params)
+    navigator.serviceWorker.register('/firebase-messaging-sw.js?' + params).catch(() => {})
   }, [])
 
   return null

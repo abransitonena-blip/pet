@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaWhatsapp, FaTimes } from 'react-icons/fa'
+import { FaWhatsapp } from 'react-icons/fa'
 import { brand } from '@/lib/brand'
 
 export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {

@@ -11,7 +11,7 @@ import { showPushNotification } from './PWARegister'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
 import {
   FaDog, FaCalendarAlt, FaClock, FaPhone, FaUser, FaCommentAlt,
-  FaPaw, FaSpinner, FaCheckCircle, FaTag, FaCheck, FaTimes,
+  FaPaw, FaSpinner, FaCheckCircle, FaCheck, FaTimes,
   FaArrowRight, FaArrowLeft, FaShieldAlt, FaStar, FaBolt, FaHeart,
   FaTicketAlt, FaInfoCircle, FaEdit, FaWhatsapp,
 } from 'react-icons/fa'

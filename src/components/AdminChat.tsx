@@ -5,10 +5,10 @@ import { motion } from 'framer-motion'
 import { db } from '@/firebase/config'
 import {
   collection, query, orderBy, onSnapshot, doc,
-  addDoc, serverTimestamp, updateDoc, increment, getDocs,
+  addDoc, serverTimestamp, updateDoc, increment,
 } from 'firebase/firestore'
 import {
-  FaComments, FaTimes, FaPaperPlane, FaUser, FaChevronLeft, FaTrash,
+  FaComments, FaPaperPlane, FaUser, FaChevronLeft,
 } from 'react-icons/fa'
 import type { Conversation, ChatMessage } from '@/types'
 

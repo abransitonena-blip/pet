@@ -35,6 +35,7 @@ export default function EditReservationModal({
 
   const handleSave = async () => {
     if (!reservation) return
+    if (!form.date || !form.time || !form.service) return
     setSaving(true)
     try {
       const changes: Record<string, { from: unknown; to: unknown }> = {}
@@ -197,7 +198,7 @@ export default function EditReservationModal({
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || !form.date || !form.time || !form.service}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-50"
               >
                 {saving ? 'Guardando...' : 'Guardar cambios'}
