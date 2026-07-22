@@ -83,8 +83,8 @@ export default function CalendarView({ reservations }: { reservations: Reservati
                 isSelected
                   ? 'bg-primary/20 text-primary border border-primary/30'
                   : isToday
-                    ? 'bg-white/10 text-white border border-white/10'
-                    : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white/10 border border-white/10'
+                    : 'hover:bg-white/5'
               }`}
             >
               <span className="text-xs leading-none">{day}</span>

@@ -127,7 +127,7 @@ export default function Gallery() {
                       <FaHeart className="text-primary/80" size={10} />
                       {img.title}
                     </p>
-                    <p className="text-white/50 text-xs flex items-center gap-1 mt-1">
+                    <p className="text-xs flex items-center gap-1 mt-1" style={{ color: 'var(--text-secondary)' }}>
                       <FaPaw className="text-primary" size={8} />
                       {img.dog}
                     </p>
@@ -208,7 +208,7 @@ export default function Gallery() {
                   <FaHeart className="text-primary" size={14} />
                   {images[selected].title}
                 </p>
-                <p className="text-white/50 text-sm flex items-center justify-center gap-1">
+                <p className="text-sm flex items-center justify-center gap-1" style={{ color: 'var(--text-secondary)' }}>
                   <FaPaw className="text-primary" size={10} />
                   {images[selected].dog}
                 </p>

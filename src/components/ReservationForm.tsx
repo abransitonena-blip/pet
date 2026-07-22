@@ -330,7 +330,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         finalPrice,
       })
       showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
-    } catch {}
+    } catch (e) { console.error('Error saving reservation:', e) }
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank')
 

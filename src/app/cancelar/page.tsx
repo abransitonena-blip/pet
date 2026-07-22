@@ -154,7 +154,7 @@ export default function CancelarPage() {
           )}
 
           {reservations && reservations.length === 0 && (
-            <p className="text-white/30 text-sm">No hay reservas activas</p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay reservas activas</p>
           )}
         </div>
       </motion.div>

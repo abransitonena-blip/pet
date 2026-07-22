@@ -64,7 +64,7 @@ export default function AdminChat() {
         lastTimestamp: serverTimestamp(),
         unreadClient: increment(1),
       }).catch(() => {})
-    } catch {}
+    } catch (e) { console.error('Error sending message:', e) }
   }
 
   const formatTime = (ts?: { seconds: number; nanoseconds: number }) => {

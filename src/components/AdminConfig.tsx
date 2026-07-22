@@ -48,7 +48,7 @@ export default function AdminConfig() {
             <span className="text-sm font-semibold text-white flex items-center gap-2">
               <span>{sec.icon}</span> {sec.label}
             </span>
-            {openSection === sec.id ? <FaChevronUp size={10} className="text-white/30" /> : <FaChevronDown size={10} className="text-white/30" />}
+            {openSection === sec.id ? <FaChevronUp size={10} style={{ color: 'var(--text-muted)' }} /> : <FaChevronDown size={10} style={{ color: 'var(--text-muted)' }} />}
           </button>
 
           <AnimatePresence>

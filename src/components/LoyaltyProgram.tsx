@@ -45,7 +45,7 @@ export default function LoyaltyProgram({ phone }: { phone?: string }) {
       ) : (
         <div className="space-y-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-white/50">
+            <span style={{ color: 'var(--text-muted)' }}>
               {earnedFree ? '🎉 ¡Ganaste un paseo gratis!' : `${count} paseo${count !== 1 ? 's' : ''} completado${count !== 1 ? 's' : ''}`}
             </span>
             <span className="text-primary font-semibold">

@@ -94,7 +94,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
           createdAt: serverTimestamp(),
         })
       }
-    } catch {}
+    } catch (e) { console.error('Error sending message:', e) }
   }
 
   const formatTime = (ts?: { seconds: number; nanoseconds: number }) => {

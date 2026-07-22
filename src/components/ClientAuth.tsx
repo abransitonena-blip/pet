@@ -193,7 +193,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
                     <div>
                       <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Nombre</label>
                       <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
-                        <FaUser className="text-white/20" size={12} />
+                        <FaUser size={12} style={{ color: 'var(--text-muted)' }} />
                         <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                           className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
                           placeholder="Tu nombre" />
@@ -202,7 +202,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
                     <div>
                       <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>WhatsApp</label>
                       <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
-                        <FaPhone className="text-white/20" size={12} />
+                    <FaPhone size={12} style={{ color: 'var(--text-muted)' }} />
                         <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                           className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
                           placeholder="5523053772" />
@@ -214,7 +214,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Correo</label>
                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
-                    <FaEnvelope className="text-white/20" size={12} />
+                    <FaEnvelope size={12} style={{ color: 'var(--text-muted)' }} />
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
                       placeholder="correo@ejemplo.com" />
@@ -224,7 +224,7 @@ export default function ClientAuth({ isOpen, onClose, onSuccess, needsPhoneUser 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Contraseña</label>
                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3">
-                    <FaLock className="text-white/20" size={12} />
+                    <FaLock size={12} style={{ color: 'var(--text-muted)' }} />
                     <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                       className="w-full bg-transparent py-2.5 text-white text-sm focus:outline-none placeholder:text-white/20"
                       placeholder="••••••••" />
