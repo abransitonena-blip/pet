@@ -16,7 +16,13 @@ export default function MisReservasPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    let unsubRes: (() => void) | undefined
+
     const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (unsubRes) {
+        unsubRes()
+        unsubRes = undefined
+      }
       if (!user) {
         router.push('/login')
         return
@@ -26,7 +32,7 @@ export default function MisReservasPage() {
         where('uid', '==', user.uid),
         orderBy('createdAt', 'desc')
       )
-      const unsubRes = onSnapshot(
+      unsubRes = onSnapshot(
         q,
         (snap) => {
           setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
@@ -38,9 +44,11 @@ export default function MisReservasPage() {
           setLoading(false)
         }
       )
-      return unsubRes
     })
-    return unsubAuth
+    return () => {
+      unsubRes?.()
+      unsubAuth()
+    }
   }, [router])
 
   if (loading) {
