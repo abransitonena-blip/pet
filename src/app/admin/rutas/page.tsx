@@ -5,18 +5,11 @@ import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestor
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { FaMapMarkedAlt, FaDog, FaClock, FaUser, FaLocationArrow, FaCamera, FaFilter, FaCheck } from 'react-icons/fa'
-import type { Reservation } from '@/types'
-
-interface WalkPoint {
-  lat: number
-  lng: number
-  photo?: string
-  timestamp?: { seconds: number; nanoseconds: number }
-}
+import type { Reservation, WalkMedia } from '@/types'
 
 interface WalkRoute extends Reservation {
-  walkCheckIn?: WalkPoint
-  walkCheckOut?: WalkPoint
+  walkCheckIn?: WalkMedia
+  walkCheckOut?: WalkMedia
   walkNotes?: string
 }
 

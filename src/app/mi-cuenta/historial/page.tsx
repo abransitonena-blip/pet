@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { motion } from 'framer-motion'
-import { FaHistory, FaDog, FaCheckCircle, FaCalendarAlt, FaClock, FaArrowLeft } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
+import {
+  FaHistory, FaDog, FaCheckCircle, FaCalendarAlt, FaClock, FaArrowLeft,
+  FaChevronDown, FaMapMarkerAlt, FaStickyNote, FaCamera,
+} from 'react-icons/fa'
 import type { Reservation } from '@/types'
 
 export default function HistorialPage() {
@@ -14,6 +18,7 @@ export default function HistorialPage() {
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled'>('all')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     let unsubRes: (() => void) | undefined
@@ -109,49 +114,151 @@ export default function HistorialPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((res, i) => (
-            <motion.div
-              key={res.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className="rounded-xl p-4 transition-all hover:bg-white/[0.02]"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                  res.status === 'completed' ? 'bg-success-500/10' :
-                  res.status === 'cancelled' ? 'bg-danger-500/10' :
-                  'bg-brand-500/10'
-                }`}>
-                  {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
-                   res.status === 'cancelled' ? <span className="text-danger-400 text-sm">✕</span> :
-                   <FaDog size={14} className="text-brand-400" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{res.service}</p>
-                    <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                      res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
-                      res.status === 'cancelled' ? 'bg-danger-500/15 text-danger-400' :
-                      res.status === 'pending' ? 'bg-brand-500/15 text-brand-400' :
-                      'bg-white/10 text-[var(--text-muted)]'
-                    }`}>
-                      {res.status === 'completed' ? 'Completado' :
-                       res.status === 'cancelled' ? 'Cancelado' :
-                       res.status === 'pending' ? 'Pendiente' :
-                       res.status === 'confirmed' ? 'Confirmado' : res.status}
-                    </span>
+          {filtered.map((res, i) => {
+            const hasWalkData = !!(res.walkCheckIn || res.walkCheckOut)
+            const isExpanded = expandedId === res.id
+            return (
+              <motion.div
+                key={res.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                className="rounded-xl overflow-hidden"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              >
+                <div
+                  className="p-4 flex items-start gap-3 transition-all hover:bg-white/[0.02]"
+                  onClick={() => hasWalkData && setExpandedId(isExpanded ? null : res.id)}
+                  style={{ cursor: hasWalkData ? 'pointer' : undefined }}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    res.status === 'completed' ? 'bg-success-500/10' :
+                    res.status === 'cancelled' ? 'bg-danger-500/10' :
+                    'bg-brand-500/10'
+                  }`}>
+                    {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
+                     res.status === 'cancelled' ? <span className="text-danger-400 text-sm">✕</span> :
+                     <FaDog size={14} className="text-brand-400" />}
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                    <span className="flex items-center gap-1"><FaDog size={10} /> {res.petName}</span>
-                    <span className="flex items-center gap-1"><FaCalendarAlt size={10} /> {res.date}</span>
-                    {res.time && <span className="flex items-center gap-1"><FaClock size={10} /> {res.time}</span>}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{res.service}</p>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {hasWalkData && (
+                          <FaCamera size={10} className="text-success-400" />
+                        )}
+                        <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
+                          res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
+                          res.status === 'cancelled' ? 'bg-danger-500/15 text-danger-400' :
+                          res.status === 'pending' ? 'bg-brand-500/15 text-brand-400' :
+                          'bg-white/10 text-[var(--text-muted)]'
+                        }`}>
+                          {res.status === 'completed' ? 'Completado' :
+                           res.status === 'cancelled' ? 'Cancelado' :
+                           res.status === 'pending' ? 'Pendiente' :
+                           res.status === 'confirmed' ? 'Confirmado' : res.status}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                      <span className="flex items-center gap-1"><FaDog size={10} /> {res.petName}</span>
+                      <span className="flex items-center gap-1"><FaCalendarAlt size={10} /> {res.date}</span>
+                      {res.time && <span className="flex items-center gap-1"><FaClock size={10} /> {res.time}</span>}
+                    </div>
+                    {hasWalkData && (
+                      <div className="flex items-center gap-1 mt-1.5 text-2xs" style={{ color: 'var(--text-muted)' }}>
+                        <FaChevronDown
+                          size={8}
+                          className="transition-transform"
+                          style={{ transform: isExpanded ? 'rotate(180deg)' : undefined }}
+                        />
+                        {isExpanded ? 'Ocultar detalles del paseo' : 'Ver detalles del paseo'}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+
+                {/* Walk Log Details */}
+                <AnimatePresence>
+                  {isExpanded && hasWalkData && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 space-y-3" style={{ borderTop: '1px solid var(--border)' }}>
+                        {/* Check-in */}
+                        {res.walkCheckIn && (
+                          <div className="pt-3">
+                            <p className="text-2xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                              <span className="w-2 h-2 rounded-full bg-success-400" />
+                              Inicio del paseo
+                            </p>
+                            {res.walkCheckIn.photo && (
+                              <div className="relative rounded-xl overflow-hidden mb-2">
+                                <Image
+                                  src={res.walkCheckIn.photo}
+                                  alt="Check-in"
+                                  width={400}
+                                  height={160}
+                                  unoptimized
+                                  className="w-full h-40 object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="flex items-center gap-3 text-2xs" style={{ color: 'var(--text-muted)' }}>
+                              <span className="flex items-center gap-1">
+                                <FaMapMarkerAlt size={9} className="text-success-400" />
+                                {res.walkCheckIn.lat.toFixed(4)}, {res.walkCheckIn.lng.toFixed(4)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Check-out */}
+                        {res.walkCheckOut && (
+                          <div>
+                            <p className="text-2xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                              <span className="w-2 h-2 rounded-full bg-brand-400" />
+                              Fin del paseo
+                            </p>
+                            {res.walkCheckOut.photo && (
+                              <div className="relative rounded-xl overflow-hidden mb-2">
+                                <Image
+                                  src={res.walkCheckOut.photo}
+                                  alt="Check-out"
+                                  width={400}
+                                  height={160}
+                                  unoptimized
+                                  className="w-full h-40 object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="flex items-center gap-3 text-2xs" style={{ color: 'var(--text-muted)' }}>
+                              <span className="flex items-center gap-1">
+                                <FaMapMarkerAlt size={9} className="text-brand-400" />
+                                {res.walkCheckOut.lat.toFixed(4)}, {res.walkCheckOut.lng.toFixed(4)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Walk Notes */}
+                        {res.walkNotes && (
+                          <div className="flex items-start gap-2 p-2.5 rounded-lg text-xs" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+                            <FaStickyNote size={10} className="text-pink-400 mt-0.5 shrink-0" />
+                            <span style={{ color: 'var(--text-secondary)' }}>{res.walkNotes}</span>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )
+          })}
         </div>
       )}
     </div>

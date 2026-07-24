@@ -6,26 +6,7 @@ import { collection, query, where, getDocs, updateDoc, doc, getDoc } from 'fireb
 import { db, auth } from '@/firebase/config'
 import Image from 'next/image'
 import { FaDog, FaTimes, FaSpinner, FaCalendarAlt, FaHistory, FaUser, FaSignOutAlt, FaCamera, FaMapMarkerAlt } from 'react-icons/fa'
-
-interface WalkMedia {
-  photo: string
-  lat: number
-  lng: number
-  timestamp?: { seconds: number; nanoseconds: number }
-}
-
-interface Reservation {
-  id: string
-  name: string
-  petName: string
-  service: string
-  date: string
-  time: string
-  status: string
-  walkCheckIn?: WalkMedia
-  walkCheckOut?: WalkMedia
-  walkNotes?: string
-}
+import type { Reservation } from '@/types'
 
 interface ClientData {
   name: string

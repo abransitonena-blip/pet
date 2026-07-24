@@ -10,7 +10,7 @@ import {
 import {
   FaSearch, FaFilter, FaDog, FaWhatsapp, FaEdit, FaTrash,
   FaCheck, FaClock, FaCamera, FaDownload, FaSpinner, FaTimes,
-  FaArrowRight, FaUndo, FaMoneyBill,
+  FaArrowRight, FaUndo, FaMoneyBill, FaWalking,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
@@ -18,6 +18,7 @@ import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
 import Badge from '@/components/ui/Badge'
 import EditReservationModal from '@/components/EditReservationModal'
+import WalkSessionModal from '@/components/WalkSessionModal'
 import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
 
@@ -50,6 +51,7 @@ export default function AdminReservas() {
   const [historyReservations, setHistoryReservations] = useState<Reservation[]>([])
   const [historyPhone, setHistoryPhone] = useState('')
   const [showHistory, setShowHistory] = useState(false)
+  const [walkModal, setWalkModal] = useState<{ reservation: Reservation; mode: 'check_in' | 'check_out' } | null>(null)
   const { prices } = usePrices()
   const { toast } = useToast()
 
@@ -293,8 +295,13 @@ export default function AdminReservas() {
                     </button>
                   )}
                   {res.status === 'en_camino' && (
-                    <button onClick={() => handleComplete(res.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="Completar">
-                      <FaCheck size={12} />
+                    <button onClick={() => setWalkModal({ reservation: res, mode: 'check_in' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Iniciar paseo (check-in)">
+                      <FaCamera size={12} />
+                    </button>
+                  )}
+                  {res.status === 'paseando' && (
+                    <button onClick={() => setWalkModal({ reservation: res, mode: 'check_out' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="Terminar paseo (check-out)">
+                      <FaWalking size={12} />
                     </button>
                   )}
                   {res.status === 'completed' && (
@@ -382,6 +389,14 @@ export default function AdminReservas() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Walk Session Modal */}
+      <WalkSessionModal
+        isOpen={!!walkModal}
+        onClose={() => setWalkModal(null)}
+        reservation={walkModal?.reservation || ({} as Reservation)}
+        mode={walkModal?.mode || 'check_in'}
+      />
     </div>
   )
 }
