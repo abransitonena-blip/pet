@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore'
 import { FaClipboardList, FaSearch, FaFilter } from 'react-icons/fa'
 
 interface AuditLog {
@@ -37,7 +37,7 @@ export default function AdminLogsPage() {
   const [actionFilter, setActionFilter] = useState<string>('all')
 
   useEffect(() => {
-    const q = query(collection(db, 'audit-logs'), orderBy('timestamp', 'desc'))
+    const q = query(collection(db, 'audit-logs'), orderBy('timestamp', 'desc'), limit(200))
     const unsub = onSnapshot(q, (snap) => {
       setLogs(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AuditLog)))
       setLoading(false)

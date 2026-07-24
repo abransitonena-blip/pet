@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore'
 import type { Reservation } from '@/types'
 
 interface ReservationsContextType {
@@ -20,7 +20,7 @@ export function ReservationsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
+    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'), limit(500))
     const unsub = onSnapshot(q, (snap) => {
       setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
       setLoading(false)

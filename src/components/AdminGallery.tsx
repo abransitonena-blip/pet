@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, Timestamp, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import Image from 'next/image'
 import { FaUpload, FaTrash, FaImage, FaLink, FaSpinner } from 'react-icons/fa'
@@ -26,7 +26,7 @@ export default function AdminGallery() {
   const { toast } = useToast()
 
   useEffect(() => {
-    const q = query(collection(db, 'gallery-images'), orderBy('createdAt', 'desc'))
+    const q = query(collection(db, 'gallery-images'), orderBy('createdAt', 'desc'), limit(100))
     const unsub = onSnapshot(q, (snap) => {
       setImages(snap.docs.map((d) => ({ id: d.id, ...d.data() } as GalleryImage)))
     })

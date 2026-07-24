@@ -44,6 +44,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
   }, [router])
 
   const handleLogout = async () => {
+    document.cookie = '__session=; path=/; max-age=0'
     await signOut(auth)
     router.push('/')
   }

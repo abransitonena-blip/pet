@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { collection, query, orderBy, getDocs } from 'firebase/firestore'
+import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import Image from 'next/image'
 import { FaDog, FaPaw, FaTimes, FaChevronLeft, FaChevronRight, FaHeart } from 'react-icons/fa'
@@ -32,7 +32,7 @@ export default function Gallery() {
   const [loaded, setLoaded] = useState<Set<number>>(new Set())
 
   useEffect(() => {
-    const q = query(collection(db, 'gallery-images'), orderBy('createdAt', 'desc'))
+    const q = query(collection(db, 'gallery-images'), orderBy('createdAt', 'desc'), limit(50))
     getDocs(q).then((snap) => {
       const imgs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as GalleryImage))
       if (imgs.length > 0) setRealImages(imgs)

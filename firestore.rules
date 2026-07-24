@@ -2,75 +2,131 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper: check if user is admin
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper: check if user is a walker
+    function isWalker() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'walker';
+    }
+
+    // Helper: check if user owns the reservation
+    function isReservationOwner() {
+      return request.auth != null
+        && resource.data.uid == request.auth.uid;
+    }
+
+    // Helper: check if user owns the conversation
+    function isConversationOwner() {
+      return request.auth != null
+        && resource.data.clientId == request.auth.uid;
+    }
+
+    // ========================
+    // RESERVATIONS
+    // ========================
+    // Note: read is public because /cancelar page needs phone lookup without auth.
+    // TODO: Move cancel to Cloud Function to remove public read.
     match /reservations/{docId} {
       allow read: if true;
       allow create: if request.resource.data.keys().hasAll(['name', 'phone', 'service', 'petName', 'date', 'time'])
                     && request.resource.data.name is string
                     && request.resource.data.phone is string
                     && request.resource.data.phone.size() >= 10;
-      allow update: if request.auth != null
-                    || (request.resource.data.status == 'cancelled'
+      allow update: if isAdmin()
+                    || isWalker()
+                    || (request.auth != null
+                        && request.resource.data.status == 'cancelled'
                         && resource.data.status != 'completed'
                         && resource.data.status != 'cancelled');
-      allow delete: if request.auth != null;
+      allow delete: if isAdmin();
     }
 
+    // ========================
+    // REVIEWS
+    // ========================
     match /reviews/{docId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['name', 'rating', 'text'])
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasAll(['name', 'rating', 'text'])
                     && request.resource.data.rating >= 1
                     && request.resource.data.rating <= 5
                     && request.resource.data.name is string
                     && request.resource.data.name.size() > 0;
-      allow delete: if request.auth != null;
+      allow delete: if isAdmin();
       allow update: if false;
     }
 
+    // ========================
+    // GALLERY
+    // ========================
     match /gallery-images/{docId} {
       allow read: if true;
-      allow create: if request.auth != null
+      allow create: if isAdmin()
                     && request.resource.data.keys().hasAny(['url', 'base64']);
-      allow delete: if request.auth != null;
+      allow delete: if isAdmin();
       allow update: if false;
     }
 
+    // ========================
+    // COUPONS
+    // ========================
     match /coupons/{docId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if request.auth != null;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
+    // ========================
+    // ADMIN DOCUMENTS
+    // ========================
     match /admin/prices {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     match /admin/config {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     match /admin/banner {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     match /admin/tokens {
-      allow read, write: if request.auth != null;
+      allow read: if isAdmin();
+      allow write: if request.auth != null;
     }
 
+    // ========================
+    // AUDIT LOGS (immutable)
+    // ========================
     match /audit-logs/{docId} {
       allow create: if request.auth != null;
-      allow read: if request.auth != null;
+      allow read: if isAdmin();
       allow update, delete: if false;
     }
 
+    // ========================
+    // USERS (role documents)
+    // ========================
     match /users/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
     }
 
+    // ========================
+    // CLIENTS (profiles)
+    // ========================
     match /clients/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow create: if request.auth != null && request.auth.uid == uid
@@ -79,26 +135,87 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ========================
+    // PETS (dog profiles)
+    // ========================
+    match /pets/{petId} {
+      allow read: if request.auth != null
+                  && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid;
+      allow update: if request.auth != null
+                    && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow delete: if request.auth != null
+                    && (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
+
+    // ========================
+    // WALK LOGS (bitácora)
+    // ========================
+    match /walk-logs/{logId} {
+      allow read: if request.auth != null
+                  && (resource.data.walkerId == request.auth.uid
+                      || resource.data.ownerId == request.auth.uid
+                      || isAdmin());
+      allow create: if isWalker() || isAdmin();
+      allow update: if isWalker() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ========================
+    // CONVERSATIONS + MESSAGES
+    // ========================
     match /conversations/{convId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+                  && (isConversationOwner() || isAdmin());
       allow create: if request.auth != null;
-      allow update: if request.auth != null;
+      allow update: if request.auth != null
+                    && (isConversationOwner() || isAdmin());
       allow delete: if false;
 
       match /messages/{msgId} {
-        allow read: if request.auth != null;
+        allow read: if request.auth != null
+                    && (isConversationOwner() || isAdmin());
         allow create: if request.auth != null;
         allow update, delete: if false;
       }
     }
 
+    // ========================
+    // REFERRALS
+    // ========================
     match /referrals/{refId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
       allow update: if request.auth != null;
-      allow delete: if request.auth != null;
+      allow delete: if isAdmin();
     }
 
+    // ========================
+    // LOYALTY POINTS
+    // ========================
+    match /loyalty/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if isAdmin();
+    }
+
+    // ========================
+    // NOTIFICATIONS
+    // ========================
+    match /notifications/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if isAdmin();
+    }
+
+    // ========================
+    // WALKERS (paseadores auth)
+    // ========================
+    match /walkers/{walkerId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // Catch-all: deny everything else
     match /{document=**} {
       allow read, write: if false;
     }

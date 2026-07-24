@@ -11,6 +11,14 @@ import { brand } from '@/lib/brand'
 
 type Mode = 'select' | 'familia' | 'equipo'
 
+function setSessionCookie(uid: string) {
+  document.cookie = `__session=${uid}; path=/; max-age=86400; SameSite=Lax; Secure`
+}
+
+function clearSessionCookie() {
+  document.cookie = '__session=; path=/; max-age=0'
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('select')
@@ -30,6 +38,7 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider)
       const snap = await getDoc(doc(db, 'clients', result.user.uid))
       if (snap.exists()) {
+        setSessionCookie(result.user.uid)
         router.push('/mi-cuenta')
       } else {
         await setDoc(doc(db, 'clients', result.user.uid), {
@@ -38,6 +47,7 @@ export default function LoginPage() {
           phone: '',
           createdAt: new Date().toISOString(),
         })
+        setSessionCookie(result.user.uid)
         router.push('/mi-cuenta')
       }
     } catch {
@@ -55,14 +65,16 @@ export default function LoginPage() {
         const userSnap = await getDoc(doc(db, 'users', cred.user.uid))
         const isAdmin = userSnap.exists() && userSnap.data()?.role === 'admin'
         if (!isAdmin) {
-          setError('Acceso no autorizado')
+          setError('Parece que no tienes acceso al panel de equipo')
           await auth.signOut()
           return
         }
+        setSessionCookie(cred.user.uid)
         router.push('/admin')
       } else {
         const snap = await getDoc(doc(db, 'clients', cred.user.uid))
         if (snap.exists()) {
+          setSessionCookie(cred.user.uid)
           router.push('/mi-cuenta')
         } else {
           await setDoc(doc(db, 'clients', cred.user.uid), {
@@ -71,6 +83,7 @@ export default function LoginPage() {
             phone: '',
             createdAt: new Date().toISOString(),
           })
+          setSessionCookie(cred.user.uid)
           router.push('/mi-cuenta')
         }
       }
@@ -104,6 +117,7 @@ export default function LoginPage() {
         phone: phone.trim(),
         createdAt: new Date().toISOString(),
       })
+      setSessionCookie(cred.user.uid)
       router.push('/mi-cuenta')
     } catch (e: unknown) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
