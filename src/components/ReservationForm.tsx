@@ -3,7 +3,8 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db, auth } from '@/firebase/config'
-import { collection, addDoc, serverTimestamp, getDocs, query, where, limit, onSnapshot } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, getDocs, query, where, limit, onSnapshot, doc, setDoc } from 'firebase/firestore'
+import { useSearchParams } from 'next/navigation'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { SERVICES, getServicePrice, getServiceMeta, calculateSavings } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
@@ -152,6 +153,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   onPhoneChange?: (phone: string) => void
   onFocusChange?: (active: boolean) => void
 }) {
+  const searchParams = useSearchParams()
+  const referralPhone = searchParams.get('ref') || ''
   const draft = useRef(loadDraft())
   const [step, setStep] = useState(draft.current?.step || 1)
   const [direction, setDirection] = useState(1)
@@ -345,8 +348,20 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         appliedCoupon: form.coupon.toUpperCase(),
         discountApplied: discountAmount,
         finalPrice,
+        referralPhone: referralPhone || '',
       })
       showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
+
+      if (referralPhone && referralPhone !== form.phone) {
+        const refId = `${referralPhone}_${form.phone}_${Date.now()}`
+        await setDoc(doc(db, 'referrals', refId), {
+          referrerPhone: referralPhone,
+          refereePhone: form.phone,
+          refereeName: form.name,
+          status: 'pending',
+          createdAt: serverTimestamp(),
+        }).catch(() => {})
+      }
     } catch (e) { console.error('Error saving reservation:', e) }
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank')

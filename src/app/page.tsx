@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import Header from '@/components/Header'
@@ -65,7 +65,9 @@ function HomeContent() {
             <ReviewForm />
           </div>
         </div>
-        <ReservationForm onFocusChange={setFormActive} />
+        <Suspense>
+          <ReservationForm onFocusChange={setFormActive} />
+        </Suspense>
         <ContactSection />
         <Footer onTerms={() => setShowTerms(true)} />
         <WhatsAppButton hidden={formActive} />

@@ -8,8 +8,9 @@ import { auth, db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import {
   FaDog, FaCalendarAlt, FaPaw, FaCamera, FaUserFriends,
-  FaSignOutAlt, FaCog, FaGift, FaHome, FaHistory, FaBookOpen,
+  FaSignOutAlt, FaCog, FaGift, FaHome, FaHistory, FaBookOpen, FaBell,
 } from 'react-icons/fa'
+import NotificationBell from '@/components/NotificationBell'
 
 const ACCOUNT_ITEMS = [
   { id: 'dashboard', label: 'Inicio', icon: FaHome, color: '#D97706', href: '/mi-cuenta' },
@@ -17,6 +18,7 @@ const ACCOUNT_ITEMS = [
   { id: 'perros', label: 'Mis perros', icon: FaPaw, color: '#3b82f6', href: '/mi-cuenta/perros' },
   { id: 'historial', label: 'Mi historial', icon: FaHistory, color: '#8B5CF6', href: '/mi-cuenta/historial' },
   { id: 'fotos', label: 'Fotos de paseos', icon: FaCamera, color: '#06B6D4', href: '/mi-cuenta/fotos' },
+  { id: 'notificaciones', label: 'Notificaciones', icon: FaBell, color: '#D97706', href: '/mi-cuenta/notificaciones' },
   { id: 'referir', label: 'Referir amigo', icon: FaUserFriends, color: '#EC4899', href: '/mi-cuenta/referir' },
   { id: 'lealtad', label: 'Mi lealtad', icon: FaGift, color: '#F59E0B', href: '/mi-cuenta/lealtad' },
   { id: 'ayuda', label: 'Centro de ayuda', icon: FaBookOpen, color: '#64748B', href: '/mi-cuenta/ayuda' },
@@ -28,6 +30,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
   const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
+  const [uid, setUid] = useState('')
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -35,6 +38,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
         router.push('/login')
         return
       }
+      setUid(user.uid)
       const snap = await getDoc(doc(db, 'clients', user.uid))
       if (snap.exists()) {
         setUserName(snap.data().name || user.displayName || 'Familia')
@@ -81,6 +85,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
             <a href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
               Inicio
             </a>
+            {uid && <NotificationBell uid={uid} />}
             <button
               onClick={handleLogout}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400"
