@@ -117,8 +117,8 @@ export interface Pet {
   breed: string
   size: 'pequeño' | 'mediano' | 'grande'
   sex?: 'macho' | 'hembra'
-  age: number
-  weight: number
+  age: string
+  weight: string
   notes: string
   personality?: {
     energyLevel: 'bajo' | 'medio' | 'alto'
