@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
@@ -12,16 +12,17 @@ import {
 } from 'react-icons/fa'
 
 const ACCOUNT_ITEMS = [
-  { id: 'reservas', label: 'Mis reservas', icon: FaCalendarAlt, color: '#D97706' },
-  { id: 'perros', label: 'Mis perros', icon: FaPaw, color: '#059669' },
-  { id: 'fotos', label: 'Fotos de paseos', icon: FaCamera, color: '#3b82f6' },
-  { id: 'referir', label: 'Referir amigo', icon: FaUserFriends, color: '#7C3AED' },
-  { id: 'lealtad', label: 'Mi lealtad', icon: FaGift, color: '#ec4899' },
-  { id: 'config', label: 'Configuración', icon: FaCog, color: '#64748B' },
+  { id: 'reservas', label: 'Mis reservas', icon: FaCalendarAlt, color: '#D97706', href: '/mi-cuenta' },
+  { id: 'perros', label: 'Mis perros', icon: FaPaw, color: '#059669', href: '/mi-cuenta/perros' },
+  { id: 'fotos', label: 'Fotos de paseos', icon: FaCamera, color: '#3b82f6', href: '/mi-cuenta/fotos' },
+  { id: 'referir', label: 'Referir amigo', icon: FaUserFriends, color: '#7C3AED', href: '/mi-cuenta/referir' },
+  { id: 'lealtad', label: 'Mi lealtad', icon: FaGift, color: '#ec4899', href: '/mi-cuenta/lealtad' },
+  { id: 'config', label: 'Configuración', icon: FaCog, color: '#64748B', href: '/mi-cuenta/config' },
 ]
 
 export default function MiCuentaLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
 
@@ -95,12 +96,13 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
             <nav className="space-y-1">
               {ACCOUNT_ITEMS.map((item) => {
                 const Icon = item.icon
+                const active = pathname === item.href
                 return (
                   <a
                     key={item.id}
-                    href={`/mi-cuenta/${item.id}`}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/[0.03]"
-                    style={{ color: 'var(--text-secondary)' }}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/[0.03] ${active ? 'bg-white/[0.05]' : ''}`}
+                    style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
                   >
                     <Icon size={16} style={{ color: item.color }} />
                     {item.label}
