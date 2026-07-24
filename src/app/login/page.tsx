@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { FaDog, FaGoogle, FaEnvelope, FaLock, FaSpinner, FaUser } from 'react-icons/fa'
+import { FaDog, FaGoogle, FaEnvelope, FaLock, FaSpinner, FaUser, FaPhone } from 'react-icons/fa'
 import { brand } from '@/lib/brand'
 
 type Mode = 'select' | 'familia' | 'equipo'
@@ -14,8 +14,11 @@ type Mode = 'select' | 'familia' | 'equipo'
 export default function LoginPage() {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('select')
+  const [familiaMode, setFamiliaMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -29,7 +32,13 @@ export default function LoginPage() {
       if (snap.exists()) {
         router.push('/mi-cuenta')
       } else {
-        setError('Esta cuenta no tiene un perfil de familia registrado')
+        await setDoc(doc(db, 'clients', result.user.uid), {
+          name: result.user.displayName || '',
+          email: result.user.email || '',
+          phone: '',
+          createdAt: new Date().toISOString(),
+        })
+        router.push('/mi-cuenta')
       }
     } catch {
       setError('Error al iniciar sesión con Google')
@@ -56,8 +65,13 @@ export default function LoginPage() {
         if (snap.exists()) {
           router.push('/mi-cuenta')
         } else {
-          setError('Esta cuenta no es de familia')
-          await auth.signOut()
+          await setDoc(doc(db, 'clients', cred.user.uid), {
+            name: cred.user.displayName || email.split('@')[0],
+            email: email,
+            phone: '',
+            createdAt: new Date().toISOString(),
+          })
+          router.push('/mi-cuenta')
         }
       }
     } catch (e: unknown) {
@@ -66,9 +80,37 @@ export default function LoginPage() {
         setError('Correo o contraseña incorrectos')
       } else if (code === 'auth/invalid-email') {
         setError('Correo inválido')
+      } else if (code === 'auth/email-already-in-use') {
+        setError('Correo ya registrado')
+      } else if (code === 'auth/weak-password') {
+        setError('Mínimo 6 caracteres')
       } else {
         setError('Error al iniciar sesión')
       }
+    }
+    setLoading(false)
+  }
+
+  const handleRegister = async () => {
+    setError('')
+    if (!name.trim()) { setError('Ingresa tu nombre'); return }
+    setLoading(true)
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password)
+      await updateProfile(cred.user, { displayName: name })
+      await setDoc(doc(db, 'clients', cred.user.uid), {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        createdAt: new Date().toISOString(),
+      })
+      router.push('/mi-cuenta')
+    } catch (e: unknown) {
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      if (code === 'auth/email-already-in-use') setError('Correo ya registrado')
+      else if (code === 'auth/weak-password') setError('Mínimo 6 caracteres')
+      else if (code === 'auth/invalid-email') setError('Correo inválido')
+      else setError('Error al registrarse')
     }
     setLoading(false)
   }
@@ -156,6 +198,39 @@ export default function LoginPage() {
                 <span className="flex-1 h-px" style={{ background: 'var(--border)' }} />
               </div>
 
+              {familiaMode === 'register' && (
+                <>
+                  <div>
+                    <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
+                    <div className="relative">
+                      <FaUser className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Tu nombre"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                        style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>WhatsApp (opcional)</label>
+                    <div className="relative">
+                      <FaPhone className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="5523053772"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                        style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo</label>
                 <div className="relative">
@@ -189,17 +264,24 @@ export default function LoginPage() {
               {error && <p className="text-danger-400 text-xs">{error}</p>}
 
               <button
-                onClick={() => handleEmailLogin('client')}
+                onClick={familiaMode === 'login' ? () => handleEmailLogin('client') : handleRegister}
                 disabled={loading || !email.trim() || !password.trim()}
                 className="btn-primary w-full"
               >
                 {loading ? <FaSpinner className="animate-spin" size={14} /> : null}
-                Entrar
+                {familiaMode === 'login' ? 'Entrar' : 'Crear cuenta'}
               </button>
             </div>
 
-            <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
-              <button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <div className="mt-4 pt-4 text-center space-y-2" style={{ borderTop: '1px solid var(--border)' }}>
+              <button
+                onClick={() => { setFamiliaMode(familiaMode === 'login' ? 'register' : 'login'); setError('') }}
+                className="text-xs block w-full"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                {familiaMode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+              </button>
+              <button onClick={() => { setMode('select'); setFamiliaMode('login'); setError(''); setEmail(''); setPassword(''); setName(''); setPhone('') }} className="text-xs block w-full" style={{ color: 'var(--text-muted)' }}>
                 ← Volver
               </button>
             </div>
