@@ -2,7 +2,7 @@
 
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { db } from '@/firebase/config'
+import { db, auth } from '@/firebase/config'
 import { collection, addDoc, serverTimestamp, getDocs, query, where, limit, onSnapshot } from 'firebase/firestore'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { SERVICES, getServicePrice, getServiceMeta, calculateSavings } from '@/lib/services'
@@ -323,6 +323,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     try {
       await addDoc(collection(db, 'reservations'), {
         ...form,
+        uid: auth.currentUser?.uid || '',
         createdAt: serverTimestamp(),
         status: 'pending',
         appliedCoupon: form.coupon.toUpperCase(),

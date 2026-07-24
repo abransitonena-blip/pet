@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
@@ -29,13 +29,20 @@ export default function MisReservasPage() {
       }
       const q = query(
         collection(db, 'reservations'),
-        where('uid', '==', user.uid),
-        orderBy('createdAt', 'desc')
+        where('uid', '==', user.uid)
       )
       unsubRes = onSnapshot(
         q,
         (snap) => {
-          setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
+          const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
+          docs.sort((a, b) => {
+            const ca = a.createdAt as string | { seconds?: number } | undefined
+            const cb = b.createdAt as string | { seconds?: number } | undefined
+            const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
+            const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
+            return tb - ta
+          })
+          setReservations(docs)
           setLoading(false)
         },
         (err) => {
