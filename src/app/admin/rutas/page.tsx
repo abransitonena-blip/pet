@@ -26,7 +26,7 @@ function formatDistance(meters: number): string {
   return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${Math.round(meters)} m`
 }
 
-function formatDuration(checkIn: WalkPoint, checkOut: WalkPoint): string {
+function formatDuration(checkIn: WalkMedia, checkOut: WalkMedia): string {
   if (!checkIn.timestamp || !checkOut.timestamp) return '—'
   const ms = (checkOut.timestamp.seconds - checkIn.timestamp.seconds) * 1000
   const mins = Math.floor(ms / 60000)
