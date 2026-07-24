@@ -27,3 +27,23 @@ export interface Reservation {
   walkNotes?: string
   uid?: string
 }
+
+export interface Conversation {
+  id: string
+  clientId: string
+  clientName: string
+  clientPhone?: string
+  lastMessage?: string
+  lastTimestamp?: { seconds: number; nanoseconds: number }
+  unreadAdmin: number
+  unreadClient: number
+  createdAt?: { seconds: number; nanoseconds: number }
+}
+
+export interface ChatMessage {
+  id?: string
+  text: string
+  senderId: string
+  senderRole: 'admin' | 'client'
+  timestamp?: { seconds: number; nanoseconds: number }
+}
