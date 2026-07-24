@@ -15,6 +15,9 @@ export default function FloatingParticles() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    const isMobile = window.innerWidth < 768
+    const particleCount = isMobile ? 20 : 50
+
     canvas.width = window.innerWidth
     canvas.height = window.innerHeight
 
@@ -27,7 +30,7 @@ export default function FloatingParticles() {
       opacity: number
     }[] = []
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -39,8 +42,10 @@ export default function FloatingParticles() {
     }
 
     let frameId: number
+    let visible = true
 
     const animate = () => {
+      if (!visible) { frameId = requestAnimationFrame(animate); return }
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       particles.forEach((p) => {
         p.x += p.speedX
@@ -60,6 +65,12 @@ export default function FloatingParticles() {
 
     frameId = requestAnimationFrame(animate)
 
+    const observer = new IntersectionObserver(
+      ([entry]) => { visible = entry.isIntersecting },
+      { threshold: 0 }
+    )
+    observer.observe(canvas)
+
     const handleResize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
@@ -67,6 +78,7 @@ export default function FloatingParticles() {
     window.addEventListener('resize', handleResize)
     return () => {
       cancelAnimationFrame(frameId)
+      observer.disconnect()
       window.removeEventListener('resize', handleResize)
     }
   }, [])
