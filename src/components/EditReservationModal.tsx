@@ -148,7 +148,7 @@ export default function EditReservationModal({
                 <label className="block text-xs text-white/40 mb-1">Estado</label>
                 <select
                   value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
                 >
                   <option value="pending">Pendiente</option>
