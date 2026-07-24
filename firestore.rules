@@ -2,81 +2,239 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: check if user is admin
+    // ═══════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
     function isAdmin() {
-      return request.auth != null
+      return isAuthenticated()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Helper: check if user is a walker
     function isWalker() {
-      return request.auth != null
+      return isAuthenticated()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'walker';
     }
 
-    // Helper: check if user owns the reservation
-    function isReservationOwner() {
-      return request.auth != null
-        && resource.data.uid == request.auth.uid;
+    function isSupervisor() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'supervisor';
     }
 
-    // Helper: check if user owns the conversation
-    function isConversationOwner() {
-      return request.auth != null
-        && resource.data.clientId == request.auth.uid;
+    function isClient() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'client';
     }
 
-    // ========================
+    function getRole() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function isWalkerAssignedToReservation() {
+      return isWalker()
+        && resource.data.assignment != null
+        && resource.data.assignment.walkerId == request.auth.uid;
+    }
+
+    function isWalkerAssignedInUpdate() {
+      return isWalker()
+        && request.resource.data.assignment != null
+        && request.resource.data.assignment.walkerId == request.auth.uid;
+    }
+
+    function isReservationClient() {
+      return isAuthenticated()
+        && resource.data.client != null
+        && resource.data.client.uid == request.auth.uid;
+    }
+
+    function isPetOwner() {
+      return isAuthenticated()
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    function isConversationParticipant() {
+      return isAuthenticated()
+        && request.auth.uid in resource.data.participants;
+    }
+
+    function isNotificationOwner() {
+      return isAuthenticated()
+        && request.auth.uid == resource.data.uid;
+    }
+
+    function isValidString(field) {
+      return field is string && field.size() > 0;
+    }
+
+    // Rate limiting: reservation fields validation
+    function isValidReservation() {
+      return request.resource.data.keys().hasAll(['name', 'phone', 'service', 'petName', 'date', 'time', 'client'])
+        && isValidString(request.resource.data.name)
+        && isValidString(request.resource.data.phone)
+        && request.resource.data.phone.size() >= 10
+        && isValidString(request.resource.data.service)
+        && isValidString(request.resource.data.petName)
+        && isValidString(request.resource.data.date)
+        && isValidString(request.resource.data.time)
+        && request.resource.data.client is map
+        && request.resource.data.client.keys().hasAll(['uid', 'name', 'phone']);
+    }
+
+    // ═══════════════════════════════════════════
+    // USERS (role documents — immutable from client)
+    // ═══════════════════════════════════════════
+
+    match /users/{uid} {
+      // Users can only read their own role doc
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+      // Only Cloud Functions (admin SDK) can write roles
+      allow write: if false;
+    }
+
+    // ═══════════════════════════════════════════
+    // CLIENTS (profiles)
+    // ═══════════════════════════════════════════
+
+    match /clients/{uid} {
+      // Owner can read, admin can read all
+      allow read: if isAuthenticated()
+        && (request.auth.uid == uid || isAdmin());
+      // Owner creates own profile on first login
+      allow create: if isAuthenticated()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['name', 'email', 'phone', 'createdAt']);
+      // Owner updates own profile, admin can update any
+      allow update: if isAuthenticated()
+        && (request.auth.uid == uid || isAdmin());
+      // Nobody deletes client profiles
+      allow delete: if false;
+    }
+
+    // ═══════════════════════════════════════════
+    // PETS (dog profiles)
+    // ═══════════════════════════════════════════
+
+    match /pets/{petId} {
+      // Owner reads own pets, admin reads all, walker reads assigned
+      allow read: if isAuthenticated()
+        && (isPetOwner() || isAdmin());
+      // Owner creates own pet
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == request.auth.uid;
+      // Owner updates own pet, admin can update any
+      allow update: if isAuthenticated()
+        && (isPetOwner() || isAdmin());
+      // Owner deletes own pet, admin can delete any
+      allow delete: if isAuthenticated()
+        && (isPetOwner() || isAdmin());
+    }
+
+    // ═══════════════════════════════════════════
     // RESERVATIONS
-    // ========================
-    // Note: read is public because /cancelar page needs phone lookup without auth.
-    // TODO: Move cancel to Cloud Function to remove public read.
-    match /reservations/{docId} {
-      allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['name', 'phone', 'service', 'petName', 'date', 'time'])
-                    && request.resource.data.name is string
-                    && request.resource.data.phone is string
-                    && request.resource.data.phone.size() >= 10;
-      allow update: if isAdmin()
-                    || isWalker()
-                    || (request.auth != null
-                        && request.resource.data.status == 'cancelled'
-                        && resource.data.status != 'completed'
-                        && resource.data.status != 'cancelled');
+    // ═══════════════════════════════════════════
+
+    match /reservations/{resId} {
+      // READ: owner, assigned walker, admin, supervisor
+      allow read: if isAuthenticated()
+        && (isReservationClient()
+            || isWalkerAssignedToReservation()
+            || isAdmin()
+            || isSupervisor());
+
+      // CREATE: any authenticated user (client books, admin creates)
+      allow create: if isAuthenticated()
+        && isValidReservation();
+
+      // UPDATE: admin always, walker for status transitions on assigned, client can cancel own pending
+      allow update: if isAuthenticated()
+        && (isAdmin()
+            || isWalkerAssignedInUpdate()
+            || (isReservationClient()
+                && request.resource.data.status == 'cancelled'
+                && resource.data.status != 'completed'
+                && resource.data.status != 'cancelled'));
+
+      // DELETE: admin only
       allow delete: if isAdmin();
     }
 
-    // ========================
+    // ═══════════════════════════════════════════
+    // WALKERS (paseador profiles)
+    // ═══════════════════════════════════════════
+
+    match /walkers/{walkerId} {
+      // All authenticated can read (for assignment display)
+      allow read: if isAuthenticated();
+      // Admin manages walkers
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════
+    // ZONES (geographic zones)
+    // ═══════════════════════════════════════════
+
+    match /zones/{zoneId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════
+    // WALK LOGS (bitácora)
+    // ═══════════════════════════════════════════
+
+    match /walk-logs/{logId} {
+      allow read: if isAuthenticated()
+        && (resource.data.walkerId == request.auth.uid
+            || resource.data.ownerId == request.auth.uid
+            || isAdmin());
+      allow create: if isWalker() || isAdmin();
+      allow update: if isWalker() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════
     // REVIEWS
-    // ========================
+    // ═══════════════════════════════════════════
+
     match /reviews/{docId} {
       allow read: if true;
-      allow create: if request.auth != null
-                    && request.resource.data.keys().hasAll(['name', 'rating', 'text'])
-                    && request.resource.data.rating >= 1
-                    && request.resource.data.rating <= 5
-                    && request.resource.data.name is string
-                    && request.resource.data.name.size() > 0;
+      allow create: if isAuthenticated()
+        && request.resource.data.keys().hasAll(['name', 'rating', 'text'])
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && isValidString(request.resource.data.name);
       allow delete: if isAdmin();
       allow update: if false;
     }
 
-    // ========================
+    // ═══════════════════════════════════════════
     // GALLERY
-    // ========================
+    // ═══════════════════════════════════════════
+
     match /gallery-images/{docId} {
       allow read: if true;
       allow create: if isAdmin()
-                    && request.resource.data.keys().hasAny(['url', 'base64']);
+        && request.resource.data.keys().hasAny(['url', 'base64']);
       allow delete: if isAdmin();
       allow update: if false;
     }
 
-    // ========================
+    // ═══════════════════════════════════════════
     // COUPONS
-    // ========================
+    // ═══════════════════════════════════════════
+
     match /coupons/{docId} {
       allow read: if true;
       allow create: if isAdmin();
@@ -84,9 +242,10 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ========================
+    // ═══════════════════════════════════════════
     // ADMIN DOCUMENTS
-    // ========================
+    // ═══════════════════════════════════════════
+
     match /admin/prices {
       allow read: if true;
       allow write: if isAdmin();
@@ -102,120 +261,91 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // FCM tokens: owner writes own, admin reads all
     match /admin/tokens {
       allow read: if isAdmin();
-      allow write: if request.auth != null;
-    }
-
-    // ========================
-    // AUDIT LOGS (immutable)
-    // ========================
-    match /audit-logs/{docId} {
-      allow create: if request.auth != null;
-      allow read: if isAdmin();
-      allow update, delete: if false;
-    }
-
-    // ========================
-    // USERS (role documents)
-    // ========================
-    match /users/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+      // Only Cloud Functions should write tokens via Admin SDK
       allow write: if false;
     }
 
-    // ========================
-    // CLIENTS (profiles)
-    // ========================
-    match /clients/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null && request.auth.uid == uid
-                    && request.resource.data.keys().hasAll(['name', 'email', 'phone', 'createdAt']);
-      allow write: if request.auth != null && request.auth.uid == uid;
-      allow delete: if false;
-    }
+    // ═══════════════════════════════════════════
+    // CONVERSATIONS + MESSAGES (Chat)
+    // ═══════════════════════════════════════════
 
-    // ========================
-    // PETS (dog profiles)
-    // ========================
-    match /pets/{petId} {
-      allow read: if request.auth != null
-                  && (resource.data.ownerId == request.auth.uid || isAdmin());
-      allow create: if request.auth != null
-                    && request.resource.data.ownerId == request.auth.uid;
-      allow update: if request.auth != null
-                    && (resource.data.ownerId == request.auth.uid || isAdmin());
-      allow delete: if request.auth != null
-                    && (resource.data.ownerId == request.auth.uid || isAdmin());
-    }
-
-    // ========================
-    // WALK LOGS (bitácora)
-    // ========================
-    match /walk-logs/{logId} {
-      allow read: if request.auth != null
-                  && (resource.data.walkerId == request.auth.uid
-                      || resource.data.ownerId == request.auth.uid
-                      || isAdmin());
-      allow create: if isWalker() || isAdmin();
-      allow update: if isWalker() || isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // ========================
-    // CONVERSATIONS + MESSAGES
-    // ========================
     match /conversations/{convId} {
-      allow read: if request.auth != null
-                  && (isConversationOwner() || isAdmin());
-      allow create: if request.auth != null;
-      allow update: if request.auth != null
-                    && (isConversationOwner() || isAdmin());
+      allow read: if isAuthenticated()
+        && (isConversationParticipant() || isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated()
+        && (isConversationParticipant() || isAdmin());
       allow delete: if false;
 
       match /messages/{msgId} {
-        allow read: if request.auth != null
-                    && (isConversationOwner() || isAdmin());
-        allow create: if request.auth != null;
+        allow read: if isAuthenticated()
+          && (isConversationParticipant() || isAdmin());
+        allow create: if isAuthenticated();
         allow update, delete: if false;
       }
     }
 
-    // ========================
+    // ═══════════════════════════════════════════
     // REFERRALS
-    // ========================
+    // ═══════════════════════════════════════════
+
     match /referrals/{refId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
+      // Referrer sees own referrals, admin sees all
+      allow read: if isAuthenticated()
+        && (resource.data.referrerUid == request.auth.uid || isAdmin());
+      // Authenticated users create referrals
+      allow create: if isAuthenticated();
+      // Only admin can update status/rewards
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
-    // ========================
-    // LOYALTY POINTS
-    // ========================
+    // ═══════════════════════════════════════════
+    // LOYALTY
+    // ═══════════════════════════════════════════
+
     match /loyalty/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if isAdmin();
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+      // Only Cloud Functions should write loyalty
+      allow write: if false;
     }
 
-    // ========================
+    // ═══════════════════════════════════════════
     // NOTIFICATIONS
-    // ========================
+    // ═══════════════════════════════════════════
+
     match /notifications/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+      // Admin creates notifications via Cloud Functions
       allow write: if isAdmin();
+
+      match /items/{notifId} {
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+        // Admin creates via Cloud Functions
+        allow create: if isAdmin();
+        // Owner can mark as read
+        allow update: if isAuthenticated() && request.auth.uid == uid;
+        allow delete: if isAdmin();
+      }
     }
 
-    // ========================
-    // WALKERS (paseadores auth)
-    // ========================
-    match /walkers/{walkerId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
+    // ═══════════════════════════════════════════
+    // AUDIT LOGS (immutable)
+    // ═══════════════════════════════════════════
+
+    match /audit-logs/{docId} {
+      allow create: if isAuthenticated();
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
 
-    // Catch-all: deny everything else
+    // ═══════════════════════════════════════════
+    // CATCH-ALL: deny everything else
+    // ═══════════════════════════════════════════
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
@@ -29,6 +29,29 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showInternal, setShowInternal] = useState(false)
+  const clickCount = useRef(0)
+  const clickTimer = useRef<NodeJS.Timeout | null>(null)
+
+  const handleLogoClick = useCallback(() => {
+    clickCount.current += 1
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+    if (clickCount.current >= 6) {
+      clickCount.current = 0
+      setShowInternal(true)
+    }
+    clickTimer.current = setTimeout(() => { clickCount.current = 0 }, 2000)
+  }, [])
+
+  // Read ?mode= query param from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlMode = params.get('mode') as Mode | null
+    if (urlMode && ['familia', 'equipo', 'paseador'].includes(urlMode)) {
+      setMode(urlMode)
+      setShowInternal(true)
+    }
+  }, [])
 
   const handleGoogleLogin = async () => {
     setLoading(true)
@@ -142,11 +165,13 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
+        {/* Logo — 6 rapid clicks reveals internal access */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-glow">
-            <FaDog />
-          </div>
+          <button onClick={handleLogoClick} className="mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-glow">
+              <FaDog />
+            </div>
+          </button>
           <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
             {mode === 'select' && 'Bienvenido a ' + brand.name}
             {mode === 'familia' && 'Familia PET'}
@@ -189,23 +214,25 @@ export default function LoginPage() {
               </div>
             </button>
 
-            {/* Equipo PET — discreet link */}
-            <button
-              onClick={() => setMode('equipo')}
-              className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-white/60"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              Acceso equipo →
-            </button>
-
-            {/* Paseador */}
-            <button
-              onClick={() => setMode('paseador')}
-              className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-white/60"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              Acceso paseador →
-            </button>
+            {/* Equipo PET — hidden: only visible after 6 rapid clicks on logo */}
+            {showInternal && (
+              <>
+                <button
+                  onClick={() => setMode('equipo')}
+                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-white/60"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Acceso equipo →
+                </button>
+                <button
+                  onClick={() => setMode('paseador')}
+                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-white/60"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Acceso paseador →
+                </button>
+              </>
+            )}
           </div>
         )}
 

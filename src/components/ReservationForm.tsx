@@ -348,19 +348,25 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         appliedCoupon: form.coupon.toUpperCase(),
         discountApplied: discountAmount,
         finalPrice,
-        referralPhone: referralPhone || '',
+        referralCode: referralPhone || '',
       })
       showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
 
       if (referralPhone && referralPhone !== form.phone) {
-        const refId = `${referralPhone}_${form.phone}_${Date.now()}`
-        await setDoc(doc(db, 'referrals', refId), {
-          referrerPhone: referralPhone,
-          refereePhone: form.phone,
-          refereeName: form.name,
-          status: 'pending',
-          createdAt: serverTimestamp(),
-        }).catch(() => {})
+        // Look up referrer by referral code
+        const refQ = query(collection(db, 'referrals'), where('code', '==', referralPhone), where('active', '==', true))
+        const refSnap = await getDocs(refQ)
+        if (!refSnap.empty) {
+          const refDoc = refSnap.docs[0]
+          const referrerUid = refDoc.data().referrerUid
+          await addDoc(collection(db, 'referrals', refDoc.id, 'conversions'), {
+            refereePhone: form.phone,
+            refereeName: form.name,
+            reservationId: 'pending',
+            status: 'pending',
+            createdAt: serverTimestamp(),
+          }).catch(() => {})
+        }
       }
     } catch (e) { console.error('Error saving reservation:', e) }
 

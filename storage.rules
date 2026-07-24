@@ -1,22 +1,68 @@
 rules_version = '2'
 service firebase.storage {
   match /b/{bucket}/o {
-    // Public gallery images
+
+    // Helper: check if user is admin via Firestore
+    function isAdmin() {
+      return request.auth != null
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper: check if user is a walker
+    function isWalker() {
+      return request.auth != null
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'walker';
+    }
+
+    // ═══════════════════════════════════════════
+    // GALLERY — public read, admin write only
+    // ═══════════════════════════════════════════
     match /gallery/{allPaths=**} {
-      allow read: if true
-      allow write: if request.auth != null
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // Walk check-in/check-out photos
-    match /walks/{allPaths=**} {
-      allow read: if request.auth != null
-      allow write: if request.auth != null
+    // ═══════════════════════════════════════════
+    // WALK PHOTOS — walker uploads to own folder
+    // Path: walks/{reservationId}/{filename}
+    // ═══════════════════════════════════════════
+    match /walks/{reservationId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      // Walker can upload to their assigned reservations, admin can upload anywhere
+      allow create: if request.auth != null && (isWalker() || isAdmin());
+      allow update: if false;
+      allow delete: if isAdmin();
     }
 
-    // Client pet photos
-    match /pets/{allPaths=**} {
-      allow read: if request.auth != null
-      allow write: if request.auth != null
+    // ═══════════════════════════════════════════
+    // PET PHOTOS — owner uploads own pets
+    // Path: pets/{uid}/{filename}
+    // ═══════════════════════════════════════════
+    match /pets/{uid}/{allPaths=**} {
+      allow read: if request.auth != null;
+      // Owner can upload to own folder, admin can upload anywhere
+      allow create: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow update: if false;
+      // Owner can delete own, admin can delete any
+      allow delete: if request.auth != null && (request.auth.uid == uid || isAdmin());
+    }
+
+    // ═══════════════════════════════════════════
+    // AVATARS — owner uploads own avatar
+    // Path: avatars/{uid}/{filename}
+    // ═══════════════════════════════════════════
+    match /avatars/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if false;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ═══════════════════════════════════════════
+    // CATCH-ALL: deny
+    // ═══════════════════════════════════════════
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }

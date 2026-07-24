@@ -12,12 +12,14 @@ import ReferralSection from '@/components/ReferralSection'
 export default function ReferirPage() {
   const router = useRouter()
   const [phone, setPhone] = useState('')
+  const [uid, setUid] = useState('')
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0 })
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) { router.push('/login'); return }
+      setUid(user.uid)
       const snap = await getDoc(doc(db, 'clients', user.uid))
       if (snap.exists()) setPhone(snap.data().phone || '')
       setLoading(false)
@@ -26,8 +28,8 @@ export default function ReferirPage() {
   }, [router])
 
   useEffect(() => {
-    if (!phone) return
-    const q = query(collection(db, 'referrals'), where('referrerPhone', '==', phone))
+    if (!uid) return
+    const q = query(collection(db, 'referrals'), where('referrerUid', '==', uid))
     return onSnapshot(q, (snap) => {
       let total = 0, completed = 0, pending = 0
       snap.forEach((doc) => {
@@ -38,7 +40,7 @@ export default function ReferirPage() {
       })
       setStats({ total, completed, pending })
     })
-  }, [phone])
+  }, [uid])
 
   if (loading) {
     return (
@@ -129,7 +131,7 @@ export default function ReferirPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        <ReferralSection phone={phone} />
+        <ReferralSection phone={phone} uid={uid} />
       </motion.div>
 
       {/* No phone warning */}
