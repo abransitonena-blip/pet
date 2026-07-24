@@ -6,16 +6,7 @@ import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/fire
 import { db } from '@/firebase/config'
 import { FaPhone, FaSpinner, FaCheckCircle, FaTimes, FaDog, FaArrowLeft } from 'react-icons/fa'
 import Link from 'next/link'
-
-interface Reservation {
-  id: string
-  name: string
-  petName: string
-  service: string
-  date: string
-  time: string
-  status: string
-}
+import type { Reservation } from '@/types'
 
 export default function CancelarPage() {
   const [phone, setPhone] = useState('')

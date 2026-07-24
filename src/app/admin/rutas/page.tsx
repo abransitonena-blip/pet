@@ -7,12 +7,6 @@ import { motion } from 'framer-motion'
 import { FaMapMarkedAlt, FaDog, FaClock, FaUser, FaLocationArrow, FaCamera, FaFilter, FaCheck } from 'react-icons/fa'
 import type { Reservation, WalkMedia } from '@/types'
 
-interface WalkRoute extends Reservation {
-  walkCheckIn?: WalkMedia
-  walkCheckOut?: WalkMedia
-  walkNotes?: string
-}
-
 function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371e3
   const toRad = (d: number) => (d * Math.PI) / 180
@@ -35,10 +29,10 @@ function formatDuration(checkIn: WalkMedia, checkOut: WalkMedia): string {
 }
 
 export default function AdminRutasPage() {
-  const [routes, setRoutes] = useState<WalkRoute[]>([])
+  const [routes, setRoutes] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
   const [filterWalker, setFilterWalker] = useState('all')
-  const [selectedRoute, setSelectedRoute] = useState<WalkRoute | null>(null)
+  const [selectedRoute, setSelectedRoute] = useState<Reservation | null>(null)
 
   useEffect(() => {
     const q = query(
@@ -47,7 +41,7 @@ export default function AdminRutasPage() {
       orderBy('walkCheckIn'),
     )
     const unsub = onSnapshot(q, (snap) => {
-      setRoutes(snap.docs.map((d) => ({ id: d.id, ...d.data() } as WalkRoute)))
+      setRoutes(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
       setLoading(false)
     }, () => setLoading(false))
     return unsub

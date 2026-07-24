@@ -5,16 +5,7 @@ import { motion } from 'framer-motion'
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { FaDog, FaTimes, FaSpinner, FaCalendarAlt, FaHistory } from 'react-icons/fa'
-
-interface Reservation {
-  id: string
-  name: string
-  petName: string
-  service: string
-  date: string
-  time: string
-  status: string
-}
+import type { Reservation } from '@/types'
 
 const SERVICE_LABELS: Record<string, string> = {
   individual: 'Individual',
