@@ -14,7 +14,7 @@ export interface Reservation {
   service: string
   date: string
   time: string
-  status: 'pending' | 'assigned' | 'en_camino' | 'paseando' | 'completed' | 'cancelled'
+  status: 'pending' | 'confirmed' | 'assigned' | 'en_camino' | 'paseando' | 'completed' | 'cancelled'
   notes: string
   internalNotes: string
   assignedWalker: string
