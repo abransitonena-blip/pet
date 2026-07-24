@@ -6,10 +6,10 @@ import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { FaDog, FaGoogle, FaEnvelope, FaLock, FaSpinner, FaUser, FaPhone } from 'react-icons/fa'
+import { FaDog, FaGoogle, FaEnvelope, FaLock, FaSpinner, FaUser, FaPhone, FaWalking } from 'react-icons/fa'
 import { brand } from '@/lib/brand'
 
-type Mode = 'select' | 'familia' | 'equipo'
+type Mode = 'select' | 'familia' | 'equipo' | 'paseador'
 
 function setSessionCookie(uid: string) {
   document.cookie = `__session=${uid}; path=/; max-age=86400; SameSite=Lax; Secure`
@@ -56,21 +56,26 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  const handleEmailLogin = async (role: 'client' | 'admin') => {
+  const handleEmailLogin = async (role: 'client' | 'admin' | 'walker') => {
     setLoading(true)
     setError('')
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password)
-      if (role === 'admin') {
+      if (role === 'admin' || role === 'walker') {
         const userSnap = await getDoc(doc(db, 'users', cred.user.uid))
-        const isAdmin = userSnap.exists() && userSnap.data()?.role === 'admin'
-        if (!isAdmin) {
+        const userRole = userSnap.exists() ? userSnap.data()?.role : null
+        if (role === 'admin' && userRole !== 'admin') {
           setError('Parece que no tienes acceso al panel de equipo')
           await auth.signOut()
           return
         }
+        if (role === 'walker' && userRole !== 'walker') {
+          setError('Parece que no tienes acceso de paseador')
+          await auth.signOut()
+          return
+        }
         setSessionCookie(cred.user.uid)
-        router.push('/admin')
+        router.push(role === 'walker' ? '/paseador' : '/admin')
       } else {
         const snap = await getDoc(doc(db, 'clients', cred.user.uid))
         if (snap.exists()) {
@@ -146,11 +151,13 @@ export default function LoginPage() {
             {mode === 'select' && 'Bienvenido a ' + brand.name}
             {mode === 'familia' && 'Familia PET'}
             {mode === 'equipo' && 'Acceso Equipo'}
+            {mode === 'paseador' && 'Acceso Paseador'}
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {mode === 'select' && 'Elige cómo quieres acceder'}
             {mode === 'familia' && 'Accede para ver tus reservas, fotos y más'}
             {mode === 'equipo' && 'Panel de administración'}
+            {mode === 'paseador' && 'Panel de paseos asignados'}
           </p>
         </div>
 
@@ -189,6 +196,15 @@ export default function LoginPage() {
               style={{ color: 'var(--text-muted)' }}
             >
               Acceso equipo →
+            </button>
+
+            {/* Paseador */}
+            <button
+              onClick={() => setMode('paseador')}
+              className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-white/60"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              Acceso paseador →
             </button>
           </div>
         )}
@@ -345,6 +361,60 @@ export default function LoginPage() {
               >
                 {loading ? <FaSpinner className="animate-spin" size={14} /> : null}
                 Acceder al panel
+              </button>
+            </div>
+
+            <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
+              <button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                ← Volver
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mode === 'paseador' && (
+          <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo de paseador</label>
+                <div className="relative">
+                  <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="paseador@petap.com"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-success-500/30"
+                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
+                <div className="relative">
+                  <FaLock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin('walker')}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-success-500/30"
+                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  />
+                </div>
+              </div>
+
+              {error && <p className="text-danger-400 text-xs">{error}</p>}
+
+              <button
+                onClick={() => handleEmailLogin('walker')}
+                disabled={loading || !email.trim() || !password.trim()}
+                className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-success-500 to-success-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {loading ? <FaSpinner className="animate-spin" size={14} /> : <FaWalking size={14} />}
+                Entrar como paseador
               </button>
             </div>
 
