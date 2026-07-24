@@ -173,8 +173,24 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const [showCoupon, setShowCoupon] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [savedPets, setSavedPets] = useState<{ id: string; name: string; petType: string; breed: string }[]>([])
 
   const timeSlots = form.date ? generateTimeSlots(getDayOfWeek(form.date)) : []
+
+  useEffect(() => {
+    const user = auth.currentUser
+    if (!user) return
+    const q = query(collection(db, 'pets'), where('ownerId', '==', user.uid), limit(5))
+    const unsub = onSnapshot(q, (snap) => {
+      setSavedPets(snap.docs.map((d) => ({
+        id: d.id,
+        name: d.data().name,
+        petType: d.data().petType || 'perro',
+        breed: d.data().breed || '',
+      })))
+    }, () => {})
+    return unsub
+  }, [])
 
   useEffect(() => {
     if (!form.date) { setBookedSlots([]); return }
@@ -625,6 +641,38 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                           <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Cuéntanos sobre tu peludo</p>
 
                           <div className="space-y-5">
+                            {savedPets.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Tus mascotas guardadas</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {savedPets.map((pet) => {
+                                    const selected = form.petName === pet.name
+                                    return (
+                                      <button
+                                        key={pet.id}
+                                        type="button"
+                                        onClick={() => {
+                                          set('petName', pet.name)
+                                          set('petType', pet.petType)
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all"
+                                        style={{
+                                          background: selected ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                          borderColor: selected ? 'var(--color-primary)' : 'var(--border)',
+                                          color: selected ? 'var(--color-primary)' : 'var(--text-secondary)',
+                                        }}
+                                      >
+                                        <span>{pet.petType === 'perro' ? '🐕' : pet.petType === 'gato' ? '🐈' : '🐾'}</span>
+                                        {pet.name}
+                                        {pet.breed && <span className="text-2xs opacity-60">· {pet.breed}</span>}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                                <div className="h-px my-2" style={{ background: 'var(--border)' }} />
+                              </div>
+                            )}
+
                             <div className="space-y-2">
                               <label htmlFor="pet-name" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
                                     <FaPaw size={13} className="text-primary" /> Nombre <span style={{ color: 'var(--color-danger)' }}>*</span>
