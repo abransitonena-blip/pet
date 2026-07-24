@@ -83,7 +83,17 @@ export default function Header() {
             style={{ color: 'var(--text-secondary)' }}
             aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
           >
-            {theme === 'dark' ? <FaSun size={14} /> : <FaMoon size={14} />}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={theme}
+                initial={{ rotate: -90, scale: 0 }}
+                animate={{ rotate: 0, scale: 1 }}
+                exit={{ rotate: 90, scale: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {theme === 'dark' ? <FaSun size={14} /> : <FaMoon size={14} />}
+              </motion.div>
+            </AnimatePresence>
           </button>
 
           <a

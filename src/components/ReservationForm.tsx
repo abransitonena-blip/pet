@@ -710,7 +710,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 }}
                               />
                               {errors.petName && touched.petName && (
-                                <p id="pet-name-error" className="text-xs flex items-center gap-1" role="alert" style={{ color: 'var(--color-danger)' }}>
+                                <p id="pet-name-error" className="text-xs flex items-center gap-1 animate-shake" role="alert" style={{ color: 'var(--color-danger)' }}>
                                   <FaTimes size={10} /> {errors.petName}
                                 </p>
                               )}
@@ -790,7 +790,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 }}
                               />
                               {errors.name && touched.name && (
-                                <p id="name-error" className="text-xs flex items-center gap-1" role="alert" style={{ color: 'var(--color-danger)' }}>
+                                <p id="name-error" className="text-xs flex items-center gap-1 animate-shake" role="alert" style={{ color: 'var(--color-danger)' }}>
                                   <FaTimes size={10} /> {errors.name}
                                 </p>
                               )}
@@ -819,7 +819,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 }}
                               />
                               {errors.phone && touched.phone && (
-                                <p id="phone-error" className="text-xs flex items-center gap-1" role="alert" style={{ color: 'var(--color-danger)' }}>
+                                <p id="phone-error" className="text-xs flex items-center gap-1 animate-shake" role="alert" style={{ color: 'var(--color-danger)' }}>
                                   <FaTimes size={10} /> {errors.phone}
                                 </p>
                               )}

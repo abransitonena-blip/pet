@@ -6,7 +6,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { ReservationsProvider } from '@/context/ReservationsContext'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   FaDog, FaTachometerAlt, FaCalendarAlt, FaUsers, FaPaw, FaWalking,
   FaMapMarkedAlt, FaDollarSign, FaTag, FaUserFriends, FaStar,
@@ -145,10 +145,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </motion.aside>
 
       {/* Mobile sidebar overlay */}
+      <AnimatePresence>
       {mobileOpen && (
          <div className="fixed inset-0 z-[var(--z-overlay)] lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-64 p-3 overflow-y-auto" style={{ background: 'var(--bg-card)' }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMobileOpen(false)}
+          />
+          <motion.div
+            initial={{ x: -256 }}
+            animate={{ x: 0 }}
+            exit={{ x: -256 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="absolute left-0 top-0 bottom-0 w-64 p-3 overflow-y-auto"
+            style={{ background: 'var(--bg-card)' }}
+          >
             <div className="flex items-center gap-3 mb-6 px-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white">
                 <FaDog size={16} />
@@ -173,9 +188,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </a>
               )
             })}
-          </div>
+          </motion.div>
         </div>
       )}
+      </AnimatePresence>
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
