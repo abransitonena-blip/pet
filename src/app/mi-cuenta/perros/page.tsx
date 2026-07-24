@@ -27,13 +27,23 @@ interface Pet {
   createdAt: unknown
 }
 
-const EMPTY_PET = {
+interface PetForm {
+  name: string
+  breed: string
+  size: string
+  age: string
+  weight: string
+  petType: string
+  notes: string
+}
+
+const EMPTY_PET: PetForm = {
   name: '',
   breed: '',
-  size: 'mediano' as const,
+  size: 'mediano',
   age: '',
   weight: '',
-  petType: 'perro' as const,
+  petType: 'perro',
   notes: '',
 }
 
