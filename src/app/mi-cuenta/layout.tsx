@@ -8,15 +8,18 @@ import { auth, db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import {
   FaDog, FaCalendarAlt, FaPaw, FaCamera, FaUserFriends,
-  FaSignOutAlt, FaCog, FaStar, FaGift,
+  FaSignOutAlt, FaCog, FaGift, FaHome, FaHistory, FaBookOpen,
 } from 'react-icons/fa'
 
 const ACCOUNT_ITEMS = [
-  { id: 'reservas', label: 'Mis reservas', icon: FaCalendarAlt, color: '#D97706', href: '/mi-cuenta' },
-  { id: 'perros', label: 'Mis perros', icon: FaPaw, color: '#059669', href: '/mi-cuenta/perros' },
-  { id: 'fotos', label: 'Fotos de paseos', icon: FaCamera, color: '#3b82f6', href: '/mi-cuenta/fotos' },
-  { id: 'referir', label: 'Referir amigo', icon: FaUserFriends, color: '#7C3AED', href: '/mi-cuenta/referir' },
-  { id: 'lealtad', label: 'Mi lealtad', icon: FaGift, color: '#ec4899', href: '/mi-cuenta/lealtad' },
+  { id: 'dashboard', label: 'Inicio', icon: FaHome, color: '#D97706', href: '/mi-cuenta' },
+  { id: 'nueva-reserva', label: 'Nueva reserva', icon: FaCalendarAlt, color: '#059669', href: '/mi-cuenta/nueva-reserva' },
+  { id: 'perros', label: 'Mis perros', icon: FaPaw, color: '#3b82f6', href: '/mi-cuenta/perros' },
+  { id: 'historial', label: 'Mi historial', icon: FaHistory, color: '#8B5CF6', href: '/mi-cuenta/historial' },
+  { id: 'fotos', label: 'Fotos de paseos', icon: FaCamera, color: '#06B6D4', href: '/mi-cuenta/fotos' },
+  { id: 'referir', label: 'Referir amigo', icon: FaUserFriends, color: '#EC4899', href: '/mi-cuenta/referir' },
+  { id: 'lealtad', label: 'Mi lealtad', icon: FaGift, color: '#F59E0B', href: '/mi-cuenta/lealtad' },
+  { id: 'ayuda', label: 'Centro de ayuda', icon: FaBookOpen, color: '#64748B', href: '/mi-cuenta/ayuda' },
   { id: 'config', label: 'Configuración', icon: FaCog, color: '#64748B', href: '/mi-cuenta/config' },
 ]
 
