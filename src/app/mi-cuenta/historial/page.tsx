@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import {
   FaHistory, FaDog, FaCheckCircle, FaCalendarAlt, FaClock, FaArrowLeft,
-  FaChevronDown, FaMapMarkerAlt, FaStickyNote, FaCamera,
+  FaChevronDown, FaMapMarkerAlt, FaStickyNote, FaCamera, FaRedo,
 } from 'react-icons/fa'
 import type { Reservation } from '@/types'
 
@@ -144,6 +144,18 @@ export default function HistorialPage() {
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{res.service}</p>
                       <div className="flex items-center gap-2 shrink-0">
+                        {res.status === 'completed' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/mi-cuenta/nueva-reserva?repeat=${encodeURIComponent(res.service)}`)
+                            }}
+                            className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-400 border border-brand-500/20"
+                            title="Repetir este paseo"
+                          >
+                            <FaRedo size={8} /> Repetir
+                          </button>
+                        )}
                         {hasWalkData && (
                           <FaCamera size={10} className="text-success-400" />
                         )}

@@ -6,7 +6,7 @@ import { db, auth } from '@/firebase/config'
 import { collection, addDoc, serverTimestamp, getDocs, query, where, limit, onSnapshot, doc, setDoc } from 'firebase/firestore'
 import { useSearchParams } from 'next/navigation'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
-import { SERVICES, getServicePrice, getServiceMeta, calculateSavings } from '@/lib/services'
+import { SERVICES, SERVICE_NAMES, getServicePrice, getServiceMeta, calculateSavings } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { showPushNotification } from './PWARegister'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
@@ -196,6 +196,15 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const [savedAddresses, setSavedAddresses] = useState<{ id: string; alias: string; street: string; colony: string; city: string; zip: string }[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState('')
   const isWeeklyPackage = form.service === 'Paquete Semanal'
+
+  // Handle ?repeat=<serviceName> query param
+  useEffect(() => {
+    const repeatService = searchParams.get('repeat')
+    if (repeatService && SERVICE_NAMES.includes(repeatService) && !form.service) {
+      setForm((prev) => ({ ...prev, service: repeatService }))
+      setStep(2)
+    }
+  }, [searchParams])
 
   const timeSlots = form.date ? generateTimeSlots(getDayOfWeek(form.date)) : []
 
