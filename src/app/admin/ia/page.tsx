@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   FaRobot, FaCalendarAlt, FaDog, FaUsers, FaChartLine, FaClock,
-  FaLightbulb, FaTrendingUp, FaTrendingDown, FaExclamationTriangle,
+  FaLightbulb, FaArrowUp, FaArrowDown, FaExclamationTriangle,
   FaBolt, FaStar, FaWalking, FaMoneyBill, FaArrowRight,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
@@ -102,9 +102,9 @@ export default function AdminIAPage() {
 
     // Revenue insight
     if (revenueGrowth > 10) {
-      result.push({ id: 'rev_up', title: 'Ingresos en alza', description: `Los ingresos subieron ${revenueGrowth}% vs el periodo anterior. Tendencia positiva.`, icon: FaTrendingUp, color: '#059669', priority: 'high' })
+      result.push({ id: 'rev_up', title: 'Ingresos en alza', description: `Los ingresos subieron ${revenueGrowth}% vs el periodo anterior. Tendencia positiva.`, icon: FaArrowUp, color: '#059669', priority: 'high' })
     } else if (revenueGrowth < -10) {
-      result.push({ id: 'rev_down', title: 'Ingresos bajando', description: `Los ingresos bajaron ${Math.abs(revenueGrowth)}%. Considera promociones para reactivar.`, icon: FaTrendingDown, color: '#DC2626', priority: 'high', action: 'Crear cupón de descuento' })
+      result.push({ id: 'rev_down', title: 'Ingresos bajando', description: `Los ingresos bajaron ${Math.abs(revenueGrowth)}%. Considera promociones para reactivar.`, icon: FaArrowDown, color: '#DC2626', priority: 'high', action: 'Crear cupón de descuento' })
     }
 
     // Pending alerts

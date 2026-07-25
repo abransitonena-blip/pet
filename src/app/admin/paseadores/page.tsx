@@ -5,6 +5,7 @@ import { db } from '@/firebase/config'
 import {
   doc, updateDoc, collection, query, onSnapshot, where,
 } from 'firebase/firestore'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   FaWalking, FaUser, FaPhone, FaDog, FaWhatsapp, FaSpinner, FaPlus, FaTimes,
   FaCalendarAlt, FaClock, FaMapMarkedAlt, FaChartBar, FaEdit, FaCheck,
