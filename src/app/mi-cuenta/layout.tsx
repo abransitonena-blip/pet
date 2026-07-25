@@ -7,7 +7,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import {
-  FaDog, FaCalendarAlt, FaPaw, FaCamera, FaUserFriends,
+  FaDog, FaCalendarAlt, FaPaw, FaCamera, FaUserFriends, FaMapMarkerAlt,
   FaSignOutAlt, FaCog, FaGift, FaHome, FaHistory, FaBookOpen, FaBell,
 } from 'react-icons/fa'
 import NotificationBell from '@/components/NotificationBell'
@@ -16,6 +16,7 @@ const ACCOUNT_ITEMS = [
   { id: 'dashboard', label: 'Inicio', icon: FaHome, color: '#D97706', href: '/mi-cuenta' },
   { id: 'nueva-reserva', label: 'Nueva reserva', icon: FaCalendarAlt, color: '#059669', href: '/mi-cuenta/nueva-reserva' },
   { id: 'perros', label: 'Mis perros', icon: FaPaw, color: '#3b82f6', href: '/mi-cuenta/perros' },
+  { id: 'direcciones', label: 'Mis direcciones', icon: FaMapMarkerAlt, color: '#F97316', href: '/mi-cuenta/direcciones' },
   { id: 'historial', label: 'Mi historial', icon: FaHistory, color: '#8B5CF6', href: '/mi-cuenta/historial' },
   { id: 'fotos', label: 'Fotos de paseos', icon: FaCamera, color: '#06B6D4', href: '/mi-cuenta/fotos' },
   { id: 'notificaciones', label: 'Notificaciones', icon: FaBell, color: '#D97706', href: '/mi-cuenta/notificaciones' },
