@@ -159,13 +159,9 @@ export default function AdminPaseadoresPage() {
     }
     setCreatingAccount(index)
     try {
-      // Generate a temporary password
-      const tempPwd = 'PetAp' + Math.random().toString(36).slice(-8) + '!'
-      
       const createAccount = httpsCallable(functions, 'createWalkerAccount')
       const result = await createAccount({
         email: walker.email,
-        password: tempPwd,
         name: walker.name,
         phone: walker.phone,
         zones: walker.zones,
@@ -174,14 +170,14 @@ export default function AdminPaseadoresPage() {
         schedule: walker.schedule,
       })
 
-      const { uid } = result.data as { uid: string }
+      const { uid, tempPassword } = result.data as { uid: string; tempPassword: string }
 
       // Update walker config with uid and status
       const walkers = [...(config.walkers || [])] as WalkerConfig[]
       walkers[index] = { ...walkers[index], uid, status: 'active' }
       await updateConfig({ walkers })
 
-      setTempPassword({ index, password: tempPwd })
+      setTempPassword({ index, password: tempPassword })
       toast('Cuenta creada exitosamente')
     } catch (e: unknown) {
       const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: string }).message) : ''

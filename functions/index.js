@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const crypto = require('crypto');
 admin.initializeApp();
 
 const db = admin.firestore();
@@ -456,8 +457,8 @@ exports.registerFCMToken = functions.https.onCall(async (data, context) => {
 // 11. WALKER ACCOUNT CREATION
 // ═══════════════════════════════════════════
 
-// Callable: createWalkerAccount({ email, password, name, phone, zones, maxDaily, maxWeekly, schedule })
-// Creates Firebase Auth user + users doc + walkerProfiles doc
+// Callable: createWalkerAccount({ email, name, phone, zones, maxDaily, maxWeekly, schedule })
+// Creates Firebase Auth user + users doc + walkerProfiles doc with generated temp password
 exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
 
@@ -466,9 +467,9 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('permission-denied', 'Admin only');
   }
 
-  const { email, password, name, phone, zones, maxDaily, maxWeekly, schedule } = data;
-  if (!email || !password || !name) {
-    throw new functions.https.HttpsError('invalid-argument', 'Email, password, and name required');
+  const { email, name, phone, zones, maxDaily, maxWeekly, schedule } = data;
+  if (!email || !name) {
+    throw new functions.https.HttpsError('invalid-argument', 'Email and name required');
   }
 
   // Check if email already exists
@@ -480,10 +481,13 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
     // User doesn't exist — good, we can create
   }
 
-  // Create Firebase Auth user
+  // Generate random temp password (12 chars: upper, lower, digit, symbol)
+  const tempPassword = crypto.randomBytes(9).toString('base64url').slice(0, 12);
+
+  // Create Firebase Auth user with generated password
   const userRecord = await auth.createUser({
     email,
-    password,
+    password: tempPassword,
     displayName: name,
     disabled: false,
   });
@@ -499,7 +503,7 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  // Create walkerProfiles doc
+  // Create walkerProfiles doc with force password change flag
   await db.collection('walkerProfiles').doc(uid).set({
     uid,
     name,
@@ -510,6 +514,7 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
     maxWeekly: maxWeekly || 40,
     schedule: schedule || {},
     status: 'active',
+    forcePasswordChange: true,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
@@ -529,7 +534,8 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
   // Notify admin
   await sendPushToAdmins('👤 Paseador creado', `Cuenta creada para ${name} (${email})`);
 
-  return { uid, success: true };
+  // Return temp password (one-time display, never stored in plaintext after this)
+  return { uid, tempPassword, success: true };
 });
 
 // ═══════════════════════════════════════════
