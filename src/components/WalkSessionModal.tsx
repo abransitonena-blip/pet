@@ -137,6 +137,9 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={mode === 'check_in' ? 'Iniciar paseo' : 'Terminar paseo'}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -152,6 +155,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
           </span>
           <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center"
             style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}
+            aria-label="Cerrar"
           >
             <FaTimes size={14} />
           </button>
@@ -172,6 +176,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
                 <Image src={photo} alt="Captura" width={400} height={192} unoptimized className="w-full h-48 object-cover" />
                 <button onClick={() => { setPhoto(null); setPhotoFile(null) }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white"
+                  aria-label="Eliminar foto"
                 >
                   <FaTimes size={12} />
                 </button>
@@ -187,6 +192,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
                   </button>
                   <button onClick={capturePhoto}
                     className="w-12 h-12 rounded-full bg-white flex items-center justify-center"
+                    aria-label="Tomar foto"
                   >
                     <div className="w-10 h-10 rounded-full border-2 border-black" />
                   </button>
@@ -215,7 +221,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
                 </button>
               </div>
             )}
-            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
+            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" aria-label="Subir foto del paseo" />
           </div>
 
           <div>

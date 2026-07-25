@@ -167,7 +167,7 @@ export default function LoginPage() {
       >
         {/* Logo — 6 rapid clicks reveals internal access */}
         <div className="text-center mb-8">
-          <button onClick={handleLogoClick} className="mx-auto">
+          <button onClick={handleLogoClick} className="mx-auto" aria-label="Logo PET Ap">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-glow">
               <FaDog />
             </div>

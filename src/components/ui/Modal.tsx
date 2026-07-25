@@ -56,6 +56,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
             transition={{ duration: 0.2 }}
             className={`relative w-full ${sizeStyles[size]} rounded-2xl p-6 overflow-hidden`}
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title || 'Diálogo'}
           >
             {title && (
               <div className="flex items-center justify-between mb-5">

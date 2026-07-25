@@ -86,6 +86,9 @@ export default function NotificationBell({ uid }: { uid: string }) {
         onClick={() => setOpen(!open)}
         className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/5"
         style={{ color: 'var(--text-muted)' }}
+        aria-label={`Notificaciones${unread > 0 ? `, ${unread} sin leer` : ''}`}
+        aria-expanded={open}
+        aria-haspopup="true"
       >
         <FaBell size={16} />
         {unread > 0 && (
@@ -130,6 +133,9 @@ export default function NotificationBell({ uid }: { uid: string }) {
                       <div
                         key={n.id}
                         onClick={() => { if (!n.read) markRead(n.id) }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!n.read) markRead(n.id) } }}
+                        role="button"
+                        tabIndex={0}
                         className="flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-white/3"
                         style={{ background: n.read ? 'transparent' : 'rgba(217,119,6,0.05)' }}
                       >

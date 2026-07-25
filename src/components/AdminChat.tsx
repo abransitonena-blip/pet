@@ -84,6 +84,7 @@ export default function AdminChat() {
               onClick={() => setSelectedId(null)}
               className="w-8 h-8 rounded-full flex items-center justify-center touch-action-manipulation"
               style={{ color: 'var(--text-secondary)' }}
+              aria-label="Volver a conversaciones"
             >
               <FaChevronLeft size={14} />
             </button>
@@ -140,6 +141,7 @@ export default function AdminChat() {
                 border: '1px solid var(--border)',
                 color: 'var(--text-primary)',
               }}
+              aria-label="Escribe un mensaje"
             />
             <button
               onClick={sendMessage}
@@ -148,6 +150,7 @@ export default function AdminChat() {
               style={{
                 background: 'linear-gradient(135deg, #E67E22, #D35400)',
               }}
+              aria-label="Enviar mensaje"
             >
               <FaPaperPlane size={14} className="text-white" />
             </button>

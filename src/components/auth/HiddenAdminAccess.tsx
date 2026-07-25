@@ -46,6 +46,9 @@ export default function HiddenAdminAccess() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
             style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Acceso interno"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}

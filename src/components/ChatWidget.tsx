@@ -122,7 +122,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
         <div className="fixed bottom-6 right-6 z-[var(--z-sticky)] flex flex-col items-end gap-3">
           <AnimatePresence>
             {open && (
-              <motion.div
+               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -135,6 +135,9 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
                   display: 'flex',
                   flexDirection: 'column',
                 }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Chat de soporte"
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b shrink-0"
                   style={{
@@ -149,6 +152,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
                   <button
                     onClick={() => setOpen(false)}
                     className="w-7 h-7 rounded-full flex items-center justify-center bg-white/20 touch-action-manipulation"
+                    aria-label="Cerrar chat"
                   >
                     <FaTimes size={12} className="text-white" />
                   </button>
@@ -194,6 +198,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
                       border: '1px solid var(--border)',
                       color: 'var(--text-primary)',
                     }}
+                    aria-label="Escribe un mensaje"
                   />
                   <button
                     onClick={sendMessage}
@@ -202,6 +207,7 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
                     style={{
                       background: 'linear-gradient(135deg, #E67E22, #D35400)',
                     }}
+                    aria-label="Enviar mensaje"
                   >
                     <FaPaperPlane size={12} className="text-white" />
                   </button>
@@ -218,6 +224,8 @@ export default function ChatWidget({ clientUid, onLoginRequired }: Props) {
               border: open ? '1px solid var(--border)' : 'none',
               boxShadow: open ? 'none' : '0 4px 20px rgba(230, 126, 34, 0.4)',
             }}
+            aria-label={open ? 'Cerrar chat' : 'Abrir chat'}
+            aria-expanded={open}
           >
             {open ? (
               <FaTimes size={20} style={{ color: 'var(--text-primary)' }} />

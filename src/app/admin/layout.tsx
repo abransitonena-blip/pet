@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" aria-label="Navegación de administración">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
             const active = pathname === item.href || (item.href === '/admin' && pathname === '/admin')
@@ -130,6 +130,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-danger-500/10 hover:text-danger-400"
             style={{ color: 'var(--text-secondary)' }}
+            aria-label="Cerrar sesión"
           >
             <FaSignOutAlt size={16} className="shrink-0" />
             {!collapsed && <span>Cerrar sesión</span>}
@@ -141,6 +142,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           onClick={() => setCollapsed(!collapsed)}
           className="absolute top-20 -right-3 w-6 h-6 rounded-full flex items-center justify-center text-xs border"
           style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+          aria-label={collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
+          aria-expanded={!collapsed}
         >
           {collapsed ? <FaChevronRight size={8} /> : <FaChevronLeft size={8} />}
         </button>
@@ -165,6 +168,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="absolute left-0 top-0 bottom-0 w-64 p-3 overflow-y-auto"
             style={{ background: 'var(--bg-card)' }}
+            role="navigation"
+            aria-label="Menú de administración"
           >
             <div className="flex items-center gap-3 mb-6 px-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white">
@@ -204,6 +209,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               onClick={() => setMobileOpen(true)}
               className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center"
               style={{ color: 'var(--text-secondary)' }}
+              aria-label="Abrir menú de navegación"
+              aria-expanded={mobileOpen}
             >
               <FaBars size={16} />
             </button>

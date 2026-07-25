@@ -865,6 +865,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                       borderColor: 'var(--border)',
                                       color: 'var(--text-primary)',
                                     }}
+                                    aria-label="Notas adicionales"
                                   />
                                 </motion.div>
                               )}
@@ -998,6 +999,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                         borderColor: couponStatus?.valid ? 'var(--color-success)' : couponStatus && !couponStatus.valid ? 'var(--color-error)' : 'var(--border)',
                                         color: 'var(--text-primary)',
                                       }}
+                                      aria-label="Código de cupón"
                                     />
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                       {checkingCoupon ? <FaSpinner className="animate-spin" size={13} style={{ color: 'var(--text-muted)' }} />
