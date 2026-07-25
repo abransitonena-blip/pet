@@ -89,7 +89,7 @@ export default function AdminReferidosPage() {
 
   const shareWhatsApp = (name: string, phone: string) => {
     const link = `${window.location.origin}?ref=${phone.replace(/\D/g, '')}`
-    const msg = `🐾 ¡Te recomiendo ${brand.name}! Paseos caninos supervisados. Agenda aquí: ${link}`
+    const msg = `🐾 ¡Te recomiendo ${brand.name}! Paseos personalizados con seguimiento. Agenda aquí: ${link}`
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
   }
 

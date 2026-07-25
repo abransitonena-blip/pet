@@ -66,7 +66,7 @@ export default function Hero() {
 
         {/* Subhead */}
         <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          {config.heroSubtitle || 'Paseos caninos supervisados con tecnología. Fotos, mapa y reporte en tiempo real. Porque saber que está bien, no tiene precio.'}
+          {config.heroSubtitle || 'Reserva paseos personalizados, administra horarios y recibe seguimiento en tiempo real desde PET Ap.'}
         </motion.p>
 
         {/* CTAs */}

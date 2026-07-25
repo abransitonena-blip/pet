@@ -5,6 +5,92 @@ export interface WalkMedia {
   timestamp: { seconds: number; nanoseconds: number }
 }
 
+export interface Address {
+  id: string
+  ownerId: string
+  alias: string
+  street: string
+  exterior: string
+  interior: string
+  colony: string
+  city: string
+  state: string
+  zip: string
+  references: string
+  instructions: string
+  lat: number
+  lng: number
+  zoneId: string
+  contactName: string
+  contactPhone: string
+  pickupInstructions: string
+  deliveryInstructions: string
+  isDefault: boolean
+  createdAt?: { seconds: number; nanoseconds: number }
+}
+
+export interface ServiceOrder {
+  id: string
+  clientId: string
+  clientName: string
+  clientPhone: string
+  dogIds: string[]
+  dogName: string
+  petType: string
+  serviceId: string
+  serviceName: string
+  packageType: 'individual' | 'extended' | 'group' | 'weekly' | 'custom'
+  numberOfSessions: number
+  addressId: string
+  address?: Address
+  zoneId: string
+  zoneName: string
+  subtotal: number
+  zoneAdjustment: number
+  discount: number
+  referralDiscount: number
+  total: number
+  paymentStatus: 'pending' | 'paid'
+  status: 'active' | 'completed' | 'cancelled' | 'paused'
+  notes: string
+  referralCode?: string
+  appliedCoupon?: string
+  createdAt?: { seconds: number; nanoseconds: number }
+}
+
+export interface WalkSession {
+  id: string
+  orderId: string
+  clientId: string
+  clientName: string
+  clientPhone: string
+  dogName: string
+  petType: string
+  serviceName: string
+  date: string
+  startTime: string
+  expectedEndTime: string
+  zoneId: string
+  zoneName: string
+  addressId: string
+  address?: Address
+  walkerId: string
+  walkerName: string
+  assignmentStatus: 'unassigned' | 'assigned' | 'confirmed' | 'rejected'
+  sessionStatus: 'pending' | 'assigned' | 'en_camino' | 'paseando' | 'completed' | 'cancelled' | 'no_show'
+  notes: string
+  internalNotes: string
+  walkCheckIn?: WalkMedia
+  walkCheckOut?: WalkMedia
+  walkNotes?: string
+  photos?: string[]
+  history?: { status: string; timestamp: string }[]
+  duration?: number
+  distance?: number
+  createdAt?: { seconds: number; nanoseconds: number }
+  completedAt?: { seconds: number; nanoseconds: number } | string
+}
+
 export interface Reservation {
   id: string
   name: string
@@ -49,6 +135,11 @@ export interface Reservation {
   finalPrice?: number
   appliedCoupon?: string
   discountApplied?: number
+  addressId?: string
+  address?: Address
+  zoneId?: string
+  zoneName?: string
+  orderId?: string
 }
 
 export interface Conversation {
@@ -100,13 +191,22 @@ export interface Zone {
   id: string
   name: string
   center: { lat: number; lng: number }
+  radius: number
   active: boolean
   walkerIds: string[]
+  basePrice: number
+  fixedAdjustment: number
+  percentAdjustment: number
+  transitIncluded: boolean
+  coverageRadius: number
+  minOrder: number
+  availableHours: Record<string, { start: string; end: string }[]>
   stats: {
     totalClients: number
     totalWalks: number
     avgDemand: number
   }
+  createdAt?: { seconds: number; nanoseconds: number }
 }
 
 export interface Pet {

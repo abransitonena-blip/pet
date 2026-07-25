@@ -17,9 +17,19 @@ interface ZoneForm {
   centerLat: string
   centerLng: string
   radius: string
+  basePrice: string
+  fixedAdjustment: string
+  percentAdjustment: string
+  transitIncluded: boolean
+  coverageRadius: string
+  minOrder: string
 }
 
-const EMPTY_FORM: ZoneForm = { name: '', centerLat: '', centerLng: '', radius: '3' }
+const EMPTY_FORM: ZoneForm = {
+  name: '', centerLat: '', centerLng: '', radius: '3',
+  basePrice: '0', fixedAdjustment: '0', percentAdjustment: '0',
+  transitIncluded: true, coverageRadius: '5', minOrder: '0',
+}
 
 export default function AdminZonasPage() {
   const [zones, setZones] = useState<Zone[]>([])
@@ -55,7 +65,13 @@ export default function AdminZonasPage() {
       name: zone.name,
       centerLat: String(zone.center?.lat || ''),
       centerLng: String(zone.center?.lng || ''),
-      radius: String((zone as unknown as { radius?: number }).radius || '3'),
+      radius: String(zone.radius || '3'),
+      basePrice: String(zone.basePrice || '0'),
+      fixedAdjustment: String(zone.fixedAdjustment || '0'),
+      percentAdjustment: String(zone.percentAdjustment || '0'),
+      transitIncluded: zone.transitIncluded ?? true,
+      coverageRadius: String(zone.coverageRadius || '5'),
+      minOrder: String(zone.minOrder || '0'),
     })
     setShowForm(true)
   }
@@ -73,6 +89,13 @@ export default function AdminZonasPage() {
         radius: parseFloat(form.radius) || 3,
         active: true,
         walkerIds: editing?.walkerIds || [],
+        basePrice: parseFloat(form.basePrice) || 0,
+        fixedAdjustment: parseFloat(form.fixedAdjustment) || 0,
+        percentAdjustment: parseFloat(form.percentAdjustment) || 0,
+        transitIncluded: form.transitIncluded,
+        coverageRadius: parseFloat(form.coverageRadius) || 5,
+        minOrder: parseFloat(form.minOrder) || 0,
+        availableHours: editing?.availableHours || {},
         stats: editing?.stats || { totalClients: 0, totalWalks: 0, avgDemand: 0 },
       }
 
@@ -280,6 +303,60 @@ export default function AdminZonasPage() {
                   className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
                   style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 />
+              </div>
+
+              <div className="border-t pt-4 space-y-3" style={{ borderColor: 'var(--border)' }}>
+                <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Precios por zona</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ajuste fijo ($)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={form.fixedAdjustment}
+                      onChange={(e) => setForm({ ...form, fixedAdjustment: e.target.value })}
+                      placeholder="0"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ajuste %</label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={form.percentAdjustment}
+                      onChange={(e) => setForm({ ...form, percentAdjustment: e.target.value })}
+                      placeholder="0"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Cobertura mínima ($)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={form.minOrder}
+                      onChange={(e) => setForm({ ...form, minOrder: e.target.value })}
+                      placeholder="0"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 pt-6">
+                    <input
+                      type="checkbox"
+                      checked={form.transitIncluded}
+                      onChange={(e) => setForm({ ...form, transitIncluded: e.target.checked })}
+                      className="rounded"
+                      id="transitIncluded"
+                    />
+                    <label htmlFor="transitIncluded" className="text-xs" style={{ color: 'var(--text-secondary)' }}>Traslado incluido</label>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">

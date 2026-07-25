@@ -36,7 +36,7 @@ export default function ContactSection() {
             Estamos <span className="gradient-text">aquí</span>
           </h2>
           <p className="section-subtitle">
-            Paseos caninos supervisados. Siempre listos para consentir a tu peludo.
+            Paseos personalizados. Siempre listos para consentir a tu peludo.
           </p>
         </motion.div>
 

@@ -3,8 +3,8 @@ export const BRAND = {
   email: 'ap9871888@gmail.com',
   whatsapp: '5215523053772',
   whatsappRaw: '5523053772',
-  tagline: 'Paseos y bienestar canino',
-  description: 'Paseos caninos supervisados con tecnología.',
+  tagline: 'Bienestar para tu perro. Tranquilidad para ti.',
+  description: 'Paseos personalizados con seguimiento en tiempo real.',
 } as const
 
 export { BRAND as brand }

@@ -32,7 +32,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
               </span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Paseos caninos supervisados con tecnología.
+              Paseos personalizados con seguimiento en tiempo real.
               Precios accesibles, mucho amor y ejercicio para tu perro.
             </p>
           </motion.div>

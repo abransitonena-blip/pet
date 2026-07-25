@@ -61,8 +61,8 @@ export interface SiteConfig {
 }
 
 export const DEFAULT_CONFIG: SiteConfig = {
-  heroTitle: 'Tu perro merece más que un paseo',
-  heroSubtitle: 'Paseos caninos supervisados con tecnología. Fotos, mapa y reporte en tiempo real. Porque saber que está bien, no tiene precio.',
+  heroTitle: 'Bienestar para tu perro. Tranquilidad para ti.',
+  heroSubtitle: 'Reserva paseos personalizados, administra horarios y recibe seguimiento en tiempo real desde PET Ap.',
   sectionDescriptions: {
     services: 'Todos nuestros paseos son supervisados, seguros y pensados para la felicidad de tu perro.',
     howItWorks: 'Reserva en 3 simples pasos y nosotros nos encargamos del resto.',
