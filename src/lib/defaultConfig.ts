@@ -56,7 +56,7 @@ export interface SiteConfig {
   walkTips: { title: string; text: string; icon: string }[]
   faq: { question: string; answer: string }[]
   termsContent: string
-  walkers: { name: string; phone: string }[]
+  walkers: { name: string; phone: string; email?: string; uid?: string; status?: string; zones?: string[]; maxDaily?: number; maxWeekly?: number; schedule?: Record<string, Array<{ start: string; end: string }>> }[]
   maintenance: boolean
 }
 
