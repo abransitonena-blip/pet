@@ -56,8 +56,8 @@ function clearDraft() {
   try { sessionStorage.removeItem(STORAGE_KEY) } catch {}
 }
 
-function BookingSummary({ step, form, prices, couponStatus }: {
-  step: number; form: Record<string, string>; prices: Record<string, number>; couponStatus: { valid?: boolean; discount?: number; type?: string } | null
+function BookingSummary({ step, form, prices, couponStatus, weeklySchedule }: {
+  step: number; form: Record<string, string>; prices: Record<string, number>; couponStatus: { valid?: boolean; discount?: number; type?: string } | null; weeklySchedule?: Record<string, string>
 }) {
   const svc = getServiceMeta(form.service)
   const basePrice = form.service ? (prices[form.service] ?? getServicePrice(form.service)) : 0
@@ -65,6 +65,8 @@ function BookingSummary({ step, form, prices, couponStatus }: {
     ? (couponStatus.type === 'percentage' ? Math.round(basePrice * couponStatus.discount / 100) : couponStatus.discount)
     : 0
   const finalPrice = basePrice - discountAmount
+  const isWeekly = form.service === 'Paquete Semanal'
+  const scheduledDays = weeklySchedule ? Object.entries(weeklySchedule).filter(([, t]) => t).sort() : []
 
   const hasData = form.service || form.date || form.petName || form.name
 
@@ -100,9 +102,22 @@ function BookingSummary({ step, form, prices, couponStatus }: {
         <div className="flex items-center justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
           <span className="flex items-center gap-2">
             <FaCalendarAlt size={11} className="text-primary" />
-            {new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}
+            {isWeekly && scheduledDays.length > 0
+              ? `${scheduledDays.length} días: ${scheduledDays[0] ? new Date(scheduledDays[0][0] + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : ''}`
+              : new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
+            }
           </span>
-          {form.time && <span className="flex items-center gap-1"><FaClock size={10} className="text-primary" /> {form.time}</span>}
+          {!isWeekly && form.time && <span className="flex items-center gap-1"><FaClock size={10} className="text-primary" /> {form.time}</span>}
+        </div>
+      )}
+      {isWeekly && scheduledDays.length > 1 && (
+        <div className="space-y-1 mt-1">
+          {scheduledDays.map(([date, time]) => (
+            <div key={date} className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+              <span className="capitalize">{new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' })}</span>
+              <span className="flex items-center gap-1"><FaClock size={8} /> {time}</span>
+            </div>
+          ))}
         </div>
       )}
       {form.petName && (
@@ -177,8 +192,35 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [savedPets, setSavedPets] = useState<{ id: string; name: string; petType: string; breed: string }[]>([])
+  const [weeklySchedule, setWeeklySchedule] = useState<Record<string, string>>({})
+  const isWeeklyPackage = form.service === 'Paquete Semanal'
 
   const timeSlots = form.date ? generateTimeSlots(getDayOfWeek(form.date)) : []
+
+  // Generate 6 days (Mon-Sat) starting from selected date or next Monday
+  const weekDays = useMemo(() => {
+    const start = form.date ? new Date(form.date + 'T12:00:00') : new Date()
+    // Find next Monday if no date selected
+    if (!form.date) {
+      const day = start.getDay()
+      const diff = day === 0 ? 1 : day === 1 ? 0 : 8 - day
+      start.setDate(start.getDate() + diff)
+    } else {
+      // Adjust to Monday if not already
+      const day = start.getDay()
+      const diff = day === 0 ? 1 : day === 1 ? 0 : 8 - day
+      start.setDate(start.getDate() + diff)
+    }
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      return {
+        date: d.toISOString().split('T')[0],
+        label: d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }),
+        dayName: d.toLocaleDateString('es-MX', { weekday: 'long' }),
+      }
+    })
+  }, [form.date])
 
   useEffect(() => {
     const user = auth.currentUser
@@ -271,7 +313,12 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const canProceed = useMemo(() => {
     switch (step) {
       case 1: return !!form.service
-      case 2: return !!form.date && !!form.time
+      case 2: {
+        if (isWeeklyPackage) {
+          return Object.values(weeklySchedule).some((t) => !!t)
+        }
+        return !!form.date && !!form.time
+      }
       case 3: return !!form.petName.trim()
       case 4: {
         const digits = form.phone.replace(/\D/g, '')
@@ -279,7 +326,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
       }
       default: return true
     }
-  }, [step, form])
+  }, [step, form, isWeeklyPackage, weeklySchedule])
 
   const ctaLabel = useMemo(() => {
     if (step === 5) return null
@@ -343,7 +390,9 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     const finalPrice = basePrice - discountAmount
 
     const petTypeLabel = PET_TYPES.find((p) => p.value === form.petType)?.label || form.petType
-    let message = `🐾 *Nuevo Paseo — PET Ap*\n`
+
+    // Build WhatsApp message
+    let message = `🐾 *Nuevo${isWeeklyPackage ? ' Paquete Semanal' : ' Paseo'} — PET Ap*\n`
     message += `👤 *Nombre:* ${form.name}\n`
     message += `📱 *Teléfono:* ${form.phone}\n`
     message += `🐶 *Mascota:* ${form.petName} (${petTypeLabel})\n`
@@ -351,22 +400,119 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     if (basePrice > 0) message += `💰 *Precio:* $${basePrice.toLocaleString()}\n`
     if (discountAmount > 0) message += `🏷️ *Descuento:* -$${discountAmount.toLocaleString()} (${form.coupon.toUpperCase()})\n`
     message += `💵 *Total:* $${finalPrice.toLocaleString()}\n`
-    message += `📅 *Fecha:* ${form.date}\n`
-    message += `🕐 *Hora:* ${form.time}\n`
+    if (!isWeeklyPackage) {
+      message += `📅 *Fecha:* ${form.date}\n`
+      message += `🕐 *Hora:* ${form.time}\n`
+    } else {
+      const scheduledDays = Object.entries(weeklySchedule).filter(([, t]) => t).sort()
+      message += `📅 *Semana:* ${scheduledDays.length} días\n`
+      scheduledDays.forEach(([date, time]) => {
+        const d = new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' })
+        message += `  • ${d}: ${time}\n`
+      })
+    }
     if (form.notes) message += `📝 *Notas:* ${form.notes}\n`
 
     try {
-      await addDoc(collection(db, 'reservations'), {
-        ...form,
-        uid: auth.currentUser?.uid || '',
-        createdAt: serverTimestamp(),
-        status: 'pending',
-        appliedCoupon: form.coupon.toUpperCase(),
-        discountApplied: discountAmount,
-        finalPrice,
-        referralCode: referralPhone || '',
-      })
-      showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
+      if (isWeeklyPackage && Object.values(weeklySchedule).some((t) => !!t)) {
+        // ─── WEEKLY PACKAGE → ServiceOrder + WalkSessions ───
+        const scheduledDays = Object.entries(weeklySchedule).filter(([, t]) => t).sort()
+        const orderIdRef = doc(collection(db, 'serviceOrders'))
+
+        const orderData = {
+          clientId: auth.currentUser?.uid || '',
+          clientName: form.name,
+          clientPhone: form.phone,
+          dogIds: [],
+          dogName: form.petName,
+          petType: form.petType,
+          serviceId: form.service,
+          serviceName: form.service,
+          packageType: 'weekly' as const,
+          numberOfSessions: scheduledDays.length,
+          addressId: '',
+          zoneId: '',
+          zoneName: '',
+          subtotal: basePrice,
+          zoneAdjustment: 0,
+          discount: discountAmount,
+          referralDiscount: 0,
+          total: finalPrice,
+          paymentStatus: 'pending' as const,
+          status: 'active' as const,
+          notes: form.notes,
+          referralCode: referralPhone || '',
+          appliedCoupon: form.coupon.toUpperCase() || '',
+          createdAt: serverTimestamp(),
+        }
+
+        await import('firebase/firestore').then(({ setDoc }) => setDoc(orderIdRef, orderData))
+
+        // Create WalkSession for each scheduled day
+        const { setDoc: setDocFn } = await import('firebase/firestore')
+        for (const [date, time] of scheduledDays) {
+          const sessionRef = doc(collection(db, 'serviceOrders', orderIdRef.id, 'sessions'))
+          await setDocFn(sessionRef, {
+            orderId: orderIdRef.id,
+            clientId: auth.currentUser?.uid || '',
+            clientName: form.name,
+            clientPhone: form.phone,
+            dogName: form.petName,
+            petType: form.petType,
+            serviceName: form.service,
+            date,
+            startTime: time,
+            expectedEndTime: '',
+            zoneId: '',
+            zoneName: '',
+            addressId: '',
+            walkerId: '',
+            walkerName: '',
+            assignmentStatus: 'unassigned',
+            sessionStatus: 'pending',
+            notes: form.notes,
+            internalNotes: '',
+            history: [{ status: 'pending', timestamp: new Date().toISOString() }],
+            createdAt: serverTimestamp(),
+          })
+        }
+
+        // Also create legacy reservation for first day (backward compat)
+        const firstDay = scheduledDays[0]
+        await addDoc(collection(db, 'reservations'), {
+          name: form.name,
+          phone: form.phone,
+          petName: form.petName,
+          petType: form.petType,
+          service: form.service,
+          date: firstDay[0],
+          time: firstDay[1],
+          uid: auth.currentUser?.uid || '',
+          createdAt: serverTimestamp(),
+          status: 'pending',
+          notes: `[Paquete Semanal - ${scheduledDays.length} sesiones] ${form.notes}`.trim(),
+          orderId: orderIdRef.id,
+          appliedCoupon: form.coupon.toUpperCase(),
+          discountApplied: discountAmount,
+          finalPrice,
+          referralCode: referralPhone || '',
+        })
+
+        showPushNotification('🐾 Paquete Semanal', `${form.name} agendó paquete de ${scheduledDays.length} sesiones`)
+      } else {
+        // ─── SINGLE RESERVATION (backward compat) ───
+        await addDoc(collection(db, 'reservations'), {
+          ...form,
+          uid: auth.currentUser?.uid || '',
+          createdAt: serverTimestamp(),
+          status: 'pending',
+          appliedCoupon: form.coupon.toUpperCase(),
+          discountApplied: discountAmount,
+          finalPrice,
+          referralCode: referralPhone || '',
+        })
+        showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
+      }
 
       // Save/update client profile for future pre-fill
       if (auth.currentUser) {
@@ -384,7 +530,6 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         const refSnap = await getDocs(refQ)
         if (!refSnap.empty) {
           const refDoc = refSnap.docs[0]
-          const referrerUid = refDoc.data().referrerUid
           await addDoc(collection(db, 'referrals', refDoc.id, 'conversions'), {
             refereePhone: form.phone,
             refereeName: form.name,
@@ -421,6 +566,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
       setSent(false)
       setStep(1)
       setForm({ name: '', phone: '', petName: '', petType: 'perro', service: '', date: '', time: '', notes: '', coupon: '' })
+      setWeeklySchedule({})
       setCouponStatus(null)
       setShowNotes(false)
       setShowCoupon(false)
@@ -606,77 +752,151 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                       {/* ═══════════ STEP 2 — DATE & TIME ═══════════ */}
                       {step === 2 && (
                         <div>
-                          <h3 className="text-lg sm:text-xl font-bold mb-1">¿Cuándo lo paseamos?</h3>
-                          <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Selecciona fecha y hora disponible</p>
-
-                          <div className="space-y-2 mb-6">
-                            <label htmlFor="reservation-date" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                                    <FaCalendarAlt size={13} className="text-primary" /> Fecha <span style={{ color: 'var(--color-danger)' }}>*</span>
-                            </label>
-                            <input
-                              id="reservation-date"
-                              type="date"
-                              value={form.date}
-                              onChange={(e) => { set('date', e.target.value); set('time', '') }}
-                              min={today}
-                              required
-                              className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-primary/30"
-                              style={{
-                                background: 'var(--glass-bg)',
-                                borderColor: 'var(--border)',
-                                color: 'var(--text-primary)',
-                              }}
-                            />
-                            {form.date && (
-                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                {new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+                          {isWeeklyPackage ? (
+                            <>
+                              <h3 className="text-lg sm:text-xl font-bold mb-1">Elige tu semana</h3>
+                              <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+                                Selecciona la fecha de inicio y los horarios para cada día
                               </p>
-                            )}
-                          </div>
 
-                          {form.date && (
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                                    <FaClock size={13} className="text-primary" /> Hora <span style={{ color: 'var(--color-danger)' }}>*</span>
-                                {loadingSlots && <FaSpinner className="animate-spin" size={11} />}
-                              </label>
-                              {timeSlots.length === 0 ? (
-                                <p className="text-sm text-center py-4" style={{ color: 'var(--text-muted)' }}>
-                                  No hay servicio este día
-                                </p>
-                              ) : (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                  {timeSlots.map((slot) => {
-                                    const booked = bookedSlots.includes(slot)
-                                    const selected = form.time === slot
+                              <div className="space-y-2 mb-6">
+                                <label htmlFor="week-start" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                  <FaCalendarAlt size={13} className="text-primary" /> Fecha de inicio (lunes)
+                                </label>
+                                <input
+                                  id="week-start"
+                                  type="date"
+                                  value={form.date}
+                                  onChange={(e) => {
+                                    set('date', e.target.value)
+                                    setWeeklySchedule({})
+                                  }}
+                                  min={today}
+                                  className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                  style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                />
+                              </div>
+
+                              {form.date && (
+                                <div className="space-y-3">
+                                  <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                                    Selecciona el horario para cada día (mínimo 1)
+                                  </p>
+                                  {weekDays.map((day) => {
+                                    const dayTimeSlots = generateTimeSlots(getDayOfWeek(day.date))
+                                    const selectedTime = weeklySchedule[day.date] || ''
                                     return (
-                                      <button
-                                        key={slot}
-                                        type="button"
-                                        disabled={booked}
-                                        onClick={() => set('time', slot)}
-                                        className="relative py-2.5 rounded-lg text-sm font-medium transition-all duration-200 border"
-                                        style={{
-                                          background: booked ? 'var(--color-error-light)' : selected ? 'var(--color-primary-light)' : 'var(--glass-bg)',
-                                          borderColor: selected ? 'var(--color-primary)' : booked ? 'var(--color-error)' : 'var(--border)',
-                                          color: booked ? 'var(--color-error)' : selected ? 'var(--color-primary)' : 'var(--text-secondary)',
-                                          cursor: booked ? 'not-allowed' : 'pointer',
-                                          textDecoration: booked ? 'line-through' : 'none',
-                                          minHeight: '44px',
-                                        }}
-                                      >
-                                        {slot}
-                                        {booked && <FaTimes size={9} className="absolute top-1 right-1 text-red-400/40" />}
-                                        {selected && <FaCheck size={9} className="absolute top-1 right-1 text-primary" />}
-                                      </button>
+                                      <div key={day.date} className="rounded-xl p-3" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+                                        <div className="flex items-center justify-between mb-2">
+                                          <span className="text-sm font-medium capitalize" style={{ color: 'var(--text-primary)' }}>{day.label}</span>
+                                          {selectedTime && (
+                                            <span className="text-2xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-success-light)', color: 'var(--color-success)' }}>
+                                              {selectedTime}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                                          {dayTimeSlots.map((slot) => (
+                                            <button
+                                              key={`${day.date}-${slot}`}
+                                              type="button"
+                                              onClick={() => setWeeklySchedule((prev) => ({ ...prev, [day.date]: prev[day.date] === slot ? '' : slot }))}
+                                              className="py-1.5 rounded-lg text-2xs font-medium transition-all border"
+                                              style={{
+                                                background: selectedTime === slot ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                                borderColor: selectedTime === slot ? 'var(--color-primary)' : 'var(--border)',
+                                                color: selectedTime === slot ? 'var(--color-primary)' : 'var(--text-muted)',
+                                                minHeight: '32px',
+                                              }}
+                                            >
+                                              {slot}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
                                     )
                                   })}
+                                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                    {Object.values(weeklySchedule).filter(Boolean).length} de 6 días programados
+                                  </p>
                                 </div>
                               )}
-                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                {timeSlots.length - bookedSlots.length} de {timeSlots.length} horarios disponibles
-                              </p>
-                            </div>
+                            </>
+                          ) : (
+                            <>
+                              <h3 className="text-lg sm:text-xl font-bold mb-1">¿Cuándo lo paseamos?</h3>
+                              <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Selecciona fecha y hora disponible</p>
+
+                              <div className="space-y-2 mb-6">
+                                <label htmlFor="reservation-date" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                        <FaCalendarAlt size={13} className="text-primary" /> Fecha <span style={{ color: 'var(--color-danger)' }}>*</span>
+                                </label>
+                                <input
+                                  id="reservation-date"
+                                  type="date"
+                                  value={form.date}
+                                  onChange={(e) => { set('date', e.target.value); set('time', '') }}
+                                  min={today}
+                                  required
+                                  className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                  style={{
+                                    background: 'var(--glass-bg)',
+                                    borderColor: 'var(--border)',
+                                    color: 'var(--text-primary)',
+                                  }}
+                                />
+                                {form.date && (
+                                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                    {new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                  </p>
+                                )}
+                              </div>
+
+                              {form.date && (
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                        <FaClock size={13} className="text-primary" /> Hora <span style={{ color: 'var(--color-danger)' }}>*</span>
+                                    {loadingSlots && <FaSpinner className="animate-spin" size={11} />}
+                                  </label>
+                                  {timeSlots.length === 0 ? (
+                                    <p className="text-sm text-center py-4" style={{ color: 'var(--text-muted)' }}>
+                                      No hay servicio este día
+                                    </p>
+                                  ) : (
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                      {timeSlots.map((slot) => {
+                                        const booked = bookedSlots.includes(slot)
+                                        const selected = form.time === slot
+                                        return (
+                                          <button
+                                            key={slot}
+                                            type="button"
+                                            disabled={booked}
+                                            onClick={() => set('time', slot)}
+                                            className="relative py-2.5 rounded-lg text-sm font-medium transition-all duration-200 border"
+                                            style={{
+                                              background: booked ? 'var(--color-error-light)' : selected ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                              borderColor: selected ? 'var(--color-primary)' : booked ? 'var(--color-error)' : 'var(--border)',
+                                              color: booked ? 'var(--color-error)' : selected ? 'var(--color-primary)' : 'var(--text-secondary)',
+                                              cursor: booked ? 'not-allowed' : 'pointer',
+                                              textDecoration: booked ? 'line-through' : 'none',
+                                              minHeight: '44px',
+                                            }}
+                                          >
+                                            {slot}
+                                            {booked && <FaTimes size={9} className="absolute top-1 right-1 text-red-400/40" />}
+                                            {selected && <FaCheck size={9} className="absolute top-1 right-1 text-primary" />}
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                  )}
+                                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                    {timeSlots.length - bookedSlots.length} de {timeSlots.length} horarios disponibles
+                                  </p>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       )}
@@ -928,16 +1148,35 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
                             {/* Date & Time */}
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                                <span className="flex items-center gap-1.5">
-                                  <FaCalendarAlt size={12} className="text-primary" />
-                                  {form.date ? new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                  <FaClock size={12} className="text-primary" /> {form.time}
-                                </span>
+                              <div className="flex-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                {isWeeklyPackage && Object.values(weeklySchedule).some((t) => t) ? (
+                                  <div className="space-y-1">
+                                    <span className="flex items-center gap-1.5 font-medium">
+                                      <FaCalendarAlt size={12} className="text-primary" /> {Object.values(weeklySchedule).filter(Boolean).length} sesiones en la semana
+                                    </span>
+                                    {Object.entries(weeklySchedule).filter(([, t]) => t).sort().slice(0, 3).map(([date, time]) => (
+                                      <div key={date} className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                                        <span className="capitalize">{new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' })}</span>
+                                        <span className="flex items-center gap-1"><FaClock size={8} /> {time}</span>
+                                      </div>
+                                    ))}
+                                    {Object.values(weeklySchedule).filter(Boolean).length > 3 && (
+                                      <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>+{Object.values(weeklySchedule).filter(Boolean).length - 3} más</span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-4">
+                                    <span className="flex items-center gap-1.5">
+                                      <FaCalendarAlt size={12} className="text-primary" />
+                                      {form.date ? new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                      <FaClock size={12} className="text-primary" /> {form.time}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
-                              <button onClick={() => goToStep(2)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                              <button onClick={() => goToStep(2)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5 shrink-0" style={{ color: 'var(--text-muted)' }}>
                                 <FaEdit size={10} /> Editar
                               </button>
                             </div>
@@ -1116,7 +1355,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           </div>
 
           {/* Desktop: BookingSummary sidebar */}
-          <BookingSummary step={step} form={form} prices={prices} couponStatus={couponStatus} />
+          <BookingSummary step={step} form={form} prices={prices} couponStatus={couponStatus} weeklySchedule={weeklySchedule} />
         </div>
 
         {/* Mobile: Fixed bottom CTA */}
