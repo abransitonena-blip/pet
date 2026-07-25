@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { id: 'clientes', label: 'Clientes', icon: FaUsers, href: '/admin/clientes' },
   { id: 'perros', label: 'Perros', icon: FaPaw, href: '/admin/perros' },
   { id: 'paseadores', label: 'Paseadores', icon: FaWalking, href: '/admin/paseadores' },
+  { id: 'zonas', label: 'Zonas', icon: FaMapMarkedAlt, href: '/admin/zonas' },
   { id: 'rutas', label: 'Rutas', icon: FaMapMarkedAlt, href: '/admin/rutas' },
   { id: 'finanzas', label: 'Finanzas', icon: FaDollarSign, href: '/admin/finanzas' },
   { id: 'cupones', label: 'Cupones', icon: FaTag, href: '/admin/cupones' },

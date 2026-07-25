@@ -1,13 +1,32 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { db } from '@/firebase/config'
-import { doc, updateDoc } from 'firebase/firestore'
-import { FaWalking, FaUser, FaPhone, FaCalendarAlt, FaDog, FaWhatsapp, FaSpinner } from 'react-icons/fa'
+import {
+  doc, updateDoc, collection, query, onSnapshot, where,
+} from 'firebase/firestore'
+import {
+  FaWalking, FaUser, FaPhone, FaDog, FaWhatsapp, FaSpinner, FaPlus, FaTimes,
+  FaCalendarAlt, FaClock, FaMapMarkedAlt, FaChartBar, FaEdit, FaCheck,
+} from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
-import type { Reservation } from '@/types'
+import type { Reservation, Zone } from '@/types'
+
+const DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
+const DAY_LABELS: Record<string, string> = {
+  lun: 'Lunes', mar: 'Martes', mie: 'Miércoles', jue: 'Jueves', vie: 'Viernes', sab: 'Sábado', dom: 'Domingo',
+}
+
+interface WalkerConfig {
+  name: string
+  phone: string
+  zones: string[]
+  maxDaily: number
+  maxWeekly: number
+  schedule: Record<string, { start: string; end: string }[]>
+}
 
 interface WalkerStats {
   name: string
@@ -15,23 +34,43 @@ interface WalkerStats {
   totalAssigned: number
   completed: number
   inProgress: number
+  todayAssigned: number
+  todayCompleted: number
   thisWeek: number
   lastAssignment: string
+}
+
+const EMPTY_WALKER: WalkerConfig = {
+  name: '',
+  phone: '',
+  zones: [],
+  maxDaily: 8,
+  maxWeekly: 40,
+  schedule: {},
 }
 
 export default function AdminPaseadoresPage() {
   const { config, updateConfig, saving } = useConfig()
   const { reservations, loading } = useReservations()
-  const [newName, setNewName] = useState('')
-  const [newPhone, setNewPhone] = useState('')
-  const [adding, setAdding] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState<number | null>(null)
+  const [form, setForm] = useState<WalkerConfig>(EMPTY_WALKER)
+  const [zones, setZones] = useState<Zone[]>([])
+  const [expandedWalker, setExpandedWalker] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const walkerStats: WalkerStats[] = useMemo(() => {
-    const walkers = config.walkers || []
-    const today = new Date().toISOString().split('T')[0]
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
+  useEffect(() => {
+    const q = query(collection(db, 'zones'), where('active', '==', true))
+    return onSnapshot(q, (snap) => {
+      setZones(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Zone)))
+    })
+  }, [])
 
+  const today = new Date().toISOString().split('T')[0]
+  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
+
+  const walkerStats: WalkerStats[] = useMemo(() => {
+    const walkers = (config.walkers || []) as WalkerConfig[]
     return walkers.map((w) => {
       const assigned = reservations.filter((r) => r.assignedWalker === w.name)
       return {
@@ -40,31 +79,93 @@ export default function AdminPaseadoresPage() {
         totalAssigned: assigned.length,
         completed: assigned.filter((r) => r.status === 'completed').length,
         inProgress: assigned.filter((r) => r.status === 'en_camino' || r.status === 'paseando').length,
+        todayAssigned: assigned.filter((r) => r.date === today).length,
+        todayCompleted: assigned.filter((r) => r.date === today && r.status === 'completed').length,
         thisWeek: assigned.filter((r) => r.date >= weekAgo).length,
         lastAssignment: assigned[0]?.date || 'Nunca',
       }
     })
   }, [reservations, config.walkers])
 
-  const handleAddWalker = async () => {
-    if (!newName.trim() || !newPhone.trim()) return
-    setAdding(true)
-    try {
-      const updatedWalkers = [...(config.walkers || []), { name: newName.trim(), phone: newPhone.trim() }]
-      await updateConfig({ walkers: updatedWalkers })
-      setNewName('')
-      setNewPhone('')
-      toast('Paseador agregado')
-    } catch { toast('Error al agregar paseador', 'error') }
-    setAdding(false)
+  const openCreate = () => {
+    setEditing(null)
+    setForm(EMPTY_WALKER)
+    setShowForm(true)
   }
 
-  const handleRemoveWalker = async (index: number) => {
+  const openEdit = (index: number) => {
+    const walker = (config.walkers || [])[index] as WalkerConfig | undefined
+    if (!walker) return
+    setEditing(index)
+    setForm({
+      name: walker.name || '',
+      phone: walker.phone || '',
+      zones: walker.zones || [],
+      maxDaily: walker.maxDaily || 8,
+      maxWeekly: walker.maxWeekly || 40,
+      schedule: walker.schedule || {},
+    })
+    setShowForm(true)
+  }
+
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.phone.trim()) return
     try {
-      const updatedWalkers = (config.walkers || []).filter((_, i) => i !== index)
-      await updateConfig({ walkers: updatedWalkers })
+      const walkers = [...(config.walkers || [])] as WalkerConfig[]
+      const data = {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        zones: form.zones,
+        maxDaily: form.maxDaily,
+        maxWeekly: form.maxWeekly,
+        schedule: form.schedule,
+      }
+
+      if (editing !== null) {
+        walkers[editing] = data
+      } else {
+        walkers.push(data)
+      }
+      await updateConfig({ walkers })
+      setShowForm(false)
+      setEditing(null)
+      setForm(EMPTY_WALKER)
+      toast(editing !== null ? 'Paseador actualizado' : 'Paseador agregado')
+    } catch {
+      toast('Error al guardar paseador', 'error')
+    }
+  }
+
+  const handleRemove = async (index: number) => {
+    try {
+      const walkers = (config.walkers || []).filter((_: unknown, i: number) => i !== index)
+      await updateConfig({ walkers })
       toast('Paseador eliminado')
-    } catch { toast('Error al eliminar paseador', 'error') }
+    } catch {
+      toast('Error al eliminar paseador', 'error')
+    }
+  }
+
+  const toggleScheduleDay = (day: string) => {
+    setForm((prev) => {
+      const schedule = { ...prev.schedule }
+      if (schedule[day]) {
+        delete schedule[day]
+      } else {
+        schedule[day] = [{ start: '09:00', end: '17:00' }]
+      }
+      return { ...prev, schedule }
+    })
+  }
+
+  const updateScheduleTime = (day: string, idx: number, field: 'start' | 'end', val: string) => {
+    setForm((prev) => {
+      const schedule = { ...prev.schedule }
+      const slots = [...(schedule[day] || [])]
+      slots[idx] = { ...slots[idx], [field]: val }
+      schedule[day] = slots
+      return { ...prev, schedule }
+    })
   }
 
   const openWhatsApp = (phone: string) => {
@@ -73,123 +174,302 @@ export default function AdminPaseadoresPage() {
   }
 
   const unassignedToday = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
     return reservations.filter((r) => r.date === today && !r.assignedWalker && r.status !== 'completed' && r.status !== 'cancelled').length
+  }, [reservations])
+
+  const todayTotal = useMemo(() => {
+    return reservations.filter((r) => r.date === today && r.status !== 'cancelled').length
   }, [reservations])
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Gestión de Paseadores</h2>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-          {(config.walkers || []).length} paseadores · {unassignedToday} reservas sin asignar hoy
-        </p>
-      </div>
-
-      {/* Add new walker */}
-      <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Agregar paseador</p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
-            placeholder="Nombre"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            className="input-field flex-1"
-          />
-          <input
-            type="tel"
-            placeholder="Teléfono"
-            value={newPhone}
-            onChange={(e) => setNewPhone(e.target.value)}
-            className="input-field flex-1"
-          />
-          <button
-            onClick={handleAddWalker}
-            disabled={!newName.trim() || !newPhone.trim() || adding}
-            className="btn-primary !text-xs flex items-center gap-1.5 shrink-0"
-          >
-            {adding ? <FaSpinner className="animate-spin" size={10} /> : <FaUser size={10} />}
-            Agregar
-          </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Gestión de Paseadores</h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            {(config.walkers || []).length} paseadores · {unassignedToday} sin asignar hoy · {todayTotal} reservas hoy
+          </p>
         </div>
+        <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
+          <FaPlus size={12} /> Agregar paseador
+        </button>
       </div>
 
-      {/* Walker cards */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="skeleton h-24 rounded-xl" />)}
+          {[1, 2, 3].map((i) => <div key={i} className="skeleton h-32 rounded-xl" />)}
         </div>
       ) : walkerStats.length === 0 ? (
         <div className="text-center py-16">
           <FaWalking className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay paseadores registrados</p>
+          <button onClick={openCreate} className="btn-primary !text-xs mt-4 inline-flex gap-2">
+            <FaPlus size={12} /> Agregar primer paseador
+          </button>
         </div>
       ) : (
         <div className="space-y-3">
-          {walkerStats.map((w) => (
-            <div
-              key={w.name}
-              className="rounded-xl p-4"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-blue-500 to-blue-600">
-                    <FaWalking className="text-white" size={16} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{w.name}</span>
-                      {w.inProgress > 0 && (
-                        <span className="text-2xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium">
-                          En paseo
-                        </span>
-                      )}
+          {walkerStats.map((w, i) => {
+            const walkerConfig = (config.walkers || [])[i] as WalkerConfig | undefined
+            const isExpanded = expandedWalker === w.name
+            const dailyLoad = w.todayAssigned
+            const dailyMax = walkerConfig?.maxDaily || 8
+            const dailyPercent = dailyMax > 0 ? Math.round((dailyLoad / dailyMax) * 100) : 0
+            const weeklyLoad = w.thisWeek
+            const weeklyMax = walkerConfig?.maxWeekly || 40
+            const weeklyPercent = weeklyMax > 0 ? Math.round((weeklyLoad / weeklyMax) * 100) : 0
+
+            return (
+              <div
+                key={w.name}
+                className="rounded-xl overflow-hidden transition-all"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              >
+                {/* Main Row */}
+                <div className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-blue-500 to-blue-600">
+                        <FaWalking className="text-white" size={16} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{w.name}</span>
+                          {w.inProgress > 0 && (
+                            <span className="text-2xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium">
+                              {w.inProgress} en paseo
+                            </span>
+                          )}
+                          {dailyPercent >= 90 && (
+                            <span className="text-2xs px-2 py-0.5 rounded-full bg-danger-500/15 text-danger-400 font-medium">
+                              Carga alta
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+                          <span className="flex items-center gap-1"><FaPhone size={9} /> {w.phone}</span>
+                          <span className="flex items-center gap-1"><FaCalendarAlt size={9} /> {w.todayAssigned}/{dailyMax} hoy</span>
+                          <span className="flex items-center gap-1"><FaChartBar size={9} /> {w.thisWeek}/{weeklyMax} semana</span>
+                        </div>
+                        {walkerConfig?.zones && walkerConfig.zones.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {walkerConfig.zones.map((z) => (
+                              <span key={z} className="text-2xs px-2 py-0.5 rounded-full bg-success-500/10 text-success-400 flex items-center gap-1">
+                                <FaMapMarkedAlt size={7} /> {z}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      <span>📞 {w.phone}</span>
-                      <span>📋 {w.totalAssigned} asignadas</span>
-                      <span>✅ {w.completed} completadas</span>
-                      <span>📅 Esta semana: {w.thisWeek}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button onClick={() => setExpandedWalker(isExpanded ? null : w.name)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title="Detalles">
+                        <FaChartBar size={13} />
+                      </button>
+                      <button onClick={() => openEdit(i)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title="Editar">
+                        <FaEdit size={12} />
+                      </button>
+                      <button onClick={() => openWhatsApp(w.phone)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="WhatsApp">
+                        <FaWhatsapp size={13} />
+                      </button>
+                      <button onClick={() => handleRemove(i)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400" title="Eliminar">
+                        <FaTimes size={12} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Load Bars */}
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="flex items-center justify-between text-2xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                        <span>Hoy</span>
+                        <span>{dailyLoad}/{dailyMax}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(dailyPercent, 100)}%`, background: dailyPercent >= 90 ? 'var(--color-danger)' : dailyPercent >= 70 ? 'var(--color-warning)' : 'var(--color-success)' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between text-2xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                        <span>Semana</span>
+                        <span>{weeklyLoad}/{weeklyMax}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(weeklyPercent, 100)}%`, background: weeklyPercent >= 90 ? 'var(--color-danger)' : weeklyPercent >= 70 ? 'var(--color-warning)' : 'var(--color-success)' }} />
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => openWhatsApp(w.phone)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400"
-                    title="WhatsApp"
-                  >
-                    <FaWhatsapp size={13} />
-                  </button>
-                  <button
-                    onClick={() => handleRemoveWalker(walkerStats.indexOf(w))}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400"
-                    title="Eliminar"
-                  >
-                    ✕
-                  </button>
+
+                {/* Expanded: Schedule & Stats */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 pt-2 space-y-3" style={{ borderTop: '1px solid var(--border)' }}>
+                        {/* Schedule */}
+                        {walkerConfig?.schedule && Object.keys(walkerConfig.schedule).length > 0 ? (
+                          <div>
+                            <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Horario semanal</p>
+                            <div className="grid grid-cols-7 gap-1">
+                              {DAYS.map((day) => {
+                                const slots = walkerConfig.schedule?.[day]
+                                const hasSlots = slots && slots.length > 0
+                                return (
+                                  <div key={day} className="text-center">
+                                    <p className="text-2xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>{DAY_LABELS[day].slice(0, 2)}</p>
+                                    <div className={`rounded-lg py-1.5 text-2xs ${hasSlots ? 'bg-success-500/10 text-success-400' : 'bg-white/5 text-white/20'}`}>
+                                      {hasSlots ? `${slots[0].start.slice(0, 5)}` : '—'}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin horario configurado</p>
+                        )}
+
+                        {/* Performance */}
+                        <div className="grid grid-cols-4 gap-2">
+                          {[
+                            { label: 'Total', value: w.totalAssigned },
+                            { label: 'Completados', value: w.completed },
+                            { label: 'En progreso', value: w.inProgress },
+                            { label: 'Última', value: 0, display: w.lastAssignment },
+                          ].map((s) => (
+                            <div key={s.label} className="text-center rounded-lg py-2" style={{ background: 'var(--glass-bg)' }}>
+                              <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{s.display || s.value}</p>
+                              <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowForm(false)}
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="w-full max-w-md rounded-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {editing !== null ? 'Editar paseador' : 'Nuevo paseador'}
+                </h2>
+                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                  <FaTimes size={14} />
+                </button>
+              </div>
+
+              {/* Name & Phone */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
+                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Teléfono</label>
+                  <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="10 dígitos" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                 </div>
               </div>
 
-              {/* Progress bar */}
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-2xs mb-1" style={{ color: 'var(--text-muted)' }}>
-                  <span>Completadas</span>
-                  <span>{w.totalAssigned > 0 ? Math.round((w.completed / w.totalAssigned) * 100) : 0}%</span>
-                </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                  <div
-                    className="h-full rounded-full bg-success-500 transition-all"
-                    style={{ width: `${w.totalAssigned > 0 ? (w.completed / w.totalAssigned) * 100 : 0}%` }}
-                  />
+              {/* Zones */}
+              <div>
+                <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-secondary)' }}>Zonas asignadas</label>
+                <div className="flex flex-wrap gap-2">
+                  {zones.length === 0 ? (
+                    <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>No hay zonas configuradas</p>
+                  ) : (
+                    zones.map((z) => {
+                      const selected = form.zones.includes(z.name)
+                      return (
+                        <button key={z.id} type="button" onClick={() => setForm({ ...form, zones: selected ? form.zones.filter((n) => n !== z.name) : [...form.zones, z.name] })} className="text-2xs px-3 py-1.5 rounded-full border font-medium transition-all" style={{ background: selected ? 'var(--color-success-light)' : 'var(--glass-bg)', borderColor: selected ? 'var(--color-success)' : 'var(--border)', color: selected ? 'var(--color-success)' : 'var(--text-secondary)' }}>
+                          {selected && <FaCheck size={7} className="inline mr-1" />}
+                          {z.name}
+                        </button>
+                      )
+                    })
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+
+              {/* Capacity */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Máx. diario</label>
+                  <input type="number" min="1" max="20" value={form.maxDaily} onChange={(e) => setForm({ ...form, maxDaily: parseInt(e.target.value) || 8 })} className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Máx. semanal</label>
+                  <input type="number" min="1" max="100" value={form.maxWeekly} onChange={(e) => setForm({ ...form, maxWeekly: parseInt(e.target.value) || 40 })} className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                </div>
+              </div>
+
+              {/* Schedule */}
+              <div>
+                <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-secondary)' }}>Horario semanal</label>
+                <div className="space-y-2">
+                  {DAYS.map((day) => {
+                    const isActive = !!form.schedule[day]
+                    return (
+                      <div key={day} className="flex items-center gap-2">
+                        <button type="button" onClick={() => toggleScheduleDay(day)} className={`w-20 text-2xs px-2 py-1.5 rounded-lg border font-medium transition-all text-left ${isActive ? 'border-success-500/30 bg-success-500/10 text-success-400' : ''}`} style={!isActive ? { borderColor: 'var(--border)', color: 'var(--text-muted)' } : {}}>
+                          {DAY_LABELS[day].slice(0, 3)}
+                        </button>
+                        {isActive && form.schedule[day]?.map((slot, idx) => (
+                          <div key={idx} className="flex items-center gap-1 flex-1">
+                            <input type="time" value={slot.start} onChange={(e) => updateScheduleTime(day, idx, 'start', e.target.value)} className="flex-1 text-xs px-2 py-1.5 rounded-lg border bg-transparent" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                            <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>—</span>
+                            <input type="time" value={slot.end} onChange={(e) => updateScheduleTime(day, idx, 'end', e.target.value)} className="flex-1 text-xs px-2 py-1.5 rounded-lg border bg-transparent" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                          </div>
+                        ))}
+                        {!isActive && <span className="text-2xs flex-1" style={{ color: 'var(--text-muted)' }}>No disponible</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                  Cancelar
+                </button>
+                <button onClick={handleSave} disabled={saving || !form.name.trim() || !form.phone.trim()} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-40">
+                  {saving ? <FaSpinner className="animate-spin" size={14} /> : <FaCheck size={14} />}
+                  {editing !== null ? 'Guardar' : 'Agregar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

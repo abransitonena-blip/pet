@@ -10,12 +10,13 @@ import {
 import {
   FaSearch, FaFilter, FaDog, FaWhatsapp, FaEdit, FaTrash,
   FaCheck, FaClock, FaCamera, FaDownload, FaSpinner, FaTimes,
-  FaArrowRight, FaUndo, FaMoneyBill, FaWalking,
+  FaArrowRight, FaUndo, FaMoneyBill, FaWalking, FaMagic,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
+import { useConfig } from '@/context/ConfigContext'
 import Badge from '@/components/ui/Badge'
 import EditReservationModal from '@/components/EditReservationModal'
 import WalkSessionModal from '@/components/WalkSessionModal'
@@ -52,8 +53,11 @@ export default function AdminReservas() {
   const [historyPhone, setHistoryPhone] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const [walkModal, setWalkModal] = useState<{ reservation: Reservation; mode: 'check_in' | 'check_out' } | null>(null)
+  const [walkerFilter, setWalkerFilter] = useState('')
+  const [autoAssigning, setAutoAssigning] = useState(false)
   const { prices } = usePrices()
   const { toast } = useToast()
+  const { config } = useConfig()
 
   const filtered = useMemo(() => {
     let result = reservations
@@ -66,6 +70,9 @@ export default function AdminReservas() {
     if (dateTo) {
       result = result.filter((r) => r.date <= dateTo)
     }
+    if (walkerFilter) {
+      result = result.filter((r) => r.assignedWalker === walkerFilter)
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       result = result.filter(
@@ -77,7 +84,7 @@ export default function AdminReservas() {
       )
     }
     return result
-  }, [reservations, statusFilter, searchQuery, dateFrom, dateTo])
+  }, [reservations, statusFilter, searchQuery, dateFrom, dateTo, walkerFilter])
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -145,6 +152,59 @@ export default function AdminReservas() {
     URL.revokeObjectURL(url)
   }
 
+  const autoAssign = async () => {
+    setAutoAssigning(true)
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const pending = reservations.filter((r) => r.status === 'pending' && r.date === today && !r.assignedWalker)
+      const walkers = (config.walkers || []) as { name: string; maxDaily: number; zones: string[] }[]
+
+      if (walkers.length === 0) {
+        toast('No hay paseadores configurados', 'error')
+        setAutoAssigning(false)
+        return
+      }
+
+      // Count current assignments per walker today
+      const loads: Record<string, number> = {}
+      reservations.filter((r) => r.date === today && r.assignedWalker && r.status !== 'cancelled').forEach((r) => {
+        loads[r.assignedWalker] = (loads[r.assignedWalker] || 0) + 1
+      })
+
+      let assigned = 0
+      for (const res of pending) {
+        // Find walker with lowest load that has capacity
+        const available = walkers
+          .filter((w) => (loads[w.name] || 0) < (w.maxDaily || 8))
+          .sort((a, b) => (loads[a.name] || 0) - (loads[b.name] || 0))
+
+        if (available.length > 0) {
+          const walker = available[0]
+          await updateDoc(doc(db, 'reservations', res.id), {
+            assignedWalker: walker.name,
+            assignment: {
+              walkerId: walker.name,
+              walkerName: walker.name,
+              assignedAt: serverTimestamp(),
+              assignedBy: 'auto',
+            },
+          })
+          loads[walker.name] = (loads[walker.name] || 0) + 1
+          assigned++
+        }
+      }
+
+      toast(assigned > 0 ? `${assigned} reserva${assigned !== 1 ? 's' : ''} asignada${assigned !== 1 ? 's' : ''}` : 'Sin reservas para asignar')
+    } catch {
+      toast('Error en auto-asignación', 'error')
+    }
+    setAutoAssigning(false)
+  }
+
+  const walkers = useMemo(() => {
+    return [...new Set(reservations.filter((r) => r.assignedWalker).map((r) => r.assignedWalker))]
+  }, [reservations])
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -155,9 +215,15 @@ export default function AdminReservas() {
             {stats.total} reservas · {stats.pending} pendientes · {stats.today} hoy
           </p>
         </div>
-        <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-          <FaDownload size={12} /> Exportar CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={autoAssign} disabled={autoAssigning || stats.pending === 0} className="btn-secondary !text-xs flex items-center gap-1.5 disabled:opacity-40">
+            {autoAssigning ? <FaSpinner className="animate-spin" size={12} /> : <FaMagic size={12} />}
+            Auto-asignar
+          </button>
+          <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
+            <FaDownload size={12} /> Exportar
+          </button>
+        </div>
       </div>
 
       {/* Stats cards */}
@@ -187,6 +253,16 @@ export default function AdminReservas() {
             className="input-field pl-9"
           />
         </div>
+        <select
+          value={walkerFilter}
+          onChange={(e) => setWalkerFilter(e.target.value)}
+          className="input-field !w-auto"
+        >
+          <option value="">Todos los paseadores</option>
+          {walkers.map((w) => (
+            <option key={w} value={w}>{w}</option>
+          ))}
+        </select>
         <input
           type="date"
           value={dateFrom}
