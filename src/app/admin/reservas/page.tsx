@@ -206,7 +206,7 @@ export default function AdminReservas() {
   }
 
   const walkers = useMemo(() => {
-    return [...new Set(reservations.filter((r) => r.assignedWalker).map((r) => r.assignedWalker))]
+    return Array.from(new Set(reservations.filter((r) => r.assignedWalker).map((r) => r.assignedWalker)))
   }, [reservations])
 
   return (
