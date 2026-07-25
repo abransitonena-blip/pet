@@ -243,7 +243,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     ).then((snap) => {
       if (snap.exists()) {
         const data = snap.data()
-        setForm((prev) => ({
+        setForm((prev: typeof form) => ({
           ...prev,
           name: prev.name || data.name || '',
           phone: prev.phone || data.phone || '',
