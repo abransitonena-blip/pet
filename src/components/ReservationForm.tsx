@@ -12,9 +12,9 @@ import { showPushNotification } from './PWARegister'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
 import {
   FaDog, FaCalendarAlt, FaClock, FaPhone, FaUser, FaCommentAlt,
-  FaPaw, FaSpinner, FaCheckCircle, FaCheck, FaTimes,
+  FaPaw, FaSpinner, FaCheckCircle, FaCheck, FaTimes, FaMapMarkerAlt,
   FaArrowRight, FaArrowLeft, FaShieldAlt, FaStar, FaBolt, FaHeart,
-  FaTicketAlt, FaInfoCircle, FaEdit, FaWhatsapp,
+  FaTicketAlt, FaInfoCircle, FaEdit, FaWhatsapp, FaPlus,
 } from 'react-icons/fa'
 
 const PET_TYPES = [
@@ -175,7 +175,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const [direction, setDirection] = useState(1)
   const [form, setForm] = useState(draft.current?.form || {
     name: '', phone: '', petName: '', petType: 'perro',
-    service: '', date: '', time: '', notes: '', coupon: '',
+    service: '', date: '', time: '', notes: '', coupon: '', addressId: '',
   })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -193,6 +193,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [savedPets, setSavedPets] = useState<{ id: string; name: string; petType: string; breed: string }[]>([])
   const [weeklySchedule, setWeeklySchedule] = useState<Record<string, string>>({})
+  const [savedAddresses, setSavedAddresses] = useState<{ id: string; alias: string; street: string; colony: string; city: string; zip: string }[]>([])
+  const [selectedAddressId, setSelectedAddressId] = useState('')
   const isWeeklyPackage = form.service === 'Paquete Semanal'
 
   const timeSlots = form.date ? generateTimeSlots(getDayOfWeek(form.date)) : []
@@ -242,7 +244,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
     // Load saved pets
     const q = query(collection(db, 'pets'), where('ownerId', '==', user.uid), limit(5))
-    const unsub = onSnapshot(q, (snap) => {
+    const unsubPets = onSnapshot(q, (snap) => {
       setSavedPets(snap.docs.map((d) => ({
         id: d.id,
         name: d.data().name,
@@ -250,7 +252,27 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         breed: d.data().breed || '',
       })))
     }, () => {})
-    return unsub
+
+    // Load saved addresses
+    const qAddr = query(collection(db, 'addresses'), where('ownerId', '==', user.uid), limit(5))
+    const unsubAddr = onSnapshot(qAddr, (snap) => {
+      const addrs = snap.docs.map((d) => ({
+        id: d.id,
+        alias: d.data().alias || 'Otro',
+        street: d.data().street || '',
+        colony: d.data().colony || '',
+        city: d.data().city || '',
+        zip: d.data().zip || '',
+      }))
+      setSavedAddresses(addrs)
+      // Auto-select default address
+      const defaultAddr = snap.docs.find((d) => d.data().isDefault)
+      if (defaultAddr && !selectedAddressId) {
+        setSelectedAddressId(defaultAddr.id)
+      }
+    }, () => {})
+
+    return () => { unsubPets(); unsubAddr() }
   }, [])
 
   useEffect(() => {
@@ -430,7 +452,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           serviceName: form.service,
           packageType: 'weekly' as const,
           numberOfSessions: scheduledDays.length,
-          addressId: '',
+          addressId: selectedAddressId,
           zoneId: '',
           zoneName: '',
           subtotal: basePrice,
@@ -465,7 +487,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
             expectedEndTime: '',
             zoneId: '',
             zoneName: '',
-            addressId: '',
+            addressId: selectedAddressId,
             walkerId: '',
             walkerName: '',
             assignmentStatus: 'unassigned',
@@ -503,6 +525,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         // ─── SINGLE RESERVATION (backward compat) ───
         await addDoc(collection(db, 'reservations'), {
           ...form,
+          addressId: selectedAddressId,
           uid: auth.currentUser?.uid || '',
           createdAt: serverTimestamp(),
           status: 'pending',
@@ -565,8 +588,9 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     setTimeout(() => {
       setSent(false)
       setStep(1)
-      setForm({ name: '', phone: '', petName: '', petType: 'perro', service: '', date: '', time: '', notes: '', coupon: '' })
+      setForm({ name: '', phone: '', petName: '', petType: 'perro', service: '', date: '', time: '', notes: '', coupon: '', addressId: '' })
       setWeeklySchedule({})
+      setSelectedAddressId('')
       setCouponStatus(null)
       setShowNotes(false)
       setShowCoupon(false)
@@ -1116,6 +1140,42 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 </motion.div>
                               )}
                             </AnimatePresence>
+
+                            {/* Address selector */}
+                            {savedAddresses.length > 0 && (
+                              <div className="space-y-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+                                <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                  <FaMapMarkerAlt size={13} className="text-primary" /> Dirección de recolección
+                                </label>
+                                <div className="space-y-2">
+                                  {savedAddresses.map((addr) => {
+                                    const selected = selectedAddressId === addr.id
+                                    return (
+                                      <button
+                                        key={addr.id}
+                                        type="button"
+                                        onClick={() => setSelectedAddressId(selected ? '' : addr.id)}
+                                        className="w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-all"
+                                        style={{
+                                          background: selected ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                          borderColor: selected ? 'var(--color-primary)' : 'var(--border)',
+                                        }}
+                                      >
+                                        <span className="text-base mt-0.5">{addr.alias === 'Casa' ? '🏠' : addr.alias === 'Trabajo' ? '🏢' : '📍'}</span>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium" style={{ color: selected ? 'var(--color-primary)' : 'var(--text-secondary)' }}>{addr.alias}</p>
+                                          <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{addr.street}, {addr.colony}</p>
+                                        </div>
+                                        {selected && <FaCheck size={12} className="text-primary mt-1 shrink-0" />}
+                                      </button>
+                                    )
+                                  })}
+                                  <a href="/mi-cuenta/direcciones" target="_blank" className="text-2xs flex items-center gap-1 transition-colors hover:text-primary" style={{ color: 'var(--text-muted)' }}>
+                                    <FaPlus size={8} /> Agregar nueva dirección
+                                  </a>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
