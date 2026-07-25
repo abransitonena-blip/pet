@@ -27,7 +27,7 @@ const EMPTY_FORM = {
   sex: '' as 'macho' | 'hembra' | '',
   age: '',
   weight: '',
-  petType: 'perro' as const,
+  petType: 'perro' as 'perro' | 'gato' | 'otro',
   notes: '',
   personality: {
     energyLevel: 'medio' as 'bajo' | 'medio' | 'alto',
