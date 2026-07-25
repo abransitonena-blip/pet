@@ -11,7 +11,7 @@ import {
 import {
   FaSearch, FaDog, FaWhatsapp, FaEdit, FaTrash,
   FaCamera, FaDownload, FaSpinner, FaTimes,
-  FaArrowRight, FaUndo, FaWalking, FaMagic,
+  FaArrowRight, FaUndo, FaWalking, FaMagic, FaBox, FaChevronDown, FaChevronRight,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
@@ -23,6 +23,7 @@ import EditReservationModal from '@/components/EditReservationModal'
 import WalkSessionModal from '@/components/WalkSessionModal'
 import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
+import { useServiceOrders, type ServiceOrderWithSessions } from '@/lib/useServiceOrders'
 
 type StatusFilter = 'all' | 'pending' | 'assigned' | 'confirmed' | 'en_camino' | 'paseando' | 'completed' | 'cancelled'
 
@@ -60,9 +61,12 @@ export default function AdminReservas() {
   const [walkModal, setWalkModal] = useState<{ reservation: Reservation; mode: 'check_in' | 'check_out' } | null>(null)
   const [walkerFilter, setWalkerFilter] = useState('')
   const [autoAssigning, setAutoAssigning] = useState(false)
+  const [viewTab, setViewTab] = useState<'reservations' | 'orders'>('reservations')
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const { prices } = usePrices()
   const { toast } = useToast()
   const { config } = useConfig()
+  const { orders } = useServiceOrders()
 
   const filtered = useMemo(() => {
     let result = reservations
@@ -335,7 +339,28 @@ export default function AdminReservas() {
         />
       </div>
 
-      {/* Status filter tabs */}
+      {/* View tabs */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setViewTab('reservations')}
+          className={`text-xs px-4 py-2 rounded-lg font-medium transition-all ${
+            viewTab === 'reservations' ? 'bg-brand-500/15 text-brand-400 border border-brand-500/30' : 'border border-white/10 text-white/50 hover:text-white/70'
+          }`}
+        >
+          🐾 Reservas
+        </button>
+        <button
+          onClick={() => setViewTab('orders')}
+          className={`text-xs px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+            viewTab === 'orders' ? 'bg-accent-500/15 text-accent-400 border border-accent-500/30' : 'border border-white/10 text-white/50 hover:text-white/70'
+          }`}
+        >
+          <FaBox size={11} /> Paquetes {orders.length > 0 && <span className="bg-accent-500/20 text-accent-400 px-1.5 py-0.5 rounded-full text-2xs">{orders.length}</span>}
+        </button>
+      </div>
+
+      {/* Status filter tabs (only for reservations view) */}
+      {viewTab === 'reservations' && (
       <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
         {(['all', 'pending', 'assigned', 'en_camino', 'paseando', 'completed', 'cancelled'] as const).map((s) => (
           <button
@@ -357,9 +382,10 @@ export default function AdminReservas() {
           </button>
         ))}
       </div>
+      )}
 
       {/* Reservation list */}
-      {loading ? (
+      {viewTab === 'reservations' && (loading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="skeleton h-24 rounded-xl" />
@@ -390,6 +416,11 @@ export default function AdminReservas() {
                     {res.assignedWalker && (
                       <span className="text-2xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
                         🦮 {res.assignedWalker}
+                      </span>
+                    )}
+                    {res.orderId && (
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-accent-500/10 text-accent-400">
+                        📦 Paquete
                       </span>
                     )}
                   </div>
@@ -450,6 +481,80 @@ export default function AdminReservas() {
               </div>
             </div>
           ))}
+        </div>
+      ))}
+
+      {/* ─── SERVICE ORDERS TAB ─── */}
+      {viewTab === 'orders' && (
+        <div className="space-y-3">
+          {orders.length === 0 ? (
+            <div className="text-center py-16">
+              <FaBox className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay paquetes semanales activos</p>
+            </div>
+          ) : (
+            orders.map((order) => {
+              const isExpanded = expandedOrder === order.id
+              const scheduledSessions = order.sessions.filter((s) => s.sessionStatus !== 'cancelled')
+              const completedSessions = order.sessions.filter((s) => s.sessionStatus === 'completed')
+              return (
+                <div key={order.id} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                  <button
+                    onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                    className="w-full flex items-center justify-between p-4 text-left hover:bg-white/[0.02] transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{order.clientName}</span>
+                        <Badge variant={order.status === 'active' ? 'success' : order.status === 'completed' ? 'default' : 'danger'}>
+                          {order.status === 'active' ? 'Activo' : order.status === 'completed' ? 'Completado' : order.status}
+                        </Badge>
+                        <span className="text-2xs px-2 py-0.5 rounded-full bg-accent-500/15 text-accent-400 font-medium">
+                          {completedSessions.length}/{scheduledSessions.length} sesiones
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <span>🐾 {order.dogName}</span>
+                        <span>📋 {order.serviceName}</span>
+                        <span>📞 {order.clientPhone}</span>
+                        {order.total > 0 && <span className="font-medium" style={{ color: 'var(--text-primary)' }}>${order.total.toLocaleString()} MXN</span>}
+                      </div>
+                    </div>
+                    {isExpanded ? <FaChevronDown size={12} style={{ color: 'var(--text-muted)' }} /> : <FaChevronRight size={12} style={{ color: 'var(--text-muted)' }} />}
+                  </button>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                        <div className="px-4 pb-4 space-y-2" style={{ borderTop: '1px solid var(--border)' }}>
+                          {order.sessions.map((session) => (
+                            <div key={session.id} className="flex items-center justify-between py-2 px-3 rounded-lg text-xs" style={{ background: 'var(--glass-bg)' }}>
+                              <div className="flex items-center gap-3">
+                                <span className="capitalize" style={{ color: 'var(--text-secondary)' }}>
+                                  {new Date(session.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                </span>
+                                <span style={{ color: 'var(--text-muted)' }}>🕐 {session.startTime}</span>
+                                {session.walkerName && <span style={{ color: 'var(--text-muted)' }}>🦮 {session.walkerName}</span>}
+                              </div>
+                              <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
+                                session.sessionStatus === 'completed' ? 'bg-success-500/15 text-success-400'
+                                : session.sessionStatus === 'paseando' ? 'bg-purple-500/15 text-purple-400'
+                                : session.sessionStatus === 'assigned' ? 'bg-accent-500/15 text-accent-400'
+                                : session.sessionStatus === 'cancelled' ? 'bg-danger-500/15 text-danger-400'
+                                : 'bg-brand-500/15 text-brand-400'
+                              }`}>
+                                {session.sessionStatus === 'completed' ? 'Completada' : session.sessionStatus === 'paseando' ? 'Paseando' : session.sessionStatus === 'assigned' ? 'Asignada' : session.sessionStatus === 'pending' ? 'Pendiente' : session.sessionStatus}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )
+            })
+          )}
         </div>
       )}
 
