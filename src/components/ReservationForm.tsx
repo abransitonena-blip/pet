@@ -201,7 +201,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   useEffect(() => {
     const repeatService = searchParams.get('repeat')
     if (repeatService && SERVICE_NAMES.includes(repeatService) && !form.service) {
-      setForm((prev) => ({ ...prev, service: repeatService }))
+      setForm((prev: typeof form) => ({ ...prev, service: repeatService }))
       setStep(2)
     }
   }, [searchParams])
