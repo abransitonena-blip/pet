@@ -271,11 +271,18 @@ export default function DashboardPage() {
                   res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
                   res.status === 'pending' ? 'bg-brand-500/15 text-brand-400' :
                   res.status === 'confirmed' ? 'bg-blue-500/15 text-blue-400' :
+                  res.status === 'assigned' ? 'bg-accent-500/15 text-accent-400' :
+                  res.status === 'en_camino' ? 'bg-blue-500/15 text-blue-400' :
+                  res.status === 'paseando' ? 'bg-success-500/15 text-success-400' :
+                  res.status === 'cancelled' ? 'bg-danger-500/15 text-danger-400' :
                   'bg-white/10 text-[var(--text-muted)]'
                 }`}>
                   {res.status === 'completed' ? 'Completado' :
                    res.status === 'pending' ? 'Pendiente' :
                    res.status === 'confirmed' ? 'Confirmado' :
+                   res.status === 'assigned' ? 'Asignado' :
+                   res.status === 'en_camino' ? 'En camino' :
+                   res.status === 'paseando' ? 'En paseo' :
                    res.status === 'cancelled' ? 'Cancelado' : res.status}
                 </span>
               </motion.div>

@@ -23,10 +23,12 @@ import WalkSessionModal from '@/components/WalkSessionModal'
 import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
 
-type StatusFilter = 'all' | 'pending' | 'en_camino' | 'paseando' | 'completed'
+type StatusFilter = 'all' | 'pending' | 'assigned' | 'confirmed' | 'en_camino' | 'paseando' | 'completed' | 'cancelled'
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente',
+  assigned: 'Asignada',
+  confirmed: 'Confirmada',
   en_camino: 'En camino',
   paseando: 'Paseando',
   completed: 'Completada',
@@ -35,6 +37,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-brand-500/15 text-brand-400',
+  assigned: 'bg-accent-500/15 text-accent-400',
+  confirmed: 'bg-blue-500/15 text-blue-400',
   en_camino: 'bg-blue-500/15 text-blue-400',
   paseando: 'bg-purple-500/15 text-purple-400',
   completed: 'bg-success-500/15 text-success-400',
@@ -185,6 +189,7 @@ export default function AdminReservas() {
         if (available.length > 0) {
           const walker = available[0]
           await updateDoc(doc(db, 'reservations', res.id), {
+            status: 'assigned',
             assignedWalker: walker.name,
             assignment: {
               walkerId: walker.name,
@@ -192,6 +197,7 @@ export default function AdminReservas() {
               assignedAt: serverTimestamp(),
               assignedBy: 'auto',
             },
+            history: [...(res.history || []), { status: 'assigned', timestamp: new Date().toISOString() }],
           })
           loads[walker.name] = (loads[walker.name] || 0) + 1
           assigned++
@@ -285,7 +291,7 @@ export default function AdminReservas() {
 
       {/* Status filter tabs */}
       <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
-        {(['all', 'pending', 'en_camino', 'paseando', 'completed'] as const).map((s) => (
+        {(['all', 'pending', 'assigned', 'en_camino', 'paseando', 'completed', 'cancelled'] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -294,6 +300,8 @@ export default function AdminReservas() {
                 ? s === 'completed' ? 'bg-success-500/15 text-success-400'
                 : s === 'en_camino' ? 'bg-blue-500/15 text-blue-400'
                 : s === 'paseando' ? 'bg-purple-500/15 text-purple-400'
+                : s === 'assigned' ? 'bg-accent-500/15 text-accent-400'
+                : s === 'cancelled' ? 'bg-danger-500/15 text-danger-400'
                 : s === 'pending' ? 'bg-brand-500/15 text-brand-400'
                 : 'bg-white/10 text-white'
               : 'bg-white/[0.04] text-white/40 hover:text-white/60'
@@ -369,7 +377,7 @@ export default function AdminReservas() {
                   <button onClick={() => setEditingReservation(res)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-blue-500/10 text-blue-400" title="Editar">
                     <FaEdit size={12} />
                   </button>
-                  {(res.status === 'pending') && (
+                  {(res.status === 'pending' || res.status === 'assigned') && (
                     <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'en_camino' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
                       <FaArrowRight size={12} />
                     </button>

@@ -452,6 +452,114 @@ exports.registerFCMToken = functions.https.onCall(async (data, context) => {
 // 10. SCHEDULE CRON — Reset daily walker loads
 // ═══════════════════════════════════════════
 
+// ═══════════════════════════════════════════
+// 11. WALKER ACCOUNT CREATION
+// ═══════════════════════════════════════════
+
+// Callable: createWalkerAccount({ email, password, name, phone, zones, maxDaily, maxWeekly, schedule })
+// Creates Firebase Auth user + users doc + walkerProfiles doc
+exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
+
+  const callerSnap = await db.collection('users').doc(context.auth.uid).get();
+  if (callerSnap.data()?.role !== 'admin') {
+    throw new functions.https.HttpsError('permission-denied', 'Admin only');
+  }
+
+  const { email, password, name, phone, zones, maxDaily, maxWeekly, schedule } = data;
+  if (!email || !password || !name) {
+    throw new functions.https.HttpsError('invalid-argument', 'Email, password, and name required');
+  }
+
+  // Check if email already exists
+  try {
+    await auth.getUserByEmail(email);
+    throw new functions.https.HttpsError('already-exists', 'Email already registered');
+  } catch (e) {
+    if (e.code === 'already-exists') throw e;
+    // User doesn't exist — good, we can create
+  }
+
+  // Create Firebase Auth user
+  const userRecord = await auth.createUser({
+    email,
+    password,
+    displayName: name,
+    disabled: false,
+  });
+
+  const uid = userRecord.uid;
+
+  // Create users doc with role
+  await db.collection('users').doc(uid).set({
+    role: 'walker',
+    name,
+    email,
+    phone: phone || '',
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Create walkerProfiles doc
+  await db.collection('walkerProfiles').doc(uid).set({
+    uid,
+    name,
+    email,
+    phone: phone || '',
+    zones: zones || [],
+    maxDaily: maxDaily || 8,
+    maxWeekly: maxWeekly || 40,
+    schedule: schedule || {},
+    status: 'active',
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Set custom claim
+  await auth.setCustomUserClaims(uid, { role: 'walker' });
+
+  // Log audit
+  await logAudit(
+    { uid: context.auth.uid, role: 'admin', name: 'Admin' },
+    'create_walker',
+    'walker',
+    uid,
+    null,
+    { name, email }
+  );
+
+  // Notify admin
+  await sendPushToAdmins('👤 Paseador creado', `Cuenta creada para ${name} (${email})`);
+
+  return { uid, success: true };
+});
+
+// ═══════════════════════════════════════════
+// 12. RESERVATION STATUS HISTORY
+// ═══════════════════════════════════════════
+
+// On reservation update → append to history array
+exports.onReservationStatusHistory = functions.firestore
+  .document('reservations/{docId}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    const resId = context.params.docId;
+
+    if (before.status === after.status) return;
+
+    // Append to history
+    const historyEntry = {
+      status: after.status,
+      timestamp: new Date().toISOString(),
+      changedBy: after.assignment?.walkerId || after.client?.uid || 'system',
+    };
+
+    // Use arrayUnion to append (creates array if doesn't exist)
+    await change.after.ref.update({
+      history: admin.firestore.FieldValue.arrayUnion(historyEntry),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+
 exports.resetDailyWalkerLoads = functions.pubsub
   .schedule('0 0 * * *') // Every midnight
   .timeZone('America/Mexico_City')

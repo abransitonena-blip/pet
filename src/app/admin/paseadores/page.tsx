@@ -5,10 +5,12 @@ import { db } from '@/firebase/config'
 import {
   doc, updateDoc, collection, query, onSnapshot, where,
 } from 'firebase/firestore'
+import { httpsCallable } from 'firebase/functions'
+import { functions } from '@/firebase/config'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FaWalking, FaUser, FaPhone, FaDog, FaWhatsapp, FaSpinner, FaPlus, FaTimes,
-  FaCalendarAlt, FaClock, FaMapMarkedAlt, FaChartBar, FaEdit, FaCheck,
+  FaCalendarAlt, FaClock, FaMapMarkedAlt, FaChartBar, FaEdit, FaCheck, FaEnvelope, FaKey,
 } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
 import { useReservations } from '@/context/ReservationsContext'
@@ -23,6 +25,9 @@ const DAY_LABELS: Record<string, string> = {
 interface WalkerConfig {
   name: string
   phone: string
+  email: string
+  uid?: string
+  status?: 'invited' | 'active' | 'suspended'
   zones: string[]
   maxDaily: number
   maxWeekly: number
@@ -44,6 +49,7 @@ interface WalkerStats {
 const EMPTY_WALKER: WalkerConfig = {
   name: '',
   phone: '',
+  email: '',
   zones: [],
   maxDaily: 8,
   maxWeekly: 40,
@@ -58,6 +64,8 @@ export default function AdminPaseadoresPage() {
   const [form, setForm] = useState<WalkerConfig>(EMPTY_WALKER)
   const [zones, setZones] = useState<Zone[]>([])
   const [expandedWalker, setExpandedWalker] = useState<string | null>(null)
+  const [creatingAccount, setCreatingAccount] = useState<number | null>(null)
+  const [tempPassword, setTempPassword] = useState<{ index: number; password: string } | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -79,7 +87,7 @@ export default function AdminPaseadoresPage() {
         phone: w.phone,
         totalAssigned: assigned.length,
         completed: assigned.filter((r) => r.status === 'completed').length,
-        inProgress: assigned.filter((r) => r.status === 'en_camino' || r.status === 'paseando').length,
+        inProgress: assigned.filter((r) => r.status === 'en_camino' || r.status === 'paseando' || r.status === 'assigned').length,
         todayAssigned: assigned.filter((r) => r.date === today).length,
         todayCompleted: assigned.filter((r) => r.date === today && r.status === 'completed').length,
         thisWeek: assigned.filter((r) => r.date >= weekAgo).length,
@@ -101,6 +109,7 @@ export default function AdminPaseadoresPage() {
     setForm({
       name: walker.name || '',
       phone: walker.phone || '',
+      email: walker.email || '',
       zones: walker.zones || [],
       maxDaily: walker.maxDaily || 8,
       maxWeekly: walker.maxWeekly || 40,
@@ -116,6 +125,7 @@ export default function AdminPaseadoresPage() {
       const data = {
         name: form.name.trim(),
         phone: form.phone.trim(),
+        email: form.email.trim(),
         zones: form.zones,
         maxDaily: form.maxDaily,
         maxWeekly: form.maxWeekly,
@@ -123,9 +133,9 @@ export default function AdminPaseadoresPage() {
       }
 
       if (editing !== null) {
-        walkers[editing] = data
+        walkers[editing] = { ...walkers[editing], ...data }
       } else {
-        walkers.push(data)
+        walkers.push({ ...data, status: 'invited' })
       }
       await updateConfig({ walkers })
       setShowForm(false)
@@ -135,6 +145,49 @@ export default function AdminPaseadoresPage() {
     } catch {
       toast('Error al guardar paseador', 'error')
     }
+  }
+
+  const handleCreateAccount = async (index: number) => {
+    const walker = (config.walkers || [])[index] as WalkerConfig | undefined
+    if (!walker?.email) {
+      toast('El paseador necesita un correo electrónico', 'error')
+      return
+    }
+    setCreatingAccount(index)
+    try {
+      // Generate a temporary password
+      const tempPwd = 'PetAp' + Math.random().toString(36).slice(-8) + '!'
+      
+      const createAccount = httpsCallable(functions, 'createWalkerAccount')
+      const result = await createAccount({
+        email: walker.email,
+        password: tempPwd,
+        name: walker.name,
+        phone: walker.phone,
+        zones: walker.zones,
+        maxDaily: walker.maxDaily,
+        maxWeekly: walker.maxWeekly,
+        schedule: walker.schedule,
+      })
+
+      const { uid } = result.data as { uid: string }
+
+      // Update walker config with uid and status
+      const walkers = [...(config.walkers || [])] as WalkerConfig[]
+      walkers[index] = { ...walkers[index], uid, status: 'active' }
+      await updateConfig({ walkers })
+
+      setTempPassword({ index, password: tempPwd })
+      toast('Cuenta creada exitosamente')
+    } catch (e: unknown) {
+      const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: string }).message) : ''
+      if (msg.includes('already-exists')) {
+        toast('Este correo ya está registrado', 'error')
+      } else {
+        toast('Error al crear cuenta: ' + (msg || 'Error desconocido'), 'error')
+      }
+    }
+    setCreatingAccount(null)
   }
 
   const handleRemove = async (index: number) => {
@@ -176,7 +229,7 @@ export default function AdminPaseadoresPage() {
 
   const unassignedToday = useMemo(() => {
     return reservations.filter((r) => r.date === today && !r.assignedWalker && r.status !== 'completed' && r.status !== 'cancelled').length
-  }, [reservations])
+  }, [reservations, today])
 
   const todayTotal = useMemo(() => {
     return reservations.filter((r) => r.date === today && r.status !== 'cancelled').length
@@ -236,6 +289,11 @@ export default function AdminPaseadoresPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{w.name}</span>
+                          {walkerConfig?.uid ? (
+                            <span className="text-2xs px-2 py-0.5 rounded-full bg-success-500/15 text-success-400 font-medium">Activo</span>
+                          ) : (
+                            <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-medium">Invitado</span>
+                          )}
                           {w.inProgress > 0 && (
                             <span className="text-2xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium">
                               {w.inProgress} en paseo
@@ -248,6 +306,7 @@ export default function AdminPaseadoresPage() {
                           )}
                         </div>
                         <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {walkerConfig?.email && <span className="flex items-center gap-1"><FaEnvelope size={9} /> {walkerConfig.email}</span>}
                           <span className="flex items-center gap-1"><FaPhone size={9} /> {w.phone}</span>
                           <span className="flex items-center gap-1"><FaCalendarAlt size={9} /> {w.todayAssigned}/{dailyMax} hoy</span>
                           <span className="flex items-center gap-1"><FaChartBar size={9} /> {w.thisWeek}/{weeklyMax} semana</span>
@@ -264,6 +323,16 @@ export default function AdminPaseadoresPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
+                      {!walkerConfig?.uid && walkerConfig?.email && (
+                        <button
+                          onClick={() => handleCreateAccount(i)}
+                          disabled={creatingAccount === i}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-accent-500/10 text-accent-400"
+                          title="Crear cuenta de acceso"
+                        >
+                          {creatingAccount === i ? <FaSpinner className="animate-spin" size={12} /> : <FaKey size={12} />}
+                        </button>
+                      )}
                       <button onClick={() => setExpandedWalker(isExpanded ? null : w.name)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title="Detalles">
                         <FaChartBar size={13} />
                       </button>
@@ -388,16 +457,24 @@ export default function AdminPaseadoresPage() {
                 </button>
               </div>
 
-              {/* Name & Phone */}
+              {/* Name, Phone & Email */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
-                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre completo" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                 </div>
                 <div>
                   <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Teléfono</label>
                   <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="10 dígitos" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                 </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+                  <FaEnvelope size={10} className="inline mr-1" />
+                  Correo electrónico (para acceso)
+                </label>
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="paseador@petap.com" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                {!editing && <p className="text-2xs mt-1" style={{ color: 'var(--text-muted)' }}>Se usará para crear la cuenta de acceso del paseador</p>}
               </div>
 
               {/* Zones */}
@@ -467,6 +544,62 @@ export default function AdminPaseadoresPage() {
                   {editing !== null ? 'Guardar' : 'Agregar'}
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Temp Password Modal */}
+      <AnimatePresence>
+        {tempPassword && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setTempPassword(null)}
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              className="w-full max-w-sm rounded-2xl p-5 space-y-4"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-success-500/10 flex items-center justify-center mx-auto mb-3">
+                  <FaKey size={20} className="text-success-400" />
+                </div>
+                <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Cuenta creada</h3>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                  Comparte estas credenciales con el paseador de forma segura
+                </p>
+              </div>
+              <div className="rounded-xl p-3 space-y-2" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+                <div>
+                  <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>Correo</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {(config.walkers || [])[tempPassword.index]?.email}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>Contraseña temporal</p>
+                  <p className="text-sm font-mono font-bold" style={{ color: 'var(--color-primary)' }}>
+                    {tempPassword.password}
+                  </p>
+                </div>
+              </div>
+              <p className="text-2xs text-center" style={{ color: 'var(--text-muted)' }}>
+                El paseador deberá cambiar esta contraseña en su primer inicio de sesión
+              </p>
+              <button
+                onClick={() => setTempPassword(null)}
+                className="w-full py-2.5 rounded-xl text-sm font-medium btn-primary"
+              >
+                Entendido
+              </button>
             </motion.div>
           </motion.div>
         )}
