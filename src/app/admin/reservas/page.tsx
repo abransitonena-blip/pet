@@ -157,7 +157,11 @@ export default function AdminReservas() {
     try {
       const today = new Date().toISOString().split('T')[0]
       const pending = reservations.filter((r) => r.status === 'pending' && r.date === today && !r.assignedWalker)
-      const walkers = (config.walkers || []) as { name: string; maxDaily: number; zones: string[] }[]
+      const walkers = ((config.walkers || []) as Record<string, unknown>[]).map((w) => ({
+        name: String(w.name || ''),
+        maxDaily: Number(w.maxDaily) || 8,
+        zones: Array.isArray(w.zones) ? w.zones : [],
+      }))
 
       if (walkers.length === 0) {
         toast('No hay paseadores configurados', 'error')
