@@ -23,7 +23,7 @@ type PetTab = 'basico' | 'personalidad' | 'salud' | 'preferencias'
 const EMPTY_FORM = {
   name: '',
   breed: '',
-  size: 'mediano' as const,
+  size: 'mediano' as 'pequeño' | 'mediano' | 'grande',
   sex: '' as 'macho' | 'hembra' | '',
   age: '',
   weight: '',
