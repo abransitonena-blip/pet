@@ -21,59 +21,8 @@ interface Review {
   petName?: string
 }
 
-const fallbackReviews = [
-  {
-    id: '1',
-    name: 'María García',
-    rating: 5,
-    text: 'Excelente servicio, mi perrito Max llega feliz después de cada paseo. Muy recomendados.',
-    date: '2024-06-15',
-    petName: 'Max',
-  },
-  {
-    id: '2',
-    name: 'Carlos López',
-    rating: 5,
-    text: 'Precios muy accesibles y el trato es increíble. Mi perra Luna ama sus paseos diarios.',
-    date: '2024-06-10',
-    petName: 'Luna',
-  },
-  {
-    id: '3',
-    name: 'Ana Martínez',
-    rating: 5,
-    text: 'El paquete semanal es perfecto para cuando trabajo. Mi perro Toby juega, corre y llega feliz.',
-    date: '2024-06-05',
-    petName: 'Toby',
-  },
-  {
-    id: '4',
-    name: 'Roberto Sánchez',
-    rating: 4,
-    text: 'Muy buen servicio de paseos. Rocky vuelve cansado y contento. Sin duda el mejor paseador de la zona.',
-    date: '2024-05-28',
-    petName: 'Rocky',
-  },
-  {
-    id: '5',
-    name: 'Laura Jiménez',
-    rating: 5,
-    text: 'Los paseos con reporte son una experiencia única. Mi perra Mimi explora rutas nuevas cada semana.',
-    date: '2024-05-20',
-    petName: 'Mimi',
-  },
-  {
-    id: '6',
-    name: 'Pedro Hernández',
-    rating: 5,
-    text: 'Desde que empecé con los paseos, mi perro Thor está más sano y feliz. Precio justo y calidad excelente.',
-    date: '2024-05-15',
-    petName: 'Thor',
-  },
-]
-
 export default function Reviews() {
-  const [reviews, setReviews] = useState<Review[]>(fallbackReviews)
+  const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const ref = useRef(null)
@@ -95,7 +44,7 @@ export default function Reviews() {
           setReviews(data)
         }
       } catch {
-        // Use fallback if Firebase fails
+        // silently fail
       } finally {
         setLoading(false)
       }
@@ -152,6 +101,11 @@ export default function Reviews() {
                 <div className="skeleton h-3 rounded w-2/3" />
               </div>
             ))}
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="text-center py-12">
+            <FaPaw className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sé el primero en dejarnos una reseña</p>
           </div>
         ) : (
           <>

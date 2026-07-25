@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import { FaMapMarkedAlt, FaDog, FaClock, FaUser, FaLocationArrow, FaCamera, FaFilter, FaCheck } from 'react-icons/fa'
+import { FaMapMarkedAlt, FaDog, FaUser, FaLocationArrow, FaCamera, FaFilter, FaCheck } from 'react-icons/fa'
 import type { Reservation, WalkMedia } from '@/types'
 
 function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {

@@ -5,7 +5,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import {
-  FaCalendarAlt, FaUsers, FaPaw, FaStar,
+  FaCalendarAlt, FaUsers,
   FaDog, FaClock, FaWhatsapp, FaWalking,
   FaChartLine, FaTag, FaCog, FaUserFriends,
   FaDollarSign,

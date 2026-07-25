@@ -6,6 +6,7 @@ import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { FaStar, FaDog } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
+import { usePublicStats } from '@/lib/usePublicStats'
 import Avatar from '@/components/ui/Avatar'
 
 const stagger = {
@@ -20,6 +21,7 @@ const item = {
 
 export default function Hero() {
   const { config } = useConfig()
+  const { avgRating, happyDogs, loading: statsLoading } = usePublicStats()
   const [topReview, setTopReview] = useState<{ name: string; text: string; rating: number } | null>(null)
 
   useEffect(() => {
@@ -90,8 +92,8 @@ export default function Hero() {
         {/* Stats inline */}
         <motion.div variants={item} className="flex items-center justify-center gap-8 sm:gap-12 mb-10">
           {[
-            { value: '50+', label: 'Perros felices' },
-            { value: '4.9★', label: 'Calificación' },
+            { value: statsLoading ? '—' : `${happyDogs}+`, label: 'Perros felices' },
+            { value: statsLoading ? '—' : `${avgRating}★`, label: 'Calificación' },
             { value: '$30', label: 'Desde' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">

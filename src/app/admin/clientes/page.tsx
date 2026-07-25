@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReservations } from '@/context/ReservationsContext'
 import {
-  FaSearch, FaUsers, FaWhatsapp, FaDog, FaCalendarAlt, FaMoneyBill, FaStar,
+  FaSearch, FaUsers, FaWhatsapp, FaDog, FaCalendarAlt,
   FaClock, FaUserFriends, FaTimes, FaCrown, FaHeart, FaExclamationTriangle,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'

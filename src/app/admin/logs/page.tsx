@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore'
-import { FaClipboardList, FaSearch, FaFilter } from 'react-icons/fa'
+import { FaClipboardList, FaSearch } from 'react-icons/fa'
 
 interface AuditLog {
   id: string

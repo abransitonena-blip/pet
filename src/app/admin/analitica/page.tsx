@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
-import { FaChartLine, FaCalendarAlt, FaDog, FaUsers, FaStar, FaWalking, FaMoneyBill } from 'react-icons/fa'
+import { FaCalendarAlt, FaUsers, FaStar, FaWalking, FaMoneyBill } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'

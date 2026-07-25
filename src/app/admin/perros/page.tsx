@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useReservations } from '@/context/ReservationsContext'
-import { FaSearch, FaPaw, FaDog, FaCalendarAlt, FaUser } from 'react-icons/fa'
+import { FaSearch, FaPaw, FaDog } from 'react-icons/fa'
 import type { Reservation } from '@/types'
 
 interface PetProfile {

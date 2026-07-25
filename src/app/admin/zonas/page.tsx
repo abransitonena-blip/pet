@@ -8,7 +8,7 @@ import { db } from '@/firebase/config'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FaMapMarkedAlt, FaPlus, FaEdit, FaTrash, FaTimes, FaCheck, FaSpinner,
-  FaWalking, FaUsers, FaEye, FaEyeSlash, FaSearch,
+  FaEye, FaEyeSlash, FaSearch,
 } from 'react-icons/fa'
 import { Zone } from '@/types'
 

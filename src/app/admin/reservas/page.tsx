@@ -9,9 +9,9 @@ import {
   getDoc,
 } from 'firebase/firestore'
 import {
-  FaSearch, FaFilter, FaDog, FaWhatsapp, FaEdit, FaTrash,
-  FaCheck, FaClock, FaCamera, FaDownload, FaSpinner, FaTimes,
-  FaArrowRight, FaUndo, FaMoneyBill, FaWalking, FaMagic,
+  FaSearch, FaDog, FaWhatsapp, FaEdit, FaTrash,
+  FaCamera, FaDownload, FaSpinner, FaTimes,
+  FaArrowRight, FaUndo, FaWalking, FaMagic,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'

@@ -1020,8 +1020,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                           {/* Trust Signals */}
                           <div className="grid grid-cols-2 gap-2 mb-5">
                             {[
-                              { icon: <FaStar size={12} />, text: '4.9/5 — 250+ paseos', color: 'var(--color-primary)' },
-                              { icon: <FaBolt size={12} />, text: 'Respuesta en 5 min', color: 'var(--color-success)' },
+                              { icon: <FaStar size={12} />, text: 'Calificación real de clientes', color: 'var(--color-primary)' },
+                              { icon: <FaBolt size={12} />, text: 'Respuesta rápida', color: 'var(--color-success)' },
                               { icon: <FaShieldAlt size={12} />, text: 'Paseadores verificados', color: '#3b82f6' },
                               { icon: <FaHeart size={12} />, text: 'Seguro para mascotas', color: '#ec4899' },
                             ].map((badge, i) => (

@@ -11,10 +11,10 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FaPaw, FaPlus, FaEdit, FaTrash, FaArrowLeft, FaTimes, FaCheck, FaSpinner,
-  FaHeart, FaBrain, FaFirstAid, FaSlidersH, FaDog, FaCat,
+  FaHeart, FaBrain, FaFirstAid, FaSlidersH, FaDog,
   FaWeight, FaRulerVertical, FaVenus, FaMars,
-  FaBolt, FaShieldAlt, FaSyringe, FaPhone, FaMedkit, FaExclamationTriangle,
-  FaStar, FaPuzzlePiece, FaCommentDots,
+  FaSyringe, FaPhone, FaMedkit, FaExclamationTriangle,
+  FaStar,
 } from 'react-icons/fa'
 import { Pet } from '@/types'
 
