@@ -183,6 +183,22 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   useEffect(() => {
     const user = auth.currentUser
     if (!user) return
+
+    // Pre-fill client profile from Firestore
+    import('firebase/firestore').then(({ getDoc }) =>
+      getDoc(doc(db, 'clients', user.uid))
+    ).then((snap) => {
+      if (snap.exists()) {
+        const data = snap.data()
+        setForm((prev) => ({
+          ...prev,
+          name: prev.name || data.name || '',
+          phone: prev.phone || data.phone || '',
+        }))
+      }
+    }).catch(() => {})
+
+    // Load saved pets
     const q = query(collection(db, 'pets'), where('ownerId', '==', user.uid), limit(5))
     const unsub = onSnapshot(q, (snap) => {
       setSavedPets(snap.docs.map((d) => ({
@@ -351,6 +367,16 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         referralCode: referralPhone || '',
       })
       showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
+
+      // Save/update client profile for future pre-fill
+      if (auth.currentUser) {
+        const { setDoc: setDocFn } = await import('firebase/firestore')
+        await setDocFn(doc(db, 'clients', auth.currentUser.uid), {
+          name: form.name,
+          phone: form.phone,
+          email: auth.currentUser.email || '',
+        }, { merge: true }).catch(() => {})
+      }
 
       if (referralPhone && referralPhone !== form.phone) {
         // Look up referrer by referral code
