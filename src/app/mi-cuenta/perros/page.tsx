@@ -142,8 +142,8 @@ export default function MisPerrosPage() {
       unsubPets = onSnapshot(q, (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Pet))
         docs.sort((a, b) => {
-          const ca = a.createdAt as { seconds?: number } | undefined
-          const cb = b.createdAt as { seconds?: number } | undefined
+          const ca = (a as unknown as Record<string, unknown>).createdAt as { seconds?: number } | undefined
+          const cb = (b as unknown as Record<string, unknown>).createdAt as { seconds?: number } | undefined
           return (cb?.seconds || 0) - (ca?.seconds || 0)
         })
         setPets(docs)
