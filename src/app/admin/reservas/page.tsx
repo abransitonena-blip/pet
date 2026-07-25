@@ -6,6 +6,7 @@ import { db } from '@/firebase/config'
 import {
   doc, updateDoc,
   deleteDoc, serverTimestamp, where, getDocs, collection, query as fsQuery, orderBy as fsOrderBy,
+  getDoc,
 } from 'firebase/firestore'
 import {
   FaSearch, FaFilter, FaDog, FaWhatsapp, FaEdit, FaTrash,
@@ -75,7 +76,7 @@ export default function AdminReservas() {
       result = result.filter((r) => r.date <= dateTo)
     }
     if (walkerFilter) {
-      result = result.filter((r) => r.assignedWalker === walkerFilter)
+      result = result.filter((r) => r.assignedWalker === walkerFilter || r.assignment?.walkerId === walkerFilter)
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
@@ -161,45 +162,87 @@ export default function AdminReservas() {
     try {
       const today = new Date().toISOString().split('T')[0]
       const pending = reservations.filter((r) => r.status === 'pending' && r.date === today && !r.assignedWalker)
-      const walkers = ((config.walkers || []) as Record<string, unknown>[]).map((w) => ({
-        name: String(w.name || ''),
-        maxDaily: Number(w.maxDaily) || 8,
-        zones: Array.isArray(w.zones) ? w.zones : [],
-      }))
 
-      if (walkers.length === 0) {
-        toast('No hay paseadores configurados', 'error')
+      if (pending.length === 0) {
+        toast('Sin reservas pendientes para hoy')
         setAutoAssigning(false)
         return
       }
 
-      // Count current assignments per walker today
+      // Fetch walkerProfiles from Firestore (rich data with zones, schedule, status)
+      const walkerProfilesSnap = await getDocs(collection(db, 'walkerProfiles'))
+      const walkerProfiles = walkerProfilesSnap.docs
+        .map((d) => ({ id: d.id, ...d.data() } as Record<string, unknown>))
+        .filter((w) => w.status === 'active')
+
+      if (walkerProfiles.length === 0) {
+        toast('No hay paseadores activos', 'error')
+        setAutoAssigning(false)
+        return
+      }
+
+      // Count current assignments per walker today (by uid)
       const loads: Record<string, number> = {}
       reservations.filter((r) => r.date === today && r.assignedWalker && r.status !== 'cancelled').forEach((r) => {
-        loads[r.assignedWalker] = (loads[r.assignedWalker] || 0) + 1
+        const walkerUid = r.assignment?.walkerId || r.assignedWalker
+        loads[walkerUid] = (loads[walkerUid] || 0) + 1
       })
+
+      // Get day of week for schedule matching (lun, mar, mie, jue, vie, sab, dom)
+      const dayMap = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab']
+      const reservationDay = dayMap[new Date(today + 'T12:00:00').getDay()]
 
       let assigned = 0
       for (const res of pending) {
-        // Find walker with lowest load that has capacity
-        const available = walkers
-          .filter((w) => (loads[w.name] || 0) < (w.maxDaily || 8))
-          .sort((a, b) => (loads[a.name] || 0) - (loads[b.name] || 0))
+        const reservationHour = parseInt(res.time?.split(':')[0] || '9', 10)
+
+        // Find walkers with capacity, matching schedule, sorted by lowest load
+        const available = walkerProfiles
+          .filter((w) => {
+            const uid = String(w.id || w.uid || '')
+            const maxDaily = Number(w.maxDaily) || 8
+            const currentLoad = loads[uid] || 0
+
+            // Check daily capacity
+            if (currentLoad >= maxDaily) return false
+
+            // Check schedule availability
+            const schedule = w.schedule as Record<string, Array<{ start: string; end: string }> | undefined>
+            if (schedule && schedule[reservationDay]) {
+              const slots = schedule[reservationDay]
+              const isInSlot = slots.some((slot) => {
+                const startHour = parseInt(slot.start?.split(':')[0] || '0', 10)
+                const endHour = parseInt(slot.end?.split(':')[0] || '23', 10)
+                return reservationHour >= startHour && reservationHour < endHour
+              })
+              if (!isInSlot) return false
+            }
+
+            return true
+          })
+          .sort((a, b) => {
+            const uidA = String(a.id || a.uid || '')
+            const uidB = String(b.id || b.uid || '')
+            return (loads[uidA] || 0) - (loads[uidB] || 0)
+          })
 
         if (available.length > 0) {
           const walker = available[0]
+          const walkerUid = String(walker.id || walker.uid || '')
+          const walkerName = String(walker.name || '')
+
           await updateDoc(doc(db, 'reservations', res.id), {
             status: 'assigned',
-            assignedWalker: walker.name,
+            assignedWalker: walkerName,
             assignment: {
-              walkerId: walker.name,
-              walkerName: walker.name,
+              walkerId: walkerUid,
+              walkerName: walkerName,
               assignedAt: serverTimestamp(),
               assignedBy: 'auto',
             },
             history: [...(res.history || []), { status: 'assigned', timestamp: new Date().toISOString() }],
           })
-          loads[walker.name] = (loads[walker.name] || 0) + 1
+          loads[walkerUid] = (loads[walkerUid] || 0) + 1
           assigned++
         }
       }
@@ -212,8 +255,11 @@ export default function AdminReservas() {
   }
 
   const walkers = useMemo(() => {
-    return Array.from(new Set(reservations.filter((r) => r.assignedWalker).map((r) => r.assignedWalker)))
-  }, [reservations])
+    // Combine walkers from reservations and config
+    const fromReservations = reservations.filter((r) => r.assignedWalker).map((r) => r.assignedWalker)
+    const fromConfig = ((config.walkers || []) as { name: string }[]).map((w) => w.name)
+    return Array.from(new Set([...fromReservations, ...fromConfig]))
+  }, [reservations, config.walkers])
 
   return (
     <div className="space-y-6">

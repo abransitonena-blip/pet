@@ -82,9 +82,12 @@ export default function AdminIAPage() {
     const pendingToday = pending.filter((r) => r.date === todayStr)
 
     // Walker load
-    const walkers = (config.walkers || []) as { name: string }[]
+    const walkers = (config.walkers || []) as { name: string; uid?: string }[]
     const walkerLoads = walkers.map((w) => {
-      const assigned = reservations.filter((r) => r.assignedWalker === w.name && r.date === todayStr)
+      const assigned = reservations.filter((r) => 
+        (r.assignedWalker === w.name || r.assignment?.walkerId === w.uid) && 
+        r.date === todayStr
+      )
       return { name: w.name, today: assigned.length, pending: assigned.filter((r) => r.status === 'pending').length }
     })
     const overloaded = walkerLoads.filter((w) => w.today > 6)

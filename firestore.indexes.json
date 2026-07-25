@@ -17,6 +17,20 @@
       ]
     },
     {
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "assignedWalker", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "assignment.walkerId", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "gallery-images",
       "queryScope": "COLLECTION",
       "fields": [

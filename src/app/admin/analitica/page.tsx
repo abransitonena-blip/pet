@@ -87,9 +87,12 @@ export default function AdminAnaliticaPage() {
     const maxMonthlyRevenue = Math.max(...monthlyRevenue.map((m) => m.revenue), 1)
 
     // Walker performance
-    const walkers = (config.walkers || []) as { name: string }[]
+    const walkers = (config.walkers || []) as { name: string; uid?: string }[]
     const walkerPerformance = walkers.map((w) => {
-      const assigned = reservations.filter((r) => r.assignedWalker === w.name)
+      const assigned = reservations.filter((r) => 
+        r.assignedWalker === w.name || 
+        r.assignment?.walkerId === w.uid
+      )
       const completed = assigned.filter((r) => r.status === 'completed')
       return {
         name: w.name,

@@ -23,9 +23,11 @@ export default function PaseadorDashboard() {
 
   useEffect(() => {
     let unsubRes: (() => void) | undefined
+    let unsubResUid: (() => void) | undefined
 
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
       if (unsubRes) { unsubRes(); unsubRes = undefined }
+      if (unsubResUid) { unsubResUid(); unsubResUid = undefined }
       if (!user) { router.push('/login'); return }
 
       const userSnap = await import('firebase/firestore').then(({ getDoc }) =>
@@ -36,21 +38,59 @@ export default function PaseadorDashboard() {
 
       if (!name) { setLoading(false); return }
 
-      const q = query(collection(db, 'reservations'), where('assignedWalker', '==', name))
-      unsubRes = onSnapshot(q, (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-        docs.sort((a, b) => {
+      // Query by name (legacy) AND by uid (new auto-assign)
+      const seenIds = new Set<string>()
+      const mergeDocs = (docs: Reservation[]) => {
+        const merged = [...reservations]
+        for (const doc of docs) {
+          if (!seenIds.has(doc.id)) {
+            seenIds.add(doc.id)
+            merged.push(doc)
+          }
+        }
+        merged.sort((a, b) => {
           const ca = a.createdAt as string | { seconds?: number } | undefined
           const cb = b.createdAt as string | { seconds?: number } | undefined
           const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
           const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
           return tb - ta
         })
+        setReservations(merged)
+        setLoading(false)
+      }
+
+      // Query by assignedWalker (name) - legacy
+      const qName = query(collection(db, 'reservations'), where('assignedWalker', '==', name))
+      unsubRes = onSnapshot(qName, (snap) => {
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
+        docs.forEach((d) => seenIds.add(d.id))
         setReservations(docs)
         setLoading(false)
       }, () => setLoading(false))
+
+      // Query by assignment.walkerId (uid) - new auto-assign
+      const qUid = query(collection(db, 'reservations'), where('assignment.walkerId', '==', user.uid))
+      unsubResUid = onSnapshot(qUid, (snap) => {
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
+        const merged = [...reservations]
+        for (const doc of docs) {
+          if (!seenIds.has(doc.id)) {
+            seenIds.add(doc.id)
+            merged.push(doc)
+          }
+        }
+        merged.sort((a, b) => {
+          const ca = a.createdAt as string | { seconds?: number } | undefined
+          const cb = b.createdAt as string | { seconds?: number } | undefined
+          const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
+          const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
+          return tb - ta
+        })
+        setReservations(merged)
+        setLoading(false)
+      }, () => setLoading(false))
     })
-    return () => { unsubRes?.(); unsubAuth() }
+    return () => { unsubRes?.(); unsubResUid?.(); unsubAuth() }
   }, [router])
 
   const today = new Date().toISOString().split('T')[0]

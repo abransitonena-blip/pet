@@ -10,6 +10,7 @@ import { SERVICE_NAMES, normalizeServiceName } from '@/lib/services'
 import { logChange } from '@/lib/audit'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import { useToast } from '@/context/ToastContext'
+import { useConfig } from '@/context/ConfigContext'
 
 export default function EditReservationModal({
   isOpen,
@@ -33,6 +34,7 @@ export default function EditReservationModal({
   })
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
+  const { config } = useConfig()
   useEscapeKey(onClose, isOpen)
 
   const handleSave = async () => {
@@ -182,13 +184,16 @@ export default function EditReservationModal({
                 </div>
                 <div className="mt-3">
                   <label className="block text-xs text-white/40 mb-1">Paseador asignado</label>
-                  <input
-                    type="text"
+                  <select
                     value={form.assignedWalker}
                     onChange={(e) => setForm({ ...form, assignedWalker: e.target.value })}
-                    placeholder="Nombre del paseador..."
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
-                  />
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value="">Sin asignar</option>
+                    {((config.walkers || []) as { name: string; phone: string }[]).map((w) => (
+                      <option key={w.name} value={w.name}>{w.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>

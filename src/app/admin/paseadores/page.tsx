@@ -81,7 +81,11 @@ export default function AdminPaseadoresPage() {
   const walkerStats: WalkerStats[] = useMemo(() => {
     const walkers = (config.walkers || []) as WalkerConfig[]
     return walkers.map((w) => {
-      const assigned = reservations.filter((r) => r.assignedWalker === w.name)
+      // Match by name (legacy) OR by uid (new auto-assign)
+      const assigned = reservations.filter((r) => 
+        r.assignedWalker === w.name || 
+        r.assignment?.walkerId === w.uid
+      )
       return {
         name: w.name,
         phone: w.phone,

@@ -182,6 +182,18 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════
+    // WALKER PROFILES (rich data: zones, schedule, capacity)
+    // ═══════════════════════════════════════════
+
+    match /walkerProfiles/{uid} {
+      // Admin and the walker themselves can read
+      allow read: if isAuthenticated()
+        && (isAdmin() || request.auth.uid == uid);
+      // Only Cloud Functions can write (createWalkerAccount)
+      allow write: if false;
+    }
+
+    // ═══════════════════════════════════════════
     // ZONES (geographic zones)
     // ═══════════════════════════════════════════
 
