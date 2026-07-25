@@ -1,247 +1,266 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
-  FaRobot, FaArrowUp, FaArrowDown, FaLightbulb, FaCalendarAlt,
-  FaDog, FaDollarSign, FaClock, FaStar, FaArrowRight, FaBrain,
+  FaRobot, FaCalendarAlt, FaDog, FaUsers, FaChartLine, FaClock,
+  FaLightbulb, FaTrendingUp, FaTrendingDown, FaExclamationTriangle,
+  FaBolt, FaStar, FaWalking, FaMoneyBill, FaArrowRight,
 } from 'react-icons/fa'
+import { getServicePrice } from '@/lib/services'
+import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
+import { useConfig } from '@/context/ConfigContext'
 import type { Reservation } from '@/types'
 
 interface Insight {
-  type: 'trend' | 'recommendation' | 'prediction' | 'alert'
+  id: string
   title: string
   description: string
-  metric?: string
-  icon: React.ReactNode
+  icon: typeof FaRobot
   color: string
+  priority: 'high' | 'medium' | 'low'
+  action?: string
 }
-
-const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 export default function AdminIAPage() {
   const { reservations, loading } = useReservations()
+  const { prices } = usePrices()
+  const { config } = useConfig()
+  const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d')
 
-  const insights = useMemo((): Insight[] => {
-    if (reservations.length === 0) return []
-    const result: Insight[] = []
+  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? getServicePrice(serviceName)
 
-    // Revenue trend (last 7 days vs previous 7 days)
+  const insights = useMemo(() => {
     const now = new Date()
-    const last7 = reservations.filter((r) => {
-      const d = r.createdAt ? new Date(r.createdAt.seconds * 1000) : new Date(r.date)
-      return (now.getTime() - d.getTime()) < 7 * 86400000
-    })
-    const prev7 = reservations.filter((r) => {
-      const d = r.createdAt ? new Date(r.createdAt.seconds * 1000) : new Date(r.date)
-      const diff = now.getTime() - d.getTime()
-      return diff >= 7 * 86400000 && diff < 14 * 86400000
-    })
+    const todayStr = now.toISOString().split('T')[0]
+    const periodDays = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
+    const periodStart = new Date(now.getTime() - periodDays * 86400000).toISOString().split('T')[0]
+    const prevStart = new Date(now.getTime() - periodDays * 2 * 86400000).toISOString().split('T')[0]
 
-    if (last7.length > prev7.length) {
-      const pct = prev7.length > 0 ? Math.round(((last7.length - prev7.length) / prev7.length) * 100) : 100
-      result.push({
-        type: 'trend', title: 'Reservas en crecimiento',
-        description: `Las reservas aumentaron ${pct}% en los últimos 7 días comparado con la semana anterior.`,
-        metric: `+${pct}%`, icon: <FaArrowUp size={16} />, color: 'text-success-400',
-      })
-    } else if (last7.length < prev7.length && prev7.length > 0) {
-      const pct = Math.round(((prev7.length - last7.length) / prev7.length) * 100)
-      result.push({
-        type: 'alert', title: 'Reservas en declive',
-        description: `Las reservas disminuyeron ${pct}% esta semana. Considera promociones.`,
-        metric: `-${pct}%`, icon: <FaArrowDown size={16} />, color: 'text-danger-400',
-      })
-    }
+    const periodRes = reservations.filter((r) => r.date >= periodStart)
+    const prevRes = reservations.filter((r) => r.date >= prevStart && r.date < periodStart)
+    const completed = periodRes.filter((r) => r.status === 'completed')
+    const prevCompleted = prevRes.filter((r) => r.status === 'completed')
 
-    // Peak day analysis
-    const dayCount: Record<number, number> = {}
-    reservations.forEach((r) => {
+    // Revenue
+    const revenue = completed.reduce((s, r) => s + getEffectivePrice(r.service), 0)
+    const prevRevenue = prevCompleted.reduce((s, r) => s + getEffectivePrice(r.service), 0)
+    const revenueGrowth = prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : 0
+
+    // Peak day
+    const dayCounts: Record<string, number> = { 'Dom': 0, 'Lun': 0, 'Mar': 0, 'Mié': 0, 'Jue': 0, 'Vie': 0, 'Sáb': 0 }
+    const dayMap = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+    periodRes.forEach((r) => {
       const d = new Date(r.date + 'T12:00:00')
-      const day = d.getDay()
-      dayCount[day] = (dayCount[day] || 0) + 1
+      dayCounts[dayMap[d.getDay()]]++
     })
-    const peakDay = Object.entries(dayCount).sort((a, b) => b[1] - a[1])[0]
-    if (peakDay) {
-      result.push({
-        type: 'prediction', title: 'Día pico detectado',
-        description: `El ${DAYS[Number(peakDay[0])]} es tu día más busy con ${peakDay[1]} reservas históricas. Asegúrate de tener suficientes paseadores.`,
-        metric: DAYS[Number(peakDay[0])], icon: <FaCalendarAlt size={16} />, color: 'text-brand-400',
-      })
-    }
+    const peakDay = Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0]
+
+    // Peak hour
+    const hourCounts: Record<number, number> = {}
+    periodRes.forEach((r) => {
+      const hour = parseInt(r.time?.split(':')[0] || '12')
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1
+    })
+    const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0]
 
     // Service popularity
-    const svcCount: Record<string, number> = {}
-    reservations.forEach((r) => { svcCount[r.service] = (svcCount[r.service] || 0) + 1 })
-    const topService = Object.entries(svcCount).sort((a, b) => b[1] - a[1])[0]
+    const serviceCounts: Record<string, number> = {}
+    periodRes.forEach((r) => { serviceCounts[r.service] = (serviceCounts[r.service] || 0) + 1 })
+    const topService = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0]
+
+    // Client retention
+    const phoneCounts = new Map<string, number>()
+    reservations.forEach((r) => phoneCounts.set(r.phone, (phoneCounts.get(r.phone) || 0) + 1))
+    const totalClients = phoneCounts.size
+    const returningClients = Array.from(phoneCounts.values()).filter((c) => c > 1).length
+    const retentionRate = totalClients > 0 ? Math.round((returningClients / totalClients) * 100) : 0
+
+    // Pending alerts
+    const pending = reservations.filter((r) => r.status === 'pending')
+    const pendingToday = pending.filter((r) => r.date === todayStr)
+
+    // Walker load
+    const walkers = (config.walkers || []) as { name: string }[]
+    const walkerLoads = walkers.map((w) => {
+      const assigned = reservations.filter((r) => r.assignedWalker === w.name && r.date === todayStr)
+      return { name: w.name, today: assigned.length, pending: assigned.filter((r) => r.status === 'pending').length }
+    })
+    const overloaded = walkerLoads.filter((w) => w.today > 6)
+
+    // Avg daily
+    const uniqueDays = new Set(periodRes.map((r) => r.date)).size
+    const avgDaily = uniqueDays > 0 ? (periodRes.length / uniqueDays).toFixed(1) : '0'
+
+    // Cancellation rate
+    const cancelled = periodRes.filter((r) => r.status === 'cancelled').length
+    const cancelRate = periodRes.length > 0 ? Math.round((cancelled / periodRes.length) * 100) : 0
+
+    // Generate insights
+    const result: Insight[] = []
+
+    // Revenue insight
+    if (revenueGrowth > 10) {
+      result.push({ id: 'rev_up', title: 'Ingresos en alza', description: `Los ingresos subieron ${revenueGrowth}% vs el periodo anterior. Tendencia positiva.`, icon: FaTrendingUp, color: '#059669', priority: 'high' })
+    } else if (revenueGrowth < -10) {
+      result.push({ id: 'rev_down', title: 'Ingresos bajando', description: `Los ingresos bajaron ${Math.abs(revenueGrowth)}%. Considera promociones para reactivar.`, icon: FaTrendingDown, color: '#DC2626', priority: 'high', action: 'Crear cupón de descuento' })
+    }
+
+    // Pending alerts
+    if (pendingToday.length > 0) {
+      result.push({ id: 'pending', title: `${pendingToday.length} reserva${pendingToday.length !== 1 ? 's' : ''} pendiente${pendingToday.length !== 1 ? 's' : ''} hoy`, description: 'Reservas sin asignar o confirmar para hoy. Asigna paseadores o confirma con el cliente.', icon: FaExclamationTriangle, color: '#F59E0B', priority: 'high', action: 'Ir a reservas' })
+    }
+
+    // Peak day
+    if (peakDay && peakDay[1] > 0) {
+      result.push({ id: 'peak_day', title: `Día más demandado: ${peakDay[0]}`, description: `El ${peakDay[0]} concentra ${peakDay[1]} reservas del periodo. Asegúrate de tener paseadores disponibles.`, icon: FaCalendarAlt, color: '#3b82f6', priority: 'medium' })
+    }
+
+    // Peak hour
+    if (peakHour) {
+      result.push({ id: 'peak_hour', title: `Hora pico: ${peakHour[0]}:00`, description: `La mayoría de reservas son a las ${peakHour[0]}:00. Considera bloquear paseadores en ese horario.`, icon: FaClock, color: '#8B5CF6', priority: 'medium' })
+    }
+
+    // Retention
+    if (retentionRate < 30 && totalClients > 5) {
+      result.push({ id: 'low_retention', title: 'Retención baja', description: `Solo ${retentionRate}% de tus clientes repiten. Usa el sistema de lealtad y referidos para mejorar.`, icon: FaUsers, color: '#F59E0B', priority: 'high', action: 'Revisar lealtad' })
+    } else if (retentionRate > 50) {
+      result.push({ id: 'good_retention', title: 'Buena retención', description: `${retentionRate}% de tus clientes son recurrentes. ¡Excelente relación con ellos!`, icon: FaStar, color: '#059669', priority: 'low' })
+    }
+
+    // Top service
     if (topService) {
-      const pct = Math.round((topService[1] / reservations.length) * 100)
-      result.push({
-        type: 'recommendation', title: 'Servicio estrella',
-        description: `"${topService[0]}" representa el ${pct}% de tus reservas. Considera destacarlo en tu página.`,
-        metric: `${pct}%`, icon: <FaStar size={16} />, color: 'text-accent-400',
-      })
+      const pct = periodRes.length > 0 ? Math.round((topService[1] / periodRes.length) * 100) : 0
+      result.push({ id: 'top_service', title: `Servicio estrella: ${topService[0]}`, description: `Representa el ${pct}% de las reservas. Podrías destacarlo en tu página.`, icon: FaBolt, color: '#D97706', priority: 'medium' })
     }
 
-    // Repeat client detection
-    const clientPhones: Record<string, number> = {}
-    reservations.forEach((r) => { clientPhones[r.phone] = (clientPhones[r.phone] || 0) + 1 })
-    const repeatClients = Object.values(clientPhones).filter((c) => c > 1).length
-    const totalClients = Object.keys(clientPhones).length
-    const retentionRate = totalClients > 0 ? Math.round((repeatClients / totalClients) * 100) : 0
-    result.push({
-      type: 'recommendation', title: 'Retención de clientes',
-      description: `El ${retentionRate}% de tus clientes repiten servicio. ${retentionRate > 50 ? 'Excelente fidelización.' : 'Considera un programa de lealtad.'}`,
-      metric: `${retentionRate}%`, icon: <FaDog size={16} />, color: 'text-success-400',
-    })
-
-    // Average revenue per reservation
-    const avgPerDay = reservations.length > 0 ? Math.round(reservations.length / Math.max(1, Math.ceil((now.getTime() - new Date(reservations[reservations.length - 1]?.date || now.toISOString()).getTime()) / 86400000))) : 0
-    result.push({
-      type: 'prediction', title: 'Promedio diario',
-      description: `Tienes un promedio de ${avgPerDay} reserva(s) por día. ${avgPerDay < 3 ? 'Hay espacio para crecer.' : 'Buen ritmo.'}`,
-      metric: `${avgPerDay}/día`, icon: <FaClock size={16} />, color: 'text-brand-400',
-    })
-
-    // Smart recommendation
-    const pendingCount = reservations.filter((r) => r.status === 'pending').length
-    if (pendingCount > 0) {
-      result.push({
-        type: 'alert', title: `${pendingCount} reserva(s) pendiente(s)`,
-        description: 'Reservas sin confirmar ni completar. Atiéndelas para mejorar la experiencia del cliente.',
-        metric: `${pendingCount}`, icon: <FaBrain size={16} />, color: 'text-danger-400',
-      })
+    // Overloaded walkers
+    if (overloaded.length > 0) {
+      result.push({ id: 'overloaded', title: 'Paseadores sobrecargados', description: `${overloaded.map((w) => w.name).join(', ')} tienen más de 6 reservas hoy. Considera redistribuir.`, icon: FaWalking, color: '#DC2626', priority: 'high' })
     }
 
-    return result
-  }, [reservations])
+    // Cancel rate
+    if (cancelRate > 15) {
+      result.push({ id: 'high_cancel', title: `${cancelRate}% de cancelaciones`, description: 'Tasa de cancelación alta. Revisa si hay patrones (servicio, horario, zona).', icon: FaExclamationTriangle, color: '#F59E0B', priority: 'medium' })
+    }
 
-  // Day-of-week heatmap data
-  const heatmap = useMemo(() => {
-    const dayCount: Record<number, number> = {}
-    reservations.forEach((r) => {
-      const d = new Date(r.date + 'T12:00:00')
-      dayCount[d.getDay()] = (dayCount[d.getDay()] || 0) + 1
+    return result.sort((a, b) => {
+      const prio = { high: 0, medium: 1, low: 2 }
+      return prio[a.priority] - prio[b.priority]
     })
-    const max = Math.max(...Object.values(dayCount), 1)
-    return DAYS.map((day, i) => ({
-      day,
-      count: dayCount[i] || 0,
-      intensity: (dayCount[i] || 0) / max,
-    }))
-  }, [reservations])
+  }, [reservations, config.walkers, selectedPeriod, getEffectivePrice])
 
-  // Hour distribution
-  const hourDist = useMemo(() => {
-    const hours: Record<number, number> = {}
-    reservations.forEach((r) => {
-      if (r.time) {
-        const h = parseInt(r.time.split(':')[0])
-        hours[h] = (hours[h] || 0) + 1
-      }
-    })
-    const max = Math.max(...Object.values(hours), 1)
-    return Object.entries(hours)
-      .map(([h, c]) => ({ hour: Number(h), count: c, intensity: c / max }))
-      .sort((a, b) => a.hour - b.hour)
-  }, [reservations])
+  const metrics = useMemo(() => {
+    const now = new Date()
+    const periodDays = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
+    const periodStart = new Date(now.getTime() - periodDays * 86400000).toISOString().split('T')[0]
+    const periodRes = reservations.filter((r) => r.date >= periodStart)
+    const completed = periodRes.filter((r) => r.status === 'completed')
+    const revenue = completed.reduce((s, r) => s + getEffectivePrice(r.service), 0)
+    const uniqueDays = new Set(periodRes.map((r) => r.date)).size
+
+    return {
+      totalRes: periodRes.length,
+      completed: completed.length,
+      revenue,
+      avgDaily: uniqueDays > 0 ? (periodRes.length / uniqueDays).toFixed(1) : '0',
+      cancelRate: periodRes.length > 0 ? Math.round((periodRes.filter((r) => r.status === 'cancelled').length / periodRes.length) * 100) : 0,
+    }
+  }, [reservations, selectedPeriod, getEffectivePrice])
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-500 to-violet-600 flex items-center justify-center">
-          <FaRobot size={18} className="text-white" />
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Centro de IA</h2>
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Insights inteligentes basados en tus datos</p>
+          <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <FaRobot size={20} className="text-brand-400" />
+            Centro de IA
+          </h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            Insights inteligentes basados en tus datos
+          </p>
+        </div>
+        <div className="flex gap-1.5">
+          {(['7d', '30d', '90d'] as const).map((p) => (
+            <button key={p} onClick={() => setSelectedPeriod(p)} className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${selectedPeriod === p ? 'bg-brand-500/15 text-brand-400' : 'bg-white/[0.04] text-white/40 hover:text-white/60'}`}>
+              {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
+            </button>
+          ))}
         </div>
       </div>
 
-      {loading ? (
-        <div className="space-y-4">{[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-24 rounded-xl" />)}</div>
-      ) : reservations.length === 0 ? (
-        <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <FaRobot className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin datos suficientes para generar insights</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Los insights aparecen cuando tienes reservas registradas</p>
+      {/* Quick Metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Reservas', value: metrics.totalRes, icon: FaCalendarAlt, color: '#D97706' },
+          { label: 'Completadas', value: metrics.completed, icon: FaDog, color: '#059669' },
+          { label: 'Ingresos', value: `$${metrics.revenue.toLocaleString()}`, icon: FaMoneyBill, color: '#3b82f6' },
+          { label: 'Cancelaciones', value: `${metrics.cancelRate}%`, icon: FaExclamationTriangle, color: metrics.cancelRate > 15 ? '#DC2626' : '#059669' },
+        ].map((m) => (
+          <div key={m.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <m.icon size={14} style={{ color: m.color }} className="mb-2" />
+            <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{m.value}</p>
+            <p className="text-2xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Insights */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <FaLightbulb size={14} className="text-warning-400" />
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Insights</h3>
+          <span className="text-2xs px-2 py-0.5 rounded-full" style={{ background: 'var(--glass-bg)', color: 'var(--text-muted)' }}>
+            {insights.length}
+          </span>
         </div>
-      ) : (
-        <>
-          {/* Insights grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            {insights.map((insight, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="rounded-xl p-4"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className={insight.color}>{insight.icon}</div>
-                  {insight.metric && (
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--glass-bg)', color: 'var(--text-primary)' }}>
-                      {insight.metric}
-                    </span>
-                  )}
-                </div>
-                <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>{insight.title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{insight.description}</p>
-              </motion.div>
-            ))}
-          </div>
 
-          {/* Day-of-week heatmap */}
-          <div className="rounded-xl p-5 mb-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-              <FaCalendarAlt size={14} className="text-brand-400" />
-              Distribución por día de la semana
-            </h3>
-            <div className="flex items-end justify-between gap-2 h-32">
-              {heatmap.map((h, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-2xs font-medium" style={{ color: 'var(--text-muted)' }}>{h.count}</span>
-                  <div
-                    className="w-full rounded-t-lg transition-all"
-                    style={{
-                      height: `${Math.max(h.intensity * 100, 4)}%`,
-                      background: h.intensity > 0.7 ? 'var(--primary)' : h.intensity > 0.3 ? 'rgba(230,126,34,0.4)' : 'rgba(230,126,34,0.15)',
-                    }}
-                  />
-                  <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{h.day}</span>
-                </div>
-              ))}
-            </div>
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-xl" />)}
           </div>
-
-          {/* Hour distribution */}
-          {hourDist.length > 0 && (
-            <div className="rounded-xl p-5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                <FaClock size={14} className="text-brand-400" />
-                Horas más solicitadas
-              </h3>
-              <div className="flex items-end gap-1 h-24">
-                {hourDist.map((h, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div
-                      className="w-full rounded-t transition-all"
-                      style={{
-                        height: `${Math.max(h.intensity * 100, 4)}%`,
-                        background: h.intensity > 0.7 ? 'var(--primary)' : h.intensity > 0.3 ? 'rgba(230,126,34,0.4)' : 'rgba(230,126,34,0.15)',
-                      }}
-                    />
-                    <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{h.hour}h</span>
+        ) : insights.length === 0 ? (
+          <div className="rounded-xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <FaRobot className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay insights para este periodo</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {insights.map((insight, i) => {
+              const Icon = insight.icon
+              return (
+                <motion.div
+                  key={insight.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="rounded-xl p-4 flex items-start gap-3"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${insight.color}15` }}>
+                    <Icon size={16} style={{ color: insight.color }} />
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{insight.title}</p>
+                      {insight.priority === 'high' && (
+                        <span className="text-2xs px-1.5 py-0.5 rounded-full bg-danger-500/15 text-danger-400 font-medium">Urgente</span>
+                      )}
+                    </div>
+                    <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{insight.description}</p>
+                    {insight.action && (
+                      <button className="text-2xs font-medium mt-2 flex items-center gap-1 transition-colors hover:opacity-80" style={{ color: 'var(--color-primary)' }}>
+                        {insight.action} <FaArrowRight size={8} />
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
