@@ -11,7 +11,7 @@ import {
   FaDog, FaTachometerAlt, FaCalendarAlt, FaUsers, FaPaw, FaWalking,
   FaMapMarkedAlt, FaDollarSign, FaTag, FaUserFriends, FaStar,
   FaChartLine, FaCog, FaClipboardList, FaRobot, FaSignOutAlt,
-  FaChevronLeft, FaChevronRight, FaBars,
+  FaChevronLeft, FaChevronRight, FaBars, FaComments,
 } from 'react-icons/fa'
 
 const NAV_ITEMS = [
@@ -26,6 +26,7 @@ const NAV_ITEMS = [
   { id: 'cupones', label: 'Cupones', icon: FaTag, href: '/admin/cupones' },
   { id: 'referidos', label: 'Referidos', icon: FaUserFriends, href: '/admin/referidos' },
   { id: 'resenas', label: 'Reseñas', icon: FaStar, href: '/admin/resenas' },
+  { id: 'chat', label: 'Chat', icon: FaComments, href: '/admin/chat' },
   { id: 'analitica', label: 'Analítica', icon: FaChartLine, href: '/admin/analitica' },
   { id: 'config', label: 'Configuración', icon: FaCog, href: '/admin/config' },
   { id: 'logs', label: 'Logs', icon: FaClipboardList, href: '/admin/logs' },
