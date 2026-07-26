@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import {
   FaRobot, FaCalendarAlt, FaDog, FaUsers, FaChartLine, FaClock,
   FaLightbulb, FaArrowUp, FaArrowDown, FaExclamationTriangle,
-  FaBolt, FaStar, FaWalking, FaMoneyBill, FaArrowRight,
+  FaBolt, FaStar, FaWalking, FaMoneyBill, FaArrowRight, FaPercent,
 } from 'react-icons/fa'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
@@ -154,6 +154,35 @@ export default function AdminIAPage() {
     })
   }, [reservations, config.walkers, selectedPeriod, getEffectivePrice])
 
+  // Service margin analysis
+  const serviceMargins = useMemo(() => {
+    const now = new Date()
+    const periodDays = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
+    const periodStart = new Date(now.getTime() - periodDays * 86400000).toISOString().split('T')[0]
+    const periodRes = reservations.filter((r) => r.date >= periodStart && r.status === 'completed')
+
+    const services: Record<string, { count: number; revenue: number; discounts: number }> = {}
+    periodRes.forEach((r) => {
+      const price = getEffectivePrice(r.service)
+      const discount = r.discountApplied || 0
+      if (!services[r.service]) services[r.service] = { count: 0, revenue: 0, discounts: 0 }
+      services[r.service].count++
+      services[r.service].revenue += price
+      services[r.service].discounts += discount
+    })
+
+    return Object.entries(services)
+      .map(([name, data]) => ({
+        name,
+        count: data.count,
+        revenue: data.revenue,
+        discounts: data.discounts,
+        avgPrice: data.count > 0 ? Math.round(data.revenue / data.count) : 0,
+        discountRate: data.revenue > 0 ? Math.round((data.discounts / (data.revenue + data.discounts)) * 100) : 0,
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+  }, [reservations, selectedPeriod, getEffectivePrice])
+
   const metrics = useMemo(() => {
     const now = new Date()
     const periodDays = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
@@ -264,6 +293,34 @@ export default function AdminIAPage() {
           </div>
         )}
       </div>
+
+      {/* Service Margin Analysis */}
+      {serviceMargins.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <div className="flex items-center gap-2 mb-3">
+            <FaPercent size={14} className="text-accent-400" />
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Análisis de margen por servicio</h3>
+          </div>
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="grid grid-cols-5 gap-2 px-4 py-2 text-2xs font-medium" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
+              <span className="col-span-2">Servicio</span>
+              <span className="text-right">Paseos</span>
+              <span className="text-right">Ingresos</span>
+              <span className="text-right">Descuento %</span>
+            </div>
+            {serviceMargins.map((s) => (
+              <div key={s.name} className="grid grid-cols-5 gap-2 px-4 py-3 text-xs" style={{ borderBottom: '1px solid var(--border)' }}>
+                <span className="col-span-2 font-medium truncate" style={{ color: 'var(--text-primary)' }}>{s.name}</span>
+                <span className="text-right" style={{ color: 'var(--text-secondary)' }}>{s.count}</span>
+                <span className="text-right font-medium" style={{ color: 'var(--text-primary)' }}>${s.revenue.toLocaleString()}</span>
+                <span className={`text-right font-medium ${s.discountRate > 20 ? 'text-danger-400' : s.discountRate > 10 ? 'text-warning-400' : 'text-success-400'}`}>
+                  {s.discountRate}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   )
 }
