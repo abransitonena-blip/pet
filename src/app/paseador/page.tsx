@@ -8,9 +8,10 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import {
   FaDog, FaCalendarAlt, FaClock, FaCheckCircle, FaArrowRight,
-  FaCamera, FaWalking, FaSpinner, FaWhatsapp,
+  FaCamera, FaWalking, FaSpinner, FaWhatsapp, FaBox,
 } from 'react-icons/fa'
 import WalkSessionModal from '@/components/WalkSessionModal'
+import { useWalkerSessions } from '@/lib/useServiceOrders'
 import type { Reservation } from '@/types'
 
 export default function PaseadorDashboard() {
@@ -109,6 +110,15 @@ export default function PaseadorDashboard() {
   const active = todayWalks.filter((r) => r.status === 'paseando')
   const completedToday = todayWalks.filter((r) => r.status === 'completed')
   const totalCompleted = reservations.filter((r) => r.status === 'completed').length
+
+  // Service order sessions (weekly packages)
+  const { sessions: walkerSessions } = useWalkerSessions(
+    auth.currentUser?.uid || '',
+    walkerName,
+  )
+  const todaySessions = walkerSessions.filter(
+    (s) => s.date === today && s.sessionStatus !== 'completed' && s.sessionStatus !== 'cancelled',
+  )
 
   const handleStatusUpdate = async (id: string, status: string) => {
     setUpdatingId(id)
@@ -320,6 +330,53 @@ export default function PaseadorDashboard() {
           </div>
         )}
       </motion.div>
+
+      {/* Service Order Sessions (Weekly Packages) */}
+      {todaySessions.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <FaBox size={12} className="text-accent-400" />
+            Sesiones de paquete ({todaySessions.length})
+          </h2>
+          <div className="space-y-2">
+            {todaySessions.map((session) => (
+              <div
+                key={session.id}
+                className="rounded-xl p-3 flex items-center gap-3"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              >
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                  session.sessionStatus === 'paseando' ? 'bg-success-500/20' :
+                  session.sessionStatus === 'en_camino' ? 'bg-blue-500/10' :
+                  'bg-accent-500/10'
+                }`}>
+                  {session.sessionStatus === 'paseando' ? <FaWalking size={14} className="text-success-400" /> :
+                   <FaDog size={14} className="text-accent-400" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{session.dogName}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    {session.serviceName} · {session.arrivalWindowStart ? `${session.arrivalWindowStart}${session.arrivalWindowEnd ? `-${session.arrivalWindowEnd}` : ''}` : session.startTime}
+                  </p>
+                </div>
+                <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
+                  session.sessionStatus === 'paseando' ? 'bg-success-500/15 text-success-400' :
+                  session.sessionStatus === 'en_camino' ? 'bg-blue-500/15 text-blue-400' :
+                  session.sessionStatus === 'completed' ? 'bg-success-500/15 text-success-400' :
+                  'bg-white/10 text-[var(--text-muted)]'
+                }`}>
+                  {session.sessionStatus === 'pending' ? 'Pendiente' :
+                   session.sessionStatus === 'assigned' ? 'Asignado' :
+                   session.sessionStatus === 'en_camino' ? 'En camino' :
+                   session.sessionStatus === 'paseando' ? 'Paseando' :
+                   session.sessionStatus === 'completed' ? 'Completado' :
+                   session.sessionStatus}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Walk Session Modal */}
       <WalkSessionModal
