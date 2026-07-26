@@ -7,7 +7,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import {
-  FaDog, FaHome, FaHistory, FaSignOutAlt, FaWalking,
+  FaDog, FaHome, FaHistory, FaSignOutAlt, FaWalking, FaExclamationTriangle,
 } from 'react-icons/fa'
 
 const NAV_ITEMS = [
@@ -20,17 +20,48 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
   const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [walkerName, setWalkerName] = useState('')
+  const [error, setError] = useState('')
+  const [mustChangePassword, setMustChangePassword] = useState(false)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) { router.push('/login'); return }
-      const snap = await getDoc(doc(db, 'users', user.uid))
-      if (snap.exists() && snap.data().role === 'walker') {
-        setWalkerName(snap.data().name || user.displayName || 'Paseador')
+
+      // Check users/{uid} for role
+      const userSnap = await getDoc(doc(db, 'users', user.uid))
+      if (!userSnap.exists() || userSnap.data().role !== 'walker') {
+        setError('No tienes acceso de paseador')
         setLoading(false)
-      } else {
-        router.push('/login')
+        return
       }
+
+      const name = userSnap.data().name || user.displayName || 'Paseador'
+      setWalkerName(name)
+
+      // Check walkerProfiles/{uid} for status
+      try {
+        const profileSnap = await getDoc(doc(db, 'walkerProfiles', user.uid))
+        if (profileSnap.exists()) {
+          const profile = profileSnap.data()
+          if (profile.status === 'suspended') {
+            setError('Tu cuenta fue suspendida. Contacta al administrador.')
+            setLoading(false)
+            return
+          }
+          if (profile.status === 'invited') {
+            setError('Tu cuenta aún no ha sido activada.')
+            setLoading(false)
+            return
+          }
+          if (profile.forcePasswordChange) {
+            setMustChangePassword(true)
+          }
+        }
+      } catch {
+        // walkerProfiles doc might not exist yet — continue with user name
+      }
+
+      setLoading(false)
     })
     return unsub
   }, [router])
@@ -47,6 +78,26 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
         <div className="text-center">
           <FaWalking className="text-success-500 text-3xl mx-auto mb-3 animate-pulse" />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Cargando panel...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
+        <div className="rounded-2xl p-8 text-center max-w-sm" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div className="w-16 h-16 rounded-2xl bg-danger-500/10 flex items-center justify-center mx-auto mb-4">
+            <FaExclamationTriangle size={24} className="text-danger-400" />
+          </div>
+          <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Acceso restringido</h2>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>{error}</p>
+          <button
+            onClick={handleLogout}
+            className="w-full py-3 rounded-xl text-sm font-semibold bg-danger-500/10 text-danger-400 hover:bg-danger-500/20 transition-all"
+          >
+            Cerrar sesión
+          </button>
         </div>
       </div>
     )
@@ -81,6 +132,16 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
           </div>
         </div>
       </header>
+
+      {mustChangePassword && (
+        <div className="bg-brand-500/10 border-b border-brand-500/20 px-4 py-3">
+          <div className="section-container">
+            <p className="text-xs font-medium text-brand-400">
+              Debes cambiar tu contraseña temporal. Ve a tu perfil para actualizarla.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="section-container py-8">
         <div className="grid lg:grid-cols-4 gap-6">

@@ -459,6 +459,7 @@ exports.registerFCMToken = functions.https.onCall(async (data, context) => {
 
 // Callable: createWalkerAccount({ email, name, phone, zones, maxDaily, maxWeekly, schedule })
 // Creates Firebase Auth user + users doc + walkerProfiles doc with generated temp password
+// Includes rollback: if Firestore writes fail after Auth user creation, the Auth user is deleted
 exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
 
@@ -472,6 +473,12 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('invalid-argument', 'Email and name required');
   }
 
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid email format');
+  }
+
   // Check if email already exists
   try {
     await auth.getUserByEmail(email);
@@ -481,61 +488,77 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
     // User doesn't exist — good, we can create
   }
 
-  // Generate random temp password (12 chars: upper, lower, digit, symbol)
-  const tempPassword = crypto.randomBytes(9).toString('base64url').slice(0, 12);
+  // Generate random temp password (16 chars: alphanumeric + symbol)
+  const tempPassword = crypto.randomBytes(12).toString('base64url').slice(0, 16);
 
-  // Create Firebase Auth user with generated password
-  const userRecord = await auth.createUser({
-    email,
-    password: tempPassword,
-    displayName: name,
-    disabled: false,
-  });
+  let uid = null;
 
-  const uid = userRecord.uid;
+  try {
+    // Create Firebase Auth user with generated password
+    const userRecord = await auth.createUser({
+      email,
+      password: tempPassword,
+      displayName: name,
+      disabled: false,
+    });
 
-  // Create users doc with role
-  await db.collection('users').doc(uid).set({
-    role: 'walker',
-    name,
-    email,
-    phone: phone || '',
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+    uid = userRecord.uid;
 
-  // Create walkerProfiles doc with force password change flag
-  await db.collection('walkerProfiles').doc(uid).set({
-    uid,
-    name,
-    email,
-    phone: phone || '',
-    zones: zones || [],
-    maxDaily: maxDaily || 8,
-    maxWeekly: maxWeekly || 40,
-    schedule: schedule || {},
-    status: 'active',
-    forcePasswordChange: true,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+    // Create users doc with role (must exist before walkerProfiles read rules work)
+    await db.collection('users').doc(uid).set({
+      role: 'walker',
+      name,
+      email,
+      phone: phone || '',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
-  // Set custom claim
-  await auth.setCustomUserClaims(uid, { role: 'walker' });
+    // Create walkerProfiles doc with force password change flag
+    await db.collection('walkerProfiles').doc(uid).set({
+      uid,
+      name,
+      email,
+      phone: phone || '',
+      zones: zones || [],
+      maxDaily: maxDaily || 8,
+      maxWeekly: maxWeekly || 40,
+      schedule: schedule || {},
+      status: 'active',
+      forcePasswordChange: true,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
-  // Log audit
-  await logAudit(
-    { uid: context.auth.uid, role: 'admin', name: 'Admin' },
-    'create_walker',
-    'walker',
-    uid,
-    null,
-    { name, email }
-  );
+    // Set custom claim
+    await auth.setCustomUserClaims(uid, { role: 'walker' });
 
-  // Notify admin
-  await sendPushToAdmins('👤 Paseador creado', `Cuenta creada para ${name} (${email})`);
+    // Log audit
+    await logAudit(
+      { uid: context.auth.uid, role: 'admin', name: 'Admin' },
+      'create_walker',
+      'walker',
+      uid,
+      null,
+      { name, email }
+    );
 
-  // Return temp password (one-time display, never stored in plaintext after this)
-  return { uid, tempPassword, success: true };
+    // Notify admin
+    await sendPushToAdmins('👤 Paseador creado', `Cuenta creada para ${name} (${email})`);
+
+    // Return temp password (one-time display, never stored in plaintext after this)
+    return { uid, tempPassword, success: true };
+
+  } catch (error) {
+    // Rollback: if Auth user was created but Firestore writes failed, delete the Auth user
+    if (uid) {
+      try {
+        await auth.deleteUser(uid);
+        console.log(`Rolled back Auth user ${uid} after Firestore write failure`);
+      } catch (rollbackError) {
+        console.error(`Failed to rollback Auth user ${uid}:`, rollbackError);
+      }
+    }
+    throw error;
+  }
 });
 
 // ═══════════════════════════════════════════

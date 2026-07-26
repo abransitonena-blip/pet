@@ -47,6 +47,12 @@ service cloud.firestore {
         && resource.data.assignment.walkerId == request.auth.uid;
     }
 
+    function isWalkerByNameOnReservation() {
+      return isWalker()
+        && resource.data.assignedWalker != null
+        && resource.data.assignedWalker == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name;
+    }
+
     function isWalkerAssignedInUpdate() {
       return isWalker()
         && request.resource.data.assignment != null
@@ -170,10 +176,16 @@ service cloud.firestore {
 
       match /sessions/{sessionId} {
         allow read: if isAuthenticated()
-          && (resource.data.clientId == request.auth.uid || isAdmin() || isSupervisor());
+          && (resource.data.clientId == request.auth.uid
+              || resource.data.walkerId == request.auth.uid
+              || isAdmin()
+              || isSupervisor());
         allow create: if isAuthenticated();
         allow update: if isAuthenticated()
-          && (resource.data.clientId == request.auth.uid || isAdmin() || isSupervisor());
+          && (resource.data.clientId == request.auth.uid
+              || resource.data.walkerId == request.auth.uid
+              || isAdmin()
+              || isSupervisor());
         allow delete: if isAdmin();
       }
     }
@@ -183,10 +195,11 @@ service cloud.firestore {
     // ═══════════════════════════════════════════
 
     match /reservations/{resId} {
-      // READ: owner, assigned walker, admin, supervisor
+      // READ: owner, assigned walker (by uid or name), admin, supervisor
       allow read: if isAuthenticated()
         && (isReservationClient()
             || isWalkerAssignedToReservation()
+            || isWalkerByNameOnReservation()
             || isAdmin()
             || isSupervisor());
 
@@ -194,10 +207,13 @@ service cloud.firestore {
       allow create: if isAuthenticated()
         && isValidReservation();
 
-      // UPDATE: admin always, walker for status transitions on assigned, client can cancel own pending
+      // UPDATE: admin always, walker for status transitions on assigned (by uid or name), client can cancel own pending
       allow update: if isAuthenticated()
         && (isAdmin()
             || isWalkerAssignedInUpdate()
+            || (isWalker()
+                && request.resource.data.assignedWalker != null
+                && request.resource.data.assignedWalker == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name)
             || (isReservationClient()
                 && request.resource.data.status == 'cancelled'
                 && resource.data.status != 'completed'

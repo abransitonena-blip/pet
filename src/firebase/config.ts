@@ -17,7 +17,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0]
 const db = getFirestore(app)
 const auth = getAuth(app)
 const storage = getStorage(app)
-const functions = getFunctions(app)
+const functions = getFunctions(app, 'us-central1')
 
 import type { Messaging } from 'firebase/messaging'
 

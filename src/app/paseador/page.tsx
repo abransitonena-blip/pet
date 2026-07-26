@@ -24,10 +24,27 @@ export default function PaseadorDashboard() {
   useEffect(() => {
     let unsubRes: (() => void) | undefined
     let unsubResUid: (() => void) | undefined
+    let seenIds = new Set<string>()
+    let allReservations: Reservation[] = []
+
+    const emitUpdate = () => {
+      const merged = [...allReservations]
+      merged.sort((a, b) => {
+        const ca = a.createdAt as string | { seconds?: number } | undefined
+        const cb = b.createdAt as string | { seconds?: number } | undefined
+        const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
+        const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
+        return tb - ta
+      })
+      setReservations(merged)
+      setLoading(false)
+    }
 
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
       if (unsubRes) { unsubRes(); unsubRes = undefined }
       if (unsubResUid) { unsubResUid(); unsubResUid = undefined }
+      seenIds = new Set<string>()
+      allReservations = []
       if (!user) { router.push('/login'); return }
 
       const userSnap = await import('firebase/firestore').then(({ getDoc }) =>
@@ -39,58 +56,51 @@ export default function PaseadorDashboard() {
       if (!name) { setLoading(false); return }
 
       // Query by name (legacy) AND by uid (new auto-assign)
-      const seenIds = new Set<string>()
-      const mergeDocs = (docs: Reservation[]) => {
-        const merged = [...reservations]
-        for (const doc of docs) {
-          if (!seenIds.has(doc.id)) {
-            seenIds.add(doc.id)
-            merged.push(doc)
-          }
-        }
-        merged.sort((a, b) => {
-          const ca = a.createdAt as string | { seconds?: number } | undefined
-          const cb = b.createdAt as string | { seconds?: number } | undefined
-          const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
-          const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
-          return tb - ta
-        })
-        setReservations(merged)
-        setLoading(false)
-      }
-
-      // Query by assignedWalker (name) - legacy
+      // Only show active sessions (not completed or cancelled) for today's view
       const qName = query(collection(db, 'reservations'), where('assignedWalker', '==', name))
       unsubRes = onSnapshot(qName, (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-        docs.forEach((d) => seenIds.add(d.id))
-        setReservations(docs)
+        snap.docChanges().forEach((change) => {
+          const docData = { id: change.doc.id, ...change.doc.data() } as Reservation
+          if (change.type === 'added' || change.type === 'modified') {
+            seenIds.add(docData.id)
+            const idx = allReservations.findIndex((r) => r.id === docData.id)
+            if (idx >= 0) allReservations[idx] = docData
+            else allReservations.push(docData)
+          } else if (change.type === 'removed') {
+            seenIds.delete(docData.id)
+            allReservations = allReservations.filter((r) => r.id !== docData.id)
+          }
+        })
+        emitUpdate()
+      }, (err) => {
+        console.error('Walker name query error:', err)
         setLoading(false)
-      }, () => setLoading(false))
+      })
 
       // Query by assignment.walkerId (uid) - new auto-assign
       const qUid = query(collection(db, 'reservations'), where('assignment.walkerId', '==', user.uid))
       unsubResUid = onSnapshot(qUid, (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-        const merged = [...reservations]
-        for (const doc of docs) {
-          if (!seenIds.has(doc.id)) {
-            seenIds.add(doc.id)
-            merged.push(doc)
+        snap.docChanges().forEach((change) => {
+          const docData = { id: change.doc.id, ...change.doc.data() } as Reservation
+          if (change.type === 'added' || change.type === 'modified') {
+            if (!seenIds.has(docData.id)) {
+              seenIds.add(docData.id)
+              allReservations.push(docData)
+            }
+          } else if (change.type === 'removed') {
+            if (seenIds.has(docData.id)) {
+              seenIds.delete(docData.id)
+              allReservations = allReservations.filter((r) => r.id !== docData.id)
+            }
           }
-        }
-        merged.sort((a, b) => {
-          const ca = a.createdAt as string | { seconds?: number } | undefined
-          const cb = b.createdAt as string | { seconds?: number } | undefined
-          const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
-          const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
-          return tb - ta
         })
-        setReservations(merged)
+        emitUpdate()
+      }, (err) => {
+        console.error('Walker uid query error:', err)
         setLoading(false)
-      }, () => setLoading(false))
+      })
     })
-    return () => { unsubRes?.(); unsubResUid?.(); unsubAuth() }
+    return () => { unsubRes?.(); unsubResUid(); unsubAuth() }
   }, [router])
 
   const today = new Date().toISOString().split('T')[0]
@@ -103,7 +113,7 @@ export default function PaseadorDashboard() {
   const handleStatusUpdate = async (id: string, status: string) => {
     setUpdatingId(id)
     try {
-      await updateDoc(doc(db, 'reservations', id), { status })
+      await updateDoc(doc(db, 'reservations', id), { status, updatedAt: serverTimestamp() })
     } catch (e) {
       console.error('Error updating status:', e)
     }
