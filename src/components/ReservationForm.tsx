@@ -47,6 +47,15 @@ function parseTimeWindow(slot: string): { start: string; end: string } {
   return { start: slot, end: '' }
 }
 
+// Margin guard: discounts cannot reduce price below this percentage of base price
+const MIN_MARGIN_PERCENT = 30
+
+function applyMarginGuard(basePrice: number, discount: number): number {
+  const minPrice = Math.round(basePrice * MIN_MARGIN_PERCENT / 100)
+  const maxDiscount = Math.max(0, basePrice - minPrice)
+  return Math.min(discount, maxDiscount)
+}
+
 function loadDraft() {
   if (typeof window === 'undefined') return null
   try {
@@ -428,6 +437,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     if (couponStatus?.valid && couponStatus.discount) {
       discountAmount = couponStatus.type === 'percentage' ? Math.round(basePrice * couponStatus.discount / 100) : couponStatus.discount
     }
+    discountAmount = applyMarginGuard(basePrice, discountAmount)
     const finalPrice = basePrice - discountAmount
 
     const petTypeLabel = PET_TYPES.find((p) => p.value === form.petType)?.label || form.petType
@@ -630,9 +640,10 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   }
 
   const basePrice = form.service ? (prices[form.service] ?? getServicePrice(form.service)) : 0
-  const discountAmount = couponStatus?.valid && couponStatus.discount
+  const rawDiscount = couponStatus?.valid && couponStatus.discount
     ? (couponStatus.type === 'percentage' ? Math.round(basePrice * couponStatus.discount / 100) : couponStatus.discount)
     : 0
+  const discountAmount = applyMarginGuard(basePrice, rawDiscount)
   const finalPrice = basePrice - discountAmount
 
   const today = new Date().toISOString().split('T')[0]
