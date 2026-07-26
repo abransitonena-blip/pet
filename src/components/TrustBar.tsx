@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useInView } from 'framer-motion'
 import { FaShieldAlt, FaBolt, FaHeart, FaStar, FaDog } from 'react-icons/fa'
 import { usePublicStats } from '@/lib/usePublicStats'
@@ -9,14 +9,14 @@ import { usePublicStats } from '@/lib/usePublicStats'
 export default function TrustBar() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
-  const { avgRating, happyDogs, loading } = usePublicStats()
+  const { avgRating, totalReviews, happyDogs, totalWalks, loading } = usePublicStats()
 
   const trustItems = [
     { icon: FaShieldAlt, label: 'Paseadores verificados', color: '#3b82f6' },
-    { icon: FaBolt, label: 'Respuesta rápida', color: '#D97706' },
-    { icon: FaHeart, label: 'Seguro incluido', color: '#ec4899' },
-    { icon: FaStar, label: loading ? 'Calificación' : `${avgRating}/5 calificación`, color: '#FBBF24' },
-    { icon: FaDog, label: loading ? 'Perros felices' : `${happyDogs}+ perros felices`, color: '#059669' },
+    { icon: FaBolt, label: 'Reserva en minutos', color: '#D97706' },
+    { icon: FaHeart, label: 'Atención personalizada', color: '#ec4899' },
+    ...(avgRating > 0 ? [{ icon: FaStar, label: `${avgRating}/5 (${totalReviews} reseñas)`, color: '#FBBF24' }] : []),
+    ...(totalWalks > 0 ? [{ icon: FaDog, label: `${happyDogs}+ perros felices`, color: '#059669' }] : []),
   ]
 
   return (
