@@ -38,6 +38,7 @@ const slideVariants = {
 }
 
 const STORAGE_KEY = 'pq_reservation_draft'
+const DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 
 function parseTimeWindow(slot: string): { start: string; end: string } {
   if (slot.includes('-')) {
@@ -59,18 +60,23 @@ function applyMarginGuard(basePrice: number, discount: number): number {
 function loadDraft() {
   if (typeof window === 'undefined') return null
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    return JSON.parse(raw)
+    const parsed = JSON.parse(raw)
+    if (parsed._savedAt && Date.now() - parsed._savedAt > DRAFT_MAX_AGE_MS) {
+      localStorage.removeItem(STORAGE_KEY)
+      return null
+    }
+    return parsed
   } catch { return null }
 }
 
 function saveDraft(data: Record<string, unknown>) {
-  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)) } catch {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, _savedAt: Date.now() })) } catch {}
 }
 
 function clearDraft() {
-  try { sessionStorage.removeItem(STORAGE_KEY) } catch {}
+  try { localStorage.removeItem(STORAGE_KEY) } catch {}
 }
 
 function BookingSummary({ step, form, prices, couponStatus, weeklySchedule }: {
