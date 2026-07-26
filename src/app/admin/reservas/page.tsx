@@ -240,6 +240,24 @@ export default function AdminReservas() {
           .sort((a, b) => {
             const uidA = String(a.id || a.uid || '')
             const uidB = String(b.id || b.uid || '')
+
+            // Continuity: prefer walker who previously served this client
+            const prevWalkerA = reservations.some(
+              (r) => r.client?.uid === res.client?.uid && (r.assignment?.walkerId === uidA || r.assignedWalker === a.name) && r.status === 'completed',
+            ) ? 1 : 0
+            const prevWalkerB = reservations.some(
+              (r) => r.client?.uid === res.client?.uid && (r.assignment?.walkerId === uidB || r.assignedWalker === b.name) && r.status === 'completed',
+            ) ? 1 : 0
+            if (prevWalkerA !== prevWalkerB) return prevWalkerB - prevWalkerA
+
+            // Zone match: prefer walker in reservation zone
+            const zonesA = (a.zones || []) as string[]
+            const zonesB = (b.zones || []) as string[]
+            const zoneMatchA = res.zoneId && zonesA.includes(res.zoneId) ? 1 : 0
+            const zoneMatchB = res.zoneId && zonesB.includes(res.zoneId) ? 1 : 0
+            if (zoneMatchA !== zoneMatchB) return zoneMatchB - zoneMatchA
+
+            // Load balance: prefer less loaded walker
             return (loads[uidA] || 0) - (loads[uidB] || 0)
           })
 
