@@ -1,8 +1,9 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { db } from '@/firebase/config'
+import { db, auth } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot, limit, startAfter, getDocs, DocumentSnapshot } from 'firebase/firestore'
+import { onAuthStateChanged } from 'firebase/auth'
 import type { Reservation } from '@/types'
 
 interface ReservationsContextType {
@@ -28,19 +29,32 @@ export function ReservationsProvider({ children }: { children: ReactNode }) {
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null)
 
   useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE))
-    const unsub = onSnapshot(q, (snap) => {
-      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-      setReservations(docs)
-      setLastDoc(snap.docs[snap.docs.length - 1] || null)
-      setHasMore(snap.docs.length === PAGE_SIZE)
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
+    let unsub: (() => void) | undefined
+
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (unsub) { unsub(); unsub = undefined }
+
+      if (!user) {
+        setReservations([])
+        setLoading(false)
+        return
+      }
+
+      const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE))
+      unsub = onSnapshot(q, (snap) => {
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
+        setReservations(docs)
+        setLastDoc(snap.docs[snap.docs.length - 1] || null)
+        setHasMore(snap.docs.length === PAGE_SIZE)
+        setLoading(false)
+      }, () => setLoading(false))
+    })
+
+    return () => { unsub?.(); unsubAuth() }
   }, [])
 
   const loadMore = useCallback(async () => {
-    if (!hasMore || !lastDoc) return
+    if (!hasMore || !lastDoc || !auth.currentUser) return
     try {
       const q = query(
         collection(db, 'reservations'),

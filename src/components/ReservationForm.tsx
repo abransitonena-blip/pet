@@ -286,6 +286,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
   useEffect(() => {
     if (!form.date) { setBookedSlots([]); return }
+    const user = auth.currentUser
+    if (!user) { setBookedSlots([]); setLoadingSlots(false); return }
     setLoadingSlots(true)
     const q = query(
       collection(db, 'reservations'),
