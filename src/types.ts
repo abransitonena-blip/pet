@@ -69,6 +69,8 @@ export interface WalkSession {
   serviceName: string
   date: string
   startTime: string
+  arrivalWindowStart?: string
+  arrivalWindowEnd?: string
   expectedEndTime: string
   zoneId: string
   zoneName: string
@@ -100,6 +102,8 @@ export interface Reservation {
   service: string
   date: string
   time: string
+  arrivalWindowStart?: string
+  arrivalWindowEnd?: string
   status: 'pending' | 'confirmed' | 'assigned' | 'en_camino' | 'paseando' | 'completed' | 'cancelled'
   notes: string
   internalNotes: string

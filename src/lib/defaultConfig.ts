@@ -18,11 +18,17 @@ export const BUSINESS_HOURS: Record<string, DayHours | null> = {
 export function generateTimeSlots(dayOfWeek: string): string[] {
   const hours = BUSINESS_HOURS[dayOfWeek]
   if (!hours) return []
-  const [openH] = hours.open.split(':').map(Number)
-  const [closeH] = hours.close.split(':').map(Number)
+  const [openH, openM] = hours.open.split(':').map(Number)
+  const [closeH, closeM] = hours.close.split(':').map(Number)
+  const openMinutes = openH * 60 + openM
+  const closeMinutes = closeH * 60 + closeM
+  const WINDOW_MINUTES = 20
   const slots: string[] = []
-  for (let h = openH; h < closeH; h++) {
-    slots.push(`${String(h).padStart(2, '0')}:00`)
+  for (let m = openMinutes; m < closeMinutes; m += WINDOW_MINUTES) {
+    const endM = Math.min(m + WINDOW_MINUTES, closeMinutes)
+    const startStr = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+    const endStr = `${String(Math.floor(endM / 60)).padStart(2, '0')}:${String(endM % 60).padStart(2, '0')}`
+    slots.push(`${startStr}-${endStr}`)
   }
   return slots
 }

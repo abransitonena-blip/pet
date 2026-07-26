@@ -175,7 +175,7 @@ export default function HistorialPage() {
                     <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
                       <span className="flex items-center gap-1"><FaDog size={10} /> {res.petName}</span>
                       <span className="flex items-center gap-1"><FaCalendarAlt size={10} /> {res.date}</span>
-                      {res.time && <span className="flex items-center gap-1"><FaClock size={10} /> {res.time}</span>}
+                      {res.time && <span className="flex items-center gap-1"><FaClock size={10} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>}
                     </div>
                     {hasWalkData && (
                       <div className="flex items-center gap-1 mt-1.5 text-2xs" style={{ color: 'var(--text-muted)' }}>

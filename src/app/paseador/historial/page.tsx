@@ -166,7 +166,7 @@ export default function PaseadorHistorialPage() {
                   <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
                     <span>{res.service}</span>
                     <span className="flex items-center gap-1"><FaCalendarAlt size={9} /> {res.date}</span>
-                    <span className="flex items-center gap-1"><FaClock size={9} /> {res.time}</span>
+                    <span className="flex items-center gap-1"><FaClock size={9} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
                   </div>
                   {res.walkCheckIn && (
                     <div className="flex items-center gap-2 mt-1.5 text-2xs" style={{ color: 'var(--text-muted)' }}>

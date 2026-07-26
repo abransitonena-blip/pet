@@ -106,7 +106,9 @@ export default function DashboardPage() {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{nextWalk.date}</p>
-                <p className="text-xs font-medium" style={{ color: 'var(--brand)' }}>{nextWalk.time}</p>
+                <p className="text-xs font-medium" style={{ color: 'var(--brand)' }}>
+                  {nextWalk.arrivalWindowStart ? `${nextWalk.arrivalWindowStart}${nextWalk.arrivalWindowEnd ? `-${nextWalk.arrivalWindowEnd}` : ''}` : nextWalk.time}
+                </p>
               </div>
             </div>
           ) : (

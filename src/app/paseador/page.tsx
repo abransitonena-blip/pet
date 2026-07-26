@@ -215,7 +215,7 @@ export default function PaseadorDashboard() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.petName}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{res.service} · {res.time}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{res.service} · {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</p>
                     </div>
                   </div>
                   <button
@@ -273,7 +273,7 @@ export default function PaseadorDashboard() {
                       <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                         <span>{res.service}</span>
                         <span>·</span>
-                        <span className="flex items-center gap-1"><FaClock size={9} /> {res.time}</span>
+                        <span className="flex items-center gap-1"><FaClock size={9} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
                       </div>
                     </div>
                   </div>

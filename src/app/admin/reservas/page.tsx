@@ -18,6 +18,7 @@ import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
 import { useConfig } from '@/context/ConfigContext'
+import { isWalkerAvailable } from '@/lib/scheduling'
 import Badge from '@/components/ui/Badge'
 import EditReservationModal from '@/components/EditReservationModal'
 import WalkSessionModal from '@/components/WalkSessionModal'
@@ -198,9 +199,11 @@ export default function AdminReservas() {
 
       let assigned = 0
       for (const res of pending) {
-        const reservationHour = parseInt(res.time?.split(':')[0] || '9', 10)
+        const timeSlot = res.arrivalWindowStart
+          ? (res.arrivalWindowEnd ? `${res.arrivalWindowStart}-${res.arrivalWindowEnd}` : res.arrivalWindowStart)
+          : res.time || '09:00-09:20'
 
-        // Find walkers with capacity, matching schedule, sorted by lowest load
+        // Find walkers with capacity, matching schedule, no transit conflicts, sorted by lowest load
         const available = walkerProfiles
           .filter((w) => {
             const uid = String(w.id || w.uid || '')
@@ -214,6 +217,7 @@ export default function AdminReservas() {
             const schedule = w.schedule as Record<string, Array<{ start: string; end: string }> | undefined>
             if (schedule && schedule[reservationDay]) {
               const slots = schedule[reservationDay]
+              const reservationHour = parseInt(timeSlot.split(':')[0] || '9', 10)
               const isInSlot = slots.some((slot) => {
                 const startHour = parseInt(slot.start?.split(':')[0] || '0', 10)
                 const endHour = parseInt(slot.end?.split(':')[0] || '23', 10)
@@ -221,6 +225,15 @@ export default function AdminReservas() {
               })
               if (!isInSlot) return false
             }
+
+            // Check transit buffer — no conflict with existing reservations
+            const walkerRes = reservations.filter(
+              (r) => r.assignment?.walkerId === uid || r.assignedWalker === w.name,
+            )
+            const { available: hasSlot } = isWalkerAvailable(
+              uid, res.date, timeSlot, walkerRes, res.service, res.id,
+            )
+            if (!hasSlot) return false
 
             return true
           })
@@ -431,7 +444,7 @@ export default function AdminReservas() {
                     </button>
                     <span>📋 {res.service}</span>
                     <span>📅 {res.date}</span>
-                    <span>⏰ {res.time}</span>
+                    <span>⏰ {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
                     <button
                       onClick={() => handlePaymentToggle(res.id, res.paymentStatus)}
                       className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-all ${
@@ -615,7 +628,7 @@ export default function AdminReservas() {
                     <div key={r.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
                       <div>
                         <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{r.service} · {r.petName}</p>
-                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.date} {r.time}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.date} {r.arrivalWindowStart ? `${r.arrivalWindowStart}${r.arrivalWindowEnd ? `-${r.arrivalWindowEnd}` : ''}` : r.time}</p>
                       </div>
                       <Badge variant={r.status === 'completed' ? 'success' : r.status === 'en_camino' ? 'info' : r.status === 'cancelled' ? 'danger' : r.status === 'paseando' ? 'info' : 'brand'} className="normal-case tracking-normal">
                         {STATUS_LABELS[r.status] || r.status}

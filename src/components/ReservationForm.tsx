@@ -39,6 +39,14 @@ const slideVariants = {
 
 const STORAGE_KEY = 'pq_reservation_draft'
 
+function parseTimeWindow(slot: string): { start: string; end: string } {
+  if (slot.includes('-')) {
+    const [start, end] = slot.split('-')
+    return { start, end }
+  }
+  return { start: slot, end: '' }
+}
+
 function loadDraft() {
   if (typeof window === 'undefined') return null
   try {
@@ -484,6 +492,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         // Create WalkSession for each scheduled day
         const { setDoc: setDocFn } = await import('firebase/firestore')
         for (const [date, time] of scheduledDays) {
+          const window = parseTimeWindow(time)
           const sessionRef = doc(collection(db, 'serviceOrders', orderIdRef.id, 'sessions'))
           await setDocFn(sessionRef, {
             orderId: orderIdRef.id,
@@ -495,6 +504,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
             serviceName: form.service,
             date,
             startTime: time,
+            arrivalWindowStart: window.start,
+            arrivalWindowEnd: window.end,
             expectedEndTime: '',
             zoneId: '',
             zoneName: '',
@@ -512,6 +523,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
         // Also create legacy reservation for first day (backward compat)
         const firstDay = scheduledDays[0]
+        const firstWindow = parseTimeWindow(firstDay[1])
         await addDoc(collection(db, 'reservations'), {
           name: form.name,
           phone: form.phone,
@@ -520,6 +532,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           service: form.service,
           date: firstDay[0],
           time: firstDay[1],
+          arrivalWindowStart: firstWindow.start,
+          arrivalWindowEnd: firstWindow.end,
           uid: auth.currentUser?.uid || '',
           client: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
           createdAt: serverTimestamp(),
@@ -535,9 +549,12 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         showPushNotification('🐾 Paquete Semanal', `${form.name} agendó paquete de ${scheduledDays.length} sesiones`)
       } else {
         // ─── SINGLE RESERVATION (backward compat) ───
+        const window = parseTimeWindow(form.time)
         await addDoc(collection(db, 'reservations'), {
           ...form,
           addressId: selectedAddressId,
+          arrivalWindowStart: window.start,
+          arrivalWindowEnd: window.end,
           uid: auth.currentUser?.uid || '',
           client: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
           createdAt: serverTimestamp(),

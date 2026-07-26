@@ -60,7 +60,7 @@ export default function AdminIAPage() {
     // Peak hour
     const hourCounts: Record<number, number> = {}
     periodRes.forEach((r) => {
-      const hour = parseInt(r.time?.split(':')[0] || '12')
+      const hour = parseInt((r.arrivalWindowStart || r.time || '12').split(':')[0])
       hourCounts[hour] = (hourCounts[hour] || 0) + 1
     })
     const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0]
