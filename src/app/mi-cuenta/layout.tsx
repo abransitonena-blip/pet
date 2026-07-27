@@ -124,7 +124,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
           </aside>
 
           {/* Content */}
-          <main className="lg:col-span-3">
+          <div className="lg:col-span-3">
             {children || (
               <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                 <FaDog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
@@ -139,7 +139,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
                 </Link>
               </div>
             )}
-          </main>
+          </div>
         </div>
       </div>
     </div>

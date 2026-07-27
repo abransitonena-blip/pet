@@ -167,9 +167,9 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
           </aside>
 
           {/* Content */}
-          <main className="lg:col-span-3">
+          <div className="lg:col-span-3">
             {children}
-          </main>
+          </div>
         </div>
       </div>
     </div>

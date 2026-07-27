@@ -63,7 +63,7 @@ function HomeContent() {
       <PWARegister />
       <BannerDisplay />
       <Preloader onComplete={() => setLoaded(true)} />
-      <main className="relative min-h-screen">
+      <div className="relative min-h-screen">
         <Header />
         <Hero />
         <TrustBar />
@@ -97,7 +97,7 @@ function HomeContent() {
         <WhatsAppButton hidden={formActive} />
         <ScrollToTop />
         <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
-      </main>
+      </div>
     </>
   )
 }

@@ -47,7 +47,7 @@ export default function CancelarPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -149,6 +149,6 @@ export default function CancelarPage() {
           )}
         </div>
       </motion.div>
-    </main>
+    </div>
   )
 }
