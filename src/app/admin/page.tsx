@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
@@ -239,9 +240,9 @@ export default function AdminDashboard() {
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
               Próximos paseos
             </h3>
-            <a href="/admin/reservas" className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors">
+            <Link href="/admin/reservas" className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors">
               Ver todos →
-            </a>
+            </Link>
           </div>
 
           {loading ? (
@@ -307,9 +308,9 @@ export default function AdminDashboard() {
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
               Rendimiento paseadores
             </h3>
-            <a href="/admin/paseadores" className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors">
+            <Link href="/admin/paseadores" className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors">
               Ver todos →
-            </a>
+            </Link>
           </div>
 
           {walkerStats.length === 0 ? (

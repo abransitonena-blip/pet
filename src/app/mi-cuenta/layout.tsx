@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
@@ -74,18 +75,18 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
       <header className="border-b sticky top-0 z-10" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)' }}>
         <div className="section-container h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/" className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white">
+            <Link href="/" className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white">
               <FaDog size={16} />
-            </a>
+            </Link>
             <div>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Mi cuenta</p>
               <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{userName}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <a href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+            <Link href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
               Inicio
-            </a>
+            </Link>
             {uid && <NotificationBell uid={uid} />}
             <button
               onClick={handleLogout}
@@ -133,9 +134,9 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
                 <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
                   Selecciona una opción del menú para comenzar.
                 </p>
-                <a href="#reservar" className="btn-primary inline-flex">
+                <Link href="/mi-cuenta/nueva-reserva" className="btn-primary inline-flex">
                   Reservar un paseo
-                </a>
+                </Link>
               </div>
             )}
           </main>

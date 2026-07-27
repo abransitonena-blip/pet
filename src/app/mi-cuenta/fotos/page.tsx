@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { FaCamera } from 'react-icons/fa'
 
 export default function FotosPage() {
@@ -10,7 +11,7 @@ export default function FotosPage() {
       <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
         Las fotos de los paseos de tu peludo aparecerán aquí.
       </p>
-      <a href="/#reservar" className="btn-primary inline-flex text-xs">Reservar un paseo</a>
+      <Link href="/mi-cuenta/nueva-reserva" className="btn-primary inline-flex text-xs">Reservar un paseo</Link>
     </div>
   )
 }
