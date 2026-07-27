@@ -12,7 +12,7 @@ import {
 } from 'react-icons/fa'
 import WalkSessionModal from '@/components/WalkSessionModal'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
-import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
+import { STATUS_LABELS, STATUS_COLORS, LEGACY_STATUS_MAP } from '@/lib/sessionMachine'
 import type { Reservation, SessionStatus } from '@/types'
 
 export default function PaseadorDashboard() {

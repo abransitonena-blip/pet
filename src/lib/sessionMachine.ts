@@ -65,6 +65,17 @@ export const STATUS_LABELS: Record<SessionStatus, string> = {
   no_show:          'No se presentó',
 }
 
+/** Legacy status aliases from reservations collection → new SessionStatus */
+export const LEGACY_STATUS_MAP: Record<string, SessionStatus> = {
+  pending:   'pending',
+  assigned:  'assigned',
+  en_camino: 'on_the_way',
+  paseando:  'in_progress',
+  completed: 'completed',
+  cancelled: 'cancelled',
+  no_show:   'no_show',
+}
+
 /** Status badge color class hints */
 export const STATUS_COLORS: Record<SessionStatus, { bg: string; text: string }> = {
   pending:          { bg: 'bg-yellow-500/15', text: 'text-yellow-400' },

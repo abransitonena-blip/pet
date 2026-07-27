@@ -8,7 +8,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import Image from 'next/image'
 import { FaCamera, FaMapMarkerAlt, FaTimes, FaCheck, FaStop, FaSpinner, FaImage } from 'react-icons/fa'
 import { useEscapeKey } from '@/lib/useEscapeKey'
-import type { Reservation } from '@/types'
+import { canTransition } from '@/lib/sessionMachine'
+import type { Reservation, SessionStatus } from '@/types'
 
 interface Props {
   isOpen: boolean
@@ -113,9 +114,15 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
 
       const updateData: Record<string, unknown> = {}
       if (mode === 'check_in') {
+        if (!canTransition(reservation.status as SessionStatus, 'in_progress')) {
+          console.warn(`[WalkSession] Invalid transition: ${reservation.status} → in_progress`)
+        }
         updateData.walkCheckIn = { photo: url, lat: location.lat, lng: location.lng, timestamp: serverTimestamp() }
-        updateData.status = 'paseando'
+        updateData.status = 'in_progress'
       } else {
+        if (!canTransition(reservation.status as SessionStatus, 'completed')) {
+          console.warn(`[WalkSession] Invalid transition: ${reservation.status} → completed`)
+        }
         updateData.walkCheckOut = { photo: url, lat: location.lat, lng: location.lng, timestamp: serverTimestamp() }
         updateData.walkNotes = notes || ''
         updateData.status = 'completed'
