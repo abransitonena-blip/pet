@@ -620,8 +620,55 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
         showPushNotification('🐾 Paquete Semanal', `${form.name} agendó paquete de ${scheduledDays.length} sesiones`)
       } else {
-        // ─── SINGLE RESERVATION (backward compat) ───
+        // ─── SINGLE RESERVATION ───
         const window = parseTimeWindow(form.time)
+
+        // Create serviceOrder
+        const orderIdRef = doc(collection(db, 'serviceOrders'))
+        await setDoc(orderIdRef, {
+          clientId: auth.currentUser?.uid || '',
+          clientName: form.name,
+          clientPhone: form.phone,
+          serviceName: form.service,
+          total: finalPrice,
+          discount: discountAmount,
+          paymentStatus: 'pending' as const,
+          status: 'active' as const,
+          notes: form.notes,
+          referralCode: referralPhone || '',
+          appliedCoupon: form.coupon.toUpperCase() || '',
+          createdAt: serverTimestamp(),
+        })
+
+        // Create walkSession under serviceOrder
+        const sessionRef = doc(collection(db, 'serviceOrders', orderIdRef.id, 'sessions'))
+        await setDoc(sessionRef, {
+          orderId: orderIdRef.id,
+          clientId: auth.currentUser?.uid || '',
+          clientName: form.name,
+          clientPhone: form.phone,
+          dogName: form.petName,
+          petType: form.petType,
+          serviceName: form.service,
+          date: form.date,
+          startTime: form.time,
+          arrivalWindowStart: window.start,
+          arrivalWindowEnd: window.end,
+          expectedEndTime: '',
+          zoneId: '',
+          zoneName: '',
+          addressId: selectedAddressId,
+          walkerId: walkerPreference || '',
+          walkerName: walkerPreference ? availableWalkers.find((w) => w.id === walkerPreference)?.name || '' : '',
+          assignmentStatus: walkerPreference ? 'client_preferred' : 'unassigned',
+          sessionStatus: 'pending',
+          notes: form.notes,
+          internalNotes: '',
+          history: [{ status: 'pending', timestamp: new Date().toISOString() }],
+          createdAt: serverTimestamp(),
+        })
+
+        // Legacy reservation (backward compat)
         await addDoc(collection(db, 'reservations'), {
           ...form,
           addressId: selectedAddressId,
@@ -637,6 +684,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           discountApplied: discountAmount,
           finalPrice,
           referralCode: referralPhone || '',
+          orderId: orderIdRef.id,
         })
         showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
       }
