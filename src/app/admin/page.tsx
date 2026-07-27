@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import {
@@ -17,9 +17,8 @@ import type { Reservation } from '@/types'
 
 interface Stats {
   todayReservations: number
-  weekReservations: number
-  monthReservations: number
   pendingReservations: number
+  monthReservations: number
   totalRevenue: number
   totalClients: number
   completedToday: number
@@ -35,7 +34,6 @@ interface WalkerPerf {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({
     todayReservations: 0,
-    weekReservations: 0,
     monthReservations: 0,
     pendingReservations: 0,
     totalRevenue: 0,
@@ -56,86 +54,53 @@ export default function AdminDashboard() {
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
     const todayDate = new Date()
-    const weekStart = new Date(todayDate)
-    weekStart.setDate(todayDate.getDate() - todayDate.getDay())
-    const weekStartStr = weekStart.toISOString().split('T')[0]
     const monthStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
     const monthStartStr = monthStart.toISOString().split('T')[0]
 
-    const todayQ = query(
-      collection(db, 'reservations'),
-      where('date', '==', today),
-      where('status', 'in', ['pending', 'en_camino', 'paseando'])
-    )
-    const unsubToday = onSnapshot(todayQ, (snap) => {
-      setStats((prev) => ({ ...prev, todayReservations: snap.size }))
-      setLoading(false)
-    })
-
-    const pendingQ = query(
-      collection(db, 'reservations'),
-      where('status', '==', 'pending'),
-      orderBy('date', 'asc'),
-      limit(10)
-    )
-    const unsubPending = onSnapshot(pendingQ, (snap) => {
-      setStats((prev) => ({ ...prev, pendingReservations: snap.size }))
-      setUpcomingReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
-    })
-
-    const weekQ = query(
-      collection(db, 'reservations'),
-      where('date', '>=', weekStartStr),
-      where('date', '<=', today),
-    )
-    const unsubWeek = onSnapshot(weekQ, (snap) => {
-      setStats((prev) => ({ ...prev, weekReservations: snap.size }))
-    })
-
+    // Single listener for ALL month's reservations — derives today, week, pending, walker stats
     const monthQ = query(
       collection(db, 'reservations'),
       where('date', '>=', monthStartStr),
       where('date', '<=', today),
     )
     const unsubMonth = onSnapshot(monthQ, (snap) => {
-      const docs = snap.docs.map((d) => d.data())
+      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
+      const todayDocs = docs.filter((d) => d.date === today)
+      const pendingDocs = docs.filter((d) => d.status === 'pending').sort((a, b) => (a.date > b.date ? 1 : -1))
       const revenue = docs.reduce((sum, d) => sum + (d.finalPrice || 0), 0)
       const completed = docs.filter((d) => d.status === 'completed').length
-      setStats((prev) => ({ ...prev, monthReservations: snap.size, totalRevenue: revenue, completedToday: completed }))
-    })
 
-    const clientsQ = query(collection(db, 'clients'))
-    const unsubClients = onSnapshot(clientsQ, (snap) => {
-      setStats((prev) => ({ ...prev, totalClients: snap.size }))
-    })
+      setStats((prev) => ({
+        ...prev,
+        todayReservations: todayDocs.filter((d) => ['pending', 'en_camino', 'paseando'].includes(d.status)).length,
+        pendingReservations: pendingDocs.length,
+        monthReservations: snap.size,
+        totalRevenue: revenue,
+        completedToday: completed,
+      }))
+      setUpcomingReservations(pendingDocs.slice(0, 10))
 
-    // Walker performance from today's reservations
-    const allTodayQ = query(collection(db, 'reservations'), where('date', '==', today))
-    const unsubWalkers = onSnapshot(allTodayQ, (snap) => {
+      // Walker performance from today
       const walkerMap = new Map<string, WalkerPerf>()
-      snap.docs.forEach((d) => {
-        const data = d.data()
-        const walker = data.assignedWalker
+      todayDocs.forEach((d) => {
+        const walker = d.assignedWalker
         if (!walker) return
-        if (!walkerMap.has(walker)) {
-          walkerMap.set(walker, { name: walker, assigned: 0, completed: 0, inProgress: 0 })
-        }
+        if (!walkerMap.has(walker)) walkerMap.set(walker, { name: walker, assigned: 0, completed: 0, inProgress: 0 })
         const w = walkerMap.get(walker)!
         w.assigned++
-        if (data.status === 'completed') w.completed++
-        if (data.status === 'paseando' || data.status === 'en_camino') w.inProgress++
+        if (d.status === 'completed') w.completed++
+        if (d.status === 'paseando' || d.status === 'en_camino') w.inProgress++
       })
       setWalkerStats(Array.from(walkerMap.values()))
+      setLoading(false)
     })
 
-    return () => {
-      unsubToday()
-      unsubPending()
-      unsubWeek()
-      unsubMonth()
-      unsubClients()
-      unsubWalkers()
-    }
+    // One-shot clients count (no real-time needed for a counter)
+    getDocs(query(collection(db, 'clients'))).then((snap) => {
+      setStats((prev) => ({ ...prev, totalClients: snap.size }))
+    }).catch(() => {})
+
+    return unsubMonth
   }, [])
 
   const statCards = [
