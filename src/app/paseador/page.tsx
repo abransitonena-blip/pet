@@ -13,6 +13,7 @@ import {
 import WalkSessionModal from '@/components/WalkSessionModal'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
 import { STATUS_LABELS, STATUS_COLORS, LEGACY_STATUS_MAP } from '@/lib/sessionMachine'
+import { logAudit } from '@/lib/auditLog'
 import type { Reservation, SessionStatus } from '@/types'
 
 export default function PaseadorDashboard() {
@@ -125,6 +126,12 @@ export default function PaseadorDashboard() {
     setUpdatingId(id)
     try {
       await updateDoc(doc(db, 'reservations', id), { status, updatedAt: serverTimestamp() })
+      logAudit({
+        action: status === 'completed' ? 'complete' : 'update',
+        entity: 'walkSession',
+        entityId: id,
+        after: { status },
+      })
     } catch (e) {
       console.error('Error updating status:', e)
     }

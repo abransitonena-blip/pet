@@ -8,9 +8,9 @@ import { useSearchParams } from 'next/navigation'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { SERVICES, SERVICE_NAMES, getServicePrice, getServiceMeta, calculateSavings } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
-import { useConfig } from '@/context/ConfigContext'
 import { showPushNotification } from './PWARegister'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
+import { logAudit } from '@/lib/auditLog'
 import {
   FaDog, FaCalendarAlt, FaClock, FaPhone, FaUser, FaCommentAlt,
   FaPaw, FaSpinner, FaCheckCircle, FaCheck, FaTimes, FaMapMarkerAlt,
@@ -709,6 +709,14 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           }).catch(() => {})
         }
       }
+
+      // Audit log
+      logAudit({
+        action: 'create',
+        entity: 'reservation',
+        entityId: orderIdRef.id,
+        after: { service: form.service, date: form.date, time: form.time, client: form.name, pet: form.petName },
+      })
 
       if (referralPhone && referralPhone !== form.phone) {
         // Look up referrer by referral code
