@@ -8,6 +8,7 @@ import {
   FaCalendarAlt, FaDog, FaCreditCard, FaPaw, FaQuestionCircle,
 } from 'react-icons/fa'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
+import { BRAND } from '@/lib/brand'
 
 const FAQ_ITEMS = [
   {
@@ -132,13 +133,13 @@ export default function AyudaPage() {
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Respuesta en minutos</p>
         </a>
         <a
-          href="mailto:ap9871888@gmail.com?subject=Ayuda%20PET%20Ap"
+          href={`mailto:${BRAND.email}?subject=Ayuda%20PET%20Ap`}
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
           style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(124,58,237,0.05))', border: '1px solid var(--border)' }}
         >
           <FaEnvelope size={20} className="text-violet-400 mb-2" />
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Email</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>ap9871888@gmail.com</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{BRAND.email}</p>
         </a>
       </div>
 

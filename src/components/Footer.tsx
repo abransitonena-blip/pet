@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { FaDog, FaWhatsapp, FaInstagram, FaFacebook, FaTimes, FaEnvelope, FaTiktok } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
 import { formatBusinessHours } from '@/lib/defaultConfig'
+import { BRAND } from '@/lib/brand'
 
 export default function Footer({ onTerms }: { onTerms: () => void }) {
   const { config } = useConfig()
@@ -77,12 +78,12 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                 {config.whatsapp.replace(/521?/, '')}
               </a>
               <a
-                href="mailto:ap9871888@gmail.com"
+                href={`mailto:${BRAND.email}`}
                 className="flex items-center gap-2 hover:text-brand-400 transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 <FaEnvelope size={14} />
-                ap9871888@gmail.com
+                {BRAND.email}
               </a>
               <Link href="/cancelar" className="flex items-center gap-2 hover:text-red-400 transition-colors text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <FaTimes size={14} />
