@@ -194,7 +194,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   onFocusChange?: (active: boolean) => void
 }) {
   const searchParams = useSearchParams()
-  const referralPhone = searchParams.get('ref') || ''
+  const referralCode = searchParams.get('ref') || ''
   const draft = useRef(loadDraft())
   const [step, setStep] = useState(draft.current?.step || 1)
   const [direction, setDirection] = useState(1)
@@ -554,7 +554,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           paymentStatus: 'pending' as const,
           status: 'active' as const,
           notes: form.notes,
-          referralCode: referralPhone || '',
+          referralCode: referralCode || '',
           appliedCoupon: form.coupon.toUpperCase() || '',
           createdAt: serverTimestamp(),
         }
@@ -615,7 +615,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           appliedCoupon: form.coupon.toUpperCase(),
           discountApplied: discountAmount,
           finalPrice,
-          referralCode: referralPhone || '',
+          referralCode: referralCode || '',
         })
 
         showPushNotification('🐾 Paquete Semanal', `${form.name} agendó paquete de ${scheduledDays.length} sesiones`)
@@ -635,7 +635,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           paymentStatus: 'pending' as const,
           status: 'active' as const,
           notes: form.notes,
-          referralCode: referralPhone || '',
+          referralCode: referralCode || '',
           appliedCoupon: form.coupon.toUpperCase() || '',
           createdAt: serverTimestamp(),
         })
@@ -683,7 +683,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           appliedCoupon: form.coupon.toUpperCase(),
           discountApplied: discountAmount,
           finalPrice,
-          referralCode: referralPhone || '',
+          referralCode: referralCode || '',
           orderId: orderIdRef.id,
         })
         showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
@@ -718,9 +718,9 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         after: { service: form.service, date: form.date, time: form.time, client: form.name, pet: form.petName },
       })
 
-      if (referralPhone && referralPhone !== form.phone) {
+      if (referralCode && referralCode !== form.phone) {
         // Look up referrer by referral code
-        const refQ = query(collection(db, 'referrals'), where('code', '==', referralPhone), where('active', '==', true))
+        const refQ = query(collection(db, 'referrals'), where('code', '==', referralCode), where('active', '==', true))
         const refSnap = await getDocs(refQ)
         if (!refSnap.empty) {
           const refDoc = refSnap.docs[0]
