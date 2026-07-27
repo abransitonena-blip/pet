@@ -239,11 +239,12 @@ service cloud.firestore {
     // ═══════════════════════════════════════════
 
     match /walkerProfiles/{uid} {
-      // Admin and the walker themselves can read
-      allow read: if isAuthenticated()
-        && (isAdmin() || request.auth.uid == uid);
+      // All authenticated can read (client needs to see available walkers for selection)
+      allow read: if isAuthenticated();
       // Only Cloud Functions can write (createWalkerAccount)
       allow write: if false;
+      // Walker can update own profile (status confirmation, photo)
+      allow update: if isWalker() && request.auth.uid == uid;
     }
 
     // ═══════════════════════════════════════════
