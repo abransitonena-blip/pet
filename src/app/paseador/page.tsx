@@ -101,7 +101,7 @@ export default function PaseadorDashboard() {
         setLoading(false)
       })
     })
-    return () => { unsubRes?.(); unsubResUid(); unsubAuth() }
+    return () => { unsubRes?.(); unsubResUid?.(); unsubAuth() }
   }, [router])
 
   const today = new Date().toISOString().split('T')[0]
