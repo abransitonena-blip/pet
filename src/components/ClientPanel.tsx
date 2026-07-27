@@ -122,7 +122,7 @@ export default function ClientPanel({ phone }: { phone: string }) {
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
                     <span>{SERVICE_LABELS[r.service] || r.service}</span>
                     <span>{r.date}</span>
-                    <span>{r.time}</span>
+                    <span>{r.arrivalWindowStart ? `${r.arrivalWindowStart}${r.arrivalWindowEnd ? `-${r.arrivalWindowEnd}` : ''}` : r.time}</span>
                   </div>
                   {r.status === 'pending' && (
                     <button

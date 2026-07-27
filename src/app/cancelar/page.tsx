@@ -127,7 +127,7 @@ export default function CancelarPage() {
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/50">
                         <span>📋 {r.service}</span>
                         <span>📅 {r.date}</span>
-                        <span>⏰ {r.time}</span>
+                        <span>⏰ {r.arrivalWindowStart ? `${r.arrivalWindowStart}${r.arrivalWindowEnd ? `-${r.arrivalWindowEnd}` : ''}` : r.time}</span>
                       </div>
                       <button
                         onClick={() => cancelReservation(r.id)}

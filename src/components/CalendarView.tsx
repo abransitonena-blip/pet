@@ -125,7 +125,7 @@ export default function CalendarView({ reservations }: { reservations: Reservati
               <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/50">
                 <span>🐾 {r.petName}</span>
                 <span>📋 {r.service}</span>
-                <span>⏰ {r.time}</span>
+                <span>⏰ {r.arrivalWindowStart ? `${r.arrivalWindowStart}${r.arrivalWindowEnd ? `-${r.arrivalWindowEnd}` : ''}` : r.time}</span>
               </div>
             </div>
           ))}
