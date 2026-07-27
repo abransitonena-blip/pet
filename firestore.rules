@@ -87,15 +87,30 @@ service cloud.firestore {
     // Rate limiting: reservation fields validation
     function isValidReservation() {
       return request.resource.data.keys().hasAll(['name', 'phone', 'service', 'petName', 'date', 'time', 'client'])
+        && request.resource.data.keys().size() <= 30
         && isValidString(request.resource.data.name)
+        && request.resource.data.name.size() <= 100
         && isValidString(request.resource.data.phone)
         && request.resource.data.phone.size() >= 10
+        && request.resource.data.phone.size() <= 15
         && isValidString(request.resource.data.service)
+        && request.resource.data.service.size() <= 50
         && isValidString(request.resource.data.petName)
+        && request.resource.data.petName.size() <= 50
         && isValidString(request.resource.data.date)
         && isValidString(request.resource.data.time)
         && request.resource.data.client is map
         && request.resource.data.client.keys().hasAll(['uid', 'name', 'phone']);
+    }
+
+    // Rate limiting: review fields validation
+    function isValidReview() {
+      return request.resource.data.keys().size() <= 10
+        && isValidString(request.resource.data.name)
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && (!request.resource.data.text || request.resource.data.text.size() <= 1000);
     }
 
     // ═══════════════════════════════════════════
@@ -277,10 +292,7 @@ service cloud.firestore {
     match /reviews/{docId} {
       allow read: if true;
       allow create: if isAuthenticated()
-        && request.resource.data.keys().hasAll(['name', 'rating', 'text'])
-        && request.resource.data.rating >= 1
-        && request.resource.data.rating <= 5
-        && isValidString(request.resource.data.name);
+        && isValidReview();
       allow delete: if isAdmin();
       allow update: if false;
     }
