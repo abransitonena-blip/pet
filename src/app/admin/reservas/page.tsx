@@ -13,6 +13,8 @@ import {
   FaCamera, FaDownload, FaSpinner, FaTimes,
   FaArrowRight, FaUndo, FaWalking, FaMagic, FaBox, FaChevronDown, FaChevronRight,
 } from 'react-icons/fa'
+import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
+import type { SessionStatus } from '@/types'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
@@ -568,13 +570,9 @@ export default function AdminReservas() {
                                 {session.walkerName && <span style={{ color: 'var(--text-muted)' }}>🦮 {session.walkerName}</span>}
                               </div>
                               <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
-                                session.sessionStatus === 'completed' ? 'bg-success-500/15 text-success-400'
-                                : session.sessionStatus === 'paseando' ? 'bg-purple-500/15 text-purple-400'
-                                : session.sessionStatus === 'assigned' ? 'bg-accent-500/15 text-accent-400'
-                                : session.sessionStatus === 'cancelled' ? 'bg-danger-500/15 text-danger-400'
-                                : 'bg-brand-500/15 text-brand-400'
-                              }`}>
-                                {session.sessionStatus === 'completed' ? 'Completada' : session.sessionStatus === 'paseando' ? 'Paseando' : session.sessionStatus === 'assigned' ? 'Asignada' : session.sessionStatus === 'pending' ? 'Pendiente' : session.sessionStatus}
+                                STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-brand-500/15'
+                              } ${STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-brand-400'}`}>
+                                {STATUS_LABELS[session.sessionStatus as SessionStatus] || session.sessionStatus}
                               </span>
                             </div>
                           ))}

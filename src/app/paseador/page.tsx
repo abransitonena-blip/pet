@@ -12,7 +12,8 @@ import {
 } from 'react-icons/fa'
 import WalkSessionModal from '@/components/WalkSessionModal'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
-import type { Reservation } from '@/types'
+import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
+import type { Reservation, SessionStatus } from '@/types'
 
 export default function PaseadorDashboard() {
   const router = useRouter()
@@ -346,12 +347,10 @@ export default function PaseadorDashboard() {
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                  session.sessionStatus === 'paseando' ? 'bg-success-500/20' :
-                  session.sessionStatus === 'en_camino' ? 'bg-blue-500/10' :
-                  'bg-accent-500/10'
+                  STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-accent-500/10'
                 }`}>
-                  {session.sessionStatus === 'paseando' ? <FaWalking size={14} className="text-success-400" /> :
-                   <FaDog size={14} className="text-accent-400" />}
+                  {session.sessionStatus === 'in_progress' ? <FaWalking size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-accent-400'} /> :
+                   <FaDog size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-accent-400'} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{session.dogName}</p>
@@ -360,17 +359,9 @@ export default function PaseadorDashboard() {
                   </p>
                 </div>
                 <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
-                  session.sessionStatus === 'paseando' ? 'bg-success-500/15 text-success-400' :
-                  session.sessionStatus === 'en_camino' ? 'bg-blue-500/15 text-blue-400' :
-                  session.sessionStatus === 'completed' ? 'bg-success-500/15 text-success-400' :
-                  'bg-white/10 text-[var(--text-muted)]'
-                }`}>
-                  {session.sessionStatus === 'pending' ? 'Pendiente' :
-                   session.sessionStatus === 'assigned' ? 'Asignado' :
-                   session.sessionStatus === 'en_camino' ? 'En camino' :
-                   session.sessionStatus === 'paseando' ? 'Paseando' :
-                   session.sessionStatus === 'completed' ? 'Completado' :
-                   session.sessionStatus}
+                  STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-white/10'
+                } ${STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-[var(--text-muted)]'}`}>
+                  {STATUS_LABELS[session.sessionStatus as SessionStatus] || session.sessionStatus}
                 </span>
               </div>
             ))}

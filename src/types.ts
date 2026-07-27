@@ -1,3 +1,7 @@
+import type { SessionStatus, AssignmentStatus } from './lib/sessionMachine'
+
+export type { SessionStatus, AssignmentStatus }
+
 export interface WalkMedia {
   photo: string
   lat: number
@@ -78,8 +82,8 @@ export interface WalkSession {
   address?: Address
   walkerId: string
   walkerName: string
-  assignmentStatus: 'unassigned' | 'assigned' | 'confirmed' | 'rejected'
-  sessionStatus: 'pending' | 'assigned' | 'en_camino' | 'paseando' | 'completed' | 'cancelled' | 'no_show'
+  assignmentStatus: AssignmentStatus
+  sessionStatus: SessionStatus
   notes: string
   internalNotes: string
   walkCheckIn?: WalkMedia
