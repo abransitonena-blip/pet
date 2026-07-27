@@ -4,7 +4,7 @@ export const BRAND = {
   whatsapp: '5215523053772',
   whatsappRaw: '5523053772',
   tagline: 'Bienestar para tu perro. Tranquilidad para ti.',
-  description: 'Paseos personalizados con seguimiento en tiempo real.',
+  description: 'Paseos personalizados con fotos y reporte de cada paseo.',
 } as const
 
 export { BRAND as brand }

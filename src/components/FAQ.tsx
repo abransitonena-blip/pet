@@ -10,7 +10,7 @@ const DEFAULT_FAQS = [
   { q: '¿Qué pasa si llueve?', a: 'En caso de lluvia ligera, el paseo se realiza normalmente (a los perros les encanta). Si hay tormenta o condiciones peligrosas, te contactaremos para reprogramar sin costo.' },
   { q: '¿Cómo funcionan las cancelaciones?', a: 'Puedes cancelar sin costo hasta 2 horas antes del paseo. Cancelaciones tardías o no-show pueden generar un cargo del 50%. Entendemos emergencias, háblanos.' },
   { q: '¿Pasean perros de todas las tallas?', a: '¡Claro! Desde chihuahuas hasta grandes daneses. Agrupamos por tamaño y temperamento para la seguridad de todos.' },
-  { q: '¿Qué incluye el Paseo + Reporte?', a: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video, mapa del recorrido y ejercicios personalizados.' },
+  { q: '¿Qué incluye el Paseo + Reporte?', a: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video, registro GPS del paseo y ejercicios personalizados.' },
   { q: '¿Cómo pago?', a: 'Aceptamos efectivo, transferencia bancaria y depósito. El pago se acuerda al momento de agendar.' },
   { q: '¿Mi perro necesita estar vacunado?', a: 'Sí, pedimos que los perros estén al día con sus vacunas (múltiple y antirrábica) para la seguridad de todos los peludos.' },
 ]

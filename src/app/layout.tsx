@@ -12,7 +12,7 @@ const inter = Inter({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-euhz.vercel.app'
 const siteName = 'PET Ap'
-const siteDescription = 'Reserva paseos personalizados, administra horarios y recibe seguimiento en tiempo real desde PET Ap.'
+const siteDescription = 'Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.'
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   openGraph: {
     title: 'PET Ap | Tu perro merece más que un paseo',
-    description: 'Paseos personalizados con seguimiento en tiempo real. Desde $30.',
+    description: 'Paseos personalizados con fotos y reporte de cada paseo. Desde $30.',
     url: siteUrl,
     siteName: 'PET Ap',
     locale: 'es_MX',
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'PET Ap | Tu perro merece más que un paseo',
-    description: 'Paseos personalizados con seguimiento en tiempo real.',
+    description: 'Paseos personalizados con fotos y reporte de cada paseo.',
   },
   robots: {
     index: true,

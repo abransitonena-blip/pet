@@ -68,7 +68,7 @@ export interface SiteConfig {
 
 export const DEFAULT_CONFIG: SiteConfig = {
   heroTitle: 'Bienestar para tu perro. Tranquilidad para ti.',
-  heroSubtitle: 'Reserva paseos personalizados, administra horarios y recibe seguimiento en tiempo real desde PET Ap.',
+  heroSubtitle: 'Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.',
   sectionDescriptions: {
     services: 'Todos nuestros paseos son supervisados, seguros y pensados para la felicidad de tu perro.',
     howItWorks: 'Reserva en 3 simples pasos y nosotros nos encargamos del resto.',
@@ -96,7 +96,7 @@ export const DEFAULT_CONFIG: SiteConfig = {
     { question: '¿Qué pasa si llueve?', answer: 'En caso de lluvia ligera, el paseo se realiza normalmente (a los perros les encanta). Si hay tormenta o condiciones peligrosas, te contactaremos para reprogramar sin costo.' },
     { question: '¿Cómo funcionan las cancelaciones?', answer: 'Puedes cancelar sin costo hasta 2 horas antes del paseo. Cancelaciones tardías o no-show pueden generar un cargo del 50%. Entendemos emergencias, háblanos.' },
     { question: '¿Pasean perros de todas las tallas?', answer: '¡Claro! Desde chihuahuas hasta grandes daneses. Agrupamos por tamaño y temperamento para la seguridad de todos.' },
-    { question: '¿Qué incluye el Paseo + Reporte?', answer: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video, mapa del recorrido y ejercicios personalizados.' },
+    { question: '¿Qué incluye el Paseo + Reporte?', answer: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video, registro GPS del paseo y ejercicios personalizados.' },
     { question: '¿Cómo pago?', answer: 'Aceptamos efectivo, transferencia bancaria y depósito. El pago se acuerda al momento de agendar.' },
     { question: '¿Mi perro necesita estar vacunado?', answer: 'Sí, pedimos que los perros estén al día con sus vacunas (múltiple y antirrábica) para la seguridad de todos los peludos.' },
   ],

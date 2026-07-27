@@ -70,10 +70,10 @@ export const SERVICES: ServiceOption[] = [
     price: 60,
     duration: '45 min',
     modality: '1 a 1',
-    mainBenefit: 'Fotos y mapa del recorrido',
+    mainBenefit: 'Fotos y reporte detallado',
     recommendedFor: 'Dueños que quieren ver todo',
     icon: '📸',
-    highlights: ['Fotos y video de tu perro', 'Reporte detallado por WhatsApp', 'Mapa del recorrido', 'Ideal para dueños curiosos'],
+    highlights: ['Fotos y video de tu perro', 'Reporte detallado por WhatsApp', 'Registro GPS del paseo', 'Ideal para dueños curiosos'],
   },
   {
     name: 'Paquete Semanal',

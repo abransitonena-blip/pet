@@ -1394,8 +1394,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                             {[
                               { icon: <FaStar size={12} />, text: 'Calificación real de clientes', color: 'var(--color-primary)' },
                               { icon: <FaBolt size={12} />, text: 'Respuesta rápida', color: 'var(--color-success)' },
-                              { icon: <FaShieldAlt size={12} />, text: 'Paseadores verificados', color: '#3b82f6' },
-                              { icon: <FaHeart size={12} />, text: 'Seguro para mascotas', color: '#ec4899' },
+                              { icon: <FaShieldAlt size={12} />, text: 'Equipo propio', color: '#3b82f6' },
+                              { icon: <FaHeart size={12} />, text: 'Atención personalizada', color: '#ec4899' },
                             ].map((badge, i) => (
                               <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg text-xs"
                                 style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>

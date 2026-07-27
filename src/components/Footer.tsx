@@ -32,7 +32,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
               </span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Paseos personalizados con seguimiento en tiempo real.
+              Paseos personalizados con fotos y reporte de cada paseo.
               Precios accesibles, mucho amor y ejercicio para tu perro.
             </p>
           </motion.div>

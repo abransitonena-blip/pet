@@ -57,7 +57,7 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
     if (!referralCode) return
     const link = `${window.location.origin}?ref=${referralCode}`
     setReferralLink(link)
-    setReferralMessage(`🐾 ¡Te recomiendo PET Ap! Paseos personalizados con seguimiento. Agenda aquí: ${link}`)
+    setReferralMessage(`🐾 ¡Te recomiendo PET Ap! Paseos personalizados con fotos y reporte. Agenda aquí: ${link}`)
   }, [referralCode])
 
   const copyLink = () => {

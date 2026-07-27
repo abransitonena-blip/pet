@@ -12,7 +12,7 @@ export default function TrustBar() {
   const { avgRating, totalReviews, happyDogs, totalWalks, loading } = usePublicStats()
 
   const trustItems = [
-    { icon: FaShieldAlt, label: 'Paseadores verificados', color: '#3b82f6' },
+    { icon: FaShieldAlt, label: 'Equipo propio', color: '#3b82f6' },
     { icon: FaBolt, label: 'Reserva en minutos', color: '#D97706' },
     { icon: FaHeart, label: 'Atención personalizada', color: '#ec4899' },
     ...(avgRating > 0 ? [{ icon: FaStar, label: `${avgRating}/5 (${totalReviews} reseñas)`, color: '#FBBF24' }] : []),

@@ -66,7 +66,7 @@ export default function Hero() {
 
         {/* Subhead */}
         <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          {config.heroSubtitle || 'Reserva paseos personalizados, administra horarios y recibe seguimiento en tiempo real desde PET Ap.'}
+          {config.heroSubtitle || 'Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.'}
         </motion.p>
 
         {/* CTAs */}
