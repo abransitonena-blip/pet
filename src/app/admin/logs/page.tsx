@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore'
+import { collection, query, orderBy, limit, getDocs, startAfter as firestoreStartAfter, DocumentSnapshot } from 'firebase/firestore'
 import { FaClipboardList, FaSearch } from 'react-icons/fa'
 
 interface AuditLog {
@@ -33,17 +33,37 @@ const ACTION_COLORS: Record<string, string> = {
 export default function AdminLogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [actionFilter, setActionFilter] = useState<string>('all')
 
-  useEffect(() => {
-    const q = query(collection(db, 'audit-logs'), orderBy('timestamp', 'desc'), limit(200))
-    const unsub = onSnapshot(q, (snap) => {
-      setLogs(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AuditLog)))
-      setLoading(false)
-    }, () => setLoading(false))
-    return unsub
-  }, [])
+  const PAGE_SIZE = 50
+
+  const fetchLogs = async (isLoadMore = false) => {
+    try {
+      const constraints: unknown[] = [orderBy('timestamp', 'desc'), limit(PAGE_SIZE)]
+      if (isLoadMore && lastDoc) constraints.push(firestoreStartAfter(lastDoc))
+
+      const q = query(collection(db, 'audit-logs'), ...constraints as Parameters<typeof query>[1])
+      const snap = await getDocs(q)
+
+      const newLogs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as AuditLog))
+      setLogs((prev) => isLoadMore ? [...prev, ...newLogs] : newLogs)
+      setHasMore(newLogs.length === PAGE_SIZE)
+      setLastDoc(snap.docs[snap.docs.length - 1] || null)
+    } catch { /* ignore */ }
+    setLoading(false)
+    setLoadingMore(false)
+  }
+
+  useEffect(() => { fetchLogs(false) }, [])
+
+  const loadMore = () => {
+    setLoadingMore(true)
+    fetchLogs(true)
+  }
 
   const filtered = useMemo(() => {
     let result = logs
@@ -143,6 +163,16 @@ export default function AdminLogsPage() {
               </span>
             </div>
           ))}
+          {hasMore && !searchQuery && actionFilter === 'all' && (
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="w-full py-2.5 text-xs font-medium rounded-xl transition-all"
+              style={{ background: 'var(--glass-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+            >
+              {loadingMore ? 'Cargando...' : 'Cargar más'}
+            </button>
+          )}
         </div>
       )}
     </div>
