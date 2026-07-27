@@ -207,10 +207,10 @@ export default function AdminIAPage() {
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <FaRobot size={20} className="text-brand-400" />
-            Centro de IA
+            Centro de Insights
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            Insights inteligentes basados en tus datos
+            Análisis inteligente basado en tus datos
           </p>
         </div>
         <div className="flex gap-1.5">

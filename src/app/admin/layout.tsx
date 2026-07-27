@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   { id: 'analitica', label: 'Analítica', icon: FaChartLine, href: '/admin/analitica' },
   { id: 'config', label: 'Configuración', icon: FaCog, href: '/admin/config' },
   { id: 'logs', label: 'Logs', icon: FaClipboardList, href: '/admin/logs' },
-  { id: 'ia', label: 'Centro IA', icon: FaRobot, href: '/admin/ia' },
+  { id: 'ia', label: 'Insights', icon: FaRobot, href: '/admin/ia' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
