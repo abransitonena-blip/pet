@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { FaDog, FaWhatsapp, FaInstagram, FaFacebook, FaTimes, FaEnvelope } from 'react-icons/fa'
+import { FaDog, FaWhatsapp, FaInstagram, FaFacebook, FaTimes, FaEnvelope, FaTiktok } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
 import { formatBusinessHours } from '@/lib/defaultConfig'
 
@@ -102,16 +102,17 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             </h3>
             <div className="flex gap-3">
               {[
-                { icon: FaWhatsapp, href: `https://wa.me/${config.whatsapp}`, color: 'hover:text-green-400' },
-                { icon: FaInstagram, href: config.instagram || '#', color: 'hover:text-pink-400' },
-                { icon: FaFacebook, href: config.facebook || '#', color: 'hover:text-blue-400' },
-              ].map(({ icon: Icon, href, color }) => (
+                { icon: FaWhatsapp, href: `https://wa.me/${config.whatsapp}`, color: 'hover:text-green-400', label: 'WhatsApp' },
+                ...(config.instagram ? [{ icon: FaInstagram, href: config.instagram, color: 'hover:text-pink-400', label: 'Instagram' }] : []),
+                ...(config.facebook ? [{ icon: FaFacebook, href: config.facebook, color: 'hover:text-blue-400', label: 'Facebook' }] : []),
+                ...(config.tiktok ? [{ icon: FaTiktok, href: config.tiktok, color: 'hover:text-white', label: 'TikTok' }] : []),
+              ].map(({ icon: Icon, href, color, label }) => (
                 <a
                   key={href}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={href.includes('instagram') ? 'Instagram (abre en nueva ventana)' : href.includes('facebook') ? 'Facebook (abre en nueva ventana)' : 'WhatsApp (abre en nueva ventana)'}
+                  aria-label={`${label} (abre en nueva ventana)`}
                   className={`w-10 h-10 rounded-full glass flex items-center justify-center transition-all duration-300 hover:scale-110 ${color}`}
                   style={{ color: 'var(--text-secondary)' }}
                 >

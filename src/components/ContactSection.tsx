@@ -4,20 +4,21 @@ import { motion } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
 import { FaWhatsapp, FaClock, FaEnvelope, FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa'
 import { formatBusinessHours } from '@/lib/defaultConfig'
+import { BRAND } from '@/lib/brand'
 
 export default function ContactSection() {
   const { config } = useConfig()
 
   const contacts = [
     { icon: FaWhatsapp, label: 'WhatsApp', value: config.whatsapp.replace(/521?/, ''), href: 'https://wa.me/' + config.whatsapp, color: 'text-green-400' },
-    { icon: FaEnvelope, label: 'Correo electrónico', value: 'ap9871888@gmail.com', href: 'mailto:ap9871888@gmail.com', color: 'text-brand-400' },
+    { icon: FaEnvelope, label: 'Correo electrónico', value: BRAND.email, href: `mailto:${BRAND.email}`, color: 'text-brand-400' },
     { icon: FaClock, label: formatBusinessHours().map((h) => h.weekday).join(' | '), value: formatBusinessHours().map((h) => h.hours).join(' | '), href: null, color: 'text-secondary' },
   ]
 
   const socials = [
-    { icon: FaFacebook, label: 'Facebook', href: config.facebook || '#', color: 'hover:text-blue-500' },
-    { icon: FaInstagram, label: 'Instagram', href: config.instagram || '#', color: 'hover:text-pink-500' },
-    { icon: FaTiktok, label: 'TikTok', href: config.tiktok || '#', color: 'hover:text-white' },
+    ...(config.facebook ? [{ icon: FaFacebook, label: 'Facebook', href: config.facebook, color: 'hover:text-blue-500' }] : []),
+    ...(config.instagram ? [{ icon: FaInstagram, label: 'Instagram', href: config.instagram, color: 'hover:text-pink-500' }] : []),
+    ...(config.tiktok ? [{ icon: FaTiktok, label: 'TikTok', href: config.tiktok, color: 'hover:text-white' }] : []),
   ]
   return (
     <section id="contacto" className="relative py-24 sm:py-32">
