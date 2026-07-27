@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
 import type { SiteConfig } from '@/lib/defaultConfig'
@@ -109,6 +109,10 @@ function HeroEditor({ config, updateConfig, saving }: EditorProps) {
   const [heroSubtitle, setHeroSubtitle] = useState(config.heroSubtitle)
   const [desc, setDesc] = useState(config.sectionDescriptions)
 
+  useEffect(() => { setHeroTitle(config.heroTitle) }, [config.heroTitle])
+  useEffect(() => { setHeroSubtitle(config.heroSubtitle) }, [config.heroSubtitle])
+  useEffect(() => { setDesc(config.sectionDescriptions) }, [config.sectionDescriptions])
+
   const save = () => {
     updateConfig({ heroTitle, heroSubtitle, sectionDescriptions: desc })
   }
@@ -131,6 +135,11 @@ function SocialEditor({ config, updateConfig, saving }: EditorProps) {
   const [facebook, setFacebook] = useState(config.facebook)
   const [tiktok, setTiktok] = useState(config.tiktok)
 
+  useEffect(() => { setWhatsapp(config.whatsapp) }, [config.whatsapp])
+  useEffect(() => { setInstagram(config.instagram) }, [config.instagram])
+  useEffect(() => { setFacebook(config.facebook) }, [config.facebook])
+  useEffect(() => { setTiktok(config.tiktok) }, [config.tiktok])
+
   const save = () => updateConfig({ whatsapp, instagram, facebook, tiktok })
 
   return (
@@ -146,6 +155,8 @@ function SocialEditor({ config, updateConfig, saving }: EditorProps) {
 
 function HoursEditor({ config, updateConfig, saving }: EditorProps) {
   const [slots, setSlots] = useState(config.availableSlots)
+
+  useEffect(() => { setSlots(config.availableSlots) }, [config.availableSlots])
 
   const save = () => updateConfig({ availableSlots: slots })
 
@@ -199,6 +210,8 @@ function HoursEditor({ config, updateConfig, saving }: EditorProps) {
 function TipsEditor({ config, updateConfig, saving }: EditorProps) {
   const [tips, setTips] = useState(config.walkTips)
 
+  useEffect(() => { setTips(config.walkTips) }, [config.walkTips])
+
   const save = () => updateConfig({ walkTips: tips })
 
   const addTip = () => setTips([...tips, { title: '', text: '', icon: '🐾' }])
@@ -232,6 +245,8 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
 function FAQEditor({ config, updateConfig, saving }: EditorProps) {
   const [faq, setFaq] = useState(config.faq)
 
+  useEffect(() => { setFaq(config.faq) }, [config.faq])
+
   const save = () => updateConfig({ faq })
 
   const addItem = () => setFaq([...faq, { question: '', answer: '' }])
@@ -263,6 +278,8 @@ function FAQEditor({ config, updateConfig, saving }: EditorProps) {
 
 function TermsEditor({ config, updateConfig, saving }: EditorProps) {
   const [content, setContent] = useState(config.termsContent)
+
+  useEffect(() => { setContent(config.termsContent) }, [config.termsContent])
   const save = () => updateConfig({ termsContent: content })
 
   return (
@@ -277,6 +294,8 @@ function TermsEditor({ config, updateConfig, saving }: EditorProps) {
 
 function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
   const [walkers, setWalkers] = useState(config.walkers)
+
+  useEffect(() => { setWalkers(config.walkers) }, [config.walkers])
 
   const save = () => updateConfig({ walkers })
 
@@ -309,6 +328,8 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
 
 function MaintenanceEditor({ config, updateConfig, saving }: EditorProps) {
   const [enabled, setEnabled] = useState(config.maintenance)
+
+  useEffect(() => { setEnabled(config.maintenance) }, [config.maintenance])
 
   const save = () => updateConfig({ maintenance: enabled })
 
