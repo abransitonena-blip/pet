@@ -6,6 +6,7 @@ import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { FaStar, FaDog } from 'react-icons/fa'
 import { useConfig } from '@/context/ConfigContext'
+import { usePrices } from '@/context/PricesContext'
 import { usePublicStats } from '@/lib/usePublicStats'
 import Avatar from '@/components/ui/Avatar'
 
@@ -21,7 +22,9 @@ const item = {
 
 export default function Hero() {
   const { config } = useConfig()
+  const { prices } = usePrices()
   const { avgRating, happyDogs, loading: statsLoading } = usePublicStats()
+  const minPrice = Math.min(...Object.values(prices).filter((p) => p > 0))
   const [topReview, setTopReview] = useState<{ name: string; text: string; rating: number } | null>(null)
 
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function Hero() {
           {[
             { value: statsLoading ? '—' : `${happyDogs}+`, label: 'Perros felices' },
             { value: statsLoading ? '—' : `${avgRating}★`, label: 'Calificación' },
-            { value: '$30', label: 'Desde' },
+            { value: `$${minPrice}`, label: 'Desde' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-xl sm:text-2xl font-bold gradient-text">{stat.value}</div>

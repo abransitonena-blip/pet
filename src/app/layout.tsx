@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   openGraph: {
     title: 'PET Ap | Tu perro merece más que un paseo',
-    description: 'Paseos personalizados con fotos y reporte de cada paseo. Desde $30.',
+    description: 'Paseos personalizados con fotos y reporte de cada paseo.',
     url: siteUrl,
     siteName: 'PET Ap',
     locale: 'es_MX',
