@@ -90,6 +90,11 @@ export const SERVICES: ServiceOption[] = [
 
 export const SERVICE_NAMES = SERVICES.map((s) => s.name)
 
+// Short labels for display — single source of truth
+export const SERVICE_LABELS: Record<string, string> = Object.fromEntries(
+  SERVICES.map((s) => [s.name, s.name.replace('Paseo ', '').replace('Paquete ', '')])
+)
+
 const LEGACY_NAME_MAP: Record<string, string> = {
   'Paseo Individual (30 min)': 'Paseo Individual',
   'Paseo Extendido (1 hora)': 'Paseo Extendido',
