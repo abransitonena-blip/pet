@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db, auth } from '@/firebase/config'
-import { collection, addDoc, serverTimestamp, getDocs, query, where, limit, onSnapshot, doc, setDoc } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, getDocs, query, where, limit, onSnapshot, doc, setDoc, updateDoc, increment } from 'firebase/firestore'
 import { useSearchParams } from 'next/navigation'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { SERVICES, SERVICE_NAMES, getServicePrice, getServiceMeta, calculateSavings } from '@/lib/services'
@@ -697,6 +697,17 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           phone: form.phone,
           email: auth.currentUser.email || '',
         }, { merge: true }).catch(() => {})
+      }
+
+      // Increment coupon usedCount
+      if (form.coupon.trim() && couponStatus?.valid) {
+        const couponQ = query(collection(db, 'coupons'), where('code', '==', form.coupon.trim().toUpperCase()), limit(1))
+        const couponSnap = await getDocs(couponQ)
+        if (!couponSnap.empty) {
+          await updateDoc(doc(db, 'coupons', couponSnap.docs[0].id), {
+            usedCount: increment(1),
+          }).catch(() => {})
+        }
       }
 
       if (referralPhone && referralPhone !== form.phone) {

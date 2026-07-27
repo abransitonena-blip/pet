@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { FaTag, FaPlus, FaTrash, FaSpinner, FaPercent, FaDollarSign, FaToggleOn, FaToggleOff } from 'react-icons/fa'
+import { FaTag, FaPlus, FaTrash, FaSpinner, FaPercent, FaDollarSign, FaToggleOn, FaToggleOff, FaEdit, FaCheck, FaTimes } from 'react-icons/fa'
 import { useToast } from '@/context/ToastContext'
 
 interface Coupon {
@@ -25,6 +25,11 @@ export default function AdminCoupons() {
   const [type, setType] = useState<'percentage' | 'fixed'>('percentage')
   const [maxUses, setMaxUses] = useState('0')
   const [creating, setCreating] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editCode, setEditCode] = useState('')
+  const [editDiscount, setEditDiscount] = useState('')
+  const [editType, setEditType] = useState<'percentage' | 'fixed'>('percentage')
+  const [editMaxUses, setEditMaxUses] = useState('')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -60,6 +65,36 @@ export default function AdminCoupons() {
   const toggleActive = async (c: Coupon) => {
     try {
       await updateDoc(doc(db, 'coupons', c.id), { active: !c.active })
+      toast('Cupón actualizado')
+    } catch { toast('Error al actualizar cupón', 'error') }
+  }
+
+  const startEdit = (c: Coupon) => {
+    setEditingId(c.id)
+    setEditCode(c.code)
+    setEditDiscount(String(c.discount))
+    setEditType(c.type)
+    setEditMaxUses(String(c.maxUses))
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditCode('')
+    setEditDiscount('')
+    setEditType('percentage')
+    setEditMaxUses('')
+  }
+
+  const saveEdit = async (id: string) => {
+    if (!editCode.trim() || !editDiscount) return
+    try {
+      await updateDoc(doc(db, 'coupons', id), {
+        code: editCode.trim().toUpperCase(),
+        discount: Number(editDiscount),
+        type: editType,
+        maxUses: Number(editMaxUses) || 0,
+      })
+      cancelEdit()
       toast('Cupón actualizado')
     } catch { toast('Error al actualizar cupón', 'error') }
   }
@@ -124,38 +159,95 @@ export default function AdminCoupons() {
               key={c.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass p-3 rounded-xl flex items-center justify-between"
+              className="glass p-3 rounded-xl"
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.active ? 'bg-green-500/20' : 'bg-white/5'}`}>
-                  {c.type === 'percentage' ? <FaPercent size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} /> : <FaDollarSign size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} />}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-white">{c.code}</span>
-                    <span className="text-xs font-bold text-primary">
-                      {c.type === 'percentage' ? `${c.discount}%` : `$${c.discount}`}
-                    </span>
+              {editingId === c.id ? (
+                <div className="space-y-3">
+                  <div className="grid sm:grid-cols-4 gap-3">
+                    <input
+                      value={editCode}
+                      onChange={(e) => setEditCode(e.target.value)}
+                      placeholder="Código"
+                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                    />
+                    <input
+                      type="number"
+                      value={editDiscount}
+                      onChange={(e) => setEditDiscount(e.target.value)}
+                      placeholder="Descuento"
+                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                    />
+                    <input
+                      type="number"
+                      value={editMaxUses}
+                      onChange={(e) => setEditMaxUses(e.target.value)}
+                      placeholder="Usos máx (0 = ilimitado)"
+                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                    />
+                    <select
+                      value={editType}
+                      onChange={(e) => setEditType(e.target.value as 'percentage' | 'fixed')}
+                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                    >
+                      <option value="percentage">Porcentaje (%)</option>
+                      <option value="fixed">Monto fijo ($)</option>
+                    </select>
                   </div>
-                  <p className="text-2xs text-white/30">
-                    Usado {c.usedCount} veces {c.maxUses > 0 ? `/ ${c.maxUses}` : '• sin límite'}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => saveEdit(c.id)}
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
+                    >
+                      <FaCheck size={10} /> Guardar
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 transition-all"
+                    >
+                      <FaTimes size={10} /> Cancelar
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => toggleActive(c)}
-                  className="transition-all" style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }}
-                >
-                  {c.active ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
-                </button>
-                <button
-                  onClick={async () => { try { await deleteDoc(doc(db, 'coupons', c.id)); toast('Cupón eliminado') } catch { toast('Error al eliminar cupón', 'error') } }}
-                  className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-all" style={{ color: 'var(--color-danger)' }}
-                >
-                  <FaTrash size={10} />
-                </button>
-              </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.active ? 'bg-green-500/20' : 'bg-white/5'}`}>
+                      {c.type === 'percentage' ? <FaPercent size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} /> : <FaDollarSign size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} />}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-white">{c.code}</span>
+                        <span className="text-xs font-bold text-primary">
+                          {c.type === 'percentage' ? `${c.discount}%` : `$${c.discount}`}
+                        </span>
+                      </div>
+                      <p className="text-2xs text-white/30">
+                        Usado {c.usedCount} veces {c.maxUses > 0 ? `/ ${c.maxUses}` : '• sin límite'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleActive(c)}
+                      className="transition-all" style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }}
+                    >
+                      {c.active ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
+                    </button>
+                    <button
+                      onClick={() => startEdit(c)}
+                      className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center transition-all" style={{ color: 'var(--color-accent)' }}
+                    >
+                      <FaEdit size={10} />
+                    </button>
+                    <button
+                      onClick={async () => { try { await deleteDoc(doc(db, 'coupons', c.id)); toast('Cupón eliminado') } catch { toast('Error al eliminar cupón', 'error') } }}
+                      className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-all" style={{ color: 'var(--color-danger)' }}
+                    >
+                      <FaTrash size={10} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
