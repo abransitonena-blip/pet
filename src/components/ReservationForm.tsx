@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { SERVICES, SERVICE_NAMES, getServicePrice, getServiceMeta, calculateSavings } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
+import { useConfig } from '@/context/ConfigContext'
 import { showPushNotification } from './PWARegister'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
 import {
@@ -28,7 +29,8 @@ const STEP_META = [
   { num: 2, label: 'Horario',  short: 'Cuándo' },
   { num: 3, label: 'Mascota',  short: 'Peludo' },
   { num: 4, label: 'Datos',    short: 'Contacto' },
-  { num: 5, label: 'Confirmar',short: 'Revisar' },
+  { num: 5, label: 'Paseador', short: 'Quién' },
+  { num: 6, label: 'Confirmar',short: 'Revisar' },
 ]
 
 const slideVariants = {
@@ -95,8 +97,8 @@ function BookingSummary({ step, form, prices, couponStatus, weeklySchedule }: {
 
   if (!hasData) return null
 
-  // Steps 1-4: show minimal one-liner only on mobile
-  if (step < 5) {
+  // Steps 1-5: show minimal one-liner only on mobile
+  if (step < 6) {
     return (
       <div className="lg:hidden mb-4">
         {form.service && (
@@ -199,10 +201,12 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const [form, setForm] = useState(draft.current?.form || {
     name: '', phone: '', petName: '', petType: 'perro',
     service: '', date: '', time: '', notes: '', coupon: '', addressId: '',
+    walkerPreference: '',
   })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const { prices } = usePrices()
+  const { config } = useConfig()
   const honeypot = useRef('')
   const lastSubmit = useRef(0)
   const [rateError, setRateError] = useState('')
@@ -218,6 +222,9 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   const [weeklySchedule, setWeeklySchedule] = useState<Record<string, string>>({})
   const [savedAddresses, setSavedAddresses] = useState<{ id: string; alias: string; street: string; colony: string; city: string; zip: string }[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState('')
+  const [walkerPreference, setWalkerPreference] = useState(draft.current?.form?.walkerPreference || '')
+  const [availableWalkers, setAvailableWalkers] = useState<{ id: string; name: string; photo?: string; zones?: string[]; rating?: number }[]>([])
+  const [loadingWalkers, setLoadingWalkers] = useState(false)
   const isWeeklyPackage = form.service === 'Paquete Semanal'
 
   // Handle ?repeat=<serviceName> query param
@@ -325,6 +332,49 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   }, [form.date])
 
   useEffect(() => {
+    if (step !== 5 || !form.date || !form.time) return
+    setLoadingWalkers(true)
+    ;(async () => {
+      try {
+        const profilesSnap = await getDocs(collection(db, 'walkerProfiles'))
+        const configWalkers = (config?.walkers || []) as { name: string; uid?: string; status?: string; zones?: string[] }[]
+        const dayOfWeek = new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short' }).toLowerCase()
+        const timeNum = parseInt(form.time.replace(':', ''), 10)
+
+        const activeUids = new Set(
+          profilesSnap.docs
+            .filter((d) => d.data().status === 'active')
+            .map((d) => d.id)
+        )
+        const merged = profilesSnap.docs.map((d) => {
+          const cfg = configWalkers.find((w) => w.uid === d.id)
+          const sched = d.data().schedule?.[dayOfWeek] || cfg?.schedule?.[dayOfWeek] || []
+          const inWindow = sched.some((s: { start: string; end: string }) => {
+            const start = parseInt(s.start.replace(':', ''), 10)
+            const end = parseInt(s.end.replace(':', ''), 10)
+            return timeNum >= start && timeNum < end
+          })
+          return {
+            id: d.id,
+            name: d.data().name || cfg?.name || 'Paseador',
+            photo: d.data().photo || d.data().photoURL || '',
+            zones: d.data().zones || cfg?.zones || [],
+            rating: d.data().performance?.rating || 0,
+            available: inWindow || sched.length === 0,
+          }
+        })
+
+        const active = merged.filter((w) => activeUids.has(w.id) && (w.available || w.zones.length === 0))
+        setAvailableWalkers(active.length > 0 ? active : merged.filter((w) => activeUids.has(w.id)))
+      } catch {
+        setAvailableWalkers([])
+      } finally {
+        setLoadingWalkers(false)
+      }
+    })()
+  }, [step, form.date, form.time, config])
+
+  useEffect(() => {
     onFocusChange?.(step > 0 && !sent)
     return () => onFocusChange?.(false)
   }, [step, sent])
@@ -333,13 +383,19 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     if (!sent) saveDraft({ step, form })
   }, [step, form, sent])
 
+  useEffect(() => {
+    if (walkerPreference !== form.walkerPreference) {
+      setForm((prev) => ({ ...prev, walkerPreference }))
+    }
+  }, [walkerPreference])
+
   const set = useCallback(<K extends keyof typeof form>(key: K, val: string) => {
     setForm((p: typeof form) => ({ ...p, [key]: val }))
     if (key === 'phone') onPhoneChange?.(val)
     if (errors[key as string]) setErrors((prev) => { const n = { ...prev }; delete n[key as string]; return n })
   }, [onPhoneChange, errors])
 
-  const goNext = () => { setDirection(1); setStep((s: number) => Math.min(s + 1, 5)) }
+  const goNext = () => { setDirection(1); setStep((s: number) => Math.min(s + 1, 6)) }
   const goBack = () => { setDirection(-1); setStep((s: number) => Math.max(s - 1, 1)) }
   const goToStep = (target: number) => { setDirection(target > step ? 1 : -1); setStep(target) }
 
@@ -385,12 +441,12 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
   }, [step, form, isWeeklyPackage, weeklySchedule])
 
   const ctaLabel = useMemo(() => {
-    if (step === 5) return null
+    if (step === 6) return null
     if (step === 1 && form.service) {
       const p = prices[form.service] ?? getServicePrice(form.service)
       return `Continuar con $${p.toLocaleString()} MXN`
     }
-    if (step === 4) return 'Revisar reserva'
+    if (step === 4) return 'Elegir paseador'
     if (!canProceed) {
       const labels = ['', 'Selecciona un paseo para continuar', 'Elige fecha y hora', 'Escribe el nombre de tu mascota', 'Completa tu nombre y teléfono']
       return labels[step]
@@ -526,9 +582,9 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
             zoneId: '',
             zoneName: '',
             addressId: selectedAddressId,
-            walkerId: '',
-            walkerName: '',
-            assignmentStatus: 'unassigned',
+            walkerId: walkerPreference || '',
+            walkerName: walkerPreference ? availableWalkers.find((w) => w.id === walkerPreference)?.name || '' : '',
+            assignmentStatus: walkerPreference ? 'client_preferred' : 'unassigned',
             sessionStatus: 'pending',
             notes: form.notes,
             internalNotes: '',
@@ -569,6 +625,8 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
         await addDoc(collection(db, 'reservations'), {
           ...form,
           addressId: selectedAddressId,
+          walkerId: walkerPreference || '',
+          walkerName: walkerPreference ? availableWalkers.find((w) => w.id === walkerPreference)?.name || '' : '',
           arrivalWindowStart: window.start,
           arrivalWindowEnd: window.end,
           uid: auth.currentUser?.uid || '',
@@ -634,7 +692,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     setTimeout(() => {
       setSent(false)
       setStep(1)
-      setForm({ name: '', phone: '', petName: '', petType: 'perro', service: '', date: '', time: '', notes: '', coupon: '', addressId: '' })
+      setForm({ name: '', phone: '', petName: '', petType: 'perro', service: '', date: '', time: '', notes: '', coupon: '', addressId: '', walkerPreference: '' })
       setWeeklySchedule({})
       setSelectedAddressId('')
       setCouponStatus(null)
@@ -1227,8 +1285,88 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                         </div>
                       )}
 
-                      {/* ═══════════ STEP 5 — CONFIRM ═══════════ */}
+                      {/* ═══════════ STEP 5 — WALKER ═══════════ */}
                       {step === 5 && (
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-bold mb-1">¿Quién pasea a tu peludo?</h3>
+                          <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
+                            Elige un paseador preferido o déjalo en automático
+                          </p>
+
+                          {loadingWalkers ? (
+                            <div className="flex items-center justify-center py-8 gap-3" style={{ color: 'var(--text-muted)' }}>
+                              <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              <span className="text-sm">Buscando paseadores disponibles…</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <button
+                                type="button"
+                                onClick={() => setWalkerPreference('')}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all"
+                                style={{
+                                  background: walkerPreference === '' ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                  borderColor: walkerPreference === '' ? 'var(--color-primary)' : 'var(--border)',
+                                }}
+                              >
+                                <span className="text-xl">🎲</span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium" style={{ color: walkerPreference === '' ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
+                                    Asignación automática
+                                  </p>
+                                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                    El sistema elige al paseador más cercano
+                                  </p>
+                                </div>
+                                {walkerPreference === '' && <FaCheck size={12} className="text-primary mt-1 shrink-0" />}
+                              </button>
+
+                              {availableWalkers.map((walker) => {
+                                const selected = walkerPreference === walker.id
+                                return (
+                                  <button
+                                    key={walker.id}
+                                    type="button"
+                                    onClick={() => setWalkerPreference(selected ? '' : walker.id)}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all"
+                                    style={{
+                                      background: selected ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+                                      borderColor: selected ? 'var(--color-primary)' : 'var(--border)',
+                                    }}
+                                  >
+                                    {walker.photo ? (
+                                      <img src={walker.photo} alt={walker.name} className="w-10 h-10 rounded-full object-cover" />
+                                    ) : (
+                                      <span className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--color-primary)', color: '#fff' }}>
+                                        {walker.name[0]}
+                                      </span>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium" style={{ color: selected ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
+                                        {walker.name}
+                                      </p>
+                                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                        {walker.zones?.length > 0 ? walker.zones.join(' · ') : 'Todas las zonas'}
+                                        {walker.rating ? ` · ${walker.rating}★` : ''}
+                                      </p>
+                                    </div>
+                                    {selected && <FaCheck size={12} className="text-primary mt-1 shrink-0" />}
+                                  </button>
+                                )
+                              })}
+
+                              {availableWalkers.length === 0 && !loadingWalkers && (
+                                <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>
+                                  No hay paseadores disponibles para esta fecha y hora
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* ═══════════ STEP 6 — CONFIRM ═══════════ */}
+                      {step === 6 && (
                         <div>
                           <h3 className="text-lg sm:text-xl font-bold mb-1">¡Revisa tu reserva!</h3>
                           <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Confirma que todo esté correcto</p>
@@ -1314,6 +1452,21 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                                 </span>
                               </div>
                               <button onClick={() => goToStep(4)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                                <FaEdit size={10} /> Editar
+                              </button>
+                            </div>
+
+                            <div className="h-px" style={{ background: 'var(--border)' }} />
+
+                            {/* Walker Preference */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                <FaDog size={12} className="text-primary" />
+                                {walkerPreference
+                                  ? availableWalkers.find((w) => w.id === walkerPreference)?.name || 'Paseador preferido'
+                                  : 'Asignación automática'}
+                              </div>
+                              <button onClick={() => goToStep(5)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
                                 <FaEdit size={10} /> Editar
                               </button>
                             </div>
@@ -1432,7 +1585,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                     </button>
                   ) : <div />}
 
-                  {step < 5 ? (
+                  {step < 6 ? (
                     <button
                       type="button"
                       onClick={goNext}
@@ -1481,7 +1634,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                 </button>
               ) : <div />}
 
-              {step < 5 ? (
+              {step < 6 ? (
                 <button
                   type="button"
                   onClick={goNext}
