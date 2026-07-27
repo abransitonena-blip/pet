@@ -11,8 +11,10 @@ import { brand } from '@/lib/brand'
 
 type Mode = 'select' | 'familia' | 'equipo' | 'paseador'
 
-function setSessionCookie(uid: string) {
-  document.cookie = `__session=${uid}; path=/; max-age=86400; SameSite=Lax; Secure`
+function setSessionCookie(_uid: string) {
+  // Security: cookie is just a flag — real auth is Firebase Auth (onAuthStateChanged).
+  // The UID is NOT stored in the cookie to prevent impersonation.
+  document.cookie = '__session=1; path=/; max-age=86400; SameSite=Lax; Secure'
 }
 
 function clearSessionCookie() {

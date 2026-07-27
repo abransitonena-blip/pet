@@ -94,11 +94,21 @@ exports.setUserRole = functions.https.onCall(async (data, context) => {
 });
 
 // Callable: getUserRole({ uid })
+// Users can only query their own role. Admins can query any user.
 exports.getUserRole = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
 
-  const { uid } = data;
-  const snap = await db.collection('users').doc(uid || context.auth.uid).get();
+  const targetUid = data.uid || context.auth.uid;
+
+  // If querying someone else's role, verify caller is admin
+  if (targetUid !== context.auth.uid) {
+    const callerSnap = await db.collection('users').doc(context.auth.uid).get();
+    if (callerSnap.data()?.role !== 'admin') {
+      throw new functions.https.HttpsError('permission-denied', 'Only admins can query other users roles');
+    }
+  }
+
+  const snap = await db.collection('users').doc(targetUid).get();
   return { role: snap.data()?.role || null };
 });
 
