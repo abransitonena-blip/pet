@@ -73,8 +73,18 @@ export default function LoginPage() {
         setSessionCookie(result.user.uid)
         router.push('/mi-cuenta')
       }
-    } catch {
-      setError('Error al iniciar sesión con Google')
+    } catch (e: unknown) {
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      if (code === 'auth/popup-blocked-by-browser') {
+        setError('El navegador bloqueó la ventana emergente. Permite popups e intenta de nuevo.')
+      } else if (code === 'auth/popup-closed-by-user') {
+        setError('Se cerró la ventana de Google. Intenta de nuevo.')
+      } else if (code === 'auth/network-request-failed') {
+        setError('Error de red. Verifica tu conexión e intenta de nuevo.')
+      } else {
+        console.error('Google login error:', e)
+        setError('Error al iniciar sesión con Google. Intenta de nuevo.')
+      }
     }
     setLoading(false)
   }
