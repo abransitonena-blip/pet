@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
-import { collection, query, orderBy, limit, getDocs, startAfter as firestoreStartAfter, DocumentSnapshot } from 'firebase/firestore'
+import { collection, query, orderBy, limit, getDocs, startAfter as firestoreStartAfter, DocumentSnapshot, QueryConstraint } from 'firebase/firestore'
 import { FaClipboardList, FaSearch } from 'react-icons/fa'
 
 interface AuditLog {
@@ -43,10 +43,10 @@ export default function AdminLogsPage() {
 
   const fetchLogs = async (isLoadMore = false) => {
     try {
-      const constraints: unknown[] = [orderBy('timestamp', 'desc'), limit(PAGE_SIZE)]
+      const constraints: QueryConstraint[] = [orderBy('timestamp', 'desc'), limit(PAGE_SIZE)]
       if (isLoadMore && lastDoc) constraints.push(firestoreStartAfter(lastDoc))
 
-      const q = query(collection(db, 'audit-logs'), ...constraints as Parameters<typeof query>[1])
+      const q = query(collection(db, 'audit-logs'), ...constraints)
       const snap = await getDocs(q)
 
       const newLogs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as AuditLog))
