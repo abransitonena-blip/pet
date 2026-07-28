@@ -60,6 +60,12 @@ function clearDraft() {
   try { localStorage.removeItem(STORAGE_KEY) } catch {}
 }
 
+const PET_TYPES = [
+  { value: 'perro', emoji: '🐕', label: 'Perro' },
+  { value: 'gato',  emoji: '🐈', label: 'Gato' },
+  { value: 'otro',  emoji: '🐾', label: 'Otro' },
+]
+
 function BookingSummary({ step, form, prices, couponStatus, weeklySchedule }: {
   step: number; form: Record<string, string>; prices: Record<string, number>; couponStatus: { valid?: boolean; discount?: number; type?: string } | null; weeklySchedule?: Record<string, string>
 }) {
