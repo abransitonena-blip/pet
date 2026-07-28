@@ -30,26 +30,6 @@ import { useServiceOrders, type ServiceOrderWithSessions } from '@/lib/useServic
 
 type StatusFilter = 'all' | 'pending' | 'assigned' | 'confirmed' | 'en_camino' | 'paseando' | 'completed' | 'cancelled'
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pendiente',
-  assigned: 'Asignada',
-  confirmed: 'Confirmada',
-  en_camino: 'En camino',
-  paseando: 'Paseando',
-  completed: 'Completada',
-  cancelled: 'Cancelada',
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-brand-500/15 text-brand-400',
-  assigned: 'bg-accent-500/15 text-accent-400',
-  confirmed: 'bg-blue-500/15 text-blue-400',
-  en_camino: 'bg-blue-500/15 text-blue-400',
-  paseando: 'bg-purple-500/15 text-purple-400',
-  completed: 'bg-success-500/15 text-success-400',
-  cancelled: 'bg-danger-500/15 text-danger-400',
-}
-
 export default function AdminReservas() {
   const { reservations, loading } = useReservations()
   const [searchQuery, setSearchQuery] = useState('')
