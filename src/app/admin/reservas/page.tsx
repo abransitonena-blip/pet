@@ -391,7 +391,7 @@ export default function AdminReservas() {
               : 'bg-white/[0.04] text-white/40 hover:text-white/60'
             }`}
           >
-            {s === 'all' ? 'Todas' : STATUS_LABELS[s]}
+            {s === 'all' ? 'Todas' : (STATUS_LABELS as Record<string, string>)[s] || s}
           </button>
         ))}
       </div>
@@ -424,7 +424,7 @@ export default function AdminReservas() {
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.name}</span>
                     <Badge variant={res.status === 'completed' ? 'success' : res.status === 'en_camino' ? 'info' : res.status === 'cancelled' ? 'danger' : res.status === 'paseando' ? 'info' : 'brand'} className="normal-case tracking-normal">
-                      {STATUS_LABELS[res.status] || res.status}
+                      {(STATUS_LABELS as Record<string, string>)[res.status] || res.status}
                     </Badge>
                     {res.assignedWalker && (
                       <span className="text-2xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
@@ -627,7 +627,7 @@ export default function AdminReservas() {
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.date} {r.arrivalWindowStart ? `${r.arrivalWindowStart}${r.arrivalWindowEnd ? `-${r.arrivalWindowEnd}` : ''}` : r.time}</p>
                       </div>
                       <Badge variant={r.status === 'completed' ? 'success' : r.status === 'en_camino' ? 'info' : r.status === 'cancelled' ? 'danger' : r.status === 'paseando' ? 'info' : 'brand'} className="normal-case tracking-normal">
-                        {STATUS_LABELS[r.status] || r.status}
+                        {(STATUS_LABELS as Record<string, string>)[r.status] || r.status}
                       </Badge>
                     </div>
                   ))}
