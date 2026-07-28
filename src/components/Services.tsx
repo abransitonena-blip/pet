@@ -32,7 +32,7 @@ export default function Services() {
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
   return (
-    <section id="servicios" className="relative py-24 sm:py-32" ref={ref}>
+    <section aria-label="Servicios" id="servicios" className="relative py-24 sm:py-32" ref={ref}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 text-primary/5 text-8xl rotate-12">🐾</div>
         <div className="absolute bottom-20 right-10 text-primary/5 text-8xl -rotate-12">🐾</div>

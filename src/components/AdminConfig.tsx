@@ -227,9 +227,9 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
       {tips.map((tip: { title: string; text: string; icon: string }, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
           <div className="flex-1 space-y-2">
-            <input value={tip.icon} onChange={(e) => updateTip(i, 'icon', e.target.value)} className="w-10 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs text-center" placeholder="Icono" />
-            <input value={tip.title} onChange={(e) => updateTip(i, 'title', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Título" />
-            <textarea value={tip.text} onChange={(e) => updateTip(i, 'text', e.target.value)} rows={2} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" placeholder="Texto" />
+            <input value={tip.icon} onChange={(e) => updateTip(i, 'icon', e.target.value)} className="w-10 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs text-center" aria-label="Icono del tip" placeholder="Icono" />
+            <input value={tip.title} onChange={(e) => updateTip(i, 'title', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Título del tip" placeholder="Título" />
+            <textarea value={tip.text} onChange={(e) => updateTip(i, 'text', e.target.value)} rows={2} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" aria-label="Texto del tip" placeholder="Texto" />
           </div>
            <button onClick={() => removeTip(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
         </div>
@@ -262,8 +262,8 @@ function FAQEditor({ config, updateConfig, saving }: EditorProps) {
       {faq.map((item: { question: string; answer: string }, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
           <div className="flex-1 space-y-2">
-            <input value={item.question} onChange={(e) => updateItem(i, 'question', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Pregunta" />
-            <textarea value={item.answer} onChange={(e) => updateItem(i, 'answer', e.target.value)} rows={3} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" placeholder="Respuesta" />
+            <input value={item.question} onChange={(e) => updateItem(i, 'question', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Pregunta frecuente" placeholder="Pregunta" />
+            <textarea value={item.answer} onChange={(e) => updateItem(i, 'answer', e.target.value)} rows={3} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" aria-label="Respuesta" placeholder="Respuesta" />
           </div>
            <button onClick={() => removeItem(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
         </div>
@@ -284,7 +284,7 @@ function TermsEditor({ config, updateConfig, saving }: EditorProps) {
 
   return (
     <div className="space-y-3">
-      <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={12}
+      <textarea aria-label="Términos y condiciones" value={content} onChange={(e) => setContent(e.target.value)} rows={12}
         className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono resize-none focus:outline-none focus:border-primary"
       />
       <SaveButton onClick={save} saving={saving} />
@@ -312,8 +312,8 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
       {walkers.map((w: { name: string; phone: string }, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
           <div className="flex-1 flex gap-2">
-            <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Nombre" />
-            <input value={w.phone} onChange={(e) => updateWalker(i, 'phone', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" placeholder="Teléfono" />
+            <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Nombre del paseador" placeholder="Nombre" />
+            <input value={w.phone} onChange={(e) => updateWalker(i, 'phone', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Teléfono del paseador" placeholder="Teléfono" />
           </div>
            <button onClick={() => removeWalker(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
         </div>

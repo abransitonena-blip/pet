@@ -8,6 +8,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import Image from 'next/image'
 import { FaCamera, FaMapMarkerAlt, FaTimes, FaCheck, FaStop, FaSpinner, FaImage } from 'react-icons/fa'
 import { useEscapeKey } from '@/lib/useEscapeKey'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 import { canTransition } from '@/lib/sessionMachine'
 import type { Reservation, SessionStatus } from '@/types'
 
@@ -144,6 +145,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      ref={trapRef}
       role="dialog"
       aria-modal="true"
       aria-label={mode === 'check_in' ? 'Iniciar paseo' : 'Terminar paseo'}

@@ -67,7 +67,7 @@ export default function Gallery() {
   }
 
   return (
-    <section id="galeria" className="relative py-24 sm:py-32 overflow-hidden">
+    <section aria-label="Galería" id="galeria" className="relative py-24 sm:py-32 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
@@ -107,7 +107,7 @@ export default function Gallery() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.05 }}
               whileHover={{ y: -6, scale: 1.02 }}
-              onClick={() => setSelected(i)}
+              onClick={() => setSelected(i)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(i) } }}
               className="break-inside-avoid cursor-pointer group relative rounded-2xl overflow-hidden shadow-lg"
               style={{ background: 'var(--glass-bg)' }}
             >
@@ -156,7 +156,7 @@ export default function Gallery() {
             className="fixed inset-0 z-[var(--z-overlay)] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
             onClick={close}
           >
-            <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-20">
+            <div role="presentation" className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-20">
               <span className="text-xs text-white/40 bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
                 {selected + 1} / {images.length}
               </span>

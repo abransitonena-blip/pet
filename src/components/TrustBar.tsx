@@ -20,7 +20,7 @@ export default function TrustBar() {
   ]
 
   return (
-    <section ref={ref} className="py-12 sm:py-16 border-b" style={{ borderColor: 'var(--border)' }}>
+    <section aria-label="Barra de confianza" ref={ref} className="py-12 sm:py-16 border-b" style={{ borderColor: 'var(--border)' }}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaTimes, FaDog, FaShieldAlt, FaHeart, FaWhatsapp, FaLock, FaPaw, FaCalendarAlt, FaStar } from 'react-icons/fa'
 import { useEscapeKey } from '@/lib/useEscapeKey'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 import { formatBusinessHours } from '@/lib/defaultConfig'
 
 const sections = [
@@ -50,6 +51,7 @@ const sections = [
 
 export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   useEscapeKey(onClose, isOpen)
+  const trapRef = useFocusTrap(isOpen)
   return (
     <AnimatePresence>
       {isOpen && (

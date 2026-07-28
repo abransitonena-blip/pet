@@ -39,7 +39,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section id="hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
+    <section aria-label="Hero" id="hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
       {/* Subtle gradient bg */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-500/[0.04] rounded-full blur-3xl" />

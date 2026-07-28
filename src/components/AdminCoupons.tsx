@@ -111,24 +111,24 @@ export default function AdminCoupons() {
           <input
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="Código (ej: BIENVENIDO)"
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
+            aria-label="Código del cupón" placeholder="Código (ej: BIENVENIDO)"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/40"
           />
           <input
             type="number"
             value={discount}
             onChange={(e) => setDiscount(e.target.value)}
-            placeholder="Descuento"
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
+            aria-label="Monto del descuento" placeholder="Descuento"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/40"
           />
           <input
             type="number"
             value={maxUses}
             onChange={(e) => setMaxUses(e.target.value)}
-            placeholder="Usos máx (0 = ilimitado)"
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
+            aria-label="Usos máximos" placeholder="Usos máx (0 = ilimitado)"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/40"
           />
-          <select
+          <select aria-label="Tipo de descuento"
             value={type}
             onChange={(e) => setType(e.target.value as 'percentage' | 'fixed')}
             className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
@@ -148,7 +148,7 @@ export default function AdminCoupons() {
       </div>
 
       {coupons.length === 0 ? (
-        <div className="text-center py-10 text-white/20">
+        <div className="text-center py-10 text-white/40">
           <FaTag className="text-3xl mx-auto mb-2" />
           <p className="text-xs">Crea tu primer cupón de descuento</p>
         </div>
@@ -167,24 +167,24 @@ export default function AdminCoupons() {
                     <input
                       value={editCode}
                       onChange={(e) => setEditCode(e.target.value)}
-                      placeholder="Código"
+                      aria-label="Código del cupón" placeholder="Código"
                       className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
                     />
                     <input
                       type="number"
                       value={editDiscount}
                       onChange={(e) => setEditDiscount(e.target.value)}
-                      placeholder="Descuento"
+                      aria-label="Monto del descuento" placeholder="Descuento"
                       className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
                     />
                     <input
                       type="number"
                       value={editMaxUses}
                       onChange={(e) => setEditMaxUses(e.target.value)}
-                      placeholder="Usos máx (0 = ilimitado)"
+                      aria-label="Usos máximos" placeholder="Usos máx (0 = ilimitado)"
                       className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
                     />
-                    <select
+                    <select aria-label="Tipo de descuento"
                       value={editType}
                       onChange={(e) => setEditType(e.target.value as 'percentage' | 'fixed')}
                       className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"

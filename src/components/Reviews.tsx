@@ -67,7 +67,7 @@ export default function Reviews() {
   }
 
   return (
-    <section id="resenas" className="relative py-24 sm:py-32" ref={ref}>
+    <section aria-label="Reseñas" id="resenas" className="relative py-24 sm:py-32" ref={ref}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 40 }}

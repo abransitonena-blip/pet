@@ -330,7 +330,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {error && <p className="text-danger-400 text-xs">{error}</p>}
+              {error {error && <p className="text-danger-400 text-xs">{error}</p>{error && <p className="text-danger-400 text-xs">{error}</p> <p className="text-danger-400 text-xs" role="alert">{error}</p>}
 
               <button
                 onClick={familiaMode === 'login' ? () => handleEmailLogin('client') : handleRegister}
@@ -391,7 +391,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {error && <p className="text-danger-400 text-xs">{error}</p>}
+              {error {error && <p className="text-danger-400 text-xs">{error}</p>{error && <p className="text-danger-400 text-xs">{error}</p> <p className="text-danger-400 text-xs" role="alert">{error}</p>}
 
               <button
                 onClick={() => handleEmailLogin('admin')}
@@ -445,7 +445,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {error && <p className="text-danger-400 text-xs">{error}</p>}
+              {error {error && <p className="text-danger-400 text-xs">{error}</p>{error && <p className="text-danger-400 text-xs">{error}</p> <p className="text-danger-400 text-xs" role="alert">{error}</p>}
 
               <button
                 onClick={() => handleEmailLogin('walker')}

@@ -108,13 +108,13 @@ export default function AdminLogsPage() {
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
-            placeholder="Buscar en logs..."
+            aria-label="Buscar en logs" placeholder="Buscar en logs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-field pl-9"
           />
         </div>
-        <select
+        <select aria-label="Filtrar por acción"
           value={actionFilter}
           onChange={(e) => setActionFilter(e.target.value)}
           className="input-field !w-auto"

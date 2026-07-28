@@ -9,6 +9,7 @@ import type { Reservation } from '@/types'
 import { SERVICE_NAMES, normalizeServiceName } from '@/lib/services'
 import { logChange } from '@/lib/audit'
 import { useEscapeKey } from '@/lib/useEscapeKey'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 import { useToast } from '@/context/ToastContext'
 import { useConfig } from '@/context/ConfigContext'
 
@@ -35,6 +36,7 @@ export default function EditReservationModal({
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
   const { config } = useConfig()
+  const trapRef = useFocusTrap(isOpen)
   useEscapeKey(onClose, isOpen)
 
   const handleSave = async () => {
@@ -93,6 +95,9 @@ export default function EditReservationModal({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
+            ref={trapRef}
+            role="dialog"
+            aria-modal="true"
             onClick={(e) => e.stopPropagation()}
             className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl shadow-primary/10"
           >
