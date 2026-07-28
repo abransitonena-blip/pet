@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db, auth } from '@/firebase/config'
-import { collection, query, where, limit, onSnapshot, doc } from 'firebase/firestore'
+import { collection, query, where, limit, onSnapshot, doc, getDocs } from 'firebase/firestore'
 import { useSearchParams } from 'next/navigation'
 import { SERVICE_NAMES, getServicePrice, getServiceMeta } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
