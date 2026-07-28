@@ -322,7 +322,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     ;(async () => {
       try {
         const profilesSnap = await getDocs(collection(db, 'walkerProfiles'))
-        const configWalkers = (config?.walkers || []) as { name: string; uid?: string; status?: string; zones?: string[] }[]
+        const configWalkers = (config?.walkers || []) as { name: string; uid?: string; status?: string; zones?: string[]; schedule?: Record<string, { start: string; end: string }[]> }[]
         const dayOfWeek = new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short' }).toLowerCase()
         const timeNum = parseInt(form.time.replace(':', ''), 10)
 
