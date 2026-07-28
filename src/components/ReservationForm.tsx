@@ -370,7 +370,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
   useEffect(() => {
     if (walkerPreference !== form.walkerPreference) {
-      setForm((prev) => ({ ...prev, walkerPreference }))
+      setForm((prev: typeof form) => ({ ...prev, walkerPreference }))
     }
   }, [walkerPreference])
 
