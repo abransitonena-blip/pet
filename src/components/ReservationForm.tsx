@@ -17,7 +17,7 @@ import StepContact from './reservation-steps/StepContact'
 import StepWalker from './reservation-steps/StepWalker'
 import StepConfirm from './reservation-steps/StepConfirm'
 import {
-  FaSpinner, FaArrowRight, FaArrowLeft, FaWhatsapp, FaCheckCircle,
+  FaSpinner, FaArrowRight, FaArrowLeft, FaWhatsapp, FaCheckCircle, FaCalendarAlt,
 } from 'react-icons/fa'
 
 const STEP_META = [
