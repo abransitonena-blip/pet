@@ -33,6 +33,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
   const streamRef = useRef<MediaStream | null>(null)
 
   useEscapeKey(onClose, isOpen)
+  const trapRef = useFocusTrap(isOpen)
 
   useEffect(() => {
     if (!isOpen) {
