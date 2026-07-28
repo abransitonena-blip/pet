@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import { db, storage } from '@/firebase/config'
+import { db } from '@/firebase/config'
 import Image from 'next/image'
 import { FaImage, FaSpinner, FaTrash, FaUpload, FaDog, FaTag } from 'react-icons/fa'
+
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'ktyauicg'
+const UPLOAD_PRESET = 'pet_gallery'
 
 interface GalleryImage {
   id: string
@@ -50,15 +52,31 @@ export default function AdminGalleryPage() {
     setDog('')
   }
 
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', UPLOAD_PRESET)
+    formData.append('folder', 'gallery')
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error?.message || `Error ${res.status} al subir a Cloudinary`)
+    }
+
+    const data = await res.json()
+    return data.secure_url as string
+  }
+
   const handleUpload = async () => {
     if (!selectedFile || !title.trim() || !dog.trim()) return
     setUploading(true)
     try {
-      const ext = selectedFile.name.split('.').pop() || 'jpg'
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-      const storageRef = ref(storage, `gallery/${filename}`)
-      await uploadBytes(storageRef, selectedFile)
-      const url = await getDownloadURL(storageRef)
+      const url = await uploadToCloudinary(selectedFile)
 
       await addDoc(collection(db, 'gallery-images'), {
         url,
@@ -79,17 +97,15 @@ export default function AdminGalleryPage() {
       setLoading(false)
     } catch (e) {
       console.error('Upload error:', e)
-      alert('Error al subir la imagen')
+      alert(e instanceof Error ? e.message : 'Error al subir la imagen')
     }
     setUploading(false)
   }
 
   const handleDelete = async (img: GalleryImage) => {
-    if (!confirm(`¿Eliminar "${img.title}"?`)) return
+    if (!confirm(`¿Eliminar "${img.title}" de la galería?`)) return
     setDeleting(img.id)
     try {
-      const storageRef = ref(storage, img.url)
-      await deleteObject(storageRef).catch(() => {})
       await deleteDoc(doc(db, 'gallery-images', img.id))
       setImages((prev) => prev.filter((i) => i.id !== img.id))
     } catch (e) {
