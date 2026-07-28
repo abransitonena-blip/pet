@@ -83,6 +83,9 @@ export default function LoginPage() {
         setError('Se cerró la ventana de Google. Intenta de nuevo.')
       } else if (code === 'auth/network-request-failed') {
         setError('Error de red. Verifica tu conexión e intenta de nuevo.')
+      } else if (code === 'auth/internal-error') {
+        console.error('Google login error (see console for details):', e)
+        setError('Error interno de Google. Revisa que el dominio esté en Google Cloud Console > Credenciales > orígenes JavaScript autorizados.')
       } else {
         console.error('Google login error:', e)
         setError('Error al iniciar sesión con Google. Intenta de nuevo.')
