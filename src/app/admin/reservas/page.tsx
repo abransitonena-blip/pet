@@ -132,7 +132,7 @@ export default function AdminReservas() {
     const headers = ['Nombre', 'Teléfono', 'Mascota', 'Servicio', 'Fecha', 'Hora', 'Notas', 'Estado', 'Paseador']
     const rows = filtered.map((r) => [
       r.name, r.phone, r.petName, r.service, r.date, r.time,
-      r.notes || '', STATUS_LABELS[r.status] || r.status, r.assignedWalker || '',
+      r.notes || '', (STATUS_LABELS as Record<string, string>)[r.status] || r.status, r.assignedWalker || '',
     ])
     const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${c}"`).join(','))].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
