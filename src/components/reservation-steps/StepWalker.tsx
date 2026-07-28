@@ -70,7 +70,7 @@ export default function StepWalker({
                     {walker.name}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {walker.zones?.length > 0 ? walker.zones.join(' · ') : 'Todas las zonas'}
+                    {(walker.zones?.length ?? 0) > 0 ? walker.zones!.join(' · ') : 'Todas las zonas'}
                     {walker.rating ? ` · ${walker.rating}★` : ''}
                   </p>
                 </div>
