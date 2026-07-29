@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
@@ -42,6 +42,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [version, setVersion] = useState<{ commit?: string; environment?: string } | null>(null)
+
+  useEffect(() => {
+    fetch('/api/version').then((r) => r.ok && r.json()).then((d) => setVersion(d)).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -138,6 +143,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <FaSignOutAlt size={16} className="shrink-0" />
             {!collapsed && <span>Cerrar sesión</span>}
           </button>
+          {!collapsed && version && (
+            <div className="mt-2 px-3 py-1.5">
+              <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>
+                v2026.07.29 · {version.commit?.slice(0, 7) || 'dev'}
+              </p>
+              <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>
+                {version.environment || 'local'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Collapse toggle */}

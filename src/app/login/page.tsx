@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, isSignInWithEmailLink } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { FaDog, FaGoogle, FaEnvelope, FaLock, FaSpinner, FaUser, FaPhone, FaWalking } from 'react-icons/fa'
@@ -32,6 +32,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showInternal, setShowInternal] = useState(false)
+  const [useRedirect, setUseRedirect] = useState(false)
   const clickCount = useRef(0)
   const clickTimer = useRef<NodeJS.Timeout | null>(null)
 
@@ -44,6 +45,31 @@ export default function LoginPage() {
     }
     clickTimer.current = setTimeout(() => { clickCount.current = 0 }, 2000)
   }, [])
+
+  // Handle redirect result from Google sign-in (mobile fallback)
+  useEffect(() => {
+    getRedirectResult(auth).then(async (result) => {
+      if (!result) return
+      const snap = await getDoc(doc(db, 'clients', result.user.uid))
+      if (!snap.exists()) {
+        await setDoc(doc(db, 'clients', result.user.uid), {
+          name: result.user.displayName || '',
+          email: result.user.email || '',
+          phone: '',
+          createdAt: new Date().toISOString(),
+        })
+      }
+      setSessionCookie(result.user.uid)
+      router.push('/mi-cuenta')
+    }).catch((e: unknown) => {
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      if (code === 'auth/account-exists-with-different-credential') {
+        setError('Ya existe una cuenta con otro método de inicio de sesión')
+      } else if (code !== 'auth/no-such-provider' && code !== 'auth/internal-error') {
+        console.error('Redirect result error:', e)
+      }
+    })
+  }, [router])
 
   // Read ?mode= query param from URL
   useEffect(() => {
@@ -60,6 +86,10 @@ export default function LoginPage() {
     setError('')
     try {
       const provider = new GoogleAuthProvider()
+      if (useRedirect || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        await signInWithRedirect(auth, provider)
+        return
+      }
       const result = await signInWithPopup(auth, provider)
       const snap = await getDoc(doc(db, 'clients', result.user.uid))
       if (snap.exists()) {
@@ -78,14 +108,15 @@ export default function LoginPage() {
     } catch (e: unknown) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
       if (code === 'auth/popup-blocked-by-browser') {
-        setError('El navegador bloqueó la ventana emergente. Permite popups e intenta de nuevo.')
+        setError('El navegador bloqueó la ventana emergente. Usa el enlace de "Acceso sin popup" abajo o permite ventanas emergentes.')
+        setUseRedirect(true)
       } else if (code === 'auth/popup-closed-by-user') {
         setError('Se cerró la ventana de Google. Intenta de nuevo.')
       } else if (code === 'auth/network-request-failed') {
         setError('Error de red. Verifica tu conexión e intenta de nuevo.')
       } else if (code === 'auth/internal-error') {
-        console.error('Google login error (see console for details):', e)
-        setError('Error interno de Google. Revisa que el dominio esté en Google Cloud Console > Credenciales > orígenes JavaScript autorizados.')
+        setError('El servicio de Google no está disponible ahora. Revisa que el dominio esté autorizado en Google Cloud Console (orígenes JavaScript) e intenta de nuevo, o usa correo y contraseña.')
+        console.error('Google 503/internal-error — domain may not be authorized in OAuth client')
       } else {
         console.error('Google login error:', e)
         setError('Error al iniciar sesión con Google. Intenta de nuevo.')
@@ -263,6 +294,15 @@ export default function LoginPage() {
                 {loading ? <FaSpinner className="animate-spin" size={14} /> : <FaGoogle size={14} />}
                 Continuar con Google
               </button>
+
+              {useRedirect && (
+                <p className="text-center text-xs flex items-center justify-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                  ¿Popup bloqueado?{' '}
+                  <button onClick={handleGoogleLogin} className="underline font-medium" style={{ color: 'var(--color-primary)' }}>
+                    Intentar con redirección
+                  </button>
+                </p>
+              )}
 
               <div className="flex items-center gap-3 py-1">
                 <span className="flex-1 h-px" style={{ background: 'var(--border)' }} />
