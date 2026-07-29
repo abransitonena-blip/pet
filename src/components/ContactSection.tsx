@@ -10,7 +10,7 @@ export default function ContactSection() {
   const { config } = useConfig()
 
   const contacts = [
-    { icon: FaWhatsapp, label: 'WhatsApp', value: config.whatsapp.replace(/521?/, ''), href: 'https://wa.me/' + config.whatsapp, color: 'text-green-400' },
+    { icon: FaWhatsapp, label: 'WhatsApp', value: `+52 ${config.whatsapp.slice(3, 5)} ${config.whatsapp.slice(5, 9)} ${config.whatsapp.slice(9)}`, href: 'https://wa.me/' + config.whatsapp, color: 'text-green-400' },
     { icon: FaEnvelope, label: 'Correo electrónico', value: BRAND.email, href: `mailto:${BRAND.email}`, color: 'text-brand-400' },
     { icon: FaClock, label: formatBusinessHours().map((h) => h.weekday).join(' | '), value: formatBusinessHours().map((h) => h.hours).join(' | '), href: null, color: 'text-secondary' },
   ]

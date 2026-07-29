@@ -95,8 +95,8 @@ export default function Hero() {
         {/* Stats inline */}
         <motion.div variants={item} className="flex items-center justify-center gap-8 sm:gap-12 mb-10">
           {[
-            { value: statsLoading ? '—' : `${happyDogs}+`, label: 'Perros felices' },
-            { value: statsLoading ? '—' : `${avgRating}★`, label: 'Calificación' },
+            { value: statsLoading ? '—' : happyDogs > 0 ? `${happyDogs}+` : '—', label: 'Perros felices' },
+            { value: statsLoading ? '—' : avgRating > 0 ? `${avgRating}★` : '—', label: 'Calificación' },
             { value: `$${minPrice}`, label: 'Desde' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">

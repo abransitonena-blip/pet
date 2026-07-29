@@ -64,6 +64,9 @@ export interface SiteConfig {
   termsContent: string
   walkers: { name: string; phone: string; email?: string; uid?: string; status?: string; zones?: string[]; maxDaily?: number; maxWeekly?: number; schedule?: Record<string, Array<{ start: string; end: string }>> }[]
   maintenance: boolean
+  features: {
+    petAhoraEnabled: boolean
+  }
 }
 
 export const DEFAULT_CONFIG: SiteConfig = {
@@ -74,7 +77,7 @@ export const DEFAULT_CONFIG: SiteConfig = {
     howItWorks: 'Reserva en 3 simples pasos y nosotros nos encargamos del resto.',
     faq: 'Respuestas a las preguntas más frecuentes sobre nuestros servicios.',
   },
-  whatsapp: brand.whatsappRaw,
+  whatsapp: brand.whatsapp,
   instagram: 'https://www.instagram.com/pet___ap',
   facebook: '',
   tiktok: '',
@@ -120,4 +123,7 @@ Los pagos se realizan en efectivo o transferencia el día del paseo.`,
     { name: 'Efrain', phone: '552305377' },
   ],
   maintenance: false,
+  features: {
+    petAhoraEnabled: false,
+  },
 }

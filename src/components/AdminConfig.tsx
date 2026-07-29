@@ -20,7 +20,7 @@ import {
 } from 'react-icons/fa'
 import { BUSINESS_HOURS, generateTimeSlots } from '@/lib/defaultConfig'
 
-type Section = 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'maintenance'
+type Section = 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'features' | 'maintenance'
 
 const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'hero', label: 'Textos del sitio', icon: '📝' },
@@ -30,6 +30,7 @@ const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'faq', label: 'FAQ', icon: '❓' },
   { id: 'terms', label: 'Términos', icon: '📄' },
   { id: 'walkers', label: 'Paseadores', icon: '🦮' },
+  { id: 'features', label: 'Funcionalidades', icon: '🚀' },
   { id: 'maintenance', label: 'Mantenimiento', icon: '⚠️' },
 ]
 
@@ -97,6 +98,8 @@ function SectionContent({
       return <TermsEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'walkers':
       return <WalkersEditor config={config} updateConfig={updateConfig} saving={saving} />
+    case 'features':
+      return <FeaturesEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'maintenance':
       return <MaintenanceEditor config={config} updateConfig={updateConfig} saving={saving} />
     default:
@@ -321,6 +324,34 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
       <button onClick={addWalker} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
         <FaPlus size={8} /> Agregar paseador
       </button>
+      <SaveButton onClick={save} saving={saving} />
+    </div>
+  )
+}
+
+function FeaturesEditor({ config, updateConfig, saving }: EditorProps) {
+  const [petAhora, setPetAhora] = useState(config.features?.petAhoraEnabled ?? false)
+
+  useEffect(() => { setPetAhora(config.features?.petAhoraEnabled ?? false) }, [config.features?.petAhoraEnabled])
+
+  const save = () => updateConfig({ features: { petAhoraEnabled: petAhora } })
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setPetAhora(!petAhora)}
+          className={`w-10 h-6 rounded-full transition-all ${petAhora ? 'bg-brand-500' : 'bg-white/10'}`}
+        >
+          <div className={`w-4 h-4 rounded-full bg-white transition-all ${petAhora ? 'translate-x-5' : 'translate-x-1'}`} />
+        </button>
+        <span className="text-xs text-white/60">{petAhora ? 'PET Ahora activado' : 'PET Ahora desactivado'}</span>
+      </div>
+      {petAhora && (
+        <div className="p-3 bg-brand-500/10 border border-brand-500/20 rounded-lg flex items-start gap-2">
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>PET Ahora permite a clientes solicitar paseos al instante. Requiere configuración adicional de zonas, paseadores y disponibilidad.</p>
+        </div>
+      )}
       <SaveButton onClick={save} saving={saving} />
     </div>
   )

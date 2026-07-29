@@ -75,7 +75,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                 style={{ color: 'var(--text-secondary)' }}
               >
                 <FaWhatsapp size={14} />
-                {config.whatsapp.replace(/521?/, '')}
+                {`+52 ${config.whatsapp.slice(3, 5)} ${config.whatsapp.slice(5, 9)} ${config.whatsapp.slice(9)}`}
               </a>
               <a
                 href={`mailto:${BRAND.email}`}

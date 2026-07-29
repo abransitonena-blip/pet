@@ -544,7 +544,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
             Reserva su <span className="gradient-text">paseo</span>
           </h2>
           <p className="section-subtitle">
-            En 5 pasos simples. Fácil, rápido y seguro.
+            En 6 pasos simples. Fácil, rápido y seguro.
           </p>
         </motion.div>
 
@@ -554,12 +554,12 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
             {/* Mobile: "Paso X de 5" */}
             <div className="lg:hidden text-center mb-3">
               <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                Paso {step} de 5 — {STEP_META[step - 1]?.label}
+                Paso {step} de 6 — {STEP_META[step - 1]?.label}
               </span>
             </div>
 
             {/* Progress Bar */}
-            <div className="flex items-center mb-8 px-2" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={5} aria-label={`Paso ${step} de 5: ${STEP_META[step - 1]?.label}`}>
+            <div className="flex items-center mb-8 px-2" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={6} aria-label={`Paso ${step} de 6: ${STEP_META[step - 1]?.label}`}>
               {STEP_META.map((s, i) => (
                 <div key={s.num} className="flex items-center flex-1 last:flex-none">
                   <div className="flex flex-col items-center gap-1.5">
@@ -667,7 +667,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
 
               {/* Navigation */}
               {!sent && (
-                <div className="flex items-center justify-between mt-6 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                <div className="hidden lg:flex items-center justify-between mt-6 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                   {step > 1 ? (
                     <button
                       type="button"

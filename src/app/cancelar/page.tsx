@@ -72,7 +72,7 @@ export default function CancelarPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && search()}
-              aria-label="Número de WhatsApp" placeholder="Ej: 5523053772"
+              aria-label="Número de WhatsApp" placeholder="Ej: 55 2305 3772"
               className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/20"
             />
             <button

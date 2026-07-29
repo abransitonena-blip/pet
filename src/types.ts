@@ -282,3 +282,81 @@ export interface Loyalty {
   freeWalksUsed: number
   lastWalkAt?: any
 }
+
+export type PresenceStatus = 'online' | 'offline' | 'busy'
+
+export interface WalkerPresence {
+  walkerId: string
+  walkerName: string
+  status: PresenceStatus
+  lastHeartbeat: { seconds: number; nanoseconds: number }
+  lat?: number
+  lng?: number
+  currentZoneId?: string
+  activeSessionId?: string
+  batteryLevel?: number
+}
+
+export type PetAhoraRequestStatus = 'pending' | 'searching' | 'offer_sent' | 'accepted' | 'en_camino' | 'paseando' | 'completed' | 'cancelled' | 'expired'
+
+export interface PetAhoraRequest {
+  id: string
+  clientId: string
+  clientName: string
+  clientPhone: string
+  petId: string
+  petName: string
+  petType: string
+  addressId: string
+  address?: Address
+  zoneId: string
+  zoneName: string
+  serviceType: string
+  status: PetAhoraRequestStatus
+  requestedAt: { seconds: number; nanoseconds: number }
+  expiresAt: { seconds: number; nanoseconds: number }
+  acceptedAt?: { seconds: number; nanoseconds: number }
+  completedAt?: { seconds: number; nanoseconds: number }
+  cancelledAt?: { seconds: number; nanoseconds: number }
+  cancellationReason?: string
+  walkerId?: string
+  walkerName?: string
+  walkerEta?: number
+  walkCheckIn?: WalkMedia
+  walkCheckOut?: WalkMedia
+  notes?: string
+  price: number
+  originLat?: number
+  originLng?: number
+}
+
+export type OfferStatus = 'pending' | 'accepted' | 'declined' | 'expired'
+
+export interface PetAhoraOffer {
+  id: string
+  requestId: string
+  walkerId: string
+  walkerName: string
+  status: OfferStatus
+  sentAt: { seconds: number; nanoseconds: number }
+  respondedAt?: { seconds: number; nanoseconds: number }
+  expiresAt: { seconds: number; nanoseconds: number }
+  walkerLat?: number
+  walkerLng?: number
+  etaMinutes?: number
+}
+
+export interface PetAhoraLease {
+  id: string
+  requestId: string
+  offerId: string
+  walkerId: string
+  walkerName: string
+  clientId: string
+  clientName: string
+  petName: string
+  zoneId: string
+  status: 'active' | 'completed' | 'cancelled'
+  lockedAt: { seconds: number; nanoseconds: number }
+  unlockedAt?: { seconds: number; nanoseconds: number }
+}

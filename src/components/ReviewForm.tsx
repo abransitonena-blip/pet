@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { db } from '@/firebase/config'
+import { db, auth } from '@/firebase/config'
+import { onAuthStateChanged } from 'firebase/auth'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { FaStar, FaPaw, FaSpinner, FaCheckCircle } from 'react-icons/fa'
+import { FaStar, FaPaw, FaSpinner, FaCheckCircle, FaUser } from 'react-icons/fa'
+import Link from 'next/link'
 
 export default function ReviewForm() {
+  const [user, setUser] = useState<{ uid: string; displayName: string | null } | null>(null)
   const [name, setName] = useState('')
   const [petName, setPetName] = useState('')
   const [rating, setRating] = useState(0)
@@ -15,6 +18,13 @@ export default function ReviewForm() {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u ? { uid: u.uid, displayName: u.displayName } : null)
+    })
+    return unsub
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,6 +63,16 @@ export default function ReviewForm() {
       viewport={{ once: true }}
       className="glass-card p-6 sm:p-8"
     >
+      {!user ? (
+        <div className="text-center py-8">
+          <FaUser className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Inicia sesión para dejar tu reseña</p>
+          <Link href="/login" className="btn-primary inline-flex items-center gap-2 text-sm">
+            Iniciar sesión
+          </Link>
+        </div>
+      ) : (
+      <>
       <div className="flex items-center gap-3 mb-6">
         <FaPaw className="text-primary text-xl" />
         <h3 className="text-xl font-bold">Deja tu reseña</h3>
@@ -154,6 +174,8 @@ export default function ReviewForm() {
           {sending ? 'Enviando...' : sent ? '¡Gracias!' : 'Publicar reseña'}
         </motion.button>
       </form>
+      </>
+      )}
     </motion.div>
   )
 }

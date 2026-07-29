@@ -7,7 +7,7 @@ export const WALK_DURATIONS: Record<string, number> = {
   'Paseo Extendido': 60,
   'Paseo Grupal': 45,
   'Paseo + Adiestramiento': 60,
-  'Paseo Express': 20,
+  'Paseo Esencial': 20,
   'Paseo + Reporte': 45,
   'Paquete Semanal': 30,
 }

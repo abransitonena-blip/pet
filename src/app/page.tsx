@@ -2,6 +2,8 @@
 
 import { Suspense, useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '@/firebase/config'
 import { ThemeProvider } from '@/context/ThemeContext'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
@@ -12,6 +14,8 @@ import ReservationForm from '@/components/ReservationForm'
 import Preloader from '@/components/Preloader'
 import PWARegister from '@/components/PWARegister'
 import BannerDisplay from '@/components/BannerDisplay'
+import Link from 'next/link'
+import { FaUser, FaArrowRight } from 'react-icons/fa'
 
 const Gallery = dynamic(() => import('@/components/Gallery'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>,
@@ -39,6 +43,12 @@ function HomeContent() {
   const [showTerms, setShowTerms] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [formActive, setFormActive] = useState(false)
+  const [user, setUser] = useState<{ uid: string; displayName: string | null } | null>(null)
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u ? { uid: u.uid, displayName: u.displayName } : null))
+    return unsub
+  }, [])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -86,7 +96,27 @@ function HomeContent() {
           </div>
         </div>
         <Suspense>
-          <ReservationForm onFocusChange={setFormActive} />
+          {user ? (
+            <section aria-label="Reservar" id="reservar" className="section-container py-20 sm:py-28">
+              <div className="max-w-lg mx-auto text-center">
+                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+                  <FaUser className="text-primary" size={24} />
+                </div>
+                <h2 className="section-title">Bienvenido de vuelta</h2>
+                <p className="section-subtitle mb-6">
+                  Ya eres parte de Familia PET. Reserva tu paseo desde tu cuenta.
+                </p>
+                <Link
+                  href="/mi-cuenta/nueva-reserva"
+                  className="btn-primary inline-flex items-center gap-2"
+                >
+                  Ir a reservar <FaArrowRight size={14} />
+                </Link>
+              </div>
+            </section>
+          ) : (
+            <ReservationForm onFocusChange={setFormActive} />
+          )}
         </Suspense>
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-32 rounded-2xl" /></div>}>
           <ContactSection />

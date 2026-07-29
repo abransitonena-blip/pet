@@ -7,22 +7,31 @@ import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import {
-  FaDog, FaCalendarAlt, FaClock, FaCheckCircle, FaArrowRight,
-  FaCamera, FaWalking, FaSpinner, FaWhatsapp, FaBox,
+  FaDog, FaCalendarAlt, FaClock, FaCheckCircle,
+  FaWalking, FaSpinner, FaWhatsapp, FaBox,
 } from 'react-icons/fa'
 import WalkSessionModal from '@/components/WalkSessionModal'
+import PetAhoraPhotoModal from '@/components/PetAhoraPhotoModal'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
-import { STATUS_LABELS, STATUS_COLORS, LEGACY_STATUS_MAP } from '@/lib/sessionMachine'
+import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import { logAudit } from '@/lib/auditLog'
+import { usePetAhoraWalkerOffers } from '@/lib/usePetAhoraWalker'
+import { PetAhoraOffersList } from '@/components/PetAhoraOfferCard'
+import { usePetAhoraActiveWalks, updatePetAhoraWalkStatus } from '@/lib/usePetAhoraActiveWalks'
 import type { Reservation, SessionStatus } from '@/types'
 
 export default function PaseadorDashboard() {
   const router = useRouter()
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [walkerName, setWalkerName] = useState('')
+  const [walkerUid, setWalkerUid] = useState<string | undefined>()
   const [loading, setLoading] = useState(true)
   const [walkModal, setWalkModal] = useState<{ reservation: Reservation; mode: 'check_in' | 'check_out' } | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const { offers: petAhoraOffers } = usePetAhoraWalkerOffers(walkerUid)
+  const { walks: petAhoraWalks } = usePetAhoraActiveWalks(walkerUid)
+  const [updatingPetAhoraId, setUpdatingPetAhoraId] = useState<string | null>(null)
+  const [petAhoraPhoto, setPetAhoraPhoto] = useState<{ requestId: string; mode: 'check_in' | 'check_out' } | null>(null)
 
   useEffect(() => {
     let unsubRes: (() => void) | undefined
@@ -50,6 +59,7 @@ export default function PaseadorDashboard() {
       allReservations = []
       if (!user) { router.push('/login'); return }
 
+      setWalkerUid(user.uid)
       const userSnap = await import('firebase/firestore').then(({ getDoc }) =>
         getDoc(doc(db, 'users', user.uid))
       )
@@ -121,6 +131,13 @@ export default function PaseadorDashboard() {
   const todaySessions = walkerSessions.filter(
     (s) => s.date === today && s.sessionStatus !== 'completed' && s.sessionStatus !== 'cancelled',
   )
+
+  const handlePetAhoraStatus = async (id: string, status: string) => {
+    setUpdatingPetAhoraId(id)
+    const ok = await updatePetAhoraWalkStatus(id, status)
+    if (!ok) console.error('Failed to update PET Ahora status')
+    setUpdatingPetAhoraId(null)
+  }
 
   const handleStatusUpdate = async (id: string, status: string) => {
     setUpdatingId(id)
@@ -211,6 +228,73 @@ export default function PaseadorDashboard() {
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Total completados</p>
         </motion.div>
       </div>
+
+      {/* PET Ahora Offers */}
+      <PetAhoraOffersList offers={petAhoraOffers} onDone={() => {}} />
+
+      {/* Active PET Ahora Walks */}
+      {petAhoraWalks.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+            PET Ahora activos
+          </h2>
+          <div className="space-y-2">
+            {petAhoraWalks.map((walk) => (
+              <div
+                key={walk.id}
+                className="rounded-xl p-4"
+                style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08), rgba(251,191,36,0.03))', border: '1px solid rgba(251,191,36,0.15)' }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.15)' }}>
+                      <FaDog size={14} className="text-secondary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{walk.petName}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {walk.status === 'accepted' ? 'Aceptado' : walk.status === 'en_camino' ? 'En camino' : 'Paseando'}
+                        {walk.address && ` · ${walk.address.street}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {walk.status === 'accepted' && (
+                      <button
+                        onClick={() => handlePetAhoraStatus(walk.id, 'en_camino')}
+                        disabled={updatingPetAhoraId === walk.id}
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+                        style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}
+                      >
+                        {updatingPetAhoraId === walk.id ? <FaSpinner className="animate-spin" size={12} /> : 'En camino'}
+                      </button>
+                    )}
+                    {walk.status === 'en_camino' && (
+                      <button
+                        onClick={() => setPetAhoraPhoto({ requestId: walk.id, mode: 'check_in' })}
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+                        style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}
+                      >
+                        Iniciar paseo
+                      </button>
+                    )}
+                    {walk.status === 'paseando' && (
+                      <button
+                        onClick={() => setPetAhoraPhoto({ requestId: walk.id, mode: 'check_out' })}
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+                        style={{ background: 'rgba(5,150,105,0.15)', color: '#059669' }}
+                      >
+                        Completar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Active Walks */}
       {active.length > 0 && (
@@ -382,6 +466,15 @@ export default function PaseadorDashboard() {
         onClose={() => setWalkModal(null)}
         reservation={walkModal?.reservation || ({} as Reservation)}
         mode={walkModal?.mode || 'check_in'}
+      />
+
+      {/* PET Ahora Photo Modal */}
+      <PetAhoraPhotoModal
+        isOpen={!!petAhoraPhoto}
+        onClose={() => setPetAhoraPhoto(null)}
+        requestId={petAhoraPhoto?.requestId || ''}
+        mode={petAhoraPhoto?.mode || 'check_in'}
+        onDone={() => setPetAhoraPhoto(null)}
       />
     </div>
   )

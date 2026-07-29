@@ -12,7 +12,7 @@ import {
   FaDog, FaTachometerAlt, FaCalendarAlt, FaUsers, FaPaw, FaWalking,
   FaMapMarkedAlt, FaDollarSign, FaTag, FaUserFriends, FaStar,
   FaChartLine, FaCog, FaClipboardList, FaRobot, FaSignOutAlt,
-  FaChevronLeft, FaChevronRight, FaBars, FaComments, FaImage,
+  FaChevronLeft, FaChevronRight, FaBars, FaComments, FaImage, FaBolt,
 } from 'react-icons/fa'
 
 const NAV_ITEMS = [
@@ -30,6 +30,7 @@ const NAV_ITEMS = [
   { id: 'chat', label: 'Chat', icon: FaComments, href: '/admin/chat' },
   { id: 'analitica', label: 'Analítica', icon: FaChartLine, href: '/admin/analitica' },
   { id: 'galeria', label: 'Galería', icon: FaImage, href: '/admin/galeria' },
+  { id: 'pet-ahora', label: 'PET Ahora', icon: FaBolt, href: '/admin/pet-ahora', color: '#f59e0b' },
   { id: 'config', label: 'Configuración', icon: FaCog, href: '/admin/config' },
   { id: 'logs', label: 'Logs', icon: FaClipboardList, href: '/admin/logs' },
   { id: 'ia', label: 'Insights', icon: FaRobot, href: '/admin/ia' },

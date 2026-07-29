@@ -6,6 +6,8 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { motion } from 'framer-motion'
+import WalkerHeartbeat from '@/components/WalkerHeartbeat'
+import { PetAhoraToastProvider } from '@/components/PetAhoraToast'
 import {
   FaDog, FaHome, FaHistory, FaSignOutAlt, FaWalking, FaExclamationTriangle,
 } from 'react-icons/fa'
@@ -115,6 +117,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
             <div>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Paseador</p>
               <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{walkerName}</p>
+              <div className="mt-1"><WalkerHeartbeat /></div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -168,7 +171,9 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
 
           {/* Content */}
           <div className="lg:col-span-3">
-            {children}
+            <PetAhoraToastProvider>
+              {children}
+            </PetAhoraToastProvider>
           </div>
         </div>
       </div>

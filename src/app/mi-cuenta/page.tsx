@@ -10,6 +10,9 @@ import {
   FaCalendarAlt, FaDog, FaHistory, FaPaw, FaGift,
   FaArrowRight, FaMapMarkerAlt, FaClock, FaCheckCircle, FaExclamationTriangle,
 } from 'react-icons/fa'
+import PetAhoraRequestForm from '@/components/PetAhoraRequestForm'
+import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
+import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
 import type { Reservation } from '@/types'
 
 interface UserProfile {
@@ -23,6 +26,9 @@ export default function DashboardPage() {
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activePetAhoraId, setActivePetAhoraId] = useState<string | null>(null)
+  const [petAhoraRequested, setPetAhoraRequested] = useState(false)
+  const { request: petAhoraRequest } = usePetAhoraClientRequest(activePetAhoraId)
 
   useEffect(() => {
     let unsubRes: (() => void) | undefined
@@ -176,6 +182,13 @@ export default function DashboardPage() {
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Puntos de lealtad</p>
         </motion.div>
       </div>
+
+      {/* PET Ahora — Instant Walk */}
+      {activePetAhoraId && petAhoraRequest ? (
+        <PetAhoraStatusTracker request={petAhoraRequest} />
+      ) : !petAhoraRequested && (
+        <PetAhoraRequestForm onRequestCreated={(id) => { setActivePetAhoraId(id); setPetAhoraRequested(true) }} />
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">

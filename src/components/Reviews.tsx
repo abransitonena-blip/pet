@@ -156,7 +156,7 @@ export default function Reviews() {
               {reviews.map((review) => (
                 <div
                   key={review.id}
-                  className="glass-card p-6 min-w-[280px] snap-center flex-shrink-0"
+                  className="glass-card p-4 sm:p-6 min-w-[260px] sm:min-w-[280px] snap-center flex-shrink-0"
                 >
                   <FaQuoteLeft className="text-primary/20 text-xl mb-3" />
                   <div className="flex items-center gap-1 mb-3" aria-label={`${review.rating} de 5 estrellas`}>

@@ -1,14 +1,14 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaWhatsapp, FaDog, FaWalking, FaMapMarkerAlt, FaHeart } from 'react-icons/fa'
+import { FaEdit, FaDog, FaWalking, FaMapMarkerAlt, FaHeart } from 'react-icons/fa'
 
 const steps = [
   {
-    icon: FaWhatsapp,
+    icon: FaEdit,
     title: '1. Contáctanos',
     description:
-      'Escríbenos por WhatsApp o llena el formulario con los datos de tu perro y el paquete que prefieras.',
+      'Llena el formulario con los datos de tu perro y el paquete que prefieras. ¡Es muy fácil!',
   },
   {
     icon: FaDog,
@@ -32,7 +32,7 @@ const steps = [
     icon: FaHeart,
     title: '5. Repite cuando quieras',
     description:
-      'Agenda el siguiente paseo desde WhatsApp. Tu perro te lo va a pedir todos los días.',
+      'Agenda el siguiente paseo desde tu cuenta. Tu perro te lo va a pedir todos los días.',
   },
 ]
 
@@ -56,7 +56,7 @@ export default function HowItWorks() {
             Así de <span className="gradient-text">fácil</span> es
           </h2>
           <p className="section-subtitle">
-            En solo 5 pasos tu perro estará disfrutando de su paseo.
+            En solo 6 pasos tu perro estará disfrutando de su paseo.
           </p>
         </motion.div>
 

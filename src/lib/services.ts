@@ -55,15 +55,15 @@ export const SERVICES: ServiceOption[] = [
     disclaimer: 'Los resultados dependen de la edad, conducta, historial y continuidad del perro.',
   },
   {
-    name: 'Paseo Express',
+    name: 'Paseo Esencial',
     price: 35,
     duration: '20 min',
     modality: '1 a 1',
     mainBenefit: 'Salida rápida',
     recommendedFor: 'Necesidades urgentes',
-    icon: '⚡',
+    icon: '🐾',
     highlights: ['Paseo rápido para necesidades', 'Perfecto entre comidas o antes de dormir', 'Sin complicaciones', 'Salida y regreso rápido'],
-    disclaimer: 'Sujeto a disponibilidad inmediata.',
+    disclaimer: 'Sujeto a disponibilidad.',
   },
   {
     name: 'Paseo + Reporte',
@@ -77,14 +77,14 @@ export const SERVICES: ServiceOption[] = [
   },
   {
     name: 'Paquete Semanal',
-    price: 390,
+    price: 150,
     quantity: 6,
     duration: '6 paseos',
     modality: 'Lun a Sáb',
     mainBenefit: 'Paseos toda la semana',
     recommendedFor: 'Rutina constante',
     icon: '📅',
-    highlights: ['6 paseos de 30 min: lunes a sábado', 'Elige el horario cada día', 'Equivalente a $65 por paseo', 'Conveniencia y rutina para tu perro'],
+    highlights: ['6 paseos de 30 min: lunes a sábado', 'Elige el horario cada día', 'Equivalente a $25 por paseo', 'Conveniencia y ahorro para tu perro'],
   },
 ]
 
@@ -100,7 +100,9 @@ const LEGACY_NAME_MAP: Record<string, string> = {
   'Paseo Extendido (1 hora)': 'Paseo Extendido',
   'Paseo Grupal (45 min)': 'Paseo Grupal',
   'Paseo + Adiestramiento (1 hora)': 'Paseo + Adiestramiento',
-  'Paseo Express (20 min)': 'Paseo Express',
+  'Paseo Esencial (20 min)': 'Paseo Esencial',
+  'Paseo Express (20 min)': 'Paseo Esencial',
+  'Paseo Express': 'Paseo Esencial',
   'Paseo + Reporte (45 min)': 'Paseo + Reporte',
   'Paquete Semanal (6 paseos)': 'Paquete Semanal',
 }

@@ -231,6 +231,18 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════
+    // WALKER PRESENCE (real-time heartbeat for PET Ahora)
+    // ═══════════════════════════════════════════
+
+    match /walkerPresence/{walkerId} {
+      // All authenticated can read (clients need to see online walkers)
+      allow read: if isAuthenticated();
+      // Walker writes own presence, admin writes any
+      allow write: if isAuthenticated()
+        && (request.auth.uid == walkerId || isAdmin());
+    }
+
+    // ═══════════════════════════════════════════
     // WALKER PROFILES (rich data: zones, schedule, capacity)
     // ═══════════════════════════════════════════
 
@@ -389,6 +401,53 @@ service cloud.firestore {
         allow update: if isAuthenticated() && request.auth.uid == uid;
         allow delete: if isAdmin();
       }
+    }
+
+    // ═══════════════════════════════════════════
+    // PET AHORA — instant walk requests
+    // ═══════════════════════════════════════════
+
+    match /petAhoraRequests/{reqId} {
+      // Client sees own, walker sees assigned, admin sees all
+      allow read: if isAuthenticated()
+        && (resource.data.clientId == request.auth.uid
+            || resource.data.walkerId == request.auth.uid
+            || isAdmin());
+      // Any authenticated client can create
+      allow create: if isAuthenticated();
+      // Client can cancel own pending, walker can update status of assigned, admin all
+      allow update: if isAuthenticated()
+        && ((resource.data.clientId == request.auth.uid && request.resource.data.status == 'cancelled')
+            || (resource.data.walkerId == request.auth.uid)
+            || isAdmin());
+      allow delete: if false;
+    }
+
+    match /petAhoraOffers/{offerId} {
+      // Walker sees own offers, admin sees all
+      allow read: if isAuthenticated()
+        && (resource.data.walkerId == request.auth.uid
+            || isAdmin());
+      // System (dispatch) creates via admin SDK or authenticated client
+      allow create: if isAuthenticated();
+      // Walker responds (accept/decline)
+      allow update: if isAuthenticated()
+        && (resource.data.walkerId == request.auth.uid
+            || isAdmin());
+      allow delete: if false;
+    }
+
+    match /petAhoraLeases/{leaseId} {
+      // Participant or admin reads
+      allow read: if isAuthenticated()
+        && (resource.data.walkerId == request.auth.uid
+            || resource.data.clientId == request.auth.uid
+            || isAdmin());
+      // System creates on acceptance
+      allow create: if isAuthenticated();
+      // Admin can unlock
+      allow update: if isAdmin();
+      allow delete: if false;
     }
 
     // ═══════════════════════════════════════════

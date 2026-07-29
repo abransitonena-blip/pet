@@ -21,7 +21,7 @@ const ICON_MAP: Record<string, typeof FaDog> = {
   'Paseo Extendido': FaClock,
   'Paseo Grupal': FaUsers,
   'Paseo + Adiestramiento': FaStar,
-  'Paseo Express': FaPaw,
+  'Paseo Esencial': FaPaw,
   'Paseo + Reporte': FaDog,
   'Paquete Semanal': FaSun,
 }
