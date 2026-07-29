@@ -2,9 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { db, storage } from '@/firebase/config'
+import { db } from '@/firebase/config'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import Image from 'next/image'
 import { FaCamera, FaMapMarkerAlt, FaTimes, FaCheck, FaStop, FaSpinner, FaImage } from 'react-icons/fa'
 import { useEscapeKey } from '@/lib/useEscapeKey'
@@ -105,14 +104,31 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
     setPhoto(URL.createObjectURL(file))
   }
 
+  const uploadToCloudinary = async (file: File, path: string): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', 'pet_gallery')
+    formData.append('folder', path)
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/ktyauicg/image/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error?.message || `Error ${res.status} al subir a Cloudinary`)
+    }
+
+    const data = await res.json()
+    return data.secure_url as string
+  }
+
   const handleSave = async () => {
     if (!photoFile || !location) return
     setSaving(true)
     try {
-      const storagePath = `walks/${reservation.id}/${mode}.jpg`
-      const storageRef = ref(storage, storagePath)
-      await uploadBytes(storageRef, photoFile)
-      const url = await getDownloadURL(storageRef)
+      const url = await uploadToCloudinary(photoFile, `walks/${reservation.id}`)
 
       const updateData: Record<string, unknown> = {}
       if (mode === 'check_in') {
