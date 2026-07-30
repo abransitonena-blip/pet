@@ -25,7 +25,7 @@ export default function CancelarPage() {
       const q = query(
         collection(db, 'reservations'),
         where('phone', '==', phone.trim()),
-        where('status', 'in', ['pending', 'en_camino', 'paseando'])
+        where('status', 'in', ['pending', 'on_the_way', 'in_progress'])
       )
       const snap = await getDocs(q)
       if (snap.empty) {
@@ -119,9 +119,9 @@ export default function CancelarPage() {
                         <FaDog className="text-primary" size={12} />
                         <span className="text-sm font-semibold text-white">{r.petName}</span>
                         <span className={`text-2xs px-2 py-0.5 rounded-full ${
-                          r.status === 'en_camino' ? 'bg-blue-500/20 text-blue-400' : r.status === 'paseando' ? 'bg-purple-500/20 text-purple-400' : 'bg-secondary/20 text-secondary'
+                          r.status === 'on_the_way' ? 'bg-blue-500/20 text-blue-400' : r.status === 'in_progress' ? 'bg-purple-500/20 text-purple-400' : 'bg-secondary/20 text-secondary'
                         }`}>
-                          {r.status === 'en_camino' ? 'En camino' : r.status === 'paseando' ? 'Paseando' : 'Pendiente'}
+                          {r.status === 'on_the_way' ? 'En camino' : r.status === 'in_progress' ? 'Paseando' : 'Pendiente'}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/50">

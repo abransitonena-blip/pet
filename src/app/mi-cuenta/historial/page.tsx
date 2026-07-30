@@ -11,6 +11,7 @@ import {
   FaHistory, FaDog, FaCheckCircle, FaCalendarAlt, FaClock, FaArrowLeft,
   FaChevronDown, FaMapMarkerAlt, FaStickyNote, FaCamera, FaRedo,
 } from 'react-icons/fa'
+import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
 
 export default function HistorialPage() {
@@ -131,11 +132,7 @@ export default function HistorialPage() {
                   onClick={() => hasWalkData && setExpandedId(isExpanded ? null : res.id)}
                   style={{ cursor: hasWalkData ? 'pointer' : undefined }}
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                    res.status === 'completed' ? 'bg-success-500/10' :
-                    res.status === 'cancelled' ? 'bg-danger-500/10' :
-                    'bg-brand-500/10'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-brand-500/10'}`}>
                     {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
                      res.status === 'cancelled' ? <span className="text-danger-400 text-sm">✕</span> :
                      <FaDog size={14} className="text-brand-400" />}
@@ -159,16 +156,8 @@ export default function HistorialPage() {
                         {hasWalkData && (
                           <FaCamera size={10} className="text-success-400" />
                         )}
-                        <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
-                          res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
-                          res.status === 'cancelled' ? 'bg-danger-500/15 text-danger-400' :
-                          res.status === 'pending' ? 'bg-brand-500/15 text-brand-400' :
-                          'bg-white/10 text-[var(--text-muted)]'
-                        }`}>
-                          {res.status === 'completed' ? 'Completado' :
-                           res.status === 'cancelled' ? 'Cancelado' :
-                           res.status === 'pending' ? 'Pendiente' :
-                           res.status === 'confirmed' ? 'Confirmado' : res.status}
+                        <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[res.status]?.bg || 'bg-white/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>
+                          {STATUS_LABELS[res.status] || res.status}
                         </span>
                       </div>
                     </div>

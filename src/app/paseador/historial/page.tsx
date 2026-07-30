@@ -16,7 +16,7 @@ export default function PaseadorHistorialPage() {
   const router = useRouter()
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'completed' | 'paseando'>('all')
+  const [filter, setFilter] = useState<'all' | 'completed' | 'in_progress'>('all')
 
   useEffect(() => {
     let unsubRes: (() => void) | undefined
@@ -105,7 +105,7 @@ export default function PaseadorHistorialPage() {
         {([
           { value: 'all' as const, label: 'Todos', count: reservations.length },
           { value: 'completed' as const, label: 'Completados', count: completedCount },
-          { value: 'paseando' as const, label: 'En progreso', count: reservations.filter((r) => r.status === 'paseando').length },
+          { value: 'in_progress' as const, label: 'En progreso', count: reservations.filter((r) => r.status === 'in_progress').length },
         ]).map((f) => (
           <button
             key={f.value}
@@ -143,11 +143,11 @@ export default function PaseadorHistorialPage() {
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                   res.status === 'completed' ? 'bg-success-500/10' :
-                  res.status === 'paseando' ? 'bg-success-500/20' :
+                  res.status === 'in_progress' ? 'bg-success-500/20' :
                   'bg-brand-500/10'
                 }`}>
                   {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
-                   res.status === 'paseando' ? <FaWalking size={14} className="text-success-400" /> :
+                   res.status === 'in_progress' ? <FaWalking size={14} className="text-success-400" /> :
                    <FaDog size={14} className="text-brand-400" />}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -155,11 +155,11 @@ export default function PaseadorHistorialPage() {
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.petName}</p>
                     <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
                       res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
-                      res.status === 'paseando' ? 'bg-success-500/20 text-success-400' :
+                      res.status === 'in_progress' ? 'bg-success-500/20 text-success-400' :
                       'bg-white/10 text-[var(--text-muted)]'
                     }`}>
                       {res.status === 'completed' ? 'Completado' :
-                       res.status === 'paseando' ? 'En paseo' :
+                       res.status === 'in_progress' ? 'En paseo' :
                        res.status === 'pending' ? 'Pendiente' : res.status}
                     </span>
                   </div>

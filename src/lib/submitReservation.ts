@@ -159,30 +159,21 @@ export async function submitReservation({
       })
     }
 
-    const firstDay = scheduledDays[0]
-    const firstWindow = parseTimeWindow(firstDay[1])
-    await addDoc(collection(db, 'reservations'), {
-      name: form.name,
-      phone: form.phone,
-      petName: form.petName,
-      petType: form.petType,
-      service: form.service,
-      date: firstDay[0],
-      time: firstDay[1],
-      arrivalWindowStart: firstWindow.start,
-      arrivalWindowEnd: firstWindow.end,
-      uid: auth.currentUser?.uid || '',
-      client: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
-      createdAt: serverTimestamp(),
-      status: 'pending',
-      notes: `[Paquete Semanal - ${scheduledDays.length} sesiones] ${form.notes}`.trim(),
-      orderId: orderIdRef.id,
-      appliedCoupon: form.coupon.toUpperCase(),
-      discountApplied: discountAmount,
-      finalPrice,
-      referralCode: referralCode || '',
-    })
-
+    for (const [date, time] of scheduledDays) {
+      const window = parseTimeWindow(time)
+      await addDoc(collection(db, 'reservations'), {
+        uid: auth.currentUser?.uid || '',
+        client: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
+        name: form.name, phone: form.phone, petName: form.petName, petType: form.petType,
+        service: '[Paquete] ' + form.service, date, time,
+        arrivalWindowStart: window.start, arrivalWindowEnd: window.end,
+        notes: form.notes,
+        status: 'pending' as const,
+        assignedWalker: walkerPreference || '',
+        orderId: orderIdRef.id,
+        createdAt: serverTimestamp(),
+      })
+    }
     showPushNotification('🐾 Paquete Semanal', `${form.name} agendó paquete de ${scheduledDays.length} sesiones`)
   } else {
     const window = parseTimeWindow(form.time)
@@ -230,23 +221,17 @@ export async function submitReservation({
     })
 
     await addDoc(collection(db, 'reservations'), {
-      ...form,
-      addressId: selectedAddressId,
-      walkerId: walkerPreference || '',
-      walkerName: walkerPreference ? availableWalkers.find((w) => w.id === walkerPreference)?.name || '' : '',
-      arrivalWindowStart: window.start,
-      arrivalWindowEnd: window.end,
       uid: auth.currentUser?.uid || '',
       client: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
-      createdAt: serverTimestamp(),
-      status: 'pending',
-      appliedCoupon: form.coupon.toUpperCase(),
-      discountApplied: discountAmount,
-      finalPrice,
-      referralCode: referralCode || '',
+      name: form.name, phone: form.phone, petName: form.petName, petType: form.petType,
+      service: form.service, date: form.date, time: form.time,
+      arrivalWindowStart: window.start, arrivalWindowEnd: window.end,
+      notes: form.notes,
+      status: 'pending' as const,
+      assignedWalker: walkerPreference || '',
       orderId: orderIdRef.id,
+      createdAt: serverTimestamp(),
     })
-
     showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
   }
 

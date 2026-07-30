@@ -108,7 +108,7 @@ export interface Reservation {
   time: string
   arrivalWindowStart?: string
   arrivalWindowEnd?: string
-  status: 'pending' | 'confirmed' | 'assigned' | 'en_camino' | 'paseando' | 'completed' | 'cancelled'
+  status: SessionStatus
   notes: string
   internalNotes: string
   assignedWalker: string

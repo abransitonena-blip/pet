@@ -28,7 +28,7 @@ import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
 import { useServiceOrders, type ServiceOrderWithSessions } from '@/lib/useServiceOrders'
 
-type StatusFilter = 'all' | 'pending' | 'assigned' | 'confirmed' | 'en_camino' | 'paseando' | 'completed' | 'cancelled'
+type StatusFilter = 'all' | 'pending' | 'assigned' | 'on_the_way' | 'in_progress' | 'completed' | 'cancelled'
 
 export default function AdminReservas() {
   const { reservations, loading } = useReservations()
@@ -375,15 +375,15 @@ export default function AdminReservas() {
       {/* Status filter tabs (only for reservations view) */}
       {viewTab === 'reservations' && (
       <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
-        {(['all', 'pending', 'assigned', 'en_camino', 'paseando', 'completed', 'cancelled'] as const).map((s) => (
+        {(['all', 'pending', 'assigned', 'on_the_way', 'in_progress', 'completed', 'cancelled'] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
             className={`text-xs whitespace-nowrap px-3 py-1.5 rounded-lg font-medium transition-all ${
               statusFilter === s
                 ? s === 'completed' ? 'bg-success-500/15 text-success-400'
-                : s === 'en_camino' ? 'bg-blue-500/15 text-blue-400'
-                : s === 'paseando' ? 'bg-purple-500/15 text-purple-400'
+                : s === 'on_the_way' ? 'bg-blue-500/15 text-blue-400'
+                : s === 'in_progress' ? 'bg-purple-500/15 text-purple-400'
                 : s === 'assigned' ? 'bg-accent-500/15 text-accent-400'
                 : s === 'cancelled' ? 'bg-danger-500/15 text-danger-400'
                 : s === 'pending' ? 'bg-brand-500/15 text-brand-400'
@@ -423,7 +423,7 @@ export default function AdminReservas() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.name}</span>
-                    <Badge variant={res.status === 'completed' ? 'success' : res.status === 'en_camino' ? 'info' : res.status === 'cancelled' ? 'danger' : res.status === 'paseando' ? 'info' : 'brand'} className="normal-case tracking-normal">
+                    <Badge variant={res.status === 'completed' ? 'success' : res.status === 'on_the_way' ? 'info' : res.status === 'cancelled' ? 'danger' : res.status === 'in_progress' ? 'info' : 'brand'} className="normal-case tracking-normal">
                       {(STATUS_LABELS as Record<string, string>)[res.status] || res.status}
                     </Badge>
                     {res.assignedWalker && (
@@ -468,16 +468,16 @@ export default function AdminReservas() {
                     <FaEdit size={12} />
                   </button>
                   {(res.status === 'pending' || res.status === 'assigned') && (
-                    <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'en_camino' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
+                    <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'on_the_way' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
                       <FaArrowRight size={12} />
                     </button>
                   )}
-                  {res.status === 'en_camino' && (
+                  {res.status === 'on_the_way' && (
                     <button onClick={() => setWalkModal({ reservation: res, mode: 'check_in' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Iniciar paseo (check-in)">
                       <FaCamera size={12} />
                     </button>
                   )}
-                  {res.status === 'paseando' && (
+                  {res.status === 'in_progress' && (
                     <button onClick={() => setWalkModal({ reservation: res, mode: 'check_out' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="Terminar paseo (check-out)">
                       <FaWalking size={12} />
                     </button>
@@ -626,7 +626,7 @@ export default function AdminReservas() {
                         <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{r.service} · {r.petName}</p>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.date} {r.arrivalWindowStart ? `${r.arrivalWindowStart}${r.arrivalWindowEnd ? `-${r.arrivalWindowEnd}` : ''}` : r.time}</p>
                       </div>
-                      <Badge variant={r.status === 'completed' ? 'success' : r.status === 'en_camino' ? 'info' : r.status === 'cancelled' ? 'danger' : r.status === 'paseando' ? 'info' : 'brand'} className="normal-case tracking-normal">
+                      <Badge variant={r.status === 'completed' ? 'success' : r.status === 'on_the_way' ? 'info' : r.status === 'cancelled' ? 'danger' : r.status === 'in_progress' ? 'info' : 'brand'} className="normal-case tracking-normal">
                         {(STATUS_LABELS as Record<string, string>)[r.status] || r.status}
                       </Badge>
                     </div>

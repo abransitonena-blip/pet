@@ -8,11 +8,12 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import {
   FaCalendarAlt, FaDog, FaHistory, FaPaw, FaGift,
-  FaArrowRight, FaMapMarkerAlt, FaClock, FaCheckCircle, FaExclamationTriangle,
+  FaArrowRight, FaMapMarkerAlt, FaClock, FaCheckCircle, FaExclamationTriangle, FaRedo,
 } from 'react-icons/fa'
 import PetAhoraRequestForm from '@/components/PetAhoraRequestForm'
 import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
 import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
+import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
 
 interface UserProfile {
@@ -61,7 +62,7 @@ export default function DashboardPage() {
     return () => { unsubRes?.(); unsubAuth() }
   }, [router])
 
-  const upcoming = reservations.filter((r) => r.status === 'pending' || r.status === 'confirmed')
+  const upcoming = reservations.filter((r) => r.status === 'pending' || r.status === 'assigned')
   const completed = reservations.filter((r) => r.status === 'completed')
   const nextWalk = upcoming[0]
 
@@ -264,12 +265,7 @@ export default function DashboardPage() {
                 className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-white/[0.02]"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                  res.status === 'completed' ? 'bg-success-500/10' :
-                  res.status === 'pending' ? 'bg-brand-500/10' :
-                  res.status === 'cancelled' ? 'bg-danger-500/10' :
-                  'bg-white/5'
-                }`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-white/5'}`}>
                   {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
                    res.status === 'cancelled' ? <FaExclamationTriangle size={14} className="text-danger-400" /> :
                    <FaDog size={14} className="text-brand-400" />}
@@ -282,24 +278,20 @@ export default function DashboardPage() {
                     <span>{res.date}</span>
                   </div>
                 </div>
-                <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                  res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
-                  res.status === 'pending' ? 'bg-brand-500/15 text-brand-400' :
-                  res.status === 'confirmed' ? 'bg-blue-500/15 text-blue-400' :
-                  res.status === 'assigned' ? 'bg-accent-500/15 text-accent-400' :
-                  res.status === 'en_camino' ? 'bg-blue-500/15 text-blue-400' :
-                  res.status === 'paseando' ? 'bg-success-500/15 text-success-400' :
-                  res.status === 'cancelled' ? 'bg-danger-500/15 text-danger-400' :
-                  'bg-white/10 text-[var(--text-muted)]'
-                }`}>
-                  {res.status === 'completed' ? 'Completado' :
-                   res.status === 'pending' ? 'Pendiente' :
-                   res.status === 'confirmed' ? 'Confirmado' :
-                   res.status === 'assigned' ? 'Asignado' :
-                   res.status === 'en_camino' ? 'En camino' :
-                   res.status === 'paseando' ? 'En paseo' :
-                   res.status === 'cancelled' ? 'Cancelado' : res.status}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {res.status === 'completed' && (
+                    <button
+                      onClick={(e) => { e.preventDefault(); router.push(`/mi-cuenta/nueva-reserva?repeat=${encodeURIComponent(res.service)}`) }}
+                      className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-400 border border-brand-500/20"
+                      title="Repetir este paseo"
+                    >
+                      <FaRedo size={8} /> Repetir
+                    </button>
+                  )}
+                  <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-white/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>
+                    {STATUS_LABELS[res.status] || res.status}
+                  </span>
+                </div>
               </motion.div>
             ))}
           </div>

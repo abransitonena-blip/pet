@@ -142,7 +142,7 @@ export default function AdminPerrosPage() {
                     {p.reservations.map((r) => (
                       <div key={r.id} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
                         <div className="flex items-center gap-2">
-                          <span className={`w-1.5 h-1.5 rounded-full ${r.status === 'completed' ? 'bg-success-500' : r.status === 'en_camino' ? 'bg-blue-500' : 'bg-brand-500'}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full ${r.status === 'completed' ? 'bg-success-500' : r.status === 'on_the_way' ? 'bg-blue-500' : 'bg-brand-500'}`} />
                           <span style={{ color: 'var(--text-muted)' }}>{r.date} {r.arrivalWindowStart ? `${r.arrivalWindowStart}${r.arrivalWindowEnd ? `-${r.arrivalWindowEnd}` : ''}` : r.time}</span>
                           <span style={{ color: 'var(--text-primary)' }}>{r.service}</span>
                         </div>

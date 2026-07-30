@@ -72,7 +72,7 @@ export default function AdminDashboard() {
 
       setStats((prev) => ({
         ...prev,
-        todayReservations: todayDocs.filter((d) => ['pending', 'en_camino', 'paseando'].includes(d.status)).length,
+        todayReservations: todayDocs.filter((d) => ['pending', 'on_the_way', 'in_progress'].includes(d.status)).length,
         pendingReservations: pendingDocs.length,
         monthReservations: snap.size,
         totalRevenue: revenue,
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
         const w = walkerMap.get(walker)!
         w.assigned++
         if (d.status === 'completed') w.completed++
-        if (d.status === 'paseando' || d.status === 'en_camino') w.inProgress++
+        if (d.status === 'in_progress' || d.status === 'on_the_way') w.inProgress++
       })
       setWalkerStats(Array.from(walkerMap.values()))
       setLoading(false)

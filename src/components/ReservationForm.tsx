@@ -307,7 +307,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     const q = query(
       collection(db, 'reservations'),
       where('date', '==', form.date),
-      where('status', 'in', ['pending', 'en_camino', 'paseando']),
+      where('status', 'in', ['pending', 'on_the_way', 'in_progress']),
     )
     const unsub = onSnapshot(q, (snap) => {
       setBookedSlots(snap.docs.map((d) => d.data().time).filter(Boolean))

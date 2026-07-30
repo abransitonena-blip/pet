@@ -91,7 +91,7 @@ export default function AdminPaseadoresPage() {
         phone: w.phone,
         totalAssigned: assigned.length,
         completed: assigned.filter((r) => r.status === 'completed').length,
-        inProgress: assigned.filter((r) => r.status === 'en_camino' || r.status === 'paseando' || r.status === 'assigned').length,
+        inProgress: assigned.filter((r) => r.status === 'on_the_way' || r.status === 'in_progress' || r.status === 'assigned').length,
         todayAssigned: assigned.filter((r) => r.date === today).length,
         todayCompleted: assigned.filter((r) => r.date === today && r.status === 'completed').length,
         thisWeek: assigned.filter((r) => r.date >= weekAgo).length,

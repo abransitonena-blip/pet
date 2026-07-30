@@ -119,7 +119,7 @@ export default function PaseadorDashboard() {
   const today = new Date().toISOString().split('T')[0]
   const todayWalks = reservations.filter((r) => r.date === today)
   const pending = todayWalks.filter((r) => r.status === 'assigned' || r.status === 'pending')
-  const active = todayWalks.filter((r) => r.status === 'paseando')
+  const active = todayWalks.filter((r) => r.status === 'in_progress')
   const completedToday = todayWalks.filter((r) => r.status === 'completed')
   const totalCompleted = reservations.filter((r) => r.status === 'completed').length
 
@@ -358,17 +358,10 @@ export default function PaseadorDashboard() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      res.status === 'completed' ? 'bg-success-500/10' :
-                      res.status === 'paseando' ? 'bg-success-500/20' :
-                      res.status === 'en_camino' ? 'bg-blue-500/10' :
-                      res.status === 'assigned' ? 'bg-accent-500/10' :
-                      'bg-brand-500/10'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${STATUS_COLORS[res.status]?.bg || 'bg-brand-500/10'}`}>
                       {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
-                       res.status === 'paseando' ? <FaWalking size={14} className="text-success-400" /> :
-                       res.status === 'assigned' ? <FaDog size={14} className="text-accent-400" /> :
-                       <FaDog size={14} className="text-brand-400" />}
+                       res.status === 'in_progress' ? <FaWalking size={14} className="text-success-400" /> :
+                       <FaDog size={14} className={STATUS_COLORS[res.status]?.text || 'text-brand-400'} />}
                     </div>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.petName}</p>
@@ -382,7 +375,7 @@ export default function PaseadorDashboard() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     {res.status === 'assigned' && (
                       <button
-                        onClick={() => handleStatusUpdate(res.id, 'en_camino')}
+                        onClick={() => handleStatusUpdate(res.id, 'on_the_way')}
                         disabled={updatingId === res.id}
                         className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 font-medium transition-all hover:bg-blue-500/20"
                       >
@@ -391,14 +384,14 @@ export default function PaseadorDashboard() {
                     )}
                     {res.status === 'pending' && (
                       <button
-                        onClick={() => handleStatusUpdate(res.id, 'en_camino')}
+                        onClick={() => handleStatusUpdate(res.id, 'on_the_way')}
                         disabled={updatingId === res.id}
                         className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 font-medium transition-all hover:bg-blue-500/20"
                       >
                         {updatingId === res.id ? <FaSpinner className="animate-spin" size={12} /> : 'En camino'}
                       </button>
                     )}
-                    {res.status === 'en_camino' && (
+                    {res.status === 'on_the_way' && (
                       <button
                         onClick={() => setWalkModal({ reservation: res, mode: 'check_in' })}
                         className="text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-400 font-medium transition-all hover:bg-brand-500/20"
