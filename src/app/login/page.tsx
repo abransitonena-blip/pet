@@ -2,23 +2,91 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Script from 'next/script'
 import { motion } from 'framer-motion'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, isSignInWithEmailLink } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithCredential } from 'firebase/auth'
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { FaDog, FaGoogle, FaEnvelope, FaLock, FaSpinner, FaUser, FaPhone, FaWalking } from 'react-icons/fa'
+import { FaDog, FaEnvelope, FaLock, FaSpinner, FaUser, FaPhone, FaWalking, FaExternalLinkAlt } from 'react-icons/fa'
 import { brand } from '@/lib/brand'
 
 type Mode = 'select' | 'familia' | 'equipo' | 'paseador'
 
-function setSessionCookie(_uid: string) {
-  // Security: cookie is just a flag — real auth is Firebase Auth (onAuthStateChanged).
-  // The UID is NOT stored in the cookie to prevent impersonation.
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string
+            callback: (response: { credential: string }) => void
+            auto_select?: boolean
+            cancel_on_tap_outside?: boolean
+          }) => void
+          renderButton: (element: HTMLElement, options: {
+            type?: string
+            theme?: string
+            size?: string
+            text?: string
+            shape?: string
+            logo_alignment?: string
+            width?: number
+          }) => void
+          prompt: () => void
+        }
+      }
+    }
+  }
+}
+
+function setSessionCookie() {
   document.cookie = '__session=1; path=/; max-age=86400; SameSite=Lax; Secure'
 }
 
 function clearSessionCookie() {
   document.cookie = '__session=; path=/; max-age=0'
+}
+
+function isWebView(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent.toLowerCase()
+  if (/(instagram|fb_iab|fbav|fban|fbrs|gmass|outlook|line|kakaotalk|snapchat)[/\s]/.test(ua)) return true
+  if (/wv|webview/.test(ua) && !/chrome\/\d+/.test(ua)) return true
+  return false
+}
+
+const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
+  'auth/popup-blocked': 'El navegador bloqueó la ventana de Google.',
+  'auth/popup-closed-by-user': 'Cerraste la ventana antes de terminar.',
+  'auth/unauthorized-domain': 'Este dominio todavía no está autorizado.',
+  'auth/account-exists-with-different-credential': 'Ya existe una cuenta con este correo usando otro método.',
+  'auth/network-request-failed': 'No pudimos conectarnos con Google. Revisa tu conexión.',
+  'auth/operation-not-allowed': 'El acceso con Google no está habilitado.',
+  'auth/invalid-api-key': 'La configuración de autenticación no es válida.',
+  'auth/user-disabled': 'Esta cuenta fue desactivada.',
+  'auth/admin-restricted-operation': 'El acceso con Google no está habilitado.',
+  'auth/credential-already-in-use': 'Esta cuenta ya está vinculada a otro usuario.',
+}
+
+function classifyGoogleError(error: unknown): string {
+  const code = error && typeof error === 'object' && 'code' in error
+    ? (error as { code: string }).code
+    : 'unknown'
+  const message = GOOGLE_ERROR_MESSAGES[code]
+  if (message) return message
+  return 'No pudimos iniciar sesión con Google. Puedes reintentar o usar correo.'
+}
+
+async function ensureCustomerProfile(user: { uid: string; displayName: string | null; email: string | null }) {
+  const snap = await getDoc(doc(db, 'clients', user.uid))
+  if (!snap.exists()) {
+    await setDoc(doc(db, 'clients', user.uid), {
+      name: user.displayName || '',
+      email: user.email || '',
+      phone: '',
+      createdAt: serverTimestamp(),
+    })
+  }
 }
 
 export default function LoginPage() {
@@ -32,7 +100,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showInternal, setShowInternal] = useState(false)
-  const [useRedirect, setUseRedirect] = useState(false)
+  const [gisReady, setGisReady] = useState(false)
+  const [gisError, setGisError] = useState(false)
+  const [webView, setWebView] = useState(false)
+  const googleButtonRef = useRef<HTMLDivElement | null>(null)
+  const initializedRef = useRef(false)
   const clickCount = useRef(0)
   const clickTimer = useRef<NodeJS.Timeout | null>(null)
 
@@ -46,32 +118,10 @@ export default function LoginPage() {
     clickTimer.current = setTimeout(() => { clickCount.current = 0 }, 2000)
   }, [])
 
-  // Handle redirect result from Google sign-in (mobile fallback)
   useEffect(() => {
-    getRedirectResult(auth).then(async (result) => {
-      if (!result) return
-      const snap = await getDoc(doc(db, 'clients', result.user.uid))
-      if (!snap.exists()) {
-        await setDoc(doc(db, 'clients', result.user.uid), {
-          name: result.user.displayName || '',
-          email: result.user.email || '',
-          phone: '',
-          createdAt: new Date().toISOString(),
-        })
-      }
-      setSessionCookie(result.user.uid)
-      router.push('/mi-cuenta')
-    }).catch((e: unknown) => {
-      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
-      if (code === 'auth/account-exists-with-different-credential') {
-        setError('Ya existe una cuenta con otro método de inicio de sesión')
-      } else if (code !== 'auth/no-such-provider' && code !== 'auth/internal-error') {
-        console.error('Redirect result error:', e)
-      }
-    })
-  }, [router])
+    setWebView(isWebView())
+  }, [])
 
-  // Read ?mode= query param from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const urlMode = params.get('mode') as Mode | null
@@ -81,49 +131,58 @@ export default function LoginPage() {
     }
   }, [])
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleCredential = useCallback(async (response: { credential: string }) => {
+    if (!response.credential) {
+      setError('Google no devolvió un token de identificación.')
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError('')
     try {
-      const provider = new GoogleAuthProvider()
-      if (useRedirect || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        await signInWithRedirect(auth, provider)
-        return
-      }
-      const result = await signInWithPopup(auth, provider)
-      const snap = await getDoc(doc(db, 'clients', result.user.uid))
-      if (snap.exists()) {
-        setSessionCookie(result.user.uid)
-        router.push('/mi-cuenta')
-      } else {
-        await setDoc(doc(db, 'clients', result.user.uid), {
-          name: result.user.displayName || '',
-          email: result.user.email || '',
-          phone: '',
-          createdAt: new Date().toISOString(),
-        })
-        setSessionCookie(result.user.uid)
-        router.push('/mi-cuenta')
-      }
-    } catch (e: unknown) {
-      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
-      if (code === 'auth/popup-blocked-by-browser') {
-        setError('El navegador bloqueó la ventana emergente. Usa el enlace de "Acceso sin popup" abajo o permite ventanas emergentes.')
-        setUseRedirect(true)
-      } else if (code === 'auth/popup-closed-by-user') {
-        setError('Se cerró la ventana de Google. Intenta de nuevo.')
-      } else if (code === 'auth/network-request-failed') {
-        setError('Error de red. Verifica tu conexión e intenta de nuevo.')
-      } else if (code === 'auth/internal-error') {
-        setError('El servicio de Google no está disponible ahora. Revisa que el dominio esté autorizado en Google Cloud Console (orígenes JavaScript) e intenta de nuevo, o usa correo y contraseña.')
-        console.error('Google 503/internal-error — domain may not be authorized in OAuth client')
-      } else {
-        console.error('Google login error:', e)
-        setError('Error al iniciar sesión con Google. Intenta de nuevo.')
-      }
+      const credential = GoogleAuthProvider.credential(response.credential)
+      const result = await signInWithCredential(auth, credential)
+      await ensureCustomerProfile(result.user)
+      setSessionCookie()
+      router.replace('/mi-cuenta')
+    } catch (e) {
+      setError(classifyGoogleError(e))
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-  }
+  }, [router])
+
+  const initializeGoogleButton = useCallback(() => {
+    if (!window.google || !googleButtonRef.current || initializedRef.current) return
+    initializedRef.current = true
+
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim()
+    if (!clientId) {
+      setGisError(true)
+      return
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleGoogleCredential,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    })
+
+    googleButtonRef.current.replaceChildren()
+
+    window.google.accounts.id.renderButton(googleButtonRef.current, {
+      type: 'standard',
+      theme: 'outline',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'rectangular',
+      logo_alignment: 'left',
+      width: 320,
+    })
+
+    setGisReady(true)
+  }, [handleGoogleCredential])
 
   const handleEmailLogin = async (role: 'client' | 'admin' | 'walker') => {
     setLoading(true)
@@ -143,23 +202,12 @@ export default function LoginPage() {
           await auth.signOut()
           return
         }
-        setSessionCookie(cred.user.uid)
+        setSessionCookie()
         router.push(role === 'walker' ? '/paseador' : '/admin')
       } else {
-        const snap = await getDoc(doc(db, 'clients', cred.user.uid))
-        if (snap.exists()) {
-          setSessionCookie(cred.user.uid)
-          router.push('/mi-cuenta')
-        } else {
-          await setDoc(doc(db, 'clients', cred.user.uid), {
-            name: cred.user.displayName || email.split('@')[0],
-            email: email,
-            phone: '',
-            createdAt: new Date().toISOString(),
-          })
-          setSessionCookie(cred.user.uid)
-          router.push('/mi-cuenta')
-        }
+        await ensureCustomerProfile(cred.user)
+        setSessionCookie()
+        router.push('/mi-cuenta')
       }
     } catch (e: unknown) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
@@ -189,9 +237,9 @@ export default function LoginPage() {
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim(),
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
       })
-      setSessionCookie(cred.user.uid)
+      setSessionCookie()
       router.push('/mi-cuenta')
     } catch (e: unknown) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
@@ -205,13 +253,18 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={initializeGoogleButton}
+        onError={() => { setGisError(true) }}
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo — 6 rapid clicks reveals internal access */}
         <div className="text-center mb-8">
           <button onClick={handleLogoClick} className="mx-auto" aria-label="Logo PET Ap">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-glow">
@@ -234,7 +287,6 @@ export default function LoginPage() {
 
         {mode === 'select' && (
           <div className="space-y-3">
-            {/* Familia PET */}
             <button
               onClick={() => setMode('familia')}
               className="w-full rounded-2xl p-5 text-left transition-all duration-200 hover:border-brand-500/30 group"
@@ -260,7 +312,6 @@ export default function LoginPage() {
               </div>
             </button>
 
-            {/* Equipo PET — hidden: only visible after 6 rapid clicks on logo */}
             {showInternal && (
               <>
                 <button
@@ -285,23 +336,25 @@ export default function LoginPage() {
         {mode === 'familia' && (
           <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <div className="space-y-3">
-              <button
-                onClick={handleGoogleLogin}
-                disabled={loading}
-                className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
-                style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-              >
-                {loading ? <FaSpinner className="animate-spin" size={14} /> : <FaGoogle size={14} />}
-                Continuar con Google
-              </button>
-
-              {useRedirect && (
-                <p className="text-center text-xs flex items-center justify-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                  ¿Popup bloqueado?{' '}
-                  <button onClick={handleGoogleLogin} className="underline font-medium" style={{ color: 'var(--color-primary)' }}>
-                    Intentar con redirección
+              {webView ? (
+                <div className="rounded-xl p-4 text-center space-y-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Para ingresar con Google, abre PET Ap en Safari o Chrome.
+                  </p>
+                  <button
+                    onClick={() => window.location.href = 'googlechrome://' + window.location.host + window.location.pathname}
+                    className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-medium transition-all"
+                    style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                  >
+                    <FaExternalLinkAlt size={10} /> Abrir en el navegador
                   </button>
+                </div>
+              ) : gisError ? (
+                <p className="text-xs text-center" style={{ color: 'var(--color-danger)' }}>
+                  No pudimos cargar el acceso con Google. Puedes reintentar o usar correo.
                 </p>
+              ) : (
+                <div ref={googleButtonRef} className="flex justify-center min-h-[40px]" />
               )}
 
               <div className="flex items-center gap-3 py-1">
@@ -508,7 +561,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Back to home */}
         <div className="text-center mt-6">
           <a href="/" className="text-xs transition-colors hover:text-brand-400" style={{ color: 'var(--text-muted)' }}>
             ← Volver al sitio
