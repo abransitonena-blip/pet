@@ -176,7 +176,7 @@ exports.onReservationCreate = functions.firestore
     );
   });
 
-// On reservation status change → notify relevant parties
+// Consolidated onUpdate: notifications, loyalty, referrals, walker stats, history
 exports.onReservationUpdate = functions.firestore
   .document('reservations/{docId}')
   .onUpdate(async (change, context) => {
@@ -186,7 +186,7 @@ exports.onReservationUpdate = functions.firestore
 
     if (before.status === after.status) return;
 
-    // Notify client on status change
+    // — Notifications —
     if (after.client?.uid) {
       const statusMessages = {
         assigned: `Tu paseo fue asignado a ${after.assignment?.walkerName || 'un paseador'}`,
@@ -207,7 +207,6 @@ exports.onReservationUpdate = functions.firestore
       }
     }
 
-    // Notify walker on assignment
     if (after.status === 'assigned' && after.assignment?.walkerId) {
       await createNotification(after.assignment.walkerId, {
         title: 'Paseo asignado',
@@ -217,7 +216,117 @@ exports.onReservationUpdate = functions.firestore
       });
     }
 
-    // Log audit
+    // — Walker stats —
+    if (after.assignment?.walkerId) {
+      const walkerId = after.assignment.walkerId;
+      const walkerRef = db.collection('walkers').doc(walkerId);
+
+      await db.runTransaction(async (t) => {
+        const snap = await t.get(walkerRef);
+        if (!snap.exists) return;
+
+        const data = snap.data();
+        const perf = data.performance || {};
+        const load = data.currentLoad || {};
+
+        let updates = {};
+
+        if (after.status === 'completed' && before.status !== 'completed') {
+          updates = {
+            'performance.totalWalks': (perf.totalWalks || 0) + 1,
+            'performance.completedWalks': (perf.completedWalks || 0) + 1,
+            'currentLoad.todayCompleted': (load.todayCompleted || 0) + 1,
+          };
+        } else if (after.status === 'en_camino' && before.status === 'assigned') {
+          updates = {
+            'currentLoad.todayAssigned': Math.max(0, (load.todayAssigned || 1) - 1),
+          };
+        }
+
+        if (Object.keys(updates).length > 0) {
+          t.update(walkerRef, updates);
+        }
+      });
+    }
+
+    // — History —
+    const historyEntry = {
+      status: after.status,
+      timestamp: new Date().toISOString(),
+      changedBy: after.assignment?.walkerId || after.client?.uid || 'system',
+    };
+
+    await change.after.ref.update({
+      history: admin.firestore.FieldValue.arrayUnion(historyEntry),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // — Loyalty (on completed) —
+    if (after.status === 'completed' && after.client?.uid) {
+      const uid = after.client.uid;
+      const loyaltyRef = db.collection('loyalty').doc(uid);
+
+      let newPoints;
+      await db.runTransaction(async (t) => {
+        const snap = await t.get(loyaltyRef);
+        const current = snap.data() || { points: 0, totalWalks: 0, freeWalksEarned: 0, freeWalksUsed: 0 };
+
+        const newWalks = (current.totalWalks || 0) + 1;
+        newPoints = (current.points || 0) + 10;
+
+        let freeWalksEarned = current.freeWalksEarned || 0;
+        if (newWalks % 10 === 0) {
+          freeWalksEarned += 1;
+        }
+
+        t.set(loyaltyRef, {
+          points: newPoints,
+          totalWalks: newWalks,
+          freeWalksEarned,
+          freeWalksUsed: current.freeWalksUsed || 0,
+          lastWalkAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      });
+
+      await createNotification(uid, {
+        title: '¡Puntos de lealtad!',
+        message: `Ganaste 10 puntos por tu paseo. Total: ${newPoints}`,
+        type: 'loyalty',
+        data: { reservationId: resId },
+      });
+    }
+
+    // — Referral (on completed) —
+    if (after.status === 'completed' && after.referralUid) {
+      const refId = after.referralUid;
+
+      const referralsSnap = await db.collection('referrals')
+        .where('referrerUid', '==', refId)
+        .where('refereePhone', '==', after.phone)
+        .limit(1)
+        .get();
+
+      if (!referralsSnap.empty) {
+        const refDoc = referralsSnap.docs[0];
+        if (refDoc.data().status !== 'completed' && refDoc.data().status !== 'rewarded') {
+          await refDoc.ref.update({
+            status: 'completed',
+            convertedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          await createNotification(refId, {
+            title: '¡Referido convertido!',
+            message: 'Tu amigo completó su primer paseo. ¡Ganaste $20 de descuento!',
+            type: 'referral',
+            data: { referralId: refDoc.id },
+          });
+
+          await sendPushToUser(refId, '¡Referido convertido!', 'Tu amigo completó su primer paseo. ¡Ganaste $20 de descuento!');
+        }
+      }
+    }
+
+    // — Audit log —
     await logAudit(
       { uid: 'system', role: 'system', name: 'System' },
       'update_status',
@@ -226,100 +335,6 @@ exports.onReservationUpdate = functions.firestore
       { status: before.status },
       { status: after.status }
     );
-  });
-
-// ═══════════════════════════════════════════
-// 4. LOYALTY POINTS
-// ═══════════════════════════════════════════
-
-// On reservation completed → award loyalty points
-exports.onReservationCompleted = functions.firestore
-  .document('reservations/{docId}')
-  .onUpdate(async (change) => {
-    const before = change.before.data();
-    const after = change.after.data();
-
-    if (before.status === 'completed' || after.status !== 'completed') return;
-    if (!after.client?.uid) return;
-
-    const uid = after.client.uid;
-    const loyaltyRef = db.collection('loyalty').doc(uid);
-
-    await db.runTransaction(async (t) => {
-      const snap = await t.get(loyaltyRef);
-      const current = snap.data() || { points: 0, totalWalks: 0, freeWalksEarned: 0, freeWalksUsed: 0 };
-
-      const newWalks = (current.totalWalks || 0) + 1;
-      const pointsEarned = 10; // 10 points per walk
-      const newPoints = (current.points || 0) + pointsEarned;
-
-      // Check if earned a free walk (every 10 walks)
-      let freeWalksEarned = current.freeWalksEarned || 0;
-      if (newWalks % 10 === 0) {
-        freeWalksEarned += 1;
-      }
-
-      t.set(loyaltyRef, {
-        points: newPoints,
-        totalWalks: newWalks,
-        freeWalksEarned,
-        freeWalksUsed: current.freeWalksUsed || 0,
-        lastWalkAt: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
-    });
-
-    // Notify client
-    await createNotification(uid, {
-      title: '¡Puntos de lealtad!',
-      message: `Ganaste 10 puntos por tu paseo. Total: ${(after._loyaltyNewPoints || 0) + 10}`,
-      type: 'loyalty',
-      data: { reservationId: change.after.id },
-    });
-  });
-
-// ═══════════════════════════════════════════
-// 5. REFERRAL PROCESSING
-// ═══════════════════════════════════════════
-
-// On reservation completed with referral → process reward
-exports.onReferralConversion = functions.firestore
-  .document('reservations/{docId}')
-  .onUpdate(async (change) => {
-    const before = change.before.data();
-    const after = change.after.data();
-
-    if (before.status === 'completed' || after.status !== 'completed') return;
-    if (!after.referralUid) return;
-
-    const refId = after.referralUid;
-
-    // Find the referral document
-    const referralsSnap = await db.collection('referrals')
-      .where('referrerUid', '==', refId)
-      .where('refereePhone', '==', after.phone)
-      .limit(1)
-      .get();
-
-    if (referralsSnap.empty) return;
-
-    const refDoc = referralsSnap.docs[0];
-    if (refDoc.data().status === 'completed' || refDoc.data().status === 'rewarded') return;
-
-    // Update referral status
-    await refDoc.ref.update({
-      status: 'completed',
-      convertedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // Notify referrer
-    await createNotification(refId, {
-      title: '¡Referido convertido!',
-      message: 'Tu amigo completó su primer paseo. ¡Ganaste $20 de descuento!',
-      type: 'referral',
-      data: { referralId: refDoc.id },
-    });
-
-    await sendPushToUser(refId, '¡Referido convertido!', 'Tu amigo completó su primer paseo. ¡Ganaste $20 de descuento!');
   });
 
 // ═══════════════════════════════════════════
@@ -334,51 +349,7 @@ exports.onNewReview = functions.firestore
   });
 
 // ═══════════════════════════════════════════
-// 7. WALKER STATS UPDATER
-// ═══════════════════════════════════════════
-
-exports.onWalkerReservationUpdate = functions.firestore
-  .document('reservations/{docId}')
-  .onUpdate(async (change, context) => {
-    const before = change.before.data();
-    const after = change.after.data();
-
-    if (before.status === after.status) return;
-    if (!after.assignment?.walkerId) return;
-
-    const walkerId = after.assignment.walkerId;
-    const walkerRef = db.collection('walkers').doc(walkerId);
-
-    await db.runTransaction(async (t) => {
-      const snap = await t.get(walkerRef);
-      if (!snap.exists) return;
-
-      const data = snap.data();
-      const perf = data.performance || {};
-      const load = data.currentLoad || {};
-
-      let updates = {};
-
-      if (after.status === 'completed' && before.status !== 'completed') {
-        updates = {
-          'performance.totalWalks': (perf.totalWalks || 0) + 1,
-          'performance.completedWalks': (perf.completedWalks || 0) + 1,
-          'currentLoad.todayCompleted': (load.todayCompleted || 0) + 1,
-        };
-      } else if (after.status === 'en_camino' && before.status === 'assigned') {
-        updates = {
-          'currentLoad.todayAssigned': Math.max(0, (load.todayAssigned || 1) - 1),
-        };
-      }
-
-      if (Object.keys(updates).length > 0) {
-        t.update(walkerRef, updates);
-      }
-    });
-  });
-
-// ═══════════════════════════════════════════
-// 8. RATE LIMITING (Reservation creation)
+// 7. RATE LIMITING (Reservation creation)
 // ═══════════════════════════════════════════
 
 exports.validateReservation = functions.firestore
@@ -429,7 +400,7 @@ exports.validateReservation = functions.firestore
   });
 
 // ═══════════════════════════════════════════
-// 9. FCM TOKEN MANAGEMENT
+// 8. FCM TOKEN MANAGEMENT
 // ═══════════════════════════════════════════
 
 // Callable: registerFCMToken({ token })
@@ -460,11 +431,7 @@ exports.registerFCMToken = functions.https.onCall(async (data, context) => {
 });
 
 // ═══════════════════════════════════════════
-// 10. SCHEDULE CRON — Reset daily walker loads
-// ═══════════════════════════════════════════
-
-// ═══════════════════════════════════════════
-// 11. WALKER ACCOUNT CREATION
+// 9. WALKER ACCOUNT CREATION
 // ═══════════════════════════════════════════
 
 // Callable: createWalkerAccount({ email, name, phone, zones, maxDaily, maxWeekly, schedule })
@@ -571,32 +538,57 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
   }
 });
 
-// ═══════════════════════════════════════════
-// 12. RESERVATION STATUS HISTORY
-// ═══════════════════════════════════════════
+exports.cleanupPetAhoraStale = functions.pubsub
+  .schedule('*/5 * * * *')
+  .timeZone('America/Mexico_City')
+  .onRun(async () => {
+    const now = admin.firestore.Timestamp.now();
+    const batch = db.batch();
+    let count = 0;
 
-// On reservation update → append to history array
-exports.onReservationStatusHistory = functions.firestore
-  .document('reservations/{docId}')
-  .onUpdate(async (change, context) => {
-    const before = change.before.data();
-    const after = change.after.data();
-    const resId = context.params.docId;
+    const expireTerminal = (status) =>
+      !['accepted', 'active', 'completed'].includes(status);
 
-    if (before.status === after.status) return;
+    const staleRequests = await db.collection('petAhoraRequests')
+      .where('expiresAt', '<', now)
+      .get();
 
-    // Append to history
-    const historyEntry = {
-      status: after.status,
-      timestamp: new Date().toISOString(),
-      changedBy: after.assignment?.walkerId || after.client?.uid || 'system',
-    };
+    for (const doc of staleRequests.docs) {
+      const data = doc.data();
+      if (expireTerminal(data.status)) {
+        batch.update(doc.ref, { status: 'expired', expiredAt: now });
+        count++;
+      }
+    }
 
-    // Use arrayUnion to append (creates array if doesn't exist)
-    await change.after.ref.update({
-      history: admin.firestore.FieldValue.arrayUnion(historyEntry),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    const staleOffers = await db.collection('petAhoraOffers')
+      .where('expiresAt', '<', now)
+      .where('status', '==', 'pending')
+      .get();
+
+    for (const doc of staleOffers.docs) {
+      batch.update(doc.ref, { status: 'declined', respondedAt: now });
+      count++;
+    }
+
+    const sevenDaysAgo = new admin.firestore.Timestamp(
+      now.seconds - 7 * 86400, 0
+    );
+
+    const staleLeases = await db.collection('petAhoraLeases')
+      .where('status', '==', 'active')
+      .where('lockedAt', '<', sevenDaysAgo)
+      .get();
+
+    for (const doc of staleLeases.docs) {
+      batch.update(doc.ref, { status: 'expired', expiredAt: now });
+      count++;
+    }
+
+    if (count > 0) {
+      await batch.commit();
+      console.log(`Cleaned up ${count} stale Pet Ahora records`);
+    }
   });
 
 exports.resetDailyWalkerLoads = functions.pubsub

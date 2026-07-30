@@ -165,7 +165,8 @@ service cloud.firestore {
     match /serviceOrders/{orderId} {
       allow read: if isAuthenticated()
         && (resource.data.clientId == request.auth.uid || isAdmin() || isSupervisor());
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && (request.resource.data.clientId == request.auth.uid || isAdmin());
       allow update: if isAuthenticated()
         && (resource.data.clientId == request.auth.uid || isAdmin() || isSupervisor());
       allow delete: if isAdmin();
@@ -176,7 +177,10 @@ service cloud.firestore {
               || resource.data.walkerId == request.auth.uid
               || isAdmin()
               || isSupervisor());
-        allow create: if isAuthenticated();
+        allow create: if isAuthenticated()
+          && (request.resource.data.clientId == request.auth.uid
+              || request.resource.data.walkerId == request.auth.uid
+              || isAdmin());
         allow update: if isAuthenticated()
           && (resource.data.clientId == request.auth.uid
               || resource.data.walkerId == request.auth.uid
@@ -199,9 +203,10 @@ service cloud.firestore {
             || isAdmin()
             || isSupervisor());
 
-      // CREATE: any authenticated user (client books, admin creates)
+      // CREATE: client books for self, admin creates for any
       allow create: if isAuthenticated()
-        && isValidReservation();
+        && isValidReservation()
+        && (request.resource.data.client.uid == request.auth.uid || isAdmin());
 
       // UPDATE: admin always, walker for status transitions on assigned (by uid or name), client can cancel own pending
       allow update: if isAuthenticated()
@@ -346,7 +351,8 @@ service cloud.firestore {
     match /conversations/{convId} {
       allow read: if isAuthenticated()
         && (isConversationParticipant() || isAdmin());
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && (request.auth.uid in request.resource.data.participants || isAdmin());
       allow update: if isAuthenticated()
         && (isConversationParticipant() || isAdmin());
       allow delete: if false;
@@ -367,8 +373,9 @@ service cloud.firestore {
       // Referrer sees own referrals, admin sees all
       allow read: if isAuthenticated()
         && (resource.data.referrerUid == request.auth.uid || isAdmin());
-      // Authenticated users create referrals
-      allow create: if isAuthenticated();
+      // Authenticated users create own referrals
+      allow create: if isAuthenticated()
+        && request.resource.data.referrerUid == request.auth.uid;
       // Only admin can update status/rewards
       allow update: if isAdmin();
       allow delete: if isAdmin();
@@ -413,8 +420,9 @@ service cloud.firestore {
         && (resource.data.clientId == request.auth.uid
             || resource.data.walkerId == request.auth.uid
             || isAdmin());
-      // Any authenticated client can create
-      allow create: if isAuthenticated();
+      // Client creates own request, admin creates any
+      allow create: if isAuthenticated()
+        && (request.resource.data.clientId == request.auth.uid || isAdmin());
       // Client can cancel own pending, walker can update status of assigned, admin all
       allow update: if isAuthenticated()
         && ((resource.data.clientId == request.auth.uid && request.resource.data.status == 'cancelled')
@@ -428,8 +436,9 @@ service cloud.firestore {
       allow read: if isAuthenticated()
         && (resource.data.walkerId == request.auth.uid
             || isAdmin());
-      // System (dispatch) creates via admin SDK or authenticated client
-      allow create: if isAuthenticated();
+      // Walker creates own offer, admin creates any
+      allow create: if isAuthenticated()
+        && (request.resource.data.walkerId == request.auth.uid || isAdmin());
       // Walker responds (accept/decline)
       allow update: if isAuthenticated()
         && (resource.data.walkerId == request.auth.uid
@@ -443,8 +452,9 @@ service cloud.firestore {
         && (resource.data.walkerId == request.auth.uid
             || resource.data.clientId == request.auth.uid
             || isAdmin());
-      // System creates on acceptance
-      allow create: if isAuthenticated();
+      // Walker or system creates on acceptance, admin creates any
+      allow create: if isAuthenticated()
+        && (request.resource.data.walkerId == request.auth.uid || isAdmin());
       // Admin can unlock
       allow update: if isAdmin();
       allow delete: if false;

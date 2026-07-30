@@ -3,14 +3,7 @@ import { initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { getStorage } from 'firebase/storage'
 import { getFunctions } from 'firebase/functions'
-
-function requiredEnv(value: string | undefined, name: string): string {
-  const normalized = value?.trim()
-  if (!normalized) {
-    throw new Error(`Missing required environment variable: ${name}`)
-  }
-  return normalized
-}
+import { requiredEnv } from '@/lib/env'
 
 const firebaseConfig = {
   apiKey: requiredEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, 'NEXT_PUBLIC_FIREBASE_API_KEY'),
