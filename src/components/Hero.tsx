@@ -4,9 +4,7 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { FaStar, FaDog } from 'react-icons/fa'
-import { useConfig } from '@/context/ConfigContext'
-import { usePrices } from '@/context/PricesContext'
+import { Star, PawPrint, ArrowRight, ChevronDown } from 'lucide-react'
 import { usePublicStats } from '@/lib/usePublicStats'
 import Avatar from '@/components/ui/Avatar'
 
@@ -16,15 +14,12 @@ const stagger = {
 }
 
 const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 }
 
 export default function Hero() {
-  const { config } = useConfig()
-  const { prices } = usePrices()
   const { avgRating, happyDogs, loading: statsLoading } = usePublicStats()
-  const minPrice = Math.min(...Object.values(prices).filter((p) => p > 0))
   const [topReview, setTopReview] = useState<{ name: string; text: string; rating: number } | null>(null)
 
   useEffect(() => {
@@ -40,10 +35,9 @@ export default function Hero() {
 
   return (
     <section aria-label="Hero" id="hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
-      {/* Subtle gradient bg */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-500/[0.04] rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-success-500/[0.03] rounded-full blur-3xl" />
+        <div className="absolute -top-1/4 -right-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-1/4 -left-1/4 w-[500px] h-[500px] bg-trust/10 rounded-full blur-[100px]" />
       </div>
 
       <motion.div
@@ -52,82 +46,73 @@ export default function Hero() {
         animate="show"
         className="relative z-10 max-w-4xl mx-auto px-4 text-center"
       >
-        {/* Brand badge */}
         <motion.div variants={item} className="mb-6 flex items-center justify-center gap-2">
-          <FaDog className="text-brand-500" size={12} />
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-brand-500/10 border border-brand-500/15 text-brand-400 uppercase tracking-wider">
+          <PawPrint className="text-primary" size={14} />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary uppercase tracking-wider">
             Paseos y bienestar canino
           </span>
         </motion.div>
 
-        {/* Headline */}
-        <motion.h1 variants={item} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight">
-          <span style={{ color: 'var(--text-primary)' }}>
-            {config.heroTitle || 'Tu perro merece más que un paseo'}
-          </span>
+        <motion.h1 variants={item} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight text-ink">
+          Pasea más, <span className="text-primary">paga menos</span>
         </motion.h1>
 
-        {/* Subhead */}
-        <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          {config.heroSubtitle || 'Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.'}
+        <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed text-muted">
+          Los mejores paseos para tu perro al mejor precio. Sin membresías, sin letras chiquitas, sin sorpresas.
         </motion.p>
 
-        {/* CTAs */}
         <motion.div variants={item} className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
           <motion.a
-            href="#reservar"
+            href="#cotizar"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="btn-primary"
+            className="btn-primary inline-flex items-center gap-2"
           >
-            Reserva tu paseo
+            Empieza ahora <ArrowRight size={16} />
           </motion.a>
           <motion.a
-            href="#servicios"
+            href="#como-funciona"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             className="btn-secondary"
           >
-            Ver planes
+            Cómo funciona
           </motion.a>
         </motion.div>
 
-        {/* Stats inline */}
         <motion.div variants={item} className="flex items-center justify-center gap-8 sm:gap-12 mb-10">
           {[
             { value: statsLoading ? '—' : happyDogs > 0 ? `${happyDogs}+` : '—', label: 'Perros felices' },
-            { value: statsLoading ? '—' : avgRating > 0 ? `${avgRating}★` : '—', label: 'Calificación' },
-            { value: `$${minPrice}`, label: 'Desde' },
+            { value: statsLoading ? '—' : avgRating > 0 ? `${avgRating}` : '—', label: 'Calificación' },
+            { value: '100+', label: 'Paseos realizados' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="text-xl sm:text-2xl font-bold gradient-text">{stat.value}</div>
-              <div className="text-xs sm:text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
+              <div className="text-xl sm:text-2xl font-bold text-primary">{stat.value}</div>
+              <div className="text-xs mt-0.5 text-muted">{stat.label}</div>
             </div>
           ))}
         </motion.div>
 
-        {/* Best review card */}
         {topReview && (
           <motion.div variants={item} className="max-w-md mx-auto">
-            <div className="rounded-2xl p-4 sm:p-5 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="card p-4 sm:p-5 text-center">
               <div className="flex items-center justify-center gap-0.5 mb-2">
                 {Array.from({ length: topReview.rating }).map((_, j) => (
-                  <FaStar key={j} className="text-brand-400" size={12} />
+                  <Star key={j} className="text-primary" size={12} fill="currentColor" />
                 ))}
               </div>
-              <p className="text-sm mb-3 leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-sm mb-3 leading-relaxed italic text-muted">
                 &ldquo;{topReview.text}&rdquo;
               </p>
               <div className="flex items-center justify-center gap-2">
                 <Avatar name={topReview.name} size="sm" />
-                <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{topReview.name}</span>
+                <span className="text-xs font-medium text-muted">{topReview.name}</span>
               </div>
             </div>
           </motion.div>
         )}
       </motion.div>
 
-      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -143,7 +128,7 @@ export default function Hero() {
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-1 h-2.5 bg-brand-500 rounded-full mt-1.5"
+            className="w-1 h-2.5 bg-primary rounded-full mt-1.5"
           />
         </motion.div>
       </motion.div>

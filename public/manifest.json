@@ -1,11 +1,11 @@
 {
   "name": "PET Ap — Bienestar Canino",
   "short_name": "PET Ap",
-  "description": "Plataforma de bienestar canino. Agenda paseos, reportes y seguimiento en tiempo real.",
+  "description": "Paseos personalizados con fotos y reporte de cada paseo. Precios accesibles, mucho amor y ejercicio para tu perro.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F172A",
-  "theme_color": "#D97706",
+  "theme_color": "#C45100",
   "orientation": "portrait-primary",
   "icons": [
     {

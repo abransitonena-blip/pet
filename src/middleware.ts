@@ -1,29 +1,47 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Middleware runs on Edge — cannot use Firebase Admin SDK directly.
-//
-// SECURITY MODEL:
-// - The __session cookie is just a boolean flag ("has logged in at some point").
-// - It does NOT contain the UID or any identity data — prevents impersonation.
-// - Real authentication: Firebase Auth (onAuthStateChanged, ID tokens).
-// - Data security: Firestore Security Rules (request.auth.uid).
-// - Business logic: Cloud Functions (admin SDK verification).
-// - This middleware only provides UX redirect (unauthenticated → login page).
-
 const SESSION_COOKIE = '__session'
+const ROLE_COOKIE = '__role'
+
+// SECURITY MODEL:
+// - __session: boolean flag ("has logged in").
+// - __role: role string ('admin' | 'walker' | 'client') set during login.
+// - Middleware checks __role server-side for route access.
+// - Real auth verification: Firebase Auth (onAuthStateChanged) + Firestore Rules (request.auth.uid).
+
+const ROLE_ROUTES: Record<string, string[]> = {
+  '/admin': ['admin'],
+  '/paseador': ['walker'],
+  '/mi-cuenta': ['client', 'admin', 'walker'],
+}
+
+function matchRoute(pathname: string): string | null {
+  for (const prefix of Object.keys(ROLE_ROUTES)) {
+    if (pathname === prefix || pathname.startsWith(prefix + '/')) return prefix
+  }
+  return null
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const routePrefix = matchRoute(pathname)
+  if (!routePrefix) return NextResponse.next()
+
   const hasSession = !!request.cookies.get(SESSION_COOKIE)?.value
-
-  // Only protect internal routes
-  const isProtected = pathname.startsWith('/admin') || pathname.startsWith('/paseador') || pathname.startsWith('/mi-cuenta')
-
-  if (isProtected && !hasSession) {
+  if (!hasSession) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
+  }
+
+  const role = request.cookies.get(ROLE_COOKIE)?.value
+  const allowedRoles = ROLE_ROUTES[routePrefix]
+
+  if (!role || !allowedRoles.includes(role)) {
+    // Admins going to /paseador or /mi-cuenta → OK. Everyone else → redirect to home.
+    if (role === 'admin') return NextResponse.next()
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return NextResponse.next()

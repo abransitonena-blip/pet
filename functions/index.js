@@ -608,3 +608,187 @@ exports.resetDailyWalkerLoads = functions.pubsub
     await batch.commit();
     console.log(`Reset daily loads for ${walkersSnap.size} walkers`);
   });
+
+// ═══════════════════════════════════════════
+// 10. DIGITAL WALLET
+// ═══════════════════════════════════════════
+
+// Helper: ensure wallet exists for user, create if not
+async function ensureWallet(uid) {
+  const ref = db.collection('wallets').doc(uid);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    await ref.set({
+      uid,
+      balance: 0,
+      totalTopUp: 0,
+      totalDeducted: 0,
+      status: 'active',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return { balance: 0, totalTopUp: 0, totalDeducted: 0 };
+  }
+  return snap.data();
+}
+
+// Callable: getWalletBalance()
+// Returns current wallet balance for the authenticated user
+exports.getWalletBalance = functions.https.onCall(async (_, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
+  const wallet = await ensureWallet(context.auth.uid);
+  return { balance: wallet.balance || 0, totalTopUp: wallet.totalTopUp || 0, totalDeducted: wallet.totalDeducted || 0 };
+});
+
+// Callable: getWalletTransactions({ limit = 20 })
+// Returns recent transactions for the authenticated user
+exports.getWalletTransactions = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
+
+  const txLimit = Math.min(data?.limit || 20, 50);
+  const snap = await db.collection('wallets').doc(context.auth.uid)
+    .collection('transactions')
+    .orderBy('createdAt', 'desc')
+    .limit(txLimit)
+    .get();
+
+  const transactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return { transactions };
+});
+
+// Callable: adminTopUpWallet({ uid, amount, concept })
+// Admin adds funds to a client's wallet
+exports.adminTopUpWallet = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
+
+  const callerSnap = await db.collection('users').doc(context.auth.uid).get();
+  if (callerSnap.data()?.role !== 'admin') {
+    throw new functions.https.HttpsError('permission-denied', 'Admin only');
+  }
+
+  const { uid, amount, concept } = data;
+  if (!uid || !amount || amount <= 0) {
+    throw new functions.https.HttpsError('invalid-argument', 'Valid uid and amount required');
+  }
+
+  await ensureWallet(uid);
+
+  const walletRef = db.collection('wallets').doc(uid);
+  const txRef = db.collection('wallets').doc(uid).collection('transactions').doc();
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(walletRef);
+    const currentBalance = snap.data()?.balance || 0;
+
+    tx.update(walletRef, {
+      balance: admin.firestore.FieldValue.increment(amount),
+      totalTopUp: admin.firestore.FieldValue.increment(amount),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    tx.set(txRef, {
+      type: 'topup',
+      amount,
+      balanceBefore: currentBalance,
+      balanceAfter: currentBalance + amount,
+      concept: concept || 'Carga de saldo',
+      createdBy: context.auth.uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+
+  await createNotification(uid, {
+    title: '💰 Saldo actualizado',
+    message: `Se añadieron $${amount.toLocaleString()} a tu billetera.`,
+    type: 'wallet',
+    data: { amount },
+  });
+
+  return { success: true, amount, transactionId: txRef.id };
+});
+
+// Callable: deductFromWallet({ amount, concept, reservationId })
+// Client deducts from their wallet (e.g. to pay for a reservation)
+exports.deductFromWallet = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
+
+  const { amount, concept, reservationId } = data;
+  if (!amount || amount <= 0) {
+    throw new functions.https.HttpsError('invalid-argument', 'Valid amount required');
+  }
+
+  const uid = context.auth.uid;
+  await ensureWallet(uid);
+
+  const walletRef = db.collection('wallets').doc(uid);
+  const txRef = db.collection('wallets').doc(uid).collection('transactions').doc();
+
+  let success = false;
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(walletRef);
+    const currentBalance = snap.data()?.balance || 0;
+
+    if (currentBalance < amount) {
+      throw new functions.https.HttpsError('failed-precondition', 'Saldo insuficiente');
+    }
+
+    tx.update(walletRef, {
+      balance: admin.firestore.FieldValue.increment(-amount),
+      totalDeducted: admin.firestore.FieldValue.increment(amount),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    tx.set(txRef, {
+      type: 'deduction',
+      amount: -amount,
+      balanceBefore: currentBalance,
+      balanceAfter: currentBalance - amount,
+      concept: concept || 'Pago de reserva',
+      reservationId: reservationId || '',
+      createdBy: uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    success = true;
+  });
+
+  return { success, amount, transactionId: txRef.id };
+});
+
+// Callable: redeemFreeWalk({ uid })
+// Client redeems a free walk from loyalty program
+exports.redeemFreeWalk = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
+
+  const { uid } = data;
+  if (!uid) throw new functions.https.HttpsError('invalid-argument', 'UID required');
+  if (uid !== context.auth.uid) throw new functions.https.HttpsError('permission-denied', 'Can only redeem for yourself');
+
+  const loyaltyRef = db.collection('loyalty').doc(uid);
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(loyaltyRef);
+    if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Loyalty record not found');
+
+    const data = snap.data();
+    const earned = data.freeWalksEarned || 0;
+    const used = data.freeWalksUsed || 0;
+    const available = earned - used;
+
+    if (available <= 0) throw new functions.https.HttpsError('failed-precondition', 'No free walks available');
+
+    tx.update(loyaltyRef, {
+      freeWalksUsed: admin.firestore.FieldValue.increment(1),
+    });
+
+    await createNotification(uid, {
+      title: '🎉 Paseo gratis canjeado',
+      message: 'Has canjeado un paseo gratis. Te contactaremos para agendarlo.',
+      type: 'loyalty',
+      data: { action: 'redeemed' },
+    });
+  });
+
+  return { success: true };
+});

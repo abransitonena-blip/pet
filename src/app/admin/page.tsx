@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa'
 import StatCard from '@/components/ui/StatCard'
 import Badge from '@/components/ui/Badge'
+import AdminWalkerStatus from '@/components/AdminWalkerStatus'
 import type { Reservation } from '@/types'
 
 interface Stats {
@@ -261,62 +262,8 @@ export default function AdminDashboard() {
           )}
         </motion.div>
 
-        {/* Walker Performance */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-2xl p-5"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Rendimiento paseadores
-            </h3>
-            <Link href="/admin/paseadores" className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors">
-              Ver todos →
-            </Link>
-          </div>
-
-          {walkerStats.length === 0 ? (
-            <div className="text-center py-6">
-              <FaWalking className="text-2xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin paseadores asignados hoy</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {walkerStats.map((w) => (
-                <div
-                  key={w.name}
-                  className="flex items-center justify-between p-3 rounded-xl"
-                  style={{ border: '1px solid var(--border)' }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-success-500/10">
-                      <FaWalking size={14} className="text-success-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{w.name}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {w.assigned} asignado{w.assigned !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {w.inProgress > 0 && (
-                      <span className="text-2xs px-2 py-0.5 rounded-full bg-success-500/15 text-success-400 font-medium">
-                        🟢 {w.inProgress} activo{w.inProgress !== 1 ? 's' : ''}
-                      </span>
-                    )}
-                    <span className="text-2xs px-2 py-0.5 rounded-full bg-white/10 font-medium" style={{ color: 'var(--text-muted)' }}>
-                      ✓ {w.completed}/{w.assigned}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
+        {/* Walker Live Status */}
+        <AdminWalkerStatus />
       </div>
     </div>
   )

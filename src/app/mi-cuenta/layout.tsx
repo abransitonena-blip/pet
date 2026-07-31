@@ -6,25 +6,27 @@ import { useRouter, usePathname } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
+import { clearSessionCookie } from '@/lib/auth'
 import { motion } from 'framer-motion'
 import {
-  FaDog, FaCalendarAlt, FaPaw, FaCamera, FaUserFriends, FaMapMarkerAlt,
-  FaSignOutAlt, FaCog, FaGift, FaHome, FaHistory, FaBookOpen, FaBell,
-} from 'react-icons/fa'
+  Dog, Calendar, PawPrint, Camera, Users, MapPin,
+  LogOut, Settings, Gift, Home, History, BookOpen, Bell,
+} from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 
 const ACCOUNT_ITEMS = [
-  { id: 'dashboard', label: 'Inicio', icon: FaHome, color: '#D97706', href: '/mi-cuenta' },
-  { id: 'nueva-reserva', label: 'Nueva reserva', icon: FaCalendarAlt, color: '#059669', href: '/mi-cuenta/nueva-reserva' },
-  { id: 'perros', label: 'Mis perros', icon: FaPaw, color: '#3b82f6', href: '/mi-cuenta/perros' },
-  { id: 'direcciones', label: 'Mis direcciones', icon: FaMapMarkerAlt, color: '#F97316', href: '/mi-cuenta/direcciones' },
-  { id: 'historial', label: 'Mi historial', icon: FaHistory, color: '#8B5CF6', href: '/mi-cuenta/historial' },
-  { id: 'fotos', label: 'Fotos de paseos', icon: FaCamera, color: '#06B6D4', href: '/mi-cuenta/fotos' },
-  { id: 'notificaciones', label: 'Notificaciones', icon: FaBell, color: '#D97706', href: '/mi-cuenta/notificaciones' },
-  { id: 'referir', label: 'Referir amigo', icon: FaUserFriends, color: '#EC4899', href: '/mi-cuenta/referir' },
-  { id: 'lealtad', label: 'Mi lealtad', icon: FaGift, color: '#F59E0B', href: '/mi-cuenta/lealtad' },
-  { id: 'ayuda', label: 'Centro de ayuda', icon: FaBookOpen, color: '#64748B', href: '/mi-cuenta/ayuda' },
-  { id: 'config', label: 'Configuración', icon: FaCog, color: '#64748B', href: '/mi-cuenta/config' },
+  { id: 'dashboard', label: 'Inicio', icon: Home, color: '#D97706', href: '/mi-cuenta' },
+  { id: 'nueva-reserva', label: 'Nueva reserva', icon: Calendar, color: '#059669', href: '/mi-cuenta/nueva-reserva' },
+  { id: 'perros', label: 'Mis perros', icon: PawPrint, color: '#3b82f6', href: '/mi-cuenta/perros' },
+  { id: 'direcciones', label: 'Mis direcciones', icon: MapPin, color: '#F97316', href: '/mi-cuenta/direcciones' },
+  { id: 'historial', label: 'Mi historial', icon: History, color: '#8B5CF6', href: '/mi-cuenta/historial' },
+  { id: 'fotos', label: 'Fotos de paseos', icon: Camera, color: '#06B6D4', href: '/mi-cuenta/fotos' },
+  { id: 'notificaciones', label: 'Notificaciones', icon: Bell, color: '#D97706', href: '/mi-cuenta/notificaciones' },
+  { id: 'billetera', label: 'Billetera', icon: Dog, color: '#0F766E', href: '/mi-cuenta/billetera' },
+  { id: 'referir', label: 'Referir amigo', icon: Users, color: '#EC4899', href: '/mi-cuenta/referir' },
+  { id: 'lealtad', label: 'Mi lealtad', icon: Gift, color: '#F59E0B', href: '/mi-cuenta/lealtad' },
+  { id: 'ayuda', label: 'Centro de ayuda', icon: BookOpen, color: '#64748B', href: '/mi-cuenta/ayuda' },
+  { id: 'config', label: 'Configuración', icon: Settings, color: '#64748B', href: '/mi-cuenta/config' },
 ]
 
 export default function MiCuentaLayout({ children }: { children: React.ReactNode }) {
@@ -53,7 +55,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
   }, [router])
 
   const handleLogout = async () => {
-    document.cookie = '__session=; path=/; max-age=0'
+    clearSessionCookie()
     await signOut(auth)
     router.push('/')
   }
@@ -62,7 +64,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <FaDog className="text-brand-500 text-3xl mx-auto mb-3 animate-pulse" />
+          <Dog className="text-brand-500 text-3xl mx-auto mb-3 animate-pulse" />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Cargando tu cuenta...</p>
         </div>
       </div>
@@ -76,7 +78,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
         <div className="section-container h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white">
-              <FaDog size={16} />
+              <Dog size={16} />
             </Link>
             <div>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Mi cuenta</p>
@@ -94,7 +96,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
               style={{ color: 'var(--text-muted)' }}
               aria-label="Cerrar sesión"
             >
-              <FaSignOutAlt size={14} />
+              <LogOut size={14} />
             </button>
           </div>
         </div>
@@ -127,7 +129,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
           <div className="lg:col-span-3">
             {children || (
               <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <FaDog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+                <Dog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
                 <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                   Bienvenido, {userName}
                 </h2>

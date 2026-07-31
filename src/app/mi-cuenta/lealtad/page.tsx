@@ -90,7 +90,7 @@ export default function LealtadPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <LoyaltyProgram phone={phone} />
+        <LoyaltyProgram />
       </motion.div>
 
       {/* No phone warning */}

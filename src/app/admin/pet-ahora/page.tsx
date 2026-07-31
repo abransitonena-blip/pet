@@ -19,16 +19,28 @@ const STATUS_LABELS: Record<string, string> = {
   expired: 'Expirado',
 }
 
-const STATUS_COLORS: Record<string, { text: string; bg: string }> = {
-  pending: { text: '#a1a1aa', bg: 'rgba(161,161,170,0.1)' },
-  searching: { text: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-  offer_sent: { text: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-  accepted: { text: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-  en_camino: { text: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
-  paseando: { text: '#059669', bg: 'rgba(5,150,105,0.1)' },
-  completed: { text: '#059669', bg: 'rgba(5,150,105,0.12)' },
-  cancelled: { text: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-  expired: { text: '#a1a1aa', bg: 'rgba(161,161,170,0.1)' },
+const STATUS_STYLE: Record<string, string> = {
+  pending: 'gray',
+  searching: 'amber',
+  offer_sent: 'amber',
+  accepted: 'blue',
+  en_camino: 'blue',
+  paseando: 'green',
+  completed: 'green',
+  cancelled: 'red',
+  expired: 'gray',
+}
+
+const STATUS_CSS: Record<string, { text: string; bg: string }> = {
+  gray: { text: 'var(--text-muted)', bg: 'color-mix(in srgb, var(--text-muted) 12%, transparent)' },
+  amber: { text: 'var(--color-warning)', bg: 'color-mix(in srgb, var(--color-warning) 12%, transparent)' },
+  blue: { text: 'var(--color-info)', bg: 'color-mix(in srgb, var(--color-info) 12%, transparent)' },
+  green: { text: 'var(--color-success)', bg: 'color-mix(in srgb, var(--color-success) 12%, transparent)' },
+  red: { text: 'var(--color-danger)', bg: 'color-mix(in srgb, var(--color-danger) 12%, transparent)' },
+}
+
+function statusStyle(status: string) {
+  return STATUS_CSS[STATUS_STYLE[status] || 'gray'] || STATUS_CSS.gray
 }
 
 export default function AdminPetAhoraPage() {
@@ -147,15 +159,15 @@ export default function AdminPetAhoraPage() {
               className="rounded-xl p-3 flex items-center gap-3"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: (STATUS_COLORS[r.status] || STATUS_COLORS.pending).bg }}>
-                {r.status === 'completed' ? <FaCheckCircle size={13} style={{ color: (STATUS_COLORS[r.status] || STATUS_COLORS.pending).text }} /> :
-                 r.status === 'cancelled' || r.status === 'expired' ? <FaBan size={13} style={{ color: (STATUS_COLORS[r.status] || STATUS_COLORS.pending).text }} /> :
-                 <FaDog size={13} style={{ color: (STATUS_COLORS[r.status] || STATUS_COLORS.pending).text }} />}
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: statusStyle(r.status).bg }}>
+                {r.status === 'completed' ? <FaCheckCircle size={13} style={{ color: statusStyle(r.status).text }} /> :
+                 r.status === 'cancelled' || r.status === 'expired' ? <FaBan size={13} style={{ color: statusStyle(r.status).text }} /> :
+                 <FaDog size={13} style={{ color: statusStyle(r.status).text }} />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{r.petName}</p>
-                  <span className="text-2xs px-1.5 py-0.5 rounded-full font-medium shrink-0" style={{ background: (STATUS_COLORS[r.status] || STATUS_COLORS.pending).bg, color: (STATUS_COLORS[r.status] || STATUS_COLORS.pending).text }}>
+                  <span className="text-2xs px-1.5 py-0.5 rounded-full font-medium shrink-0" style={{ background: statusStyle(r.status).bg, color: statusStyle(r.status).text }}>
                     {STATUS_LABELS[r.status] || r.status}
                   </span>
                 </div>

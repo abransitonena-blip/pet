@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa'
 import PetAhoraRequestForm from '@/components/PetAhoraRequestForm'
 import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
+import WalletCard from '@/components/WalletCard'
 import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
@@ -183,6 +184,9 @@ export default function DashboardPage() {
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Puntos de lealtad</p>
         </motion.div>
       </div>
+
+      {/* Wallet */}
+      <WalletCard compact />
 
       {/* PET Ahora — Instant Walk */}
       {activePetAhoraId && petAhoraRequest ? (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
@@ -21,6 +21,18 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
+  }, [onClose])
+
+  useEffect(() => {
+    if (!isOpen) return
+    document.addEventListener('keydown', handleKeyDown)
+    dialogRef.current?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, handleKeyDown])
 
   if (!isOpen) return null
 
@@ -58,7 +70,15 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={mode === 'check_in' ? 'Iniciar paseo' : 'Completar paseo'}
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)' }}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

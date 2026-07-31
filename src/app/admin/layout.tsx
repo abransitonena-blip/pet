@@ -6,34 +6,35 @@ import { useRouter, usePathname } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
+import { clearSessionCookie } from '@/lib/auth'
 import { ReservationsProvider } from '@/context/ReservationsContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  FaDog, FaTachometerAlt, FaCalendarAlt, FaUsers, FaPaw, FaWalking,
-  FaMapMarkedAlt, FaDollarSign, FaTag, FaUserFriends, FaStar,
-  FaChartLine, FaCog, FaClipboardList, FaRobot, FaSignOutAlt,
-  FaChevronLeft, FaChevronRight, FaBars, FaComments, FaImage, FaBolt,
-} from 'react-icons/fa'
+  Dog, Gauge, Calendar, Users, PawPrint, Footprints,
+  MapPin, DollarSign, Tag, Star,
+  TrendingUp, Settings, ClipboardList, Bot, LogOut,
+  ChevronLeft, ChevronRight, Menu, MessageSquare, Image, Zap,
+} from 'lucide-react'
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: FaTachometerAlt, href: '/admin' },
-  { id: 'reservas', label: 'Reservas', icon: FaCalendarAlt, href: '/admin/reservas' },
-  { id: 'clientes', label: 'Clientes', icon: FaUsers, href: '/admin/clientes' },
-  { id: 'perros', label: 'Perros', icon: FaPaw, href: '/admin/perros' },
-  { id: 'paseadores', label: 'Paseadores', icon: FaWalking, href: '/admin/paseadores' },
-  { id: 'zonas', label: 'Zonas', icon: FaMapMarkedAlt, href: '/admin/zonas' },
-  { id: 'rutas', label: 'Rutas', icon: FaMapMarkedAlt, href: '/admin/rutas' },
-  { id: 'finanzas', label: 'Finanzas', icon: FaDollarSign, href: '/admin/finanzas' },
-  { id: 'cupones', label: 'Cupones', icon: FaTag, href: '/admin/cupones' },
-  { id: 'referidos', label: 'Referidos', icon: FaUserFriends, href: '/admin/referidos' },
-  { id: 'resenas', label: 'Reseñas', icon: FaStar, href: '/admin/resenas' },
-  { id: 'chat', label: 'Chat', icon: FaComments, href: '/admin/chat' },
-  { id: 'analitica', label: 'Analítica', icon: FaChartLine, href: '/admin/analitica' },
-  { id: 'galeria', label: 'Galería', icon: FaImage, href: '/admin/galeria' },
-  { id: 'pet-ahora', label: 'PET Ahora', icon: FaBolt, href: '/admin/pet-ahora', color: '#f59e0b' },
-  { id: 'config', label: 'Configuración', icon: FaCog, href: '/admin/config' },
-  { id: 'logs', label: 'Logs', icon: FaClipboardList, href: '/admin/logs' },
-  { id: 'ia', label: 'Insights', icon: FaRobot, href: '/admin/ia' },
+  { id: 'dashboard', label: 'Dashboard', icon: Gauge, href: '/admin' },
+  { id: 'reservas', label: 'Reservas', icon: Calendar, href: '/admin/reservas' },
+  { id: 'clientes', label: 'Clientes', icon: Users, href: '/admin/clientes' },
+  { id: 'perros', label: 'Perros', icon: PawPrint, href: '/admin/perros' },
+  { id: 'paseadores', label: 'Paseadores', icon: Footprints, href: '/admin/paseadores' },
+  { id: 'zonas', label: 'Zonas', icon: MapPin, href: '/admin/zonas' },
+  { id: 'rutas', label: 'Rutas', icon: MapPin, href: '/admin/rutas' },
+  { id: 'finanzas', label: 'Finanzas', icon: DollarSign, href: '/admin/finanzas' },
+  { id: 'cupones', label: 'Cupones', icon: Tag, href: '/admin/cupones' },
+  { id: 'referidos', label: 'Referidos', icon: Users, href: '/admin/referidos' },
+  { id: 'resenas', label: 'Reseñas', icon: Star, href: '/admin/resenas' },
+  { id: 'chat', label: 'Chat', icon: MessageSquare, href: '/admin/chat' },
+  { id: 'analitica', label: 'Analítica', icon: TrendingUp, href: '/admin/analitica' },
+  { id: 'galeria', label: 'Galería', icon: Image, href: '/admin/galeria' },
+  { id: 'pet-ahora', label: 'PET Ahora', icon: Zap, href: '/admin/pet-ahora', color: '#f59e0b' },
+  { id: 'config', label: 'Configuración', icon: Settings, href: '/admin/config' },
+  { id: 'logs', label: 'Logs', icon: ClipboardList, href: '/admin/logs' },
+  { id: 'ia', label: 'Insights', icon: Bot, href: '/admin/ia' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -67,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [router])
 
   const handleLogout = async () => {
-    document.cookie = '__session=; path=/; max-age=0'
+    clearSessionCookie()
     await signOut(auth)
     router.push('/')
   }
@@ -76,7 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <FaDog className="text-brand-500 text-3xl mx-auto mb-3 animate-pulse" />
+          <Dog className="text-brand-500 text-3xl mx-auto mb-3 animate-pulse" />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Cargando centro de operaciones...</p>
         </div>
       </div>
@@ -96,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white shrink-0">
-            <FaDog size={16} />
+            <Dog size={16} />
           </div>
           {!collapsed && (
             <motion.span
@@ -140,7 +141,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             style={{ color: 'var(--text-secondary)' }}
             aria-label="Cerrar sesión"
           >
-            <FaSignOutAlt size={16} className="shrink-0" />
+            <LogOut size={16} className="shrink-0" />
             {!collapsed && <span>Cerrar sesión</span>}
           </button>
           {!collapsed && version && (
@@ -163,7 +164,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           aria-label={collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
           aria-expanded={!collapsed}
         >
-          {collapsed ? <FaChevronRight size={8} /> : <FaChevronLeft size={8} />}
+          {collapsed ? <ChevronRight size={8} /> : <ChevronLeft size={8} />}
         </button>
       </motion.aside>
 
@@ -191,7 +192,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <div className="flex items-center gap-3 mb-6 px-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white">
-                <FaDog size={16} />
+                <Dog size={16} />
               </div>
               <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>PET Ap</span>
             </div>
@@ -230,7 +231,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               aria-label="Abrir menú de navegación"
               aria-expanded={mobileOpen}
             >
-              <FaBars size={16} />
+              <Menu size={16} />
             </button>
             <h1 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
               Centro de Operaciones

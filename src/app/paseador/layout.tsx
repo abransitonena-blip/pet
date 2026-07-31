@@ -5,16 +5,18 @@ import { useRouter, usePathname } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
+import { clearSessionCookie } from '@/lib/auth'
 import { motion } from 'framer-motion'
 import WalkerHeartbeat from '@/components/WalkerHeartbeat'
 import { PetAhoraToastProvider } from '@/components/PetAhoraToast'
 import {
-  FaDog, FaHome, FaHistory, FaSignOutAlt, FaWalking, FaExclamationTriangle,
-} from 'react-icons/fa'
+  Dog, Home, History, LogOut, Footprints, AlertTriangle,
+} from 'lucide-react'
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Mis paseos', icon: FaHome, color: '#059669', href: '/paseador' },
-  { id: 'historial', label: 'Historial', icon: FaHistory, color: '#3b82f6', href: '/paseador/historial' },
+  { id: 'dashboard', label: 'Mis paseos', icon: Home, color: '#059669', href: '/paseador' },
+  { id: 'historial', label: 'Historial', icon: History, color: '#3b82f6', href: '/paseador/historial' },
+  { id: 'perfil', label: 'Mi perfil', icon: Dog, color: '#D97706', href: '/paseador/perfil' },
 ]
 
 export default function PaseadorLayout({ children }: { children: React.ReactNode }) {
@@ -69,7 +71,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
   }, [router])
 
   const handleLogout = async () => {
-    document.cookie = '__session=; path=/; max-age=0'
+    clearSessionCookie()
     await signOut(auth)
     router.push('/')
   }
@@ -78,7 +80,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <FaWalking className="text-success-500 text-3xl mx-auto mb-3 animate-pulse" />
+          <Footprints className="text-success-500 text-3xl mx-auto mb-3 animate-pulse" />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Cargando panel...</p>
         </div>
       </div>
@@ -90,7 +92,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
         <div className="rounded-2xl p-8 text-center max-w-sm" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <div className="w-16 h-16 rounded-2xl bg-danger-500/10 flex items-center justify-center mx-auto mb-4">
-            <FaExclamationTriangle size={24} className="text-danger-400" />
+            <AlertTriangle size={24} className="text-danger-400" />
           </div>
           <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Acceso restringido</h2>
           <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>{error}</p>
@@ -112,7 +114,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
         <div className="section-container h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-success-500 to-success-600 flex items-center justify-center text-white">
-              <FaWalking size={16} />
+              <Footprints size={16} />
             </div>
             <div>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Paseador</p>
@@ -130,7 +132,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
               style={{ color: 'var(--text-muted)' }}
               aria-label="Cerrar sesión"
             >
-              <FaSignOutAlt size={14} />
+              <LogOut size={14} />
             </button>
           </div>
         </div>

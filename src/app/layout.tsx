@@ -8,6 +8,7 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  fallback: ['system-ui', 'sans-serif'],
 })
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-euhz.vercel.app'
@@ -15,21 +16,50 @@ const siteName = 'PET Ap'
 const siteDescription = 'Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.'
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  name: 'PET Ap',
-  description: siteDescription,
-  url: siteUrl,
-  telephone: '+525523053772',
-  email: 'ap9871888@gmail.com',
-  image: `${siteUrl}/og-image.png`,
-  openingHoursSpecification: [
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: BUSINESS_HOURS.lunes!.open, closes: BUSINESS_HOURS.lunes!.close },
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: BUSINESS_HOURS.sabado!.open, closes: BUSINESS_HOURS.sabado!.close },
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Sunday', opens: '00:00', closes: '00:00', description: 'Cerrado' },
-  ],
-  priceRange: '$$',
-  sameAs: [
-    'https://www.instagram.com/pet___ap',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}/#website`,
+      url: siteUrl,
+      name: siteName,
+      description: siteDescription,
+      inLanguage: 'es-MX',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${siteUrl}/?s={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'LocalBusiness',
+      '@id': `${siteUrl}/#business`,
+      name: 'PET Ap',
+      description: siteDescription,
+      url: siteUrl,
+      telephone: '+525523053772',
+      email: 'ap9871888@gmail.com',
+      image: `${siteUrl}/og-image.png`,
+      openingHoursSpecification: [
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: BUSINESS_HOURS.lunes!.open, closes: BUSINESS_HOURS.lunes!.close },
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: BUSINESS_HOURS.sabado!.open, closes: BUSINESS_HOURS.sabado!.close },
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Sunday', opens: '00:00', closes: '00:00', description: 'Cerrado' },
+      ],
+      priceRange: '$$',
+      sameAs: ['https://www.instagram.com/pet___ap'],
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'Servicios de paseo canino',
+        itemListElement: [
+          { '@type': 'Offer', name: 'Paseo Cotidiano', description: 'Paseo diario de 30 min' },
+          { '@type': 'Offer', name: 'Paseo Energía', description: 'Paseo activo de 45 min' },
+          { '@type': 'Offer', name: 'Paseo Acompañamiento', description: 'Paseo extendido de 60 min' },
+          { '@type': 'Offer', name: 'Rutina Semanal', description: 'Plan semanal personalizado' },
+        ],
+      },
+    },
   ],
 }
 
@@ -77,12 +107,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={inter.variable} data-theme="dark">
+    <html lang="es" className={inter.variable}>
       <head>
         <link rel="canonical" href={siteUrl} />
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
-        <meta name="theme-color" content="#D97706" />
+        <meta name="theme-color" content="#C45100" />
+        <meta name="color-scheme" content="light dark" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="PET Ap" />
@@ -94,7 +125,7 @@ export default function RootLayout({
           __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-HQTMCZX66M');`
         }} />
       </head>
-      <body className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      <body className="min-h-screen overflow-x-hidden">
          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[var(--z-overlay)] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-brand-500 focus:text-white focus:outline-none">
           Saltar al contenido principal
         </a>

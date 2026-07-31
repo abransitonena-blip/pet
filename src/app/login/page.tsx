@@ -9,6 +9,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { FaDog, FaEnvelope, FaLock, FaSpinner, FaUser, FaPhone, FaWalking, FaExternalLinkAlt } from 'react-icons/fa'
 import { brand } from '@/lib/brand'
+import { Events } from '@/lib/analytics'
 import {
   setSessionCookie,
   clearSessionCookie,
@@ -110,9 +111,18 @@ export default function LoginPage() {
     try {
       const credential = GoogleAuthProvider.credential(response.credential)
       const result = await signInWithCredential(auth, credential)
-      await ensureCustomerProfile(result.user)
-      setSessionCookie()
-      router.replace('/mi-cuenta')
+      Events.loginMethod('google')
+      const userSnap = await getDoc(doc(db, 'users', result.user.uid))
+      const role = userSnap.exists() ? userSnap.data()?.role : null
+      if (role === 'admin' || role === 'walker') {
+        await ensureCustomerProfile(result.user)
+        setSessionCookie(role)
+        router.replace(role === 'admin' ? '/admin' : '/paseador')
+      } else {
+        await ensureCustomerProfile(result.user)
+        setSessionCookie('client')
+        router.replace('/mi-cuenta')
+      }
     } catch (e) {
       setError(classifyGoogleError(e))
     } finally {
@@ -157,6 +167,7 @@ export default function LoginPage() {
     setError('')
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password)
+      Events.loginMethod('email')
       if (role === 'admin' || role === 'walker') {
         const userSnap = await getDoc(doc(db, 'users', cred.user.uid))
         const userRole = userSnap.exists() ? userSnap.data()?.role : null
@@ -170,11 +181,11 @@ export default function LoginPage() {
           await auth.signOut()
           return
         }
-        setSessionCookie()
+        setSessionCookie(role)
         router.push(role === 'walker' ? '/paseador' : '/admin')
       } else {
         await ensureCustomerProfile(cred.user)
-        setSessionCookie()
+        setSessionCookie('client')
         router.push('/mi-cuenta')
       }
     } catch (e: unknown) {

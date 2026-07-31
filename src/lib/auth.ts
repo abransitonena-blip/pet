@@ -1,11 +1,23 @@
-export function setSessionCookie() {
+const SESSION_MAX_AGE = 86400 // 24h
+
+function setCookie(name: string, value: string, maxAge: number) {
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`
+}
+
+function removeCookie(name: string) {
+  document.cookie = `${name}=; path=/; max-age=0`
+}
+
+export function setSessionCookie(role?: string) {
   if (typeof document === 'undefined') return
-  document.cookie = '__session=1; path=/; max-age=86400; SameSite=Lax; Secure'
+  setCookie('__session', '1', SESSION_MAX_AGE)
+  if (role) setCookie('__role', role, SESSION_MAX_AGE)
 }
 
 export function clearSessionCookie() {
   if (typeof document === 'undefined') return
-  document.cookie = '__session=; path=/; max-age=0'
+  removeCookie('__session')
+  removeCookie('__role')
 }
 
 export function isWebView(): boolean {

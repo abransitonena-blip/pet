@@ -28,12 +28,6 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'supervisor';
     }
 
-    function isClient() {
-      return isAuthenticated()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'client';
-    }
-
     function getRole() {
       return isAuthenticated()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
@@ -255,9 +249,10 @@ service cloud.firestore {
       // All authenticated can read (client needs to see available walkers for selection)
       allow read: if isAuthenticated();
       // Only Cloud Functions can write (createWalkerAccount)
-      allow write: if false;
-      // Walker can update own profile (status confirmation, photo)
-      allow update: if isWalker() && request.auth.uid == uid;
+      allow write: if isAdmin();
+      // Walker can update own profile (schedule, zones, capacity, phone)
+      allow update: if (isWalker() && request.auth.uid == uid)
+        || isAdmin();
     }
 
     // ═══════════════════════════════════════════
@@ -360,7 +355,8 @@ service cloud.firestore {
       match /messages/{msgId} {
         allow read: if isAuthenticated()
           && (isConversationParticipant() || isAdmin());
-        allow create: if isAuthenticated();
+        allow create: if isAuthenticated()
+          && (isConversationParticipant() || isAdmin());
         allow update, delete: if false;
       }
     }
@@ -389,6 +385,27 @@ service cloud.firestore {
       allow read: if isAuthenticated() && request.auth.uid == uid;
       // Only Cloud Functions should write loyalty
       allow write: if false;
+    }
+
+    // ═══════════════════════════════════════════
+    // WALLET / BILLETERA DIGITAL
+    // ═══════════════════════════════════════════
+
+    match /wallets/{uid} {
+      // Owner reads own wallet, admin reads all
+      allow read: if isAuthenticated()
+        && (request.auth.uid == uid || isAdmin());
+      // Only Cloud Functions (admin SDK) can write wallets
+      allow write: if false;
+
+      match /transactions/{txId} {
+        // Owner reads own transactions, admin reads all
+        allow read: if isAuthenticated()
+          && (request.auth.uid == uid || isAdmin());
+        // Only Cloud Functions creates transactions
+        allow create: if isAdmin();
+        allow update, delete: if false;
+      }
     }
 
     // ═══════════════════════════════════════════

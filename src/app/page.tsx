@@ -10,12 +10,11 @@ import Hero from '@/components/Hero'
 import TrustBar from '@/components/TrustBar'
 import HowItWorks from '@/components/HowItWorks'
 import Services from '@/components/Services'
-import ReservationForm from '@/components/ReservationForm'
 import Preloader from '@/components/Preloader'
 import PWARegister from '@/components/PWARegister'
 import BannerDisplay from '@/components/BannerDisplay'
 import Link from 'next/link'
-import { FaUser, FaArrowRight } from 'react-icons/fa'
+import { User, ArrowRight } from 'lucide-react'
 
 const Gallery = dynamic(() => import('@/components/Gallery'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>,
@@ -37,6 +36,12 @@ const ScrollToTop = dynamic(() => import('@/components/ScrollToTop'), { ssr: fal
 const TermsModal = dynamic(() => import('@/components/TermsModal'), { ssr: false })
 const ReviewForm = dynamic(() => import('@/components/ReviewForm'), {
   loading: () => <div className="skeleton h-32 rounded-2xl" />,
+})
+const QuoteForm = dynamic(() => import('@/components/QuoteForm'), {
+  loading: () => <div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>,
+})
+const ReservationForm = dynamic(() => import('@/components/ReservationForm'), {
+  loading: () => <div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>,
 })
 
 function HomeContent() {
@@ -78,6 +83,9 @@ function HomeContent() {
         <Hero />
         <TrustBar />
         <Services />
+        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>}>
+          <QuoteForm />
+        </Suspense>
         <HowItWorks />
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>}>
           <Gallery />
@@ -99,8 +107,8 @@ function HomeContent() {
           {user ? (
             <section aria-label="Reservar" id="reservar" className="section-container py-20 sm:py-28">
               <div className="max-w-lg mx-auto text-center">
-                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-                  <FaUser className="text-primary" size={24} />
+                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center card">
+                  <User className="text-primary" size={24} />
                 </div>
                 <h2 className="section-title">Bienvenido de vuelta</h2>
                 <p className="section-subtitle mb-6">
@@ -110,12 +118,14 @@ function HomeContent() {
                   href="/mi-cuenta/nueva-reserva"
                   className="btn-primary inline-flex items-center gap-2"
                 >
-                  Ir a reservar <FaArrowRight size={14} />
+                  Ir a reservar <ArrowRight size={14} />
                 </Link>
               </div>
             </section>
           ) : (
-            <ReservationForm onFocusChange={setFormActive} />
+            <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>}>
+              <ReservationForm onFocusChange={setFormActive} />
+            </Suspense>
           )}
         </Suspense>
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-32 rounded-2xl" /></div>}>

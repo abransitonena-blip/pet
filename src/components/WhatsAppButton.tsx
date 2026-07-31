@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaWhatsapp } from 'react-icons/fa'
 import { brand } from '@/lib/brand'
+import { Events } from '@/lib/analytics'
 
 export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
   const [show, setShow] = useState(false)
@@ -37,6 +38,7 @@ export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Contactar por WhatsApp para reservar paseo"
+            onClick={() => Events.whatsappClick('flotante')}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             whileHover={{ scale: 1.1 }}
