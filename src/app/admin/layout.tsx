@@ -236,7 +236,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div className="flex items-center gap-3">
             <Link href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
-              Ver sitio
+              Inicio
             </Link>
           </div>
         </div>
