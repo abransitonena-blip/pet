@@ -954,3 +954,48 @@ match /reservations/{resId} {
 ---
 
 *Este documento fue generado por un equipo de auditoría de 16 roles especializados. Cada recomendación está respaldada por el análisis del código fuente actual.*
+
+---
+
+# ANEXO — Estado de implementación (auditoría de producción 12 fases)
+
+> Última actualización: 3 de agosto de 2026 · Commit: `99055d3`
+
+## Resumen de fase
+
+| Fase | Área | Estado | Detalle |
+|------|------|--------|---------|
+| F1 | Diagnóstico de los 5 bugs críticos | ✅ Hecho | Root cause documentado: "Quebrada" solo vive como dato stale en Firestore `admin/config` (eliminada del código en `7845a0f`/`ca0c8cc`); cotizador bloqueado por regla `zones` con `isAuthenticated()`; botón Google vacío por GIS que solo corría en `onLoad` (ref nulo en modo select); teléfono en 4 fuentes; landing con cotizador + reserva vieja coexistiendo |
+| F2 | Config single source of truth | ✅ Hecho | `ConfigContext` lee `appSettings/public` (schemaVersion 2) vía `onSnapshot`, fallback legacy `admin/config` solo durante migración, normaliza E.164/displayPhone. Seed: `scripts/seed-appsettings.json`. Guard: `scripts/check-forbidden.mjs` (prebuild) |
+| F3 | Landing solo cotizador | ✅ Hecho | `page.tsx` sin `ReservationForm`; CTA pública → `#cotizar`; autenticados → `/mi-cuenta/nueva-reserva` |
+| F4 | Selector de zonas | ✅ Hecho | `firestore.rules`: `zones` lectura pública; `QuoteForm` con error/empty/retry + `aria-busy` |
+| F5 | Login Google | ✅ Hecho | `renderGoogleButton` re-ejecuta en modo familia, timeout 8s → mensaje exacto de auditoría; Script `onLoad` lo re-dispara |
+| F6 | Privacidad + consentimiento GA | ✅ Hecho | `ConsentProvider`: banner "Tu privacidad importa", default `denied`, carga GA solo tras aceptar y fuera de rutas auth; script GA eliminado de `layout.tsx` |
+| F7 | Contraste/legibilidad | ✅ Hecho | `.gradient-text` con fallback sólido + `@supports` + `forced-colors`; precios sin gradiente; dark `--text-muted` 0.4→0.5 (AA). Ver `CONTRAST.md` |
+| F8 | Touch targets | ✅ Hecho | Icon-buttons interactivos ≥28px (≥24 min), `.btn` con `min-height:44px`, `aria-label`/`title` presentes |
+| F9 | Unificación de íconos | ✅ Parcial | 47 archivos públicos migrados a `lucide-react`; **pendiente:** 20 archivos admin (`src/app/admin/*`, `AdminChat`, `AdminConfig`, `AdminCoupons`, `EditReservationModal`) |
+| F10 | IP / licencias | ✅ Hecho | `ASSET_LICENSES.md`, `public/assets-manifest.json`, `THIRD_PARTY_NOTICES.md`; logos Uber/DiDi eliminados |
+| F11 | Legales | ✅ Hecho | Términos corregidos (sin claims falsos), contenido compartido `src/lib/termsContent.ts`, página standalone `/terminos`, privacidad reescrita |
+| F12 | Tests | ✅ Hecho | 46 tests / 5 suites, guard de marca, `TESTING.md` (smoke E2E). `tsc`, `jest`, `build` en verde |
+
+## Entregables generados
+
+- `DATA_INVENTORY.md` — inventario de colecciones, PII, consentimientos y retención
+- `CONTRAST.md` — ratios WCAG AA por tema
+- `ASSET_LICENSES.md` + `public/assets-manifest.json` + `THIRD_PARTY_NOTICES.md`
+- `TESTING.md` — checklist E2E
+- `scripts/seed-appsettings.json` — seed de Firestore
+- `scripts/check-forbidden.mjs` — guard de marca (prebuild)
+
+## Riesgos pendientes
+
+1. **Admin iconos (F9)** — 20 archivos admin aún usan `react-icons` (MIT/CC-BY 4.0, legal). Migración pendiente a `lucide-react`.
+2. **Migración de datos Firestore (F2)** — depende de acción manual:
+   - Crear `appSettings/public` (seed o guardando config desde admin)
+   - Eliminar/archivar `admin/config` legacy
+   - Desplegar `firestore.rules` (`npx firebase deploy --only firestore:rules`)
+3. **Galería** — fotos en `gallery-images` requieren consentimiento individual documentado; base64 en Firestore (C1) sigue pendiente de migrar a Firebase Storage.
+4. **Autenticación de clientes (C2)** — cancelación/visualización por teléfono sin verificación de identidad sigue pendiente.
+5. **Primary sobre canvas oscuro** — 4.03:1 (UI ok, texto normal no). Ver `CONTRAST.md`.
+6. **ESLint** — `next lint` no corre localmente por conflicto de versión `eslint@8` (no bloquea build en Next 14).
+7. **Verificación visual** — falta auditor visual con screenshots de ambos temas tras el cambio de `--text-muted`.
