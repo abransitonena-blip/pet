@@ -42,12 +42,14 @@ export default function BannerDisplay() {
       initial={{ height: 0, opacity: 0 }}
       animate={{ height: 'auto', opacity: 1 }}
       className="relative bg-gradient-to-r from-primary/20 via-amber-600/10 to-primary/20 border-b border-primary/20"
+      aria-live="polite"
     >
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-2 text-sm text-primary-hover text-center">
         <span>{banner.message}</span>
         <button
           onClick={dismiss}
           className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/50 hover:text-primary transition-all"
+          aria-label="Cerrar aviso"
         >
           <X size={12} />
         </button>
