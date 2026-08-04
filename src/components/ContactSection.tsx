@@ -5,14 +5,15 @@ import { useConfig } from '@/context/ConfigContext'
 import { MessageCircle, Mail, Clock, Music } from 'lucide-react'
 import { FacebookIcon, InstagramIcon } from '@/components/ui/SocialIcons'
 import { formatBusinessHours } from '@/lib/defaultConfig'
+import { formatDisplayPhone } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
 
 export default function ContactSection() {
   const { config } = useConfig()
 
   const contacts = [
-    { icon: MessageCircle, label: 'WhatsApp', value: `+52 ${config.whatsapp.slice(3, 5)} ${config.whatsapp.slice(5, 9)} ${config.whatsapp.slice(9)}`, href: 'https://wa.me/' + config.whatsapp },
-    { icon: Mail, label: 'Correo electrónico', value: BRAND.email, href: `mailto:${BRAND.email}` },
+    { icon: MessageCircle, label: 'WhatsApp', value: formatDisplayPhone(config.whatsapp), href: 'https://wa.me/' + config.whatsapp },
+    { icon: Mail, label: 'Correo electrónico', value: config.contactEmail || BRAND.email, href: `mailto:${config.contactEmail || BRAND.email}` },
     { icon: Clock, label: 'Horario', value: formatBusinessHours().map((h) => `${h.weekday} ${h.hours}`).join(' · '), href: null },
   ]
 

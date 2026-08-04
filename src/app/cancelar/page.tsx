@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { FaPhone, FaSpinner, FaCheckCircle, FaTimes, FaDog, FaArrowLeft } from 'react-icons/fa'
+import { Phone, Loader2, CheckCircle2, X, Dog, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { Reservation } from '@/types'
 
@@ -54,12 +54,12 @@ export default function CancelarPage() {
         className="w-full max-w-md"
       >
         <Link href="/" className="inline-flex items-center gap-1 text-xs text-white/30 hover:text-white/50 mb-6 transition-all">
-          <FaArrowLeft size={10} /> Volver al inicio
+          <ArrowLeft size={10} /> Volver al inicio
         </Link>
 
         <div className="glass-card p-6 sm:p-8 text-center">
           <div className="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-            <FaTimes className="text-red-400" size={22} />
+            <X className="text-red-400" size={22} />
           </div>
           <h1 className="text-xl font-bold text-white mb-2">Cancelar reserva</h1>
           <p className="text-sm text-white/50 mb-6">
@@ -80,7 +80,7 @@ export default function CancelarPage() {
               disabled={loading || !phone.trim()}
               className="px-4 py-2.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-all disabled:opacity-30 flex items-center gap-2"
             >
-              {loading ? <FaSpinner className="animate-spin" size={14} /> : <FaPhone size={14} />}
+              {loading ? <Loader2 className="animate-spin" size={14} /> : <Phone size={14} />}
             </button>
           </div>
 
@@ -110,13 +110,13 @@ export default function CancelarPage() {
                 >
                   {cancelled === r.id ? (
                     <div className="text-center py-2">
-                      <FaCheckCircle className="text-green-400 mx-auto mb-1" size={20} />
+                      <CheckCircle2 className="text-green-400 mx-auto mb-1" size={20} />
                       <p className="text-sm text-green-400 font-medium">Reserva cancelada</p>
                     </div>
                   ) : (
                     <>
                       <div className="flex items-center gap-2 mb-2">
-                        <FaDog className="text-primary" size={12} />
+                        <Dog className="text-primary" size={12} />
                         <span className="text-sm font-semibold text-white">{r.petName}</span>
                         <span className={`text-2xs px-2 py-0.5 rounded-full ${
                           r.status === 'on_the_way' ? 'bg-blue-500/20 text-blue-400' : r.status === 'in_progress' ? 'bg-purple-500/20 text-purple-400' : 'bg-secondary/20 text-secondary'
@@ -134,7 +134,7 @@ export default function CancelarPage() {
                         disabled={cancelling === r.id}
                         className="mt-3 w-full py-2 rounded-lg text-xs font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all disabled:opacity-30 flex items-center justify-center gap-1"
                       >
-                        {cancelling === r.id ? <FaSpinner className="animate-spin" size={12} /> : <FaTimes size={10} />}
+                        {cancelling === r.id ? <Loader2 className="animate-spin" size={12} /> : <X size={10} />}
                         Cancelar reserva
                       </button>
                     </>

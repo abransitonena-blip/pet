@@ -6,10 +6,8 @@ import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp }
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
-import {
-  FaDog, FaCalendarAlt, FaClock, FaCheckCircle,
-  FaWalking, FaSpinner, FaWhatsapp, FaBox,
-} from 'react-icons/fa'
+import { Dog, CalendarDays, Clock, CheckCircle2,
+  PersonStanding, Loader2, Package } from 'lucide-react'
 import WalkSessionModal from '@/components/WalkSessionModal'
 import PetAhoraPhotoModal from '@/components/PetAhoraPhotoModal'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
@@ -249,7 +247,7 @@ export default function PaseadorDashboard() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.15)' }}>
-                      <FaDog size={14} className="text-secondary" />
+                      <Dog size={14} className="text-secondary" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{walk.petName}</p>
@@ -267,7 +265,7 @@ export default function PaseadorDashboard() {
                         className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
                         style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}
                       >
-                        {updatingPetAhoraId === walk.id ? <FaSpinner className="animate-spin" size={12} /> : 'En camino'}
+                        {updatingPetAhoraId === walk.id ? <Loader2 className="animate-spin" size={12} /> : 'En camino'}
                       </button>
                     )}
                     {walk.status === 'en_camino' && (
@@ -313,7 +311,7 @@ export default function PaseadorDashboard() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-success-500/20 flex items-center justify-center">
-                      <FaWalking size={16} className="text-success-400" />
+                      <PersonStanding size={16} className="text-success-400" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.petName}</p>
@@ -341,7 +339,7 @@ export default function PaseadorDashboard() {
         </h2>
         {todayWalks.length === 0 ? (
           <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <FaCalendarAlt className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <CalendarDays className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
             <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>Sin paseos hoy</p>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Disfruta tu día libre</p>
           </div>
@@ -359,16 +357,16 @@ export default function PaseadorDashboard() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${STATUS_COLORS[res.status]?.bg || 'bg-brand-500/10'}`}>
-                      {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
-                       res.status === 'in_progress' ? <FaWalking size={14} className="text-success-400" /> :
-                       <FaDog size={14} className={STATUS_COLORS[res.status]?.text || 'text-brand-400'} />}
+                      {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :
+                       res.status === 'in_progress' ? <PersonStanding size={14} className="text-success-400" /> :
+                       <Dog size={14} className={STATUS_COLORS[res.status]?.text || 'text-brand-400'} />}
                     </div>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.petName}</p>
                       <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                         <span>{res.service}</span>
                         <span>·</span>
-                        <span className="flex items-center gap-1"><FaClock size={9} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
+                        <span className="flex items-center gap-1"><Clock size={9} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
                       </div>
                     </div>
                   </div>
@@ -379,7 +377,7 @@ export default function PaseadorDashboard() {
                         disabled={updatingId === res.id}
                         className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 font-medium transition-all hover:bg-blue-500/20"
                       >
-                        {updatingId === res.id ? <FaSpinner className="animate-spin" size={12} /> : 'En camino'}
+                        {updatingId === res.id ? <Loader2 className="animate-spin" size={12} /> : 'En camino'}
                       </button>
                     )}
                     {res.status === 'pending' && (
@@ -388,7 +386,7 @@ export default function PaseadorDashboard() {
                         disabled={updatingId === res.id}
                         className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 font-medium transition-all hover:bg-blue-500/20"
                       >
-                        {updatingId === res.id ? <FaSpinner className="animate-spin" size={12} /> : 'En camino'}
+                        {updatingId === res.id ? <Loader2 className="animate-spin" size={12} /> : 'En camino'}
                       </button>
                     )}
                     {res.status === 'on_the_way' && (
@@ -405,7 +403,7 @@ export default function PaseadorDashboard() {
                         className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400"
                         title="WhatsApp"
                       >
-                        <FaWhatsapp size={13} />
+                        <WhatsAppIcon width={13} height={13} />
                       </button>
                     )}
                   </div>
@@ -420,7 +418,7 @@ export default function PaseadorDashboard() {
       {todaySessions.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <FaBox size={12} className="text-accent-400" />
+            <Package size={12} className="text-accent-400" />
             Sesiones de paquete ({todaySessions.length})
           </h2>
           <div className="space-y-2">
@@ -433,8 +431,8 @@ export default function PaseadorDashboard() {
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                   STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-accent-500/10'
                 }`}>
-                  {session.sessionStatus === 'in_progress' ? <FaWalking size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-accent-400'} /> :
-                   <FaDog size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-accent-400'} />}
+                  {session.sessionStatus === 'in_progress' ? <PersonStanding size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-accent-400'} /> :
+                   <Dog size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-accent-400'} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{session.dogName}</p>
@@ -472,3 +470,5 @@ export default function PaseadorDashboard() {
     </div>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

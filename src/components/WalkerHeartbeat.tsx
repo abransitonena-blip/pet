@@ -5,7 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { useWalkerPresence } from '@/lib/useWalkerPresence'
-import { FaCircle, FaExclamationTriangle } from 'react-icons/fa'
+import { Circle, AlertTriangle } from 'lucide-react'
 
 export default function WalkerHeartbeat() {
   const [walkerInfo, setWalkerInfo] = useState<{ id: string; name: string } | null>(null)
@@ -50,11 +50,11 @@ export default function WalkerHeartbeat() {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs" style={{ background: gpsError ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)', border: `1px solid ${gpsError ? 'rgba(245,158,11,0.2)' : 'rgba(16,185,129,0.2)'}` }}>
-      <FaCircle size={6} className={gpsError ? 'text-amber-500' : 'text-success-500'} />
+      <Circle size={6} className={gpsError ? 'text-amber-500' : 'text-success-500'} />
       <span style={{ color: gpsError ? 'var(--text-muted)' : 'var(--text-secondary)' }}>
         {gpsError ? 'GPS no disponible' : 'Presencia activa'}
       </span>
-      {gpsError && <FaExclamationTriangle size={10} className="text-amber-500" />}
+      {gpsError && <AlertTriangle size={10} className="text-amber-500" />}
     </div>
   )
 }

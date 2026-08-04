@@ -47,6 +47,8 @@ export function getDayOfWeek(dateStr: string): string {
 }
 
 export interface SiteConfig {
+  schemaVersion?: number
+  brandName?: string
   heroTitle: string
   heroSubtitle: string
   sectionDescriptions: {
@@ -55,9 +57,14 @@ export interface SiteConfig {
     faq: string
   }
   whatsapp: string
+  whatsappE164?: string
+  displayPhone?: string
+  contactEmail?: string
   instagram: string
+  instagramUrl?: string
   facebook: string
   tiktok: string
+  analyticsEnabled?: boolean
   availableSlots: Record<string, string[]>
   walkTips: { title: string; text: string; icon: string }[]
   faq: { question: string; answer: string }[]
@@ -70,6 +77,8 @@ export interface SiteConfig {
 }
 
 export const DEFAULT_CONFIG: SiteConfig = {
+  schemaVersion: 2,
+  brandName: brand.name,
   heroTitle: 'Bienestar para tu perro. Tranquilidad para ti.',
   heroSubtitle: 'Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.',
   sectionDescriptions: {
@@ -78,9 +87,14 @@ export const DEFAULT_CONFIG: SiteConfig = {
     faq: 'Respuestas a las preguntas más frecuentes sobre nuestros servicios.',
   },
   whatsapp: brand.whatsapp,
+  whatsappE164: brand.whatsapp,
+  displayPhone: '55 2305 3772',
+  contactEmail: brand.email,
   instagram: 'https://www.instagram.com/pet___ap',
+  instagramUrl: 'https://www.instagram.com/pet___ap',
   facebook: '',
   tiktok: '',
+  analyticsEnabled: true,
   availableSlots: {
     lunes:     generateTimeSlots('lunes'),
     martes:    generateTimeSlots('martes'),
@@ -99,7 +113,7 @@ export const DEFAULT_CONFIG: SiteConfig = {
     { question: '¿Qué pasa si llueve?', answer: 'En caso de lluvia ligera, el paseo se realiza normalmente (a los perros les encanta). Si hay tormenta o condiciones peligrosas, te contactaremos para reprogramar sin costo.' },
     { question: '¿Cómo funcionan las cancelaciones?', answer: 'Puedes cancelar sin costo hasta 2 horas antes del paseo. Cancelaciones tardías o no-show pueden generar un cargo del 50%. Entendemos emergencias, háblanos.' },
     { question: '¿Pasean perros de todas las tallas?', answer: '¡Claro! Desde chihuahuas hasta grandes daneses. Agrupamos por tamaño y temperamento para la seguridad de todos.' },
-    { question: '¿Qué incluye el Paseo + Reporte?', answer: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video, registro GPS del paseo y ejercicios personalizados.' },
+    { question: '¿Qué incluye el Paseo + Reporte?', answer: 'Duración de 45 min con reporte detallado por WhatsApp, fotos, video y ejercicios personalizados.' },
     { question: '¿Cómo pago?', answer: 'Aceptamos efectivo, transferencia bancaria y depósito. El pago se acuerda al momento de agendar.' },
     { question: '¿Mi perro necesita estar vacunado?', answer: 'Sí, pedimos que los perros estén al día con sus vacunas (múltiple y antirrábica) para la seguridad de todos los peludos.' },
   ],
@@ -120,7 +134,7 @@ PET Ap se compromete a cuidar de tu perro durante el paseo. No nos hacemos respo
 5. PAGOS
 Los pagos se realizan en efectivo o transferencia el día del paseo.`,
   walkers: [
-    { name: 'Efrain', phone: '552305377' },
+    { name: 'Efrain', phone: '5523053772' },
   ],
   maintenance: false,
   features: {

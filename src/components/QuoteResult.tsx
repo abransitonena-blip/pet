@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, CheckCircle, Clock, Info, ArrowRight, Zap } from 'lucide-react'
 import { Quote } from '@/lib/services'
 import { getCategory } from '@/lib/services'
+import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { Events } from '@/lib/analytics'
 
 interface QuoteResultProps {
@@ -106,7 +107,7 @@ export default function QuoteResult({ quote, onBack }: QuoteResultProps) {
           {/* Actions */}
           <div className="space-y-3">
             <motion.a
-              href={`https://wa.me/525523053772?text=${encodeURIComponent(
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
                 `Hola! Quiero reservar un paseo (${category?.name || ''}). Mi cotización es de ${formatCurrency(quote.total)}.`
               )}`}
               target="_blank"

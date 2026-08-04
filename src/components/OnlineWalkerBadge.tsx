@@ -1,7 +1,7 @@
 'use client'
 
 import { useOnlineWalkers } from '@/lib/useOnlineWalkers'
-import { FaCircle } from 'react-icons/fa'
+import { Circle } from 'lucide-react'
 
 export default function OnlineWalkerBadge() {
   const { onlineWalkers, totalOnline, loading } = useOnlineWalkers()
@@ -21,7 +21,7 @@ export default function OnlineWalkerBadge() {
       border: `1px solid ${totalOnline > 0 ? 'rgba(16,185,129,0.2)' : 'var(--border)'}`,
       color: totalOnline > 0 ? 'var(--color-success)' : 'var(--text-muted)',
     }}>
-      <FaCircle size={6} className={totalOnline > 0 ? 'text-success-500' : 'text-white/20'} />
+      <Circle size={6} className={totalOnline > 0 ? 'text-success-500' : 'text-white/20'} />
       {totalOnline > 0 ? `${totalOnline} en línea` : 'Sin conexiones'}
     </span>
   )

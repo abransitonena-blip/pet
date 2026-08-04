@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaUser, FaPhone, FaInfoCircle, FaMapMarkerAlt, FaCheck, FaTimes, FaPlus } from 'react-icons/fa'
+import { User, Phone, Info, MapPin, Check, X, Plus } from 'lucide-react'
 
 export default function StepContact({
   form, set, errors, touched, handleBlur, showNotes, setShowNotes,
@@ -27,7 +27,7 @@ export default function StepContact({
       <div className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="owner-name" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-            <FaUser size={13} className="text-primary" /> Tu nombre <span style={{ color: 'var(--color-danger)' }}>*</span>
+            <User size={13} className="text-primary" /> Tu nombre <span style={{ color: 'var(--color-danger)' }}>*</span>
           </label>
           <input
             id="owner-name"
@@ -48,14 +48,14 @@ export default function StepContact({
           />
           {errors.name && touched.name && (
             <p id="name-error" className="text-xs flex items-center gap-1 animate-shake" role="alert" style={{ color: 'var(--color-danger)' }}>
-              <FaTimes size={10} /> {errors.name}
+              <X size={10} /> {errors.name}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
           <label htmlFor="owner-phone" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-            <FaPhone size={13} className="text-primary" /> WhatsApp <span style={{ color: 'var(--color-danger)' }}>*</span>
+            <Phone size={13} className="text-primary" /> WhatsApp <span style={{ color: 'var(--color-danger)' }}>*</span>
           </label>
           <input
             id="owner-phone"
@@ -77,12 +77,12 @@ export default function StepContact({
           />
           {errors.phone && touched.phone && (
             <p id="phone-error" className="text-xs flex items-center gap-1 animate-shake" role="alert" style={{ color: 'var(--color-danger)' }}>
-              <FaTimes size={10} /> {errors.phone}
+              <X size={10} /> {errors.phone}
             </p>
           )}
           {!errors.phone && form.phone.replace(/\D/g, '').length >= 10 && /^[2-9]/.test(form.phone.replace(/\D/g, '')) && (
             <p className="text-xs flex items-center gap-1" style={{ color: 'var(--color-success)' }}>
-              <FaCheck size={10} /> Número válido
+              <Check size={10} /> Número válido
             </p>
           )}
         </div>
@@ -93,7 +93,7 @@ export default function StepContact({
           className="flex items-center gap-2 text-xs transition-colors"
           style={{ color: 'var(--text-muted)' }}
         >
-          <FaInfoCircle size={12} />
+          <Info size={12} />
           {showNotes ? 'Ocultar notas' : '¿Algo que debamos saber?'} <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>(opcional)</span>
         </button>
         <AnimatePresence>
@@ -121,7 +121,7 @@ export default function StepContact({
         {savedAddresses.length > 0 && (
           <div className="space-y-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
             <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-              <FaMapMarkerAlt size={13} className="text-primary" /> Dirección de recolección
+              <MapPin size={13} className="text-primary" /> Dirección de recolección
             </label>
             <div className="space-y-2">
               {savedAddresses.map((addr) => {
@@ -142,12 +142,12 @@ export default function StepContact({
                       <p className="text-xs font-medium" style={{ color: selected ? 'var(--color-primary)' : 'var(--text-secondary)' }}>{addr.alias}</p>
                       <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{addr.street}, {addr.colony}</p>
                     </div>
-                    {selected && <FaCheck size={12} className="text-primary mt-1 shrink-0" />}
+                    {selected && <Check size={12} className="text-primary mt-1 shrink-0" />}
                   </button>
                 )
               })}
               <a href="/mi-cuenta/direcciones" target="_blank" className="text-2xs flex items-center gap-1 transition-colors hover:text-primary" style={{ color: 'var(--text-muted)' }}>
-                <FaPlus size={8} /> Agregar nueva dirección
+                <Plus size={8} /> Agregar nueva dirección
               </a>
             </div>
           </div>

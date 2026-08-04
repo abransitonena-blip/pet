@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
-import { FaShare, FaCheck, FaCopy, FaUsers, FaSpinner } from 'react-icons/fa'
+import { Share2, Check, Copy, Users, Loader2 } from 'lucide-react'
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
@@ -75,7 +75,7 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
   return (
     <div className="glass-card p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-3">
-        <FaUsers className="text-primary" size={16} />
+        <Users className="text-primary" size={16} />
         <h3 className="text-sm font-semibold text-white">Recomienda y gana</h3>
       </div>
 
@@ -85,7 +85,7 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
         </p>
       ) : creating ? (
         <p className="text-xs text-white/30 text-center py-4 flex items-center justify-center gap-2">
-          <FaSpinner className="animate-spin" size={12} /> Generando tu código...
+          <Loader2 className="animate-spin" size={12} /> Generando tu código...
         </p>
       ) : (
         <>
@@ -99,7 +99,7 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
               onClick={copyLink}
               className="shrink-0 text-xs px-2.5 py-1 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-all"
             >
-              {copied ? <FaCheck size={11} /> : <FaCopy size={11} />}
+              {copied ? <Check size={11} /> : <Copy size={11} />}
             </button>
           </div>
 
@@ -112,7 +112,7 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
             onClick={shareWhatsApp}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold bg-green-500/20 hover:bg-green-500/30 transition-all" style={{ color: 'var(--color-success)' }}
           >
-            <FaShare size={12} />
+            <Share2 size={12} />
             Compartir por WhatsApp
           </button>
         </>

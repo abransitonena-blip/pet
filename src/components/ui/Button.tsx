@@ -1,7 +1,7 @@
 'use client'
 
 import { ButtonHTMLAttributes, forwardRef } from 'react'
-import { FaSpinner } from 'react-icons/fa'
+import { Loader2 } from 'lucide-react'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
 type Size = 'sm' | 'md' | 'lg'
@@ -44,7 +44,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         `}
         {...props}
       >
-        {loading ? <FaSpinner className="animate-spin" size={size === 'sm' ? 12 : 14} /> : icon}
+        {loading ? <Loader2 className="animate-spin" size={size === 'sm' ? 12 : 14} /> : icon}
         {children}
       </button>
     )

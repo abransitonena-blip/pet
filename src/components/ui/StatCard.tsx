@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { FaArrowUp, FaArrowDown } from 'react-icons/fa'
+import { ArrowUp, ArrowDown } from 'lucide-react'
 import CountUp from './CountUp'
 
 interface StatCardProps {
@@ -29,7 +29,7 @@ export default function StatCard({ label, value, icon, change, trend = 'neutral'
         </div>
         {change !== undefined && trend !== 'neutral' && (
           <span className="flex items-center gap-0.5 text-xs font-medium" style={{ color: trend === 'up' ? 'var(--color-success)' : 'var(--color-danger)' }}>
-            {trend === 'up' ? <FaArrowUp size={10} /> : <FaArrowDown size={10} />}
+            {trend === 'up' ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
             {Math.abs(change)}%
           </span>
         )}

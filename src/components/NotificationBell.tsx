@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBell, FaCheck, FaTimes, FaDog, FaCalendarCheck, FaStar, FaGift } from 'react-icons/fa'
+import { Bell, Check, X, Dog, CalendarCheck, Star, Gift } from 'lucide-react'
 import { db } from '@/firebase/config'
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, limit } from 'firebase/firestore'
 
@@ -15,11 +15,11 @@ interface Notification {
   createdAt: { seconds: number; nanoseconds: number } | null
 }
 
-const typeIcons: Record<string, typeof FaBell> = {
-  walk_update: FaDog,
-  loyalty: FaStar,
-  referral: FaGift,
-  system: FaCalendarCheck,
+const typeIcons: Record<string, typeof Bell> = {
+  walk_update: Dog,
+  loyalty: Star,
+  referral: Gift,
+  system: CalendarCheck,
 }
 
 const typeColors: Record<string, string> = {
@@ -90,7 +90,7 @@ export default function NotificationBell({ uid }: { uid: string }) {
         aria-expanded={open}
         aria-haspopup="true"
       >
-        <FaBell size={16} />
+        <Bell size={16} />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-brand-500 text-white text-2xs font-bold flex items-center justify-center">
             {unread > 9 ? '9+' : unread}
@@ -122,12 +122,12 @@ export default function NotificationBell({ uid }: { uid: string }) {
               <div className="overflow-y-auto max-h-72">
                 {notifications.length === 0 ? (
                   <div className="p-6 text-center">
-                    <FaBell size={24} className="mx-auto mb-2 opacity-20" style={{ color: 'var(--text-muted)' }} />
+                    <Bell size={24} className="mx-auto mb-2 opacity-20" style={{ color: 'var(--text-muted)' }} />
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin notificaciones</p>
                   </div>
                 ) : (
                   notifications.map((n) => {
-                    const Icon = typeIcons[n.type] || FaBell
+                    const Icon = typeIcons[n.type] || Bell
                     const color = typeColors[n.type] || 'var(--text-muted)'
                     return (
                       <div

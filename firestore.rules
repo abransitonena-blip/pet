@@ -260,7 +260,7 @@ service cloud.firestore {
     // ═══════════════════════════════════════════
 
     match /zones/{zoneId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
@@ -328,6 +328,12 @@ service cloud.firestore {
     }
 
     match /admin/banner {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Public site settings — single source of truth for public content
+    match /appSettings/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }

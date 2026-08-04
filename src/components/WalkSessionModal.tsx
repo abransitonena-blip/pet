@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { db } from '@/firebase/config'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import Image from 'next/image'
-import { FaCamera, FaMapMarkerAlt, FaTimes, FaCheck, FaStop, FaSpinner, FaImage } from 'react-icons/fa'
+import { Camera, MapPin, X, Check, Square, Loader2, Image as ImageIcon } from 'lucide-react'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import { useFocusTrap } from '@/lib/useFocusTrap'
 import { canTransition } from '@/lib/sessionMachine'
@@ -183,7 +183,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
             style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}
             aria-label="Cerrar"
           >
-            <FaTimes size={14} />
+            <X size={14} />
           </button>
         </div>
 
@@ -194,7 +194,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
 
           <div>
             <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-muted)' }}>
-              <FaCamera size={11} className="inline mr-1" />
+              <Camera size={11} className="inline mr-1" />
               Foto
             </label>
             {photo ? (
@@ -204,7 +204,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white"
                   aria-label="Eliminar foto"
                 >
-                  <FaTimes size={12} />
+                  <X size={12} />
                 </button>
               </div>
             ) : previewing ? (
@@ -235,14 +235,14 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
                   className="flex-1 py-8 rounded-xl text-center transition-all touch-action-manipulation"
                   style={{ background: 'var(--glass-bg)', border: '1px dashed var(--border)' }}
                 >
-                  <FaCamera size={24} className="mx-auto mb-1" style={{ color: 'var(--text-muted)' }} />
+                  <Camera size={24} className="mx-auto mb-1" style={{ color: 'var(--text-muted)' }} />
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Cámara</span>
                 </button>
                 <button onClick={() => fileInputRef.current?.click()}
                   className="flex-1 py-8 rounded-xl text-center transition-all touch-action-manipulation"
                   style={{ background: 'var(--glass-bg)', border: '1px dashed var(--border)' }}
                 >
-                  <FaImage size={24} className="mx-auto mb-1" style={{ color: 'var(--text-muted)' }} />
+                  <ImageIcon size={24} className="mx-auto mb-1" style={{ color: 'var(--text-muted)' }} />
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Subir foto</span>
                 </button>
               </div>
@@ -252,7 +252,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
 
           <div>
             <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-muted)' }}>
-              <FaMapMarkerAlt size={11} className="inline mr-1" />
+              <MapPin size={11} className="inline mr-1" />
               Ubicación
             </label>
             {location ? (
@@ -306,11 +306,11 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
             }}
           >
             {saving ? (
-              <><FaSpinner className="animate-spin" size={14} /> Guardando...</>
+              <><Loader2 className="animate-spin" size={14} /> Guardando...</>
             ) : mode === 'check_in' ? (
-              <><FaCheck size={14} /> Iniciar paseo</>
+              <><Check size={14} /> Iniciar paseo</>
             ) : (
-              <><FaStop size={14} /> Terminar paseo</>
+              <><Square size={14} /> Terminar paseo</>
             )}
           </button>
         </div>

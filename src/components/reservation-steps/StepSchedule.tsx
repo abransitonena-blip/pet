@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { FaCalendarAlt, FaClock, FaSpinner, FaCheck, FaTimes } from 'react-icons/fa'
+import { CalendarDays, Clock, Loader2, Check, X } from 'lucide-react'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
 
 export default function StepSchedule({
@@ -51,7 +51,7 @@ export default function StepSchedule({
 
         <div className="space-y-2 mb-6">
           <label htmlFor="week-start" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-            <FaCalendarAlt size={13} className="text-primary" /> Fecha de inicio (lunes)
+            <CalendarDays size={13} className="text-primary" /> Fecha de inicio (lunes)
           </label>
           <input
             id="week-start"
@@ -122,7 +122,7 @@ export default function StepSchedule({
 
       <div className="space-y-2 mb-6">
         <label htmlFor="reservation-date" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-          <FaCalendarAlt size={13} className="text-primary" /> Fecha <span style={{ color: 'var(--color-danger)' }}>*</span>
+          <CalendarDays size={13} className="text-primary" /> Fecha <span style={{ color: 'var(--color-danger)' }}>*</span>
         </label>
         <input
           id="reservation-date"
@@ -144,8 +144,8 @@ export default function StepSchedule({
       {form.date && (
         <div className="space-y-2">
           <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-            <FaClock size={13} className="text-primary" /> Hora <span style={{ color: 'var(--color-danger)' }}>*</span>
-            {loadingSlots && <FaSpinner className="animate-spin" size={11} />}
+            <Clock size={13} className="text-primary" /> Hora <span style={{ color: 'var(--color-danger)' }}>*</span>
+            {loadingSlots && <Loader2 className="animate-spin" size={11} />}
           </label>
           {timeSlots.length === 0 ? (
             <p className="text-sm text-center py-4" style={{ color: 'var(--text-muted)' }}>
@@ -173,8 +173,8 @@ export default function StepSchedule({
                     }}
                   >
                     {slot}
-                    {booked && <FaTimes size={9} className="absolute top-1 right-1 text-red-400/40" />}
-                    {selected && <FaCheck size={9} className="absolute top-1 right-1 text-primary" />}
+                    {booked && <X size={9} className="absolute top-1 right-1 text-red-400/40" />}
+                    {selected && <Check size={9} className="absolute top-1 right-1 text-primary" />}
                   </button>
                 )
               })}

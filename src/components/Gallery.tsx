@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import Image from 'next/image'
-import { FaDog, FaPaw, FaTimes, FaChevronLeft, FaChevronRight, FaHeart } from 'react-icons/fa'
+import { Dog, PawPrint, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 
 interface GalleryImage {
@@ -126,18 +126,18 @@ export default function Gallery() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-400">
                   <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                     <p className="text-white font-semibold text-sm flex items-center gap-2">
-                      <FaHeart className="text-primary/80" size={10} />
+                      <Heart className="text-primary/80" size={10} />
                       {img.title}
                     </p>
                     <p className="text-xs flex items-center gap-1 mt-1" style={{ color: 'var(--text-secondary)' }}>
-                      <FaPaw className="text-primary" size={8} />
+                      <PawPrint className="text-primary" size={8} />
                       {img.dog}
                     </p>
                   </div>
                 </div>
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <FaDog className="text-white" size={12} />
+                    <Dog className="text-white" size={12} />
                   </div>
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function Gallery() {
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all backdrop-blur-sm"
                 aria-label="Cerrar galería"
               >
-                <FaTimes size={16} />
+                <X size={16} />
               </button>
             </div>
 
@@ -174,7 +174,7 @@ export default function Gallery() {
               className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all backdrop-blur-sm z-20"
               aria-label="Imagen anterior"
             >
-              <FaChevronLeft size={16} />
+              <ChevronLeft size={16} />
             </button>
 
             <button
@@ -182,7 +182,7 @@ export default function Gallery() {
               className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all backdrop-blur-sm z-20"
               aria-label="Imagen siguiente"
             >
-              <FaChevronRight size={16} />
+              <ChevronRight size={16} />
             </button>
 
             <motion.div
@@ -209,11 +209,11 @@ export default function Gallery() {
                 className="text-center mt-5 space-y-1"
               >
                 <p className="text-white font-semibold text-lg flex items-center justify-center gap-2">
-                  <FaHeart className="text-primary" size={14} />
+                  <Heart className="text-primary" size={14} />
                   {images[selected].title}
                 </p>
                 <p className="text-sm flex items-center justify-center gap-1" style={{ color: 'var(--text-secondary)' }}>
-                  <FaPaw className="text-primary" size={10} />
+                  <PawPrint className="text-primary" size={10} />
                   {images[selected].dog}
                 </p>
               </motion.div>

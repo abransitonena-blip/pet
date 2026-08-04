@@ -6,6 +6,7 @@ import { Dog, MessageCircle, XCircle, Mail, Music } from 'lucide-react'
 import { FacebookIcon, InstagramIcon } from '@/components/ui/SocialIcons'
 import { useConfig } from '@/context/ConfigContext'
 import { formatBusinessHours } from '@/lib/defaultConfig'
+import { formatDisplayPhone } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
 
 export default function Footer({ onTerms }: { onTerms: () => void }) {
@@ -61,14 +62,14 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                 className="flex items-center gap-2 hover:text-primary transition-colors"
               >
                 <MessageCircle size={14} />
-                {`+52 ${config.whatsapp.slice(3, 5)} ${config.whatsapp.slice(5, 9)} ${config.whatsapp.slice(9)}`}
+                {formatDisplayPhone(config.whatsapp)}
               </a>
               <a
-                href={`mailto:${BRAND.email}`}
+                href={`mailto:${config.contactEmail || BRAND.email}`}
                 className="flex items-center gap-2 hover:text-primary transition-colors"
               >
                 <Mail size={14} />
-                {BRAND.email}
+                {config.contactEmail || BRAND.email}
               </a>
               <Link href="/cancelar" className="flex items-center gap-2 hover:text-error transition-colors text-sm text-muted">
                 <XCircle size={14} />
@@ -125,6 +126,9 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             <button onClick={onTerms} className="text-xs text-muted hover:text-ink transition-colors">
               Términos
             </button>
+            <Link href="/terminos" className="text-xs text-muted hover:text-ink transition-colors">
+              Términos completos
+            </Link>
             <Link href="/privacidad" className="text-xs text-muted hover:text-ink transition-colors">
               Privacidad
             </Link>

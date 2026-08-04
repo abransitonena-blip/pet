@@ -6,7 +6,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
-import { FaArrowLeft, FaGift, FaStar, FaCheckCircle, FaDog } from 'react-icons/fa'
+import { ArrowLeft, Gift, Star, CheckCircle2, Dog } from 'lucide-react'
 import LoyaltyProgram from '@/components/LoyaltyProgram'
 
 export default function LealtadPage() {
@@ -45,7 +45,7 @@ export default function LealtadPage() {
           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
           style={{ color: 'var(--text-muted)' }}
         >
-          <FaArrowLeft size={14} />
+          <ArrowLeft size={14} />
         </button>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Mi lealtad</h1>
@@ -61,14 +61,14 @@ export default function LealtadPage() {
         style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.1), rgba(217,119,6,0.05))', border: '1px solid var(--border)' }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <FaGift size={16} className="text-brand-400" />
+          <Gift size={16} className="text-brand-400" />
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>¿Cómo funciona?</h2>
         </div>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { icon: FaDog, label: 'Pasea', desc: 'Disfruta tus paseos' },
-            { icon: FaCheckCircle, label: 'Acumula', desc: '10 paseos = 1 gratis' },
-            { icon: FaStar, label: 'Canjea', desc: 'Paseo individual gratis' },
+            { icon: Dog, label: 'Pasea', desc: 'Disfruta tus paseos' },
+            { icon: CheckCircle2, label: 'Acumula', desc: '10 paseos = 1 gratis' },
+            { icon: Star, label: 'Canjea', desc: 'Paseo individual gratis' },
           ].map((step, i) => {
             const Icon = step.icon
             return (

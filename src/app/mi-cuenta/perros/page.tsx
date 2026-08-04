@@ -10,12 +10,12 @@ import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  FaPaw, FaPlus, FaEdit, FaTrash, FaArrowLeft, FaTimes, FaCheck, FaSpinner,
-  FaHeart, FaBrain, FaFirstAid, FaSlidersH, FaDog,
-  FaWeight, FaRulerVertical, FaVenus, FaMars,
-  FaSyringe, FaPhone, FaMedkit, FaExclamationTriangle,
-  FaStar,
-} from 'react-icons/fa'
+  PawPrint, Plus, Pencil, Trash2, ArrowLeft, X, Check, Loader2,
+  Heart, Brain, HeartPulse, SlidersHorizontal, Dog,
+  Weight, Ruler, Venus, Mars,
+  Syringe, Phone, BriefcaseMedical, AlertTriangle,
+  Star,
+} from 'lucide-react'
 import { Pet } from '@/types'
 
 type PetTab = 'basico' | 'personalidad' | 'salud' | 'preferencias'
@@ -74,11 +74,11 @@ const TEMPERAMENT_TAGS = [
 
 const VACCINE_PRESETS = ['Rabia', 'Moquillo', 'Parvovirus', 'Leptospirosis', 'Bordetella', 'Leishmania']
 
-const TABS: { key: PetTab; label: string; icon: typeof FaPaw }[] = [
-  { key: 'basico', label: 'Básico', icon: FaPaw },
-  { key: 'personalidad', label: 'Personalidad', icon: FaBrain },
-  { key: 'salud', label: 'Salud', icon: FaFirstAid },
-  { key: 'preferencias', label: 'Preferencias', icon: FaSlidersH },
+const TABS: { key: PetTab; label: string; icon: typeof PawPrint }[] = [
+  { key: 'basico', label: 'Básico', icon: PawPrint },
+  { key: 'personalidad', label: 'Personalidad', icon: Brain },
+  { key: 'salud', label: 'Salud', icon: HeartPulse },
+  { key: 'preferencias', label: 'Preferencias', icon: SlidersHorizontal },
 ]
 
 function ChipInput({ items, onChange, placeholder, color }: {
@@ -301,7 +301,7 @@ export default function MisPerrosPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => router.push('/mi-cuenta')} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-            <FaArrowLeft size={14} />
+            <ArrowLeft size={14} />
           </button>
           <div>
             <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Mis perros</h1>
@@ -311,19 +311,19 @@ export default function MisPerrosPage() {
           </div>
         </div>
         <button onClick={openCreate} className="btn-primary text-xs inline-flex gap-2">
-          <FaPlus size={12} /> Agregar
+          <Plus size={12} /> Agregar
         </button>
       </div>
 
       {pets.length === 0 ? (
         <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <FaPaw className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <PawPrint className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Aún no tienes mascotas registradas</p>
           <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
             Registra a tu peludo para agilizar tus reservas y guardar su información
           </p>
           <button onClick={openCreate} className="btn-primary text-xs inline-flex gap-2">
-            <FaPlus size={12} /> Registrar primer mascota
+            <Plus size={12} /> Registrar primer mascota
           </button>
         </div>
       ) : (
@@ -353,10 +353,10 @@ export default function MisPerrosPage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <button onClick={() => openEdit(pet)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} aria-label={`Editar ${pet.name}`}>
-                        <FaEdit size={12} />
+                        <Pencil size={12} />
                       </button>
                       <button onClick={() => setConfirmDelete(pet.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400" style={{ color: 'var(--text-muted)' }} aria-label={`Eliminar ${pet.name}`}>
-                        <FaTrash size={12} />
+                        <Trash2 size={12} />
                       </button>
                     </div>
                   </div>
@@ -366,12 +366,12 @@ export default function MisPerrosPage() {
                   <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                     {pet.age && (
                       <span className="flex items-center gap-1">
-                        <FaRulerVertical size={10} className="text-brand-400" /> {pet.age}
+                        <Ruler size={10} className="text-brand-400" /> {pet.age}
                       </span>
                     )}
                     {pet.weight && (
                       <span className="flex items-center gap-1">
-                        <FaWeight size={10} className="text-success-400" /> {pet.weight}
+                        <Weight size={10} className="text-success-400" /> {pet.weight}
                       </span>
                     )}
                   </div>
@@ -391,7 +391,7 @@ export default function MisPerrosPage() {
                   )}
                   {pet.health?.allergies && pet.health.allergies.length > 0 && (
                     <div className="flex items-center gap-1 mt-2 text-2xs" style={{ color: 'var(--color-danger)' }}>
-                      <FaExclamationTriangle size={9} />
+                      <AlertTriangle size={9} />
                       <span>Alergias: {pet.health.allergies.join(', ')}</span>
                     </div>
                   )}
@@ -448,7 +448,7 @@ export default function MisPerrosPage() {
                   {editingPet ? `Editar ${editingPet.name}` : 'Nueva mascota'}
                 </h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-                  <FaTimes size={14} />
+                  <X size={14} />
                 </button>
               </div>
 
@@ -525,8 +525,8 @@ export default function MisPerrosPage() {
                       <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-secondary)' }}>Sexo</label>
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          { value: 'macho' as const, label: 'Macho', icon: FaMars, color: '#3b82f6' },
-                          { value: 'hembra' as const, label: 'Hembra', icon: FaVenus, color: '#ec4899' },
+                          { value: 'macho' as const, label: 'Macho', icon: Mars, color: '#3b82f6' },
+                          { value: 'hembra' as const, label: 'Hembra', icon: Venus, color: '#ec4899' },
                         ].map((opt) => {
                           const Icon = opt.icon
                           return (
@@ -585,7 +585,7 @@ export default function MisPerrosPage() {
                           const selected = form.personality.temperament.includes(tag)
                           return (
                             <button key={tag} type="button" onClick={() => toggleTemperament(tag)} className="px-3 py-1.5 rounded-full text-xs font-medium border transition-all" style={{ background: selected ? 'var(--color-primary-light)' : 'var(--glass-bg)', borderColor: selected ? 'var(--color-primary)' : 'var(--border)', color: selected ? 'var(--color-primary)' : 'var(--text-secondary)' }}>
-                              {selected && <FaCheck size={8} className="inline mr-1" />}
+                              {selected && <Check size={8} className="inline mr-1" />}
                               {tag}
                             </button>
                           )
@@ -614,7 +614,7 @@ export default function MisPerrosPage() {
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Vacunas</label>
                         <button type="button" onClick={addVaccine} className="text-2xs font-medium flex items-center gap-1 transition-colors hover:opacity-80" style={{ color: 'var(--color-primary)' }}>
-                          <FaPlus size={8} /> Agregar
+                          <Plus size={8} /> Agregar
                         </button>
                       </div>
                       {/* Presets */}
@@ -630,10 +630,10 @@ export default function MisPerrosPage() {
                       </div>
                       {form.health.vaccines.map((vac, i) => (
                         <div key={i} className="flex items-center gap-2 mb-2 p-2 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-                          <FaSyringe size={12} className="text-brand-400 shrink-0" />
+                          <Syringe size={12} className="text-brand-400 shrink-0" />
                           <input type="text" value={vac.name} onChange={(e) => updateVaccine(i, 'name', e.target.value)} placeholder="Nombre" className="flex-1 text-xs bg-transparent border-none outline-none" style={{ color: 'var(--text-primary)' }} />
                           <input type="date" value={vac.date} onChange={(e) => updateVaccine(i, 'date', e.target.value)} className="text-2xs bg-transparent outline-none" style={{ color: 'var(--text-muted)' }} />
-                          <button type="button" onClick={() => removeVaccine(i)} className="text-danger-400 hover:opacity-80"><FaTimes size={10} /></button>
+                          <button type="button" onClick={() => removeVaccine(i)} className="text-danger-400 hover:opacity-80"><X size={10} /></button>
                         </div>
                       ))}
                     </div>
@@ -641,7 +641,7 @@ export default function MisPerrosPage() {
                     {/* Vet Info */}
                     <div className="p-3 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
                       <div className="flex items-center gap-2 mb-3">
-                        <FaPhone size={12} className="text-success-400" />
+                        <Phone size={12} className="text-success-400" />
                         <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Veterinario</label>
                       </div>
                       <div className="space-y-2">
@@ -683,7 +683,7 @@ export default function MisPerrosPage() {
                   Cancelar
                 </button>
                 <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2">
-                  {saving ? <FaSpinner className="animate-spin" size={14} /> : <FaCheck size={14} />}
+                  {saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
                   {editingPet ? 'Guardar cambios' : 'Agregar mascota'}
                 </button>
               </div>

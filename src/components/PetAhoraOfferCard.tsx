@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { usePetAhoraDispatch } from '@/lib/usePetAhoraDispatch'
 import { formatEta } from '@/lib/eta'
-import { FaBolt, FaDog, FaMapMarkerAlt, FaCheck, FaTimes, FaExclamationTriangle } from 'react-icons/fa'
+import { Zap, Dog, MapPin, Check, X, AlertTriangle } from 'lucide-react'
 import type { PetAhoraOffer, PetAhoraRequest } from '@/types'
 
 interface Props {
@@ -35,7 +35,7 @@ export default function PetAhoraOfferCard({ offer, onDone }: Props) {
     >
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(251,191,36,0.15)' }}>
-          <FaBolt className="text-secondary" size={16} />
+          <Zap className="text-secondary" size={16} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
@@ -49,12 +49,12 @@ export default function PetAhoraOfferCard({ offer, onDone }: Props) {
           {offer.request && (
             <div className="space-y-1 mb-2">
               <p className="flex items-center gap-1.5 text-sm">
-                <FaDog size={10} style={{ color: 'var(--text-muted)' }} />
+                <Dog size={10} style={{ color: 'var(--text-muted)' }} />
                 {offer.request.petName}
               </p>
               {offer.request.address && (
                 <p className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  <FaMapMarkerAlt size={9} />
+                  <MapPin size={9} />
                   {offer.request.address.street}
                 </p>
               )}
@@ -67,15 +67,15 @@ export default function PetAhoraOfferCard({ offer, onDone }: Props) {
           )}
           {expired ? (
             <p className="text-xs flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-              <FaExclamationTriangle size={10} /> Oferta expirada
+              <AlertTriangle size={10} /> Oferta expirada
             </p>
           ) : (
             <div className="flex gap-2">
               <button onClick={handleAccept} className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 text-white" style={{ background: 'var(--color-primary)' }}>
-                <FaCheck size={10} /> Aceptar
+                <Check size={10} /> Aceptar
               </button>
               <button onClick={handleDecline} className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--color-danger)' }}>
-                <FaTimes size={10} /> Rechazar
+                <X size={10} /> Rechazar
               </button>
             </div>
           )}
@@ -91,7 +91,7 @@ export function PetAhoraOffersList({ offers, onDone }: { offers: (PetAhoraOffer 
   return (
     <div className="space-y-3">
       <h3 className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-        <FaBolt size={10} /> Solicitudes PET Ahora
+        <Zap size={10} /> Solicitudes PET Ahora
       </h3>
       {offers.map((o) => (
         <PetAhoraOfferCard key={o.id} offer={o} onDone={onDone} />

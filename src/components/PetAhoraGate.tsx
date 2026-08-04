@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react'
 import Link from 'next/link'
-import { FaLock, FaExclamationTriangle, FaDog, FaMapMarkerAlt, FaWalking } from 'react-icons/fa'
+import { Lock, AlertTriangle, Dog, MapPin, PersonStanding } from 'lucide-react'
 import { useConfig } from '@/context/ConfigContext'
 import { useEligibility, type EligibilityResult } from '@/lib/useEligibility'
 
@@ -33,19 +33,19 @@ function EligibilityBlocked({ reasons, result }: { reasons: string[]; result: El
   return (
     <div className="glass-card p-6 text-center">
       <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-        <FaLock className="text-secondary" size={20} />
+        <Lock className="text-secondary" size={20} />
       </div>
       <h3 className="text-lg font-bold mb-2">PET Ahora no disponible</h3>
       <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
         Completa los siguientes requisitos para acceder a paseos al instante:
       </p>
       <div className="space-y-2 text-left max-w-xs mx-auto mb-4">
-        <Requirement met={result.hasPet} label="Registrar un perro" href="/mi-cuenta/perros" icon={<FaDog size={12} />} />
-        <Requirement met={result.hasAddress} label="Agregar dirección" href="/mi-cuenta/direcciones" icon={<FaMapMarkerAlt size={12} />} />
-        <Requirement met={result.hasCompletedWalk} label="Completar primer paseo" href="/#reservar" icon={<FaWalking size={12} />} />
+        <Requirement met={result.hasPet} label="Registrar un perro" href="/mi-cuenta/perros" icon={<Dog size={12} />} />
+        <Requirement met={result.hasAddress} label="Agregar dirección" href="/mi-cuenta/direcciones" icon={<MapPin size={12} />} />
+        <Requirement met={result.hasCompletedWalk} label="Completar primer paseo" href="/#reservar" icon={<PersonStanding size={12} />} />
       </div>
       <div className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--text-muted)', border: '1px solid rgba(245,158,11,0.2)' }}>
-        <FaExclamationTriangle size={10} className="inline mr-1 text-amber-500" />
+        <AlertTriangle size={10} className="inline mr-1 text-amber-500" />
         PET Ahora requiere tener perro registrado, dirección guardada y al menos un paseo completado anteriormente.
       </div>
     </div>

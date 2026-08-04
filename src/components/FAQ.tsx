@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaChevronDown, FaQuestionCircle } from 'react-icons/fa'
+import { ChevronDown, HelpCircle } from 'lucide-react'
 import { useConfig } from '@/context/ConfigContext'
 import { DEFAULT_CONFIG } from '@/lib/defaultConfig'
 
@@ -47,7 +47,7 @@ export default function FAQ() {
                 className="w-full glass-card p-4 sm:p-5 text-left flex items-center justify-between gap-4 transition-all hover:bg-white/[0.03]"
               >
                 <span className="flex items-center gap-3 text-sm sm:text-base font-medium" style={{ color: 'var(--text-primary)' }}>
-                  <FaQuestionCircle className="text-primary shrink-0" size={14} />
+                  <HelpCircle className="text-primary shrink-0" size={14} />
                   {faq.q}
                 </span>
                 <motion.div
@@ -55,7 +55,7 @@ export default function FAQ() {
                   transition={{ duration: 0.2 }}
                   className="shrink-0"
                 >
-                  <FaChevronDown style={{ color: 'var(--text-muted)' }} size={12} />
+                  <ChevronDown style={{ color: 'var(--text-muted)' }} size={12} />
                 </motion.div>
               </button>
               <AnimatePresence>

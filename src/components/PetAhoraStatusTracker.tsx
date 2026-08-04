@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatEta } from '@/lib/eta'
-import { FaBolt, FaDog, FaMapMarkerAlt, FaCheckCircle, FaSpinner, FaTimesCircle, FaWalking } from 'react-icons/fa'
+import { Zap, Dog, MapPin, CheckCircle2, Loader2, XCircle, PersonStanding } from 'lucide-react'
 import type { PetAhoraRequest } from '@/types'
 
 interface Props {
@@ -10,15 +10,15 @@ interface Props {
 }
 
 const STATUS_FLOW: Record<string, { label: string; icon: any; step: number }> = {
-  pending: { label: 'Pendiente', icon: FaSpinner, step: 0 },
-  searching: { label: 'Buscando paseador', icon: FaBolt, step: 1 },
-  offer_sent: { label: 'Oferta enviada', icon: FaBolt, step: 2 },
-  accepted: { label: 'Aceptado', icon: FaCheckCircle, step: 3 },
-  en_camino: { label: 'Paseador en camino', icon: FaWalking, step: 4 },
-  paseando: { label: 'Paseando', icon: FaDog, step: 5 },
-  completed: { label: 'Completado', icon: FaCheckCircle, step: 6 },
-  cancelled: { label: 'Cancelado', icon: FaTimesCircle, step: -1 },
-  expired: { label: 'Expirado', icon: FaTimesCircle, step: -1 },
+  pending: { label: 'Pendiente', icon: Loader2, step: 0 },
+  searching: { label: 'Buscando paseador', icon: Zap, step: 1 },
+  offer_sent: { label: 'Oferta enviada', icon: Zap, step: 2 },
+  accepted: { label: 'Aceptado', icon: CheckCircle2, step: 3 },
+  en_camino: { label: 'Paseador en camino', icon: PersonStanding, step: 4 },
+  paseando: { label: 'Paseando', icon: Dog, step: 5 },
+  completed: { label: 'Completado', icon: CheckCircle2, step: 6 },
+  cancelled: { label: 'Cancelado', icon: XCircle, step: -1 },
+  expired: { label: 'Expirado', icon: XCircle, step: -1 },
 }
 
 export default function PetAhoraStatusTracker({ request }: Props) {
@@ -73,12 +73,12 @@ export default function PetAhoraStatusTracker({ request }: Props) {
 
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm">
-          <FaDog size={11} style={{ color: 'var(--text-muted)' }} />
+          <Dog size={11} style={{ color: 'var(--text-muted)' }} />
           <span>{request.petName}</span>
         </div>
         {request.address && (
           <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-            <FaMapMarkerAlt size={10} />
+            <MapPin size={10} />
             <span>{request.address.alias || request.address.street}</span>
           </div>
         )}

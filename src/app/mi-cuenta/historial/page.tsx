@@ -8,9 +8,9 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import {
-  FaHistory, FaDog, FaCheckCircle, FaCalendarAlt, FaClock, FaArrowLeft,
-  FaChevronDown, FaMapMarkerAlt, FaStickyNote, FaCamera, FaRedo,
-} from 'react-icons/fa'
+  History, Dog, CheckCircle2, CalendarDays, Clock, ArrowLeft,
+  ChevronDown, MapPin, StickyNote, Camera, Redo2,
+} from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
 
@@ -67,7 +67,7 @@ export default function HistorialPage() {
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
             style={{ color: 'var(--text-muted)' }}
           >
-            <FaArrowLeft size={14} />
+            <ArrowLeft size={14} />
           </button>
           <div>
             <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Mi historial</h1>
@@ -102,7 +102,7 @@ export default function HistorialPage() {
 
       {filtered.length === 0 ? (
         <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <FaHistory className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <History className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
             {filter === 'all' ? 'No hay reservas en tu historial' : `No hay reservas ${filter === 'completed' ? 'completadas' : 'canceladas'}`}
           </p>
@@ -133,9 +133,9 @@ export default function HistorialPage() {
                   style={{ cursor: hasWalkData ? 'pointer' : undefined }}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-brand-500/10'}`}>
-                    {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
+                    {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :
                      res.status === 'cancelled' ? <span className="text-danger-400 text-sm">✕</span> :
-                     <FaDog size={14} className="text-brand-400" />}
+                     <Dog size={14} className="text-brand-400" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
@@ -150,11 +150,11 @@ export default function HistorialPage() {
                             className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-400 border border-brand-500/20"
                             title="Repetir este paseo"
                           >
-                            <FaRedo size={8} /> Repetir
+                            <Redo2 size={8} /> Repetir
                           </button>
                         )}
                         {hasWalkData && (
-                          <FaCamera size={10} className="text-success-400" />
+                          <Camera size={10} className="text-success-400" />
                         )}
                         <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[res.status]?.bg || 'bg-white/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>
                           {STATUS_LABELS[res.status] || res.status}
@@ -162,13 +162,13 @@ export default function HistorialPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      <span className="flex items-center gap-1"><FaDog size={10} /> {res.petName}</span>
-                      <span className="flex items-center gap-1"><FaCalendarAlt size={10} /> {res.date}</span>
-                      {res.time && <span className="flex items-center gap-1"><FaClock size={10} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>}
+                      <span className="flex items-center gap-1"><Dog size={10} /> {res.petName}</span>
+                      <span className="flex items-center gap-1"><CalendarDays size={10} /> {res.date}</span>
+                      {res.time && <span className="flex items-center gap-1"><Clock size={10} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>}
                     </div>
                     {hasWalkData && (
                       <div className="flex items-center gap-1 mt-1.5 text-2xs" style={{ color: 'var(--text-muted)' }}>
-                        <FaChevronDown
+                        <ChevronDown
                           size={8}
                           className="transition-transform"
                           style={{ transform: isExpanded ? 'rotate(180deg)' : undefined }}
@@ -211,7 +211,7 @@ export default function HistorialPage() {
                             )}
                             <div className="flex items-center gap-3 text-2xs" style={{ color: 'var(--text-muted)' }}>
                               <span className="flex items-center gap-1">
-                                <FaMapMarkerAlt size={9} className="text-success-400" />
+                                <MapPin size={9} className="text-success-400" />
                                 {res.walkCheckIn.lat.toFixed(4)}, {res.walkCheckIn.lng.toFixed(4)}
                               </span>
                             </div>
@@ -239,7 +239,7 @@ export default function HistorialPage() {
                             )}
                             <div className="flex items-center gap-3 text-2xs" style={{ color: 'var(--text-muted)' }}>
                               <span className="flex items-center gap-1">
-                                <FaMapMarkerAlt size={9} className="text-brand-400" />
+                                <MapPin size={9} className="text-brand-400" />
                                 {res.walkCheckOut.lat.toFixed(4)}, {res.walkCheckOut.lng.toFixed(4)}
                               </span>
                             </div>
@@ -249,7 +249,7 @@ export default function HistorialPage() {
                         {/* Walk Notes */}
                         {res.walkNotes && (
                           <div className="flex items-start gap-2 p-2.5 rounded-lg text-xs" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-                            <FaStickyNote size={10} className="text-pink-400 mt-0.5 shrink-0" />
+                            <StickyNote size={10} className="text-pink-400 mt-0.5 shrink-0" />
                             <span style={{ color: 'var(--text-secondary)' }}>{res.walkNotes}</span>
                           </div>
                         )}

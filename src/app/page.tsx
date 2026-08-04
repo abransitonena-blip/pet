@@ -14,7 +14,7 @@ import Preloader from '@/components/Preloader'
 import PWARegister from '@/components/PWARegister'
 import BannerDisplay from '@/components/BannerDisplay'
 import Link from 'next/link'
-import { User, ArrowRight } from 'lucide-react'
+import { User, ArrowRight, CalendarCheck } from 'lucide-react'
 
 const Gallery = dynamic(() => import('@/components/Gallery'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>,
@@ -40,14 +40,10 @@ const ReviewForm = dynamic(() => import('@/components/ReviewForm'), {
 const QuoteForm = dynamic(() => import('@/components/QuoteForm'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>,
 })
-const ReservationForm = dynamic(() => import('@/components/ReservationForm'), {
-  loading: () => <div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>,
-})
 
 function HomeContent() {
   const [showTerms, setShowTerms] = useState(false)
   const [loaded, setLoaded] = useState(false)
-  const [formActive, setFormActive] = useState(false)
   const [user, setUser] = useState<{ uid: string; displayName: string | null } | null>(null)
 
   useEffect(() => {
@@ -123,9 +119,23 @@ function HomeContent() {
               </div>
             </section>
           ) : (
-            <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>}>
-              <ReservationForm onFocusChange={setFormActive} />
-            </Suspense>
+            <section aria-label="Reservar" id="reservar" className="section-container py-20 sm:py-28">
+              <div className="max-w-lg mx-auto text-center">
+                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center card">
+                  <CalendarCheck className="text-primary" size={24} />
+                </div>
+                <h2 className="section-title">Cotiza y agenda tu paseo</h2>
+                <p className="section-subtitle mb-6">
+                  Obtén tu precio claro en la cotizador de arriba y confírmalo en minutos por WhatsApp.
+                </p>
+                <a
+                  href="#cotizar"
+                  className="btn-primary inline-flex items-center gap-2"
+                >
+                  Cotizar mi paseo <ArrowRight size={14} />
+                </a>
+              </div>
+            </section>
           )}
         </Suspense>
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-32 rounded-2xl" /></div>}>
@@ -134,7 +144,7 @@ function HomeContent() {
         <Suspense fallback={<div className="skeleton h-48 rounded-none" />}>
           <Footer onTerms={() => setShowTerms(true)} />
         </Suspense>
-        <WhatsAppButton hidden={formActive} />
+        <WhatsAppButton />
         <ScrollToTop />
         <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
       </div>

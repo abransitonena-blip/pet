@@ -7,9 +7,9 @@ import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import {
-  FaCalendarAlt, FaDog, FaHistory, FaPaw, FaGift,
-  FaArrowRight, FaMapMarkerAlt, FaClock, FaCheckCircle, FaExclamationTriangle, FaRedo,
-} from 'react-icons/fa'
+  CalendarDays, Dog, History, PawPrint, Gift,
+  ArrowRight, MapPin, Clock, CheckCircle2, AlertTriangle, Redo2,
+} from 'lucide-react'
 import PetAhoraRequestForm from '@/components/PetAhoraRequestForm'
 import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
 import WalletCard from '@/components/WalletCard'
@@ -104,7 +104,7 @@ export default function DashboardPage() {
           {nextWalk ? (
             <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
               <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0">
-                <FaDog size={16} className="text-brand-400" />
+                <Dog size={16} className="text-brand-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Tu próximo paseo</p>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
           ) : (
             <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
               <div className="w-10 h-10 rounded-xl bg-success-500/10 flex items-center justify-center shrink-0">
-                <FaCheckCircle size={16} className="text-success-400" />
+                <CheckCircle2 size={16} className="text-success-400" />
               </div>
               <div>
                 <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
           onClick={() => router.push('/mi-cuenta/nueva-reserva')}
         >
           <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center mb-3">
-            <FaCalendarAlt size={16} className="text-brand-400" />
+            <CalendarDays size={16} className="text-brand-400" />
           </div>
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{upcoming.length}</p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Próximos paseos</p>
@@ -163,7 +163,7 @@ export default function DashboardPage() {
           onClick={() => router.push('/mi-cuenta/historial')}
         >
           <div className="w-10 h-10 rounded-xl bg-success-500/10 flex items-center justify-center mb-3">
-            <FaHistory size={16} className="text-success-400" />
+            <History size={16} className="text-success-400" />
           </div>
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{completed.length}</p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Paseos completados</p>
@@ -178,7 +178,7 @@ export default function DashboardPage() {
           onClick={() => router.push('/mi-cuenta/lealtad')}
         >
           <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center mb-3">
-            <FaGift size={16} className="text-pink-400" />
+            <Gift size={16} className="text-pink-400" />
           </div>
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{completed.length * 10}</p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Puntos de lealtad</p>
@@ -205,10 +205,10 @@ export default function DashboardPage() {
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-brand-500/30"
           style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.1), rgba(217,119,6,0.05))', border: '1px solid var(--border)' }}
         >
-          <FaCalendarAlt size={20} className="text-brand-400 mb-2" />
+          <CalendarDays size={20} className="text-brand-400 mb-2" />
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Nueva reserva</p>
           <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-            Agendar un paseo <FaArrowRight size={8} />
+            Agendar un paseo <ArrowRight size={8} />
           </p>
         </motion.button>
 
@@ -220,10 +220,10 @@ export default function DashboardPage() {
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-success-500/30"
           style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.1), rgba(5,150,105,0.05))', border: '1px solid var(--border)' }}
         >
-          <FaPaw size={20} className="text-success-400 mb-2" />
+          <PawPrint size={20} className="text-success-400 mb-2" />
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Mis perros</p>
           <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-            Registrar peludo <FaArrowRight size={8} />
+            Registrar peludo <ArrowRight size={8} />
           </p>
         </motion.button>
       </div>
@@ -242,14 +242,14 @@ export default function DashboardPage() {
               className="text-xs flex items-center gap-1 transition-colors hover:text-brand-400"
               style={{ color: 'var(--text-muted)' }}
             >
-              Ver todo <FaArrowRight size={8} />
+              Ver todo <ArrowRight size={8} />
             </button>
           )}
         </div>
 
         {reservations.length === 0 ? (
           <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <FaCalendarAlt className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <CalendarDays className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
             <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>No tienes reservas aún</p>
             <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
               Tu primer paseo está a un clic de distancia
@@ -270,9 +270,9 @@ export default function DashboardPage() {
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-white/5'}`}>
-                  {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
-                   res.status === 'cancelled' ? <FaExclamationTriangle size={14} className="text-danger-400" /> :
-                   <FaDog size={14} className="text-brand-400" />}
+                  {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :
+                   res.status === 'cancelled' ? <AlertTriangle size={14} className="text-danger-400" /> :
+                   <Dog size={14} className="text-brand-400" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{res.service}</p>
@@ -289,7 +289,7 @@ export default function DashboardPage() {
                       className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-400 border border-brand-500/20"
                       title="Repetir este paseo"
                     >
-                      <FaRedo size={8} /> Repetir
+                      <Redo2 size={8} /> Repetir
                     </button>
                   )}
                   <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-white/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>

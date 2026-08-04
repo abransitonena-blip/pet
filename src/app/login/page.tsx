@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithCredential } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { FaDog, FaEnvelope, FaLock, FaSpinner, FaUser, FaPhone, FaWalking, FaExternalLinkAlt } from 'react-icons/fa'
+import { Dog, Mail, Lock, Loader2, User, Phone, PersonStanding, ExternalLink } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { Events } from '@/lib/analytics'
 import {
@@ -130,26 +130,29 @@ export default function LoginPage() {
     }
   }, [router])
 
-  const initializeGoogleButton = useCallback(() => {
-    if (!window.google || !googleButtonRef.current || initializedRef.current) return
-    initializedRef.current = true
+  const renderGoogleButton = useCallback(() => {
+    const el = googleButtonRef.current
+    if (!window.google?.accounts?.id || !el) return false
 
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim()
     if (!clientId) {
       setGisError(true)
-      return
+      return true
     }
 
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: handleGoogleCredential,
-      auto_select: false,
-      cancel_on_tap_outside: true,
-    })
+    if (!initializedRef.current) {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      })
+      initializedRef.current = true
+    }
 
-    googleButtonRef.current.replaceChildren()
+    el.replaceChildren()
 
-    window.google.accounts.id.renderButton(googleButtonRef.current, {
+    window.google.accounts.id.renderButton(el, {
       type: 'standard',
       theme: 'outline',
       size: 'large',
@@ -160,7 +163,23 @@ export default function LoginPage() {
     })
 
     setGisReady(true)
+    return true
   }, [handleGoogleCredential])
+
+  useEffect(() => {
+    if (mode !== 'familia' || webView || gisError) return
+    renderGoogleButton()
+  }, [mode, webView, gisError, renderGoogleButton])
+
+  useEffect(() => {
+    if (mode !== 'familia' || webView) return
+    const t = setTimeout(() => {
+      if (!window.google?.accounts?.id && !initializedRef.current) {
+        setGisError(true)
+      }
+    }, 8000)
+    return () => clearTimeout(t)
+  }, [mode, webView])
 
   const handleEmailLogin = async (role: 'client' | 'admin' | 'walker') => {
     setLoading(true)
@@ -235,7 +254,7 @@ export default function LoginPage() {
       <Script
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
-        onLoad={initializeGoogleButton}
+        onLoad={() => { renderGoogleButton() }}
         onError={() => { setGisError(true) }}
       />
       <motion.div
@@ -247,7 +266,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <button onClick={handleLogoClick} className="mx-auto" aria-label="Logo PET Ap">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-glow">
-              <FaDog />
+              <Dog />
             </div>
           </button>
           <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
@@ -273,7 +292,7 @@ export default function LoginPage() {
             >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-success-500/10 flex items-center justify-center text-success-400 shrink-0">
-                  <FaUser size={20} />
+                  <User size={20} />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
@@ -325,12 +344,12 @@ export default function LoginPage() {
                     className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-medium transition-all"
                     style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
                   >
-                    <FaExternalLinkAlt size={10} /> Abrir en el navegador
+                    <ExternalLink size={10} /> Abrir en el navegador
                   </button>
                 </div>
               ) : gisError ? (
-                <p className="text-xs text-center" style={{ color: 'var(--color-danger)' }}>
-                  No pudimos cargar el acceso con Google. Puedes reintentar o usar correo.
+                <p className="text-xs text-center" style={{ color: 'var(--color-danger)' }} role="alert">
+                  El acceso con Google no está disponible temporalmente. Continúa con correo o inténtalo más tarde.
                 </p>
               ) : (
                 <div ref={googleButtonRef} className="flex justify-center min-h-[40px]" />
@@ -347,7 +366,7 @@ export default function LoginPage() {
                   <div>
                     <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
                     <div className="relative">
-                      <FaUser className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                       <input
                         type="text"
                         value={name}
@@ -361,7 +380,7 @@ export default function LoginPage() {
                   <div>
                     <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>WhatsApp (opcional)</label>
                     <div className="relative">
-                      <FaPhone className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                       <input
                         type="tel"
                         value={phone}
@@ -378,7 +397,7 @@ export default function LoginPage() {
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo</label>
                 <div className="relative">
-                  <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="email"
                     value={email}
@@ -393,7 +412,7 @@ export default function LoginPage() {
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
                 <div className="relative">
-                  <FaLock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="password"
                     value={password}
@@ -412,7 +431,7 @@ export default function LoginPage() {
                 disabled={loading || !email.trim() || !password.trim()}
                 className="btn-primary w-full"
               >
-                {loading ? <FaSpinner className="animate-spin" size={14} /> : null}
+                {loading ? <Loader2 className="animate-spin" size={14} /> : null}
                 {familiaMode === 'login' ? 'Entrar' : 'Crear cuenta'}
               </button>
             </div>
@@ -438,7 +457,7 @@ export default function LoginPage() {
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo de administrador</label>
                 <div className="relative">
-                  <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="email"
                     value={email}
@@ -453,7 +472,7 @@ export default function LoginPage() {
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
                 <div className="relative">
-                  <FaLock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="password"
                     value={password}
@@ -473,7 +492,7 @@ export default function LoginPage() {
                 disabled={loading || !email.trim() || !password.trim()}
                 className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-accent-500 to-accent-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" size={14} /> : null}
+                {loading ? <Loader2 className="animate-spin" size={14} /> : null}
                 Acceder al panel
               </button>
             </div>
@@ -492,7 +511,7 @@ export default function LoginPage() {
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo de paseador</label>
                 <div className="relative">
-                  <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="email"
                     value={email}
@@ -507,7 +526,7 @@ export default function LoginPage() {
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
                 <div className="relative">
-                  <FaLock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="password"
                     value={password}
@@ -527,7 +546,7 @@ export default function LoginPage() {
                 disabled={loading || !email.trim() || !password.trim()}
                 className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-success-500 to-success-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" size={14} /> : <FaWalking size={14} />}
+                {loading ? <Loader2 className="animate-spin" size={14} /> : <PersonStanding size={14} />}
                 Entrar como paseador
               </button>
             </div>

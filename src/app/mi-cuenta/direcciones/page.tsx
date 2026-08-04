@@ -9,14 +9,14 @@ import {
 } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import {
-  FaMapMarkerAlt, FaPlus, FaEdit, FaTrash, FaTimes, FaCheck, FaSpinner, FaHome, FaBuilding, FaStar,
-} from 'react-icons/fa'
+  MapPin, Plus, Pencil, Trash2, X, Check, Loader2, Home, Building2, Star,
+} from 'lucide-react'
 import type { Address } from '@/types'
 
 const ALIAS_OPTIONS = [
-  { value: 'Casa', icon: FaHome },
-  { value: 'Trabajo', icon: FaBuilding },
-  { value: 'Otro', icon: FaMapMarkerAlt },
+  { value: 'Casa', icon: Home },
+  { value: 'Trabajo', icon: Building2 },
+  { value: 'Otro', icon: MapPin },
 ]
 
 const EMPTY_FORM = {
@@ -163,13 +163,13 @@ export default function DireccionesPage() {
           </p>
         </div>
         <button onClick={openCreate} className="btn-primary !text-xs flex items-center gap-1.5">
-          <FaPlus size={12} /> Agregar
+          <Plus size={12} /> Agregar
         </button>
       </div>
 
       {addresses.length === 0 ? (
         <div className="text-center py-12 rounded-2xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <FaMapMarkerAlt className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <MapPin className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Aún no tienes direcciones guardadas</p>
           <button onClick={openCreate} className="btn-primary !text-xs">
             Agregar primera dirección
@@ -190,7 +190,7 @@ export default function DireccionesPage() {
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{addr.alias}</span>
                     {addr.isDefault && (
                       <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-medium flex items-center gap-1">
-                        <FaStar size={8} /> Predeterminada
+                        <Star size={8} /> Predeterminada
                       </span>
                     )}
                   </div>
@@ -207,14 +207,14 @@ export default function DireccionesPage() {
                 <div className="flex items-center gap-1 shrink-0">
                   {!addr.isDefault && (
                     <button onClick={() => setDefault(addr.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Predeterminada">
-                      <FaStar size={11} />
+                      <Star size={11} />
                     </button>
                   )}
                   <button onClick={() => openEdit(addr)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-blue-500/10 text-blue-400" title="Editar">
-                    <FaEdit size={12} />
+                    <Pencil size={12} />
                   </button>
                   <button onClick={() => setConfirmDelete(addr.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400" title="Eliminar">
-                    <FaTrash size={11} />
+                    <Trash2 size={11} />
                   </button>
                 </div>
               </div>
@@ -248,7 +248,7 @@ export default function DireccionesPage() {
                   {editing ? 'Editar dirección' : 'Nueva dirección'}
                 </h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-                  <FaTimes size={14} />
+                  <X size={14} />
                 </button>
               </div>
 
@@ -443,7 +443,7 @@ export default function DireccionesPage() {
                   disabled={saving || !form.street.trim() || !form.colony.trim()}
                   className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {saving ? <><FaSpinner className="animate-spin" size={12} /> Guardando...</> : <><FaCheck size={12} /> {editing ? 'Actualizar' : 'Guardar'}</>}
+                  {saving ? <><Loader2 className="animate-spin" size={12} /> Guardando...</> : <><Check size={12} /> {editing ? 'Actualizar' : 'Guardar'}</>}
                 </button>
               </div>
             </motion.div>
@@ -470,7 +470,7 @@ export default function DireccionesPage() {
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <FaTrash className="text-danger-400 text-2xl mx-auto mb-3" />
+              <Trash2 className="text-danger-400 text-2xl mx-auto mb-3" />
               <p className="text-sm font-medium mb-4" style={{ color: 'var(--text-primary)' }}>¿Eliminar esta dirección?</p>
               <div className="flex gap-3">
                 <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl text-sm border hover:bg-white/5" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>

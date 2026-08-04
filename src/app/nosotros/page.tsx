@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { BRAND } from '@/lib/brand'
-import { FaShieldAlt, FaHeart, FaLeaf, FaUsers } from 'react-icons/fa'
+import { ShieldCheck, Heart, Leaf, Users } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Nosotros',
@@ -13,22 +13,22 @@ export const metadata: Metadata = {
 
 const values = [
   {
-    icon: FaHeart,
+    icon: Heart,
     title: 'Amor por los perros',
     desc: 'Cada paseo se da con paciencia, respeto y cariño. Priorizamos el bienestar físico y emocional de tu mascota.',
   },
   {
-    icon: FaShieldAlt,
+    icon: ShieldCheck,
     title: 'Confianza y seguridad',
     desc: 'Todos nuestros paseadores son certificados, evaluados y cuentan con seguro de responsabilidad civil.',
   },
   {
-    icon: FaLeaf,
+    icon: Leaf,
     title: 'Compromiso ecológico',
     desc: 'Usamos bolsas biodegradables, promovemos la hidratación responsable y optimizamos rutas para reducir nuestra huella.',
   },
   {
-    icon: FaUsers,
+    icon: Users,
     title: 'Comunidad',
     desc: 'Construimos una red de dueños responsables y paseadores apasionados que cuidan a los peludos como si fueran suyos.',
   },

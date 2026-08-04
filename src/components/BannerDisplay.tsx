@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import { FaTimes } from 'react-icons/fa'
+import { X } from 'lucide-react'
 
 const DISMISS_KEY = 'petap_banner_dismissed'
 
@@ -49,7 +49,7 @@ export default function BannerDisplay() {
           onClick={dismiss}
           className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/50 hover:text-primary transition-all"
         >
-          <FaTimes size={12} />
+          <X size={12} />
         </button>
       </div>
     </motion.div>

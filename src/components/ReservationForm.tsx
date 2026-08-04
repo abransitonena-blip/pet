@@ -16,9 +16,7 @@ import StepPet from './reservation-steps/StepPet'
 import StepContact from './reservation-steps/StepContact'
 import StepWalker from './reservation-steps/StepWalker'
 import StepConfirm from './reservation-steps/StepConfirm'
-import {
-  FaSpinner, FaArrowRight, FaArrowLeft, FaWhatsapp, FaCheckCircle, FaCalendarAlt, FaClock, FaPaw, FaCheck, FaUser,
-} from 'react-icons/fa'
+import { Loader2, ArrowRight, ArrowLeft, CheckCircle2, CalendarDays, Clock, PawPrint, Check, User } from 'lucide-react'
 
 const STEP_META = [
   { num: 1, label: 'Paseo',    short: 'Servicio' },
@@ -111,13 +109,13 @@ function BookingSummary({ step, form, prices, couponStatus, weeklySchedule }: {
       {form.date && (
         <div className="flex items-center justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
           <span className="flex items-center gap-2">
-            <FaCalendarAlt size={11} className="text-primary" />
+            <CalendarDays size={11} className="text-primary" />
             {isWeekly && scheduledDays.length > 0
               ? `${scheduledDays.length} días: ${scheduledDays[0] ? new Date(scheduledDays[0][0] + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : ''}`
               : new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
             }
           </span>
-          {!isWeekly && form.time && <span className="flex items-center gap-1"><FaClock size={10} className="text-primary" /> {form.time}</span>}
+          {!isWeekly && form.time && <span className="flex items-center gap-1"><Clock size={10} className="text-primary" /> {form.time}</span>}
         </div>
       )}
       {isWeekly && scheduledDays.length > 1 && (
@@ -125,20 +123,20 @@ function BookingSummary({ step, form, prices, couponStatus, weeklySchedule }: {
           {scheduledDays.map(([date, time]) => (
             <div key={date} className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
               <span className="capitalize">{new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' })}</span>
-              <span className="flex items-center gap-1"><FaClock size={8} /> {time}</span>
+              <span className="flex items-center gap-1"><Clock size={8} /> {time}</span>
             </div>
           ))}
         </div>
       )}
       {form.petName && (
         <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          <FaPaw size={11} className="text-primary" />
+          <PawPrint size={11} className="text-primary" />
           {form.petName} ({PET_TYPES.find((p) => p.value === form.petType)?.label})
         </div>
       )}
       {form.name && (
         <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          <FaUser size={11} className="text-primary" />
+          <User size={11} className="text-primary" />
           {form.name}
         </div>
       )}
@@ -154,7 +152,7 @@ function BookingSummary({ step, form, prices, couponStatus, weeklySchedule }: {
           )}
           <div className="flex justify-between text-base font-bold pt-1">
             <span>Total</span>
-            <span className="gradient-text">${finalPrice.toLocaleString()} MXN</span>
+            <span className="text-primary">${finalPrice.toLocaleString()} MXN</span>
           </div>
         </div>
       )}
@@ -575,7 +573,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                         color: step >= s.num ? '#fff' : 'var(--text-muted)',
                       }}
                     >
-                      {step > s.num ? <FaCheck size={12} /> : s.num}
+                      {step > s.num ? <Check size={12} /> : s.num}
                     </motion.div>
                     <span className="text-2xs sm:text-xs font-medium hidden sm:block"
                       style={{ color: step >= s.num ? 'var(--text-primary)' : 'var(--text-muted)' }}>
@@ -619,7 +617,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                         className="w-20 h-20 rounded-full flex items-center justify-center"
                         style={{ background: 'linear-gradient(135deg, var(--color-success), #059669)' }}
                       >
-                        <FaCheckCircle size={36} className="text-white" />
+                        <CheckCircle2 size={36} className="text-white" />
                       </motion.div>
                       <h3 className="text-xl sm:text-2xl font-bold">¡Paseo reservado!</h3>
                       <p className="text-sm text-center max-w-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -675,7 +673,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                       className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
                       style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)', border: '1px solid var(--border)', minHeight: '44px' }}
                     >
-                      <FaArrowLeft size={12} /> Atrás
+                      <ArrowLeft size={12} /> Atrás
                     </button>
                   ) : <div />}
 
@@ -687,7 +685,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                       className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                       style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', minHeight: '44px' }}
                     >
-                      {ctaLabel} <FaArrowRight size={12} />
+                      {ctaLabel} <ArrowRight size={12} />
                     </button>
                   ) : (
                     <button
@@ -697,7 +695,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                       className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                       style={{ background: 'linear-gradient(135deg, var(--color-success), #059669)', boxShadow: '0 4px 16px var(--color-success-light)', minHeight: '44px' }}
                     >
-                      {sending ? <><FaSpinner className="animate-spin" size={14} /> Enviando...</> : <><FaWhatsapp size={14} /> Confirmar por WhatsApp</>}
+                      {sending ? <><Loader2 className="animate-spin" size={14} /> Enviando...</> : <><WhatsAppIcon width={14} height={14} /> Confirmar por WhatsApp</>}
                     </button>
                   )}
                 </div>
@@ -724,7 +722,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all"
                   style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)', border: '1px solid var(--border)', minHeight: '44px' }}
                 >
-                  <FaArrowLeft size={10} /> Atrás
+                  <ArrowLeft size={10} /> Atrás
                 </button>
               ) : <div />}
 
@@ -736,7 +734,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                   style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', minHeight: '44px' }}
                 >
-                  {ctaLabel} <FaArrowRight size={12} />
+                  {ctaLabel} <ArrowRight size={12} />
                 </button>
               ) : (
                 <button
@@ -746,7 +744,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                   style={{ background: 'linear-gradient(135deg, var(--color-success), #059669)', minHeight: '44px' }}
                 >
-                  {sending ? <><FaSpinner className="animate-spin" size={14} /> ...</> : <><FaWhatsapp size={14} /> Confirmar</>}
+                  {sending ? <><Loader2 className="animate-spin" size={14} /> ...</> : <><WhatsAppIcon width={14} height={14} /> Confirmar</>}
                 </button>
               )}
             </div>
@@ -756,3 +754,5 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     </section>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

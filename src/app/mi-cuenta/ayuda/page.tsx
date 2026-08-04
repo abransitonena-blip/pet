@@ -3,17 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  FaBookOpen, FaArrowLeft, FaChevronDown, FaWhatsapp, FaEnvelope,
-  FaCalendarAlt, FaDog, FaCreditCard, FaPaw, FaQuestionCircle,
-} from 'react-icons/fa'
+import { BookOpen, ArrowLeft, ChevronDown, Mail,
+  CalendarDays, Dog, CreditCard, PawPrint, HelpCircle } from 'lucide-react'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
 
 const FAQ_ITEMS = [
   {
     category: 'Reservas',
-    icon: FaCalendarAlt,
+    icon: CalendarDays,
     color: '#D97706',
     questions: [
       {
@@ -36,7 +34,7 @@ const FAQ_ITEMS = [
   },
   {
     category: 'Servicios',
-    icon: FaDog,
+    icon: Dog,
     color: '#059669',
     questions: [
       {
@@ -59,7 +57,7 @@ const FAQ_ITEMS = [
   },
   {
     category: 'Pagos',
-    icon: FaCreditCard,
+    icon: CreditCard,
     color: '#7C3AED',
     questions: [
       {
@@ -78,7 +76,7 @@ const FAQ_ITEMS = [
   },
   {
     category: 'Mascotas',
-    icon: FaPaw,
+    icon: PawPrint,
     color: '#EC4899',
     questions: [
       {
@@ -111,7 +109,7 @@ export default function AyudaPage() {
           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
           style={{ color: 'var(--text-muted)' }}
         >
-          <FaArrowLeft size={14} />
+          <ArrowLeft size={14} />
         </button>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Centro de ayuda</h1>
@@ -128,7 +126,7 @@ export default function AyudaPage() {
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
           style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.1), rgba(5,150,105,0.05))', border: '1px solid var(--border)' }}
         >
-          <FaWhatsapp size={20} className="text-success-400 mb-2" />
+          <WhatsAppIcon width={20} height={20} className="text-success-400 mb-2" />
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>WhatsApp</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Respuesta en minutos</p>
         </a>
@@ -137,7 +135,7 @@ export default function AyudaPage() {
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
           style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(124,58,237,0.05))', border: '1px solid var(--border)' }}
         >
-          <FaEnvelope size={20} className="text-violet-400 mb-2" />
+          <Mail size={20} className="text-violet-400 mb-2" />
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Email</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{BRAND.email}</p>
         </a>
@@ -172,7 +170,7 @@ export default function AyudaPage() {
                         transition={{ duration: 0.2 }}
                         style={{ color: 'var(--text-muted)' }}
                       >
-                        <FaChevronDown size={12} />
+                        <ChevronDown size={12} />
                       </motion.div>
                     </button>
                     <AnimatePresence>
@@ -200,7 +198,7 @@ export default function AyudaPage() {
 
       {/* Still need help */}
       <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <FaQuestionCircle className="text-2xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
+        <HelpCircle className="text-2xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
         <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>¿No encontraste lo que buscabas?</p>
         <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Estamos aquí para ayudarte</p>
         <a
@@ -209,9 +207,11 @@ export default function AyudaPage() {
           rel="noopener noreferrer"
           className="btn-primary inline-flex text-xs gap-2"
         >
-          <FaWhatsapp size={14} /> Escribirnos por WhatsApp
+          <WhatsAppIcon width={14} height={14} /> Escribirnos por WhatsApp
         </a>
       </div>
     </div>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

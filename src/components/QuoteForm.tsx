@@ -26,6 +26,8 @@ const WEEKDAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes
 export default function QuoteForm() {
   const [zones, setZones] = useState<ZoneOption[]>([])
   const [loadingZones, setLoadingZones] = useState(true)
+  const [zonesError, setZonesError] = useState(false)
+  const [zonesAttempt, setZonesAttempt] = useState(0)
   const [categoryId, setCategoryId] = useState('')
   const [zoneId, setZoneId] = useState('')
   const [dogCount, setDogCount] = useState(1)
@@ -40,14 +42,24 @@ export default function QuoteForm() {
 
   useEffect(() => {
     setLoadingZones(true)
+    setZonesError(false)
     const q = query(collection(db, 'zones'), where('active', '==', true))
-    const unsub = onSnapshot(q, (snap) => {
-      const list: ZoneOption[] = snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id }))
-      setZones(list)
-      setLoadingZones(false)
-    })
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list: ZoneOption[] = snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id }))
+        setZones(list)
+        setLoadingZones(false)
+      },
+      (err) => {
+        console.error('Error cargando zonas:', err)
+        setZones([])
+        setLoadingZones(false)
+        setZonesError(true)
+      }
+    )
     return unsub
-  }, [])
+  }, [zonesAttempt])
 
   useEffect(() => {
     setQuote(null)
@@ -162,7 +174,8 @@ export default function QuoteForm() {
                 value={zoneId}
                 onChange={(e) => setZoneId(e.target.value)}
                 className="input mt-2"
-                disabled={loadingZones}
+                disabled={loadingZones || zonesError || zones.length === 0}
+                aria-busy={loadingZones}
               >
                 <option value="">Selecciona tu zona</option>
                 {zones.map((z) => (
@@ -170,6 +183,22 @@ export default function QuoteForm() {
                 ))}
               </select>
               {loadingZones && <p className="text-xs text-muted mt-1">Cargando zonas...</p>}
+              {!loadingZones && zonesError && (
+                <div className="mt-1">
+                  <p className="text-xs text-error">No pudimos cargar las zonas. Verifica tu conexión e inténtalo de nuevo.</p>
+                  <button
+                    onClick={() => setZonesAttempt((n) => n + 1)}
+                    className="text-xs text-primary underline mt-1"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
+              {!loadingZones && !zonesError && zones.length === 0 && (
+                <p className="text-xs text-warning mt-1">
+                  Aún no tenemos zonas disponibles en tu área. Escríbenos por WhatsApp para agendar.
+                </p>
+              )}
             </div>
 
             {/* Dog count */}

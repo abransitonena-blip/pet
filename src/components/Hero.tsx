@@ -6,6 +6,7 @@ import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { Star, PawPrint, ArrowRight, ChevronDown } from 'lucide-react'
 import { usePublicStats } from '@/lib/usePublicStats'
+import { useConfig } from '@/context/ConfigContext'
 import Avatar from '@/components/ui/Avatar'
 
 const stagger = {
@@ -19,6 +20,7 @@ const item = {
 }
 
 export default function Hero() {
+  const { config } = useConfig()
   const { avgRating, happyDogs, loading: statsLoading } = usePublicStats()
   const [topReview, setTopReview] = useState<{ name: string; text: string; rating: number } | null>(null)
 
@@ -54,11 +56,11 @@ export default function Hero() {
         </motion.div>
 
         <motion.h1 variants={item} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight text-ink">
-          Pasea más, <span className="text-primary">paga menos</span>
+          {config.heroTitle}
         </motion.h1>
 
         <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed text-muted">
-          Los mejores paseos para tu perro al mejor precio. Sin membresías, sin letras chiquitas, sin sorpresas.
+          {config.heroSubtitle}
         </motion.p>
 
         <motion.div variants={item} className="flex flex-col sm:flex-row gap-3 justify-center mb-12">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaArrowUp } from 'react-icons/fa'
+import { ArrowUp } from 'lucide-react'
 
 export default function ScrollToTop() {
   const [show, setShow] = useState(false)
@@ -24,7 +24,7 @@ export default function ScrollToTop() {
           className="fixed bottom-6 left-6 z-[var(--z-sticky)] w-12 h-12 rounded-full bg-gradient-to-r from-primary to-amber-600 text-white shadow-lg shadow-primary/30 flex items-center justify-center hover:opacity-90 transition-all"
           aria-label="Volver arriba"
         >
-          <FaArrowUp size={16} />
+          <ArrowUp size={16} />
         </motion.button>
       )}
     </AnimatePresence>

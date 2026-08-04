@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaWhatsapp, FaChevronDown, FaCalendarAlt, FaDog, FaCreditCard, FaPaw } from 'react-icons/fa'
+import { ChevronDown, CalendarDays, Dog, CreditCard, PawPrint } from 'lucide-react'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
 
 const FAQ_ITEMS = [
   {
     category: 'Reservas',
-    icon: FaCalendarAlt,
+    icon: CalendarDays,
     questions: [
       { q: '¿Cómo puedo reservar un paseo?', a: 'Puedes reservar desde nuestra sección de cotización en la página principal o directamente desde tu cuenta. Solo elige el servicio, fecha, hora y datos de tu mascota.' },
       { q: '¿Puedo cancelar una reserva?', a: 'Sí, puedes cancelar sin costo hasta 2 horas antes del paseo. Cancelaciones tardías o no-show pueden generar un cargo del 50%. Entendemos emergencias, háblanos.' },
@@ -19,7 +19,7 @@ const FAQ_ITEMS = [
   },
   {
     category: 'Servicios',
-    icon: FaDog,
+    icon: Dog,
     questions: [
       { q: '¿Qué incluye cada paseo?', a: 'Todos nuestros paseos incluyen: paseador certificado, agua fresca, bolsas para desechos y reporte de actividad. Los paquetes premium incluyen fotos y ruta personalizada.' },
       { q: '¿Cuánto dura cada paseo?', a: 'Ofrecemos paseos de 30 min (Cotidiano), 45 min (Energía) y 60 min (Acompañamiento). También hay planes de rutina semanal.' },
@@ -29,7 +29,7 @@ const FAQ_ITEMS = [
   },
   {
     category: 'Pagos',
-    icon: FaCreditCard,
+    icon: CreditCard,
     questions: [
       { q: '¿Cómo puedo pagar?', a: 'Aceptamos efectivo, transferencia bancaria y depósito digital. El pago se acuerda al momento de agendar.' },
       { q: '¿Tienen promociones o descuentos?', a: 'Ofrecemos descuentos en paquetes semanales y mensuales. También tenemos un programa de lealtad donde acumulas puntos por cada paseo.' },
@@ -38,7 +38,7 @@ const FAQ_ITEMS = [
   },
   {
     category: 'Mascotas',
-    icon: FaPaw,
+    icon: PawPrint,
     questions: [
       { q: '¿Cómo registro a mi mascota?', a: 'Crea una cuenta y agrega los datos de tu peludo: nombre, raza, tamaño, edad y notas importantes para el paseador.' },
       { q: '¿Qué información necesito proporcionar?', a: 'Nombre, raza, tamaño, peso aproximado, edad, si tiene alguna condición médica y contactos de emergencia veterinaria.' },
@@ -104,7 +104,7 @@ export default function PublicFAQ() {
                             transition={{ duration: 0.2 }}
                             className="shrink-0 text-muted"
                           >
-                            <FaChevronDown size={12} />
+                            <ChevronDown size={12} />
                           </motion.div>
                         </button>
                         <AnimatePresence>
@@ -150,7 +150,7 @@ export default function PublicFAQ() {
               rel="noopener noreferrer"
               className="btn-primary inline-flex items-center gap-2"
             >
-              <FaWhatsapp size={16} /> Escríbenos por WhatsApp
+              <WhatsAppIcon width={16} height={16} /> Escríbenos por WhatsApp
             </a>
           </div>
         </div>
@@ -158,3 +158,5 @@ export default function PublicFAQ() {
     </div>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

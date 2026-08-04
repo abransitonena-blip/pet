@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { FaCog, FaSpinner, FaCheck } from 'react-icons/fa'
+import { Settings, Loader2, Check } from 'lucide-react'
 
 export default function ConfigPage() {
   const router = useRouter()
@@ -44,7 +44,7 @@ export default function ConfigPage() {
   if (loading) {
     return (
       <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <FaCog className="text-3xl mx-auto mb-2 animate-pulse" style={{ color: 'var(--text-muted)' }} />
+        <Settings className="text-3xl mx-auto mb-2 animate-pulse" style={{ color: 'var(--text-muted)' }} />
       </div>
     )
   }
@@ -78,7 +78,7 @@ export default function ConfigPage() {
           disabled={saving || !name.trim()}
           className="btn-primary inline-flex items-center gap-2"
         >
-          {saving ? <FaSpinner className="animate-spin" size={14} /> : saved ? <FaCheck size={14} /> : null}
+          {saving ? <Loader2 className="animate-spin" size={14} /> : saved ? <Check size={14} /> : null}
           {saved ? 'Guardado' : 'Guardar'}
         </button>
       </div>

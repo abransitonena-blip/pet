@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { getServiceMeta } from '@/lib/services'
-import { FaCalendarAlt, FaClock, FaPaw, FaUser, FaPhone, FaDog, FaCommentAlt, FaEdit, FaStar, FaBolt, FaShieldAlt, FaHeart, FaTicketAlt, FaSpinner, FaCheck, FaTimes } from 'react-icons/fa'
+import { CalendarDays, Clock, PawPrint, User, Phone, Dog, MessageSquare, Pencil, Star, Zap, ShieldCheck, Heart, Ticket, Loader2, Check, X } from 'lucide-react'
 
 const PET_TYPES = [
   { value: 'perro', label: 'Perro' },
@@ -50,7 +50,7 @@ export default function StepConfirm({
             </div>
           </div>
           <button onClick={() => goToStep(1)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-            <FaEdit size={10} /> Editar
+            <Pencil size={10} /> Editar
           </button>
         </div>
 
@@ -62,12 +62,12 @@ export default function StepConfirm({
             {isWeeklyPackage && Object.values(weeklySchedule).some((t) => t) ? (
               <div className="space-y-1">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <FaCalendarAlt size={12} className="text-primary" /> {Object.values(weeklySchedule).filter(Boolean).length} sesiones en la semana
+                  <CalendarDays size={12} className="text-primary" /> {Object.values(weeklySchedule).filter(Boolean).length} sesiones en la semana
                 </span>
                 {Object.entries(weeklySchedule).filter(([, t]) => t).sort().slice(0, 3).map(([date, time]) => (
                   <div key={date} className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
                     <span className="capitalize">{new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' })}</span>
-                    <span className="flex items-center gap-1"><FaClock size={8} /> {time}</span>
+                    <span className="flex items-center gap-1"><Clock size={8} /> {time}</span>
                   </div>
                 ))}
                 {Object.values(weeklySchedule).filter(Boolean).length > 3 && (
@@ -77,17 +77,17 @@ export default function StepConfirm({
             ) : (
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5">
-                  <FaCalendarAlt size={12} className="text-primary" />
+                  <CalendarDays size={12} className="text-primary" />
                   {form.date ? new Date(form.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <FaClock size={12} className="text-primary" /> {form.time}
+                  <Clock size={12} className="text-primary" /> {form.time}
                 </span>
               </div>
             )}
           </div>
           <button onClick={() => goToStep(2)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5 shrink-0" style={{ color: 'var(--text-muted)' }}>
-            <FaEdit size={10} /> Editar
+            <Pencil size={10} /> Editar
           </button>
         </div>
 
@@ -96,11 +96,11 @@ export default function StepConfirm({
         {/* Pet */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-            <FaPaw size={12} className="text-primary" />
+            <PawPrint size={12} className="text-primary" />
             {form.petName} ({PET_TYPES.find((p) => p.value === form.petType)?.label})
           </div>
           <button onClick={() => goToStep(3)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-            <FaEdit size={10} /> Editar
+            <Pencil size={10} /> Editar
           </button>
         </div>
 
@@ -110,14 +110,14 @@ export default function StepConfirm({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
             <span className="flex items-center gap-1.5">
-              <FaUser size={12} className="text-primary" /> {form.name}
+              <User size={12} className="text-primary" /> {form.name}
             </span>
             <span className="flex items-center gap-1.5">
-              <FaPhone size={12} className="text-primary" /> {form.phone}
+              <Phone size={12} className="text-primary" /> {form.phone}
             </span>
           </div>
           <button onClick={() => goToStep(4)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-            <FaEdit size={10} /> Editar
+            <Pencil size={10} /> Editar
           </button>
         </div>
 
@@ -126,13 +126,13 @@ export default function StepConfirm({
         {/* Walker Preference */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
-            <FaDog size={12} className="text-primary" />
+            <Dog size={12} className="text-primary" />
             {walkerPreference
               ? availableWalkers.find((w) => w.id === walkerPreference)?.name || 'Paseador preferido'
               : 'Asignación automática'}
           </div>
           <button onClick={() => goToStep(5)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-            <FaEdit size={10} /> Editar
+            <Pencil size={10} /> Editar
           </button>
         </div>
 
@@ -141,7 +141,7 @@ export default function StepConfirm({
             <div className="h-px" style={{ background: 'var(--border)' }} />
             <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               <span className="flex items-center gap-1.5">
-                <FaCommentAlt size={12} className="text-primary" /> {form.notes}
+                <MessageSquare size={12} className="text-primary" /> {form.notes}
               </span>
             </div>
           </>
@@ -162,7 +162,7 @@ export default function StepConfirm({
           )}
           <div className="flex justify-between text-base font-bold pt-1">
             <span>Total</span>
-            <span className="gradient-text">${finalPrice.toLocaleString()} MXN</span>
+            <span className="text-primary">${finalPrice.toLocaleString()} MXN</span>
           </div>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function StepConfirm({
       <div className="mb-5">
         <button type="button" onClick={() => setShowCoupon(!showCoupon)}
           className="flex items-center gap-2 text-xs mb-2 transition-colors" style={{ color: 'var(--text-muted)' }}>
-          <FaTicketAlt size={12} /> ¿Tienes un cupón? <span className="text-2xs">(opcional)</span>
+          <Ticket size={12} /> ¿Tienes un cupón? <span className="text-2xs">(opcional)</span>
         </button>
         <AnimatePresence>
           {showCoupon && (
@@ -192,9 +192,9 @@ export default function StepConfirm({
                   aria-label="Código de cupón"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {checkingCoupon ? <FaSpinner className="animate-spin" size={13} style={{ color: 'var(--text-muted)' }} />
-                    : couponStatus?.valid ? <FaCheck size={13} style={{ color: 'var(--color-success)' }} />
-                    : couponStatus && !couponStatus.valid ? <FaTimes size={13} style={{ color: 'var(--color-danger)' }} /> : null}
+                  {checkingCoupon ? <Loader2 className="animate-spin" size={13} style={{ color: 'var(--text-muted)' }} />
+                    : couponStatus?.valid ? <Check size={13} style={{ color: 'var(--color-success)' }} />
+                    : couponStatus && !couponStatus.valid ? <X size={13} style={{ color: 'var(--color-danger)' }} /> : null}
                 </div>
               </div>
               {couponStatus && (
@@ -210,10 +210,10 @@ export default function StepConfirm({
       {/* Trust Signals */}
       <div className="grid grid-cols-2 gap-2 mb-5">
         {[
-          { icon: <FaStar size={12} />, text: 'Calificación real de clientes', color: 'var(--color-primary)' },
-          { icon: <FaBolt size={12} />, text: 'Respuesta rápida', color: 'var(--color-success)' },
-          { icon: <FaShieldAlt size={12} />, text: 'Equipo propio', color: '#3b82f6' },
-          { icon: <FaHeart size={12} />, text: 'Atención personalizada', color: '#ec4899' },
+          { icon: <Star size={12} />, text: 'Calificación real de clientes', color: 'var(--color-primary)' },
+          { icon: <Zap size={12} />, text: 'Respuesta rápida', color: 'var(--color-success)' },
+          { icon: <ShieldCheck size={12} />, text: 'Equipo propio', color: '#3b82f6' },
+          { icon: <Heart size={12} />, text: 'Atención personalizada', color: '#ec4899' },
         ].map((badge, i) => (
           <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg text-xs"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>

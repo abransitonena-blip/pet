@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { SERVICES, getServicePrice, calculateSavings } from '@/lib/services'
-import { FaCheck } from 'react-icons/fa'
+import { Check } from 'lucide-react'
 
 export default function StepService({ form, prices, onSelect }: {
   form: { service: string }
@@ -64,7 +64,7 @@ export default function StepService({ form, prices, onSelect }: {
                   className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-1"
                   style={{ background: 'var(--color-primary)' }}
                 >
-                  <FaCheck size={12} className="text-white" />
+                  <Check size={12} className="text-white" />
                 </motion.div>
               )}
             </label>

@@ -7,9 +7,9 @@ import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import {
-  FaHistory, FaDog, FaCheckCircle, FaCalendarAlt, FaClock, FaArrowLeft,
-  FaWalking, FaCamera, FaMapMarkerAlt,
-} from 'react-icons/fa'
+  History, Dog, CheckCircle2, CalendarDays, Clock, ArrowLeft,
+  PersonStanding, Camera, MapPin,
+} from 'lucide-react'
 import type { Reservation } from '@/types'
 
 export default function PaseadorHistorialPage() {
@@ -89,7 +89,7 @@ export default function PaseadorHistorialPage() {
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
             style={{ color: 'var(--text-muted)' }}
           >
-            <FaArrowLeft size={14} />
+            <ArrowLeft size={14} />
           </button>
           <div>
             <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Mi historial</h1>
@@ -124,7 +124,7 @@ export default function PaseadorHistorialPage() {
 
       {filtered.length === 0 ? (
         <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <FaHistory className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <History className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
             {filter === 'all' ? 'No hay paseos en tu historial' : `No hay paseos ${filter === 'completed' ? 'completados' : 'en progreso'}`}
           </p>
@@ -146,9 +146,9 @@ export default function PaseadorHistorialPage() {
                   res.status === 'in_progress' ? 'bg-success-500/20' :
                   'bg-brand-500/10'
                 }`}>
-                  {res.status === 'completed' ? <FaCheckCircle size={14} className="text-success-400" /> :
-                   res.status === 'in_progress' ? <FaWalking size={14} className="text-success-400" /> :
-                   <FaDog size={14} className="text-brand-400" />}
+                  {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :
+                   res.status === 'in_progress' ? <PersonStanding size={14} className="text-success-400" /> :
+                   <Dog size={14} className="text-brand-400" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
@@ -165,15 +165,15 @@ export default function PaseadorHistorialPage() {
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
                     <span>{res.service}</span>
-                    <span className="flex items-center gap-1"><FaCalendarAlt size={9} /> {res.date}</span>
-                    <span className="flex items-center gap-1"><FaClock size={9} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
+                    <span className="flex items-center gap-1"><CalendarDays size={9} /> {res.date}</span>
+                    <span className="flex items-center gap-1"><Clock size={9} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
                   </div>
                   {res.walkCheckIn && (
                     <div className="flex items-center gap-2 mt-1.5 text-2xs" style={{ color: 'var(--text-muted)' }}>
-                      <FaCamera size={8} className="text-success-400" /> Check-in registrado
+                      <Camera size={8} className="text-success-400" /> Check-in registrado
                       {res.walkCheckIn.lat && (
                         <span className="flex items-center gap-0.5">
-                          <FaMapMarkerAlt size={8} /> {res.walkCheckIn.lat.toFixed(3)}, {res.walkCheckIn.lng.toFixed(3)}
+                          <MapPin size={8} /> {res.walkCheckIn.lat.toFixed(3)}, {res.walkCheckIn.lng.toFixed(3)}
                         </span>
                       )}
                     </div>

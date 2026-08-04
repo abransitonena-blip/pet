@@ -1,6 +1,6 @@
 'use client'
 
-import { FaPaw, FaDog, FaCheck, FaTimes } from 'react-icons/fa'
+import { PawPrint, Dog, Check, X } from 'lucide-react'
 
 const PET_TYPES = [
   { value: 'perro', emoji: '🐕', label: 'Perro' },
@@ -58,7 +58,7 @@ export default function StepPet({
 
         <div className="space-y-2">
           <label htmlFor="pet-name" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-            <FaPaw size={13} className="text-primary" /> Nombre <span style={{ color: 'var(--color-danger)' }}>*</span>
+            <PawPrint size={13} className="text-primary" /> Nombre <span style={{ color: 'var(--color-danger)' }}>*</span>
           </label>
           <input
             id="pet-name"
@@ -79,12 +79,12 @@ export default function StepPet({
           />
           {errors.petName && touched.petName && (
             <p id="pet-name-error" className="text-xs flex items-center gap-1 animate-shake" role="alert" style={{ color: 'var(--color-danger)' }}>
-              <FaTimes size={10} /> {errors.petName}
+              <X size={10} /> {errors.petName}
             </p>
           )}
           {!errors.petName && form.petName && (
             <p className="text-xs flex items-center gap-1" style={{ color: 'var(--color-success)' }}>
-              <FaCheck size={10} /> ¡Qué bonito nombre!
+              <Check size={10} /> ¡Qué bonito nombre!
             </p>
           )}
         </div>
@@ -92,7 +92,7 @@ export default function StepPet({
         <div className="space-y-2">
           <fieldset>
             <legend className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-              <FaDog size={13} className="text-primary" /> Tipo de mascota
+              <Dog size={13} className="text-primary" /> Tipo de mascota
             </legend>
             <div className="grid grid-cols-3 gap-3" role="radiogroup">
               {PET_TYPES.map((pt) => {

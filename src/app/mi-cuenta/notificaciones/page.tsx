@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, limit } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { FaArrowLeft, FaBell, FaDog, FaCalendarCheck, FaStar, FaGift } from 'react-icons/fa'
+import { ArrowLeft, Bell, Dog, CalendarCheck, Star, Gift } from 'lucide-react'
 
 interface Notification {
   id: string
@@ -17,11 +17,11 @@ interface Notification {
   createdAt: { seconds: number; nanoseconds: number } | null
 }
 
-const typeIcons: Record<string, typeof FaBell> = {
-  walk_update: FaDog,
-  loyalty: FaStar,
-  referral: FaGift,
-  system: FaCalendarCheck,
+const typeIcons: Record<string, typeof Bell> = {
+  walk_update: Dog,
+  loyalty: Star,
+  referral: Gift,
+  system: CalendarCheck,
 }
 
 const typeColors: Record<string, string> = {
@@ -100,7 +100,7 @@ export default function NotificacionesPage() {
           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
           style={{ color: 'var(--text-muted)' }}
         >
-          <FaArrowLeft size={14} />
+          <ArrowLeft size={14} />
         </button>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Notificaciones</h1>
@@ -115,14 +115,14 @@ export default function NotificacionesPage() {
           className="rounded-2xl p-8 text-center"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
-          <FaBell size={32} className="mx-auto mb-3 opacity-20" style={{ color: 'var(--text-muted)' }} />
+          <Bell size={32} className="mx-auto mb-3 opacity-20" style={{ color: 'var(--text-muted)' }} />
           <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Sin notificaciones</h2>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Tus actualizaciones aparecerán aquí</p>
         </motion.div>
       ) : (
         <div className="space-y-2">
           {notifications.map((n, i) => {
-            const Icon = typeIcons[n.type] || FaBell
+            const Icon = typeIcons[n.type] || Bell
             const color = typeColors[n.type] || 'var(--text-muted)'
             return (
               <motion.div

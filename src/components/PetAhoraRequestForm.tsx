@@ -7,7 +7,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { usePetAhoraDispatch } from '@/lib/usePetAhoraDispatch'
 import { useConfig } from '@/context/ConfigContext'
-import { FaBolt, FaSpinner, FaDog, FaMapMarkerAlt, FaExclamationTriangle } from 'react-icons/fa'
+import { Zap, Loader2, Dog, MapPin, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import type { Pet, Address } from '@/types'
 
@@ -82,7 +82,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
   if (!user) {
     return (
       <div className="glass-card p-6 text-center">
-        <FaBolt className="text-3xl mx-auto mb-3 text-secondary" />
+        <Zap className="text-3xl mx-auto mb-3 text-secondary" />
         <h3 className="text-lg font-bold mb-2">PET Ahora</h3>
         <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Inicia sesión para solicitar un paseo al instante</p>
         <Link href="/login" className="btn-primary inline-flex items-center gap-2 text-sm">Iniciar sesión</Link>
@@ -94,7 +94,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
     return (
       <div className="glass-card p-6 text-center">
         <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.1)' }}>
-          <FaBolt className="text-secondary" size={24} />
+          <Zap className="text-secondary" size={24} />
         </div>
         <h3 className="text-lg font-bold mb-2">Buscando paseador...</h3>
         <div className="flex items-center justify-center gap-2 mb-3">
@@ -114,7 +114,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
     >
       <div className="flex items-center gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.1)' }}>
-          <FaBolt className="text-secondary" size={18} />
+          <Zap className="text-secondary" size={18} />
         </div>
         <div>
           <h3 className="text-lg font-bold">PET Ahora</h3>
@@ -124,7 +124,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
 
       {pets.length === 0 ? (
         <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
-          <FaExclamationTriangle size={12} className="inline mr-1 text-amber-500" />
+          <AlertTriangle size={12} className="inline mr-1 text-amber-500" />
           No tienes perros registrados.{' '}
           <Link href="/mi-cuenta/perros" className="text-primary underline">Registra uno</Link>
         </div>
@@ -139,7 +139,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
 
       {addresses.length === 0 ? (
         <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
-          <FaExclamationTriangle size={12} className="inline mr-1 text-amber-500" />
+          <AlertTriangle size={12} className="inline mr-1 text-amber-500" />
           No tienes direcciones guardadas.{' '}
           <Link href="/mi-cuenta/direcciones" className="text-primary underline">Agrega una</Link>
         </div>
@@ -161,7 +161,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
         disabled={dispatching || pets.length === 0 || addresses.length === 0}
         className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
       >
-        {dispatching ? <><FaSpinner className="animate-spin" /> Buscando...</> : <><FaBolt /> Solicitar PET Ahora</>}
+        {dispatching ? <><Loader2 className="animate-spin" /> Buscando...</> : <><Zap /> Solicitar PET Ahora</>}
       </button>
     </motion.div>
   )

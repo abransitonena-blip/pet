@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaWhatsapp } from 'react-icons/fa'
+import {  } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { Events } from '@/lib/analytics'
 
@@ -50,7 +50,7 @@ export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
                        hover:shadow-xl hover:shadow-green-500/40 transition-shadow
                        relative group"
           >
-            <FaWhatsapp className="text-white text-2xl" />
+            <WhatsAppIcon className="text-white text-2xl" />
             <motion.span
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -62,3 +62,5 @@ export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
     </AnimatePresence>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

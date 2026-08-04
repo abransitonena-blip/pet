@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { db, auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { FaStar, FaPaw, FaSpinner, FaCheckCircle, FaUser } from 'react-icons/fa'
+import { Star, PawPrint, Loader2, CheckCircle2, User } from 'lucide-react'
 import Link from 'next/link'
 
 export default function ReviewForm() {
@@ -65,7 +65,7 @@ export default function ReviewForm() {
     >
       {!user ? (
         <div className="text-center py-8">
-          <FaUser className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <User className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Inicia sesión para dejar tu reseña</p>
           <Link href="/login" className="btn-primary inline-flex items-center gap-2 text-sm">
             Iniciar sesión
@@ -74,7 +74,7 @@ export default function ReviewForm() {
       ) : (
       <>
       <div className="flex items-center gap-3 mb-6">
-        <FaPaw className="text-primary text-xl" />
+        <PawPrint className="text-primary text-xl" />
         <h3 className="text-xl font-bold">Deja tu reseña</h3>
       </div>
 
@@ -121,7 +121,7 @@ export default function ReviewForm() {
                 onMouseLeave={() => setHover(0)}
                 className="p-1 transition-transform hover:scale-110"
               >
-                <FaStar
+                <Star
                   size={24}
                   className={
                     star <= (hover || rating)
@@ -165,11 +165,11 @@ export default function ReviewForm() {
           className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
         >
           {sending ? (
-            <FaSpinner className="animate-spin" />
+            <Loader2 className="animate-spin" />
           ) : sent ? (
-            <FaCheckCircle />
+            <CheckCircle2 />
           ) : (
-            <FaPaw />
+            <PawPrint />
           )}
           {sending ? 'Enviando...' : sent ? '¡Gracias!' : 'Publicar reseña'}
         </motion.button>

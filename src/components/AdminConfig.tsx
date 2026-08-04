@@ -134,20 +134,26 @@ function HeroEditor({ config, updateConfig, saving }: EditorProps) {
 
 function SocialEditor({ config, updateConfig, saving }: EditorProps) {
   const [whatsapp, setWhatsapp] = useState(config.whatsapp)
+  const [displayPhone, setDisplayPhone] = useState(config.displayPhone || '')
+  const [contactEmail, setContactEmail] = useState(config.contactEmail || '')
   const [instagram, setInstagram] = useState(config.instagram)
   const [facebook, setFacebook] = useState(config.facebook)
   const [tiktok, setTiktok] = useState(config.tiktok)
 
   useEffect(() => { setWhatsapp(config.whatsapp) }, [config.whatsapp])
+  useEffect(() => { setDisplayPhone(config.displayPhone || '') }, [config.displayPhone])
+  useEffect(() => { setContactEmail(config.contactEmail || '') }, [config.contactEmail])
   useEffect(() => { setInstagram(config.instagram) }, [config.instagram])
   useEffect(() => { setFacebook(config.facebook) }, [config.facebook])
   useEffect(() => { setTiktok(config.tiktok) }, [config.tiktok])
 
-  const save = () => updateConfig({ whatsapp, instagram, facebook, tiktok })
+  const save = () => updateConfig({ whatsapp, displayPhone, contactEmail, instagram, facebook, tiktok })
 
   return (
     <div className="space-y-3">
-      <InputField label="WhatsApp (solo números)" value={whatsapp} onChange={setWhatsapp} />
+      <InputField label="WhatsApp (solo números, con código de país ej. 5215523053772)" value={whatsapp} onChange={setWhatsapp} />
+      <InputField label="Teléfono para mostrar (ej. 55 2305 3772)" value={displayPhone} onChange={setDisplayPhone} />
+      <InputField label="Correo de contacto" value={contactEmail} onChange={setContactEmail} />
       <InputField label="Instagram (URL completa)" value={instagram} onChange={setInstagram} />
       <InputField label="Facebook (URL completa)" value={facebook} onChange={setFacebook} />
       <InputField label="TikTok (URL completa)" value={tiktok} onChange={setTiktok} />
@@ -331,13 +337,24 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
 
 function FeaturesEditor({ config, updateConfig, saving }: EditorProps) {
   const [petAhora, setPetAhora] = useState(config.features?.petAhoraEnabled ?? false)
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(config.analyticsEnabled !== false)
 
   useEffect(() => { setPetAhora(config.features?.petAhoraEnabled ?? false) }, [config.features?.petAhoraEnabled])
+  useEffect(() => { setAnalyticsEnabled(config.analyticsEnabled !== false) }, [config.analyticsEnabled])
 
-  const save = () => updateConfig({ features: { petAhoraEnabled: petAhora } })
+  const save = () => updateConfig({ features: { petAhoraEnabled: petAhora }, analyticsEnabled })
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
+          className={`w-10 h-6 rounded-full transition-all ${analyticsEnabled ? 'bg-brand-500' : 'bg-white/10'}`}
+        >
+          <div className={`w-4 h-4 rounded-full bg-white transition-all ${analyticsEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+        </button>
+        <span className="text-xs text-white/60">{analyticsEnabled ? 'Analítica activada' : 'Analítica desactivada'}</span>
+      </div>
       <div className="flex items-center gap-3">
         <button
           onClick={() => setPetAhora(!petAhora)}

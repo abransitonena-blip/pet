@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaDog } from 'react-icons/fa'
+import { Dog } from 'lucide-react'
 
 export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const [visible, setVisible] = useState(true)
@@ -31,7 +31,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
               transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
               className="text-7xl mb-6"
             >
-              <FaDog
+              <Dog
                 className="inline-block"
                 style={{ color: 'var(--primary)' }}
               />

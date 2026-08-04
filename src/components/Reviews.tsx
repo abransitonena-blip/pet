@@ -10,7 +10,7 @@ import {
   limit,
   getDocs,
 } from 'firebase/firestore'
-import { FaStar, FaQuoteLeft, FaPaw } from 'react-icons/fa'
+import { Star, Quote, PawPrint } from 'lucide-react'
 
 interface Review {
   id: string
@@ -104,7 +104,7 @@ export default function Reviews() {
           </div>
         ) : reviews.length === 0 ? (
           <div className="text-center py-12">
-            <FaPaw className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <PawPrint className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sé el primero en dejarnos una reseña</p>
           </div>
         ) : (
@@ -119,10 +119,10 @@ export default function Reviews() {
                   transition={{ duration: 0.5 }}
                   className="glass-card p-6 w-80 flex-shrink-0"
                 >
-                  <FaQuoteLeft className="text-primary/20 text-xl mb-3" />
+                  <Quote className="text-primary/20 text-xl mb-3" />
                   <div className="flex items-center gap-1 mb-3" aria-label={`${review.rating} de 5 estrellas`}>
                     {Array.from({ length: 5 }).map((_, j) => (
-                      <FaStar
+                      <Star
                         key={j}
                         className={j < review.rating ? 'text-secondary' : 'opacity-20'}
                         style={j >= review.rating ? { color: 'var(--text-muted)' } : undefined}
@@ -142,7 +142,7 @@ export default function Reviews() {
                       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{review.name}</p>
                       {review.petName && (
                         <p className="text-xs flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                          <FaPaw className="text-primary" size={10} />
+                          <PawPrint className="text-primary" size={10} />
                           {review.petName}
                         </p>
                       )}
@@ -158,10 +158,10 @@ export default function Reviews() {
                   key={review.id}
                   className="glass-card p-4 sm:p-6 min-w-[260px] sm:min-w-[280px] snap-center flex-shrink-0"
                 >
-                  <FaQuoteLeft className="text-primary/20 text-xl mb-3" />
+                  <Quote className="text-primary/20 text-xl mb-3" />
                   <div className="flex items-center gap-1 mb-3" aria-label={`${review.rating} de 5 estrellas`}>
                     {Array.from({ length: 5 }).map((_, j) => (
-                      <FaStar
+                      <Star
                         key={j}
                         className={j < review.rating ? 'text-secondary' : 'opacity-20'}
                         style={j >= review.rating ? { color: 'var(--text-muted)' } : undefined}
@@ -181,7 +181,7 @@ export default function Reviews() {
                       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{review.name}</p>
                       {review.petName && (
                         <p className="text-xs flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                          <FaPaw className="text-primary" size={10} />
+                          <PawPrint className="text-primary" size={10} />
                           {review.petName}
                         </p>
                       )}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { db } from '@/firebase/config'
 import { collection, query, where, getDocs } from 'firebase/firestore'
-import { FaCheck, FaTimes } from 'react-icons/fa'
+import { Check, X } from 'lucide-react'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
 
 export default function AvailabilityCalendar({ date, onSelect }: { date?: string; onSelect?: (time: string) => void }) {
@@ -64,7 +64,7 @@ export default function AvailabilityCalendar({ date, onSelect }: { date?: string
                     : 'bg-white/5 text-white/60 hover:bg-primary/20 hover:text-primary'
                 }`}
               >
-                {isBooked ? <FaTimes size={9} /> : <FaCheck size={9} className="opacity-0" />}
+                {isBooked ? <X size={9} /> : <Check size={9} className="opacity-0" />}
                 {slot}
               </motion.button>
             )

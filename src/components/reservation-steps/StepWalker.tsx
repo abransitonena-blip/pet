@@ -1,6 +1,6 @@
 'use client'
 
-import { FaCheck, FaDog } from 'react-icons/fa'
+import { Check, Dog } from 'lucide-react'
 
 export default function StepWalker({
   walkerPreference, setWalkerPreference, availableWalkers, loadingWalkers,
@@ -45,7 +45,7 @@ export default function StepWalker({
                 El sistema elige al paseador más cercano
               </p>
             </div>
-            {walkerPreference === '' && <FaCheck size={12} className="text-primary mt-1 shrink-0" />}
+            {walkerPreference === '' && <Check size={12} className="text-primary mt-1 shrink-0" />}
           </button>
 
           {availableWalkers.map((walker) => {
@@ -77,7 +77,7 @@ export default function StepWalker({
                     {walker.rating ? ` · ${walker.rating}★` : ''}
                   </p>
                 </div>
-                {selected && <FaCheck size={12} className="text-primary mt-1 shrink-0" />}
+                {selected && <Check size={12} className="text-primary mt-1 shrink-0" />}
               </button>
             )
           })}

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { uploadToCloudinary, getCurrentPosition } from '@/lib/cloudinary'
-import { FaCamera, FaTimes, FaCheck, FaSpinner } from 'react-icons/fa'
+import { Camera, X, Check, Loader2 } from 'lucide-react'
 
 interface Props {
   isOpen: boolean
@@ -90,7 +90,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
             {mode === 'check_in' ? 'Iniciar paseo' : 'Completar paseo'}
           </h3>
           <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
-            <FaTimes size={11} style={{ color: 'var(--text-muted)' }} />
+            <X size={11} style={{ color: 'var(--text-muted)' }} />
           </button>
         </div>
 
@@ -104,7 +104,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
             className="w-full aspect-square mb-4 rounded-xl flex flex-col items-center justify-center gap-2 border-2 border-dashed transition-colors hover:bg-white/[0.02]"
             style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
           >
-            <FaCamera size={24} />
+            <Camera size={24} />
             <span className="text-xs">{mode === 'check_in' ? 'Tomar foto de inicio' : 'Tomar foto de finalización'}</span>
           </button>
         )}
@@ -125,7 +125,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
             className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-2 transition-all"
             style={{ background: 'var(--color-primary)' }}
           >
-            {saving ? <><FaSpinner className="animate-spin" size={11} /> Guardando...</> : <><FaCheck size={11} /> {photo ? 'Guardar' : 'Seleccionar foto'}</>}
+            {saving ? <><Loader2 className="animate-spin" size={11} /> Guardando...</> : <><Check size={11} /> {photo ? 'Guardar' : 'Seleccionar foto'}</>}
           </button>
         </div>
       </motion.div>

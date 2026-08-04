@@ -1,0 +1,94 @@
+{
+  "generatedAt": "2026-07-30",
+  "owner": "PET Ap",
+  "contact": "ap9871888@gmail.com",
+  "assets": [
+    {
+      "path": "/icons/icon-192.svg",
+      "type": "image/svg+xml",
+      "purpose": "App icon / PWA (192px)",
+      "origin": "in-house",
+      "license": "proprietary-PET-Ap",
+      "authorized": true
+    },
+    {
+      "path": "/icons/icon-512.svg",
+      "type": "image/svg+xml",
+      "purpose": "App icon / PWA (512px)",
+      "origin": "in-house",
+      "license": "proprietary-PET-Ap",
+      "authorized": true
+    },
+    {
+      "path": "/manifest.json",
+      "type": "application/manifest+json",
+      "purpose": "PWA manifest",
+      "origin": "in-house",
+      "license": "proprietary-PET-Ap",
+      "authorized": true
+    },
+    {
+      "path": "/sw.js",
+      "type": "text/javascript",
+      "purpose": "Service worker (offline cache)",
+      "origin": "in-house",
+      "license": "proprietary-PET-Ap",
+      "authorized": true
+    },
+    {
+      "path": "/firebase-messaging-sw.js",
+      "type": "text/javascript",
+      "purpose": "Firebase messaging service worker",
+      "origin": "Firebase/Google",
+      "license": "Apache-2.0",
+      "authorized": true
+    },
+    {
+      "path": "/robots.txt",
+      "type": "text/plain",
+      "purpose": "SEO directives",
+      "origin": "in-house",
+      "license": "proprietary-PET-Ap",
+      "authorized": true
+    },
+    {
+      "path": "/sitemap.xml",
+      "type": "application/xml",
+      "purpose": "SEO sitemap",
+      "origin": "in-house",
+      "license": "proprietary-PET-Ap",
+      "authorized": true
+    }
+  ],
+  "runtimeAssets": [
+    {
+      "source": "lucide-react",
+      "type": "inline-svg-icons",
+      "license": "ISC",
+      "notes": "Ver THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "source": "react-icons",
+      "type": "inline-svg-icons",
+      "license": "CC BY 4.0 (FA) / MIT (Remix, etc.)",
+      "notes": "En migración a lucide-react (F9). No agregar usos nuevos."
+    },
+    {
+      "source": "gallery-images (Firestore)",
+      "type": "photographs",
+      "license": "consentimiento por propietario",
+      "notes": "Cada foto requiere autorización previa. Ver ASSET_LICENSES.md"
+    },
+    {
+      "source": "Google Fonts (Inter, JetBrains Mono)",
+      "type": "webfont",
+      "license": "OFL-1.1",
+      "notes": "OFL permite uso sin restricción comercial"
+    }
+  ],
+  "prohibited": [
+    "Logos o marcas de terceros (Uber, DiDi, Lyft, etc.) sin licencia comercial",
+    "Fotografías de clientes sin consentimiento",
+    "Assets sin entrada en este manifiesto"
+  ]
+}

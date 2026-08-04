@@ -1,57 +1,15 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaTimes, FaDog, FaShieldAlt, FaHeart, FaWhatsapp, FaLock, FaPaw, FaCalendarAlt, FaStar } from 'react-icons/fa'
+import { X, Dog } from 'lucide-react'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import { useFocusTrap } from '@/lib/useFocusTrap'
-import { formatBusinessHours } from '@/lib/defaultConfig'
-
-const sections = [
-  {
-    icon: FaDog,
-    title: 'Nuestro compromiso contigo',
-    content: 'En PET Ap nos apasiona lo que hacemos. Cada paseo es una experiencia pensada para la felicidad y el bienestar de tu perro. Nuestro equipo está capacitado en manejo canino y primeros auxilios básicos, para que tú estés tranquilo mientras tu lomito se divierte.',
-  },
-  {
-    icon: FaCalendarAlt,
-    title: '¿Cómo reservar?',
-    content: 'Reservar es muy fácil: llena el formulario en nuestra página o escríbenos directo por WhatsApp. Te confirmaremos el horario disponible y listo.',
-  },
-  {
-    icon: FaTimes,
-    title: 'Cancelaciones y cambios',
-    content: 'Entendemos que pasan imprevistos. Puedes cancelar o reagendar sin costo hasta 2 horas antes del paseo desde nuestra página de cancelación o por WhatsApp. Si cancelas después de ese tiempo, te cobraremos el 50% del servicio para cubrir el tiempo apartado.',
-  },
-  {
-    icon: FaHeart,
-    title: 'Salud y seguridad',
-    content: 'La salud de tu perro es lo más importante. Todos los perros deben tener su esquema de vacunación al día para paseos grupales. Para paseos individuales lo recomendamos pero no es obligatorio. Si tu perro tiene alguna condición especial, comportamiento agresivo, o está en celo, por favor infórmanos al agendar para tomar las precauciones necesarias. Así todos disfrutan el paseo.',
-  },
-  {
-    icon: FaShieldAlt,
-    title: 'Responsabilidad compartida',
-    content: 'Nos comprometemos a cuidar a tu perro como si fuera nuestro. Durante el paseo usamos correa y supervisión constante. Tú como dueño te comprometes a proporcionar información honesta sobre el comportamiento, salud y necesidades de tu mascota. No nos hacemos responsables por incidentes derivados de información no revelada, como agresividad no declarada o condiciones médicas preexistentes.',
-  },
-  {
-    icon: FaLock,
-    title: 'Tu privacidad importa',
-    content: 'Tus datos personales (nombre, teléfono, dirección) los usamos únicamente para coordinar los paseos. No compartimos información con terceros ni enviamos spam. Las fotos y videos que tomamos durante los paseos son el alma de nuestra galería — si prefieres que no aparezca tu perro, solo dínoslo y lo respetamos sin problema.',
-  },
-  {
-    icon: FaStar,
-    title: 'Precios justos',
-    content: 'Todos nuestros precios están en pesos mexicanos (MXN) e incluyen IVA. Creemos en precios accesibles para que más perros disfruten de paseos supervisados. Si algún día ajustamos nuestras tarifas, respetamos el precio acordado en reservaciones ya confirmadas. Los cupones y descuentos tienen vigencia y términos específicos que se indican al momento de aplicarlos.',
-  },
-  {
-    icon: FaWhatsapp,
-    title: 'Atención al cliente',
-    content: `Estamos disponibles por WhatsApp ${formatBusinessHours().map((h) => `${h.weekday} de ${h.hours}`).join(' y ')}. Fuera de horario puedes dejarnos un mensaje y te responderemos en cuanto abramos. Tu opinión nos ayuda a mejorar — después de cada paseo puedes calificar el servicio y dejar tus comentarios.`,
-  },
-]
+import { termsSections, TERMS_LAST_UPDATED } from '@/lib/termsContent'
 
 export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   useEscapeKey(onClose, isOpen)
   const trapRef = useFocusTrap(isOpen)
+  const sections = termsSections
   return (
     <AnimatePresence>
       {isOpen && (
@@ -78,7 +36,7 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center text-white">
-                  <FaDog />
+                  <Dog />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Términos y condiciones</h2>
@@ -89,7 +47,7 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
                 onClick={onClose}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10 text-white/40 hover:text-white"
               >
-                <FaTimes size={14} />
+                <X size={14} />
               </button>
             </div>
 
@@ -127,7 +85,7 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
             </motion.div>
 
             <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-              <p className="text-2xs text-white/30">Última actualización: {new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}</p>
+              <p className="text-2xs text-white/30">Última actualización: {TERMS_LAST_UPDATED}</p>
               <button
                 onClick={onClose}
                 className="text-xs px-4 py-2 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-all"

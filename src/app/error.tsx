@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FaDog, FaExclamationTriangle } from 'react-icons/fa'
+import { Dog, AlertTriangle } from 'lucide-react'
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
           className="w-16 h-16 rounded-2xl bg-danger-500/10 flex items-center justify-center mx-auto mb-4"
         >
-          <FaExclamationTriangle size={24} className="text-danger-400" />
+          <AlertTriangle size={24} className="text-danger-400" />
         </motion.div>
         <motion.h1
           initial={{ opacity: 0, y: 10 }}

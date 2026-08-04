@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { FaDog, FaPaw } from 'react-icons/fa'
+import { Dog, PawPrint } from 'lucide-react'
 import Button from '@/components/ui/Button'
 
 export default function NotFound() {
@@ -53,7 +53,7 @@ export default function NotFound() {
           transition={{ delay: 0.5 }}
         >
           <Link href="/" className="inline-flex">
-            <Button icon={<FaDog />}>Volver al inicio</Button>
+            <Button icon={<Dog />}>Volver al inicio</Button>
           </Link>
         </motion.div>
         <motion.div
@@ -63,7 +63,7 @@ export default function NotFound() {
           className="mt-12 flex items-center justify-center gap-2 text-xs"
           style={{ color: 'var(--text-muted)' }}
         >
-          <FaPaw /> PET Ap <FaPaw />
+          <PawPrint /> PET Ap <PawPrint />
         </motion.div>
       </motion.div>
     </div>

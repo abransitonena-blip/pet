@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "brandName": "PET Ap",
+  "heroTitle": "Bienestar para tu perro. Tranquilidad para ti.",
+  "heroSubtitle": "Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.",
+  "sectionDescriptions": {
+    "services": "Todos nuestros paseos son supervisados, seguros y pensados para la felicidad de tu perro.",
+    "howItWorks": "Cotiza en segundos y nosotros nos encargamos del resto.",
+    "faq": "Respuestas a las preguntas más frecuentes sobre nuestros servicios."
+  },
+  "whatsapp": "5215523053772",
+  "whatsappE164": "5215523053772",
+  "displayPhone": "55 2305 3772",
+  "contactEmail": "ap9871888@gmail.com",
+  "instagram": "https://www.instagram.com/pet___ap",
+  "instagramUrl": "https://www.instagram.com/pet___ap",
+  "facebook": "",
+  "tiktok": "",
+  "analyticsEnabled": true,
+  "availableSlots": {
+    "lunes": ["07:00-07:20", "07:20-07:40", "07:40-08:00", "08:00-08:20", "08:20-08:40", "08:40-09:00", "09:00-09:20", "09:20-09:40", "09:40-10:00", "10:00-10:20", "10:20-10:40", "10:40-11:00", "11:00-11:20", "11:20-11:40", "11:40-12:00", "12:00-12:20", "12:20-12:40", "12:40-13:00", "13:00-13:20", "13:20-13:40", "13:40-14:00", "14:00-14:20", "14:20-14:40", "14:40-15:00", "15:00-15:20", "15:20-15:40", "15:40-16:00", "16:00-16:20", "16:20-16:40", "16:40-17:00", "17:00-17:20", "17:20-17:40", "17:40-18:00", "18:00-18:20", "18:20-18:40", "18:40-19:00"],
+    "martes": ["07:00-07:20", "07:20-07:40", "07:40-08:00", "08:00-08:20", "08:20-08:40", "08:40-09:00", "09:00-09:20", "09:20-09:40", "09:40-10:00", "10:00-10:20", "10:20-10:40", "10:40-11:00", "11:00-11:20", "11:20-11:40", "11:40-12:00", "12:00-12:20", "12:20-12:40", "12:40-13:00", "13:00-13:20", "13:20-13:40", "13:40-14:00", "14:00-14:20", "14:20-14:40", "14:40-15:00", "15:00-15:20", "15:20-15:40", "15:40-16:00", "16:00-16:20", "16:20-16:40", "16:40-17:00", "17:00-17:20", "17:20-17:40", "17:40-18:00", "18:00-18:20", "18:20-18:40", "18:40-19:00"],
+    "miercoles": ["07:00-07:20", "07:20-07:40", "07:40-08:00", "08:00-08:20", "08:20-08:40", "08:40-09:00", "09:00-09:20", "09:20-09:40", "09:40-10:00", "10:00-10:20", "10:20-10:40", "10:40-11:00", "11:00-11:20", "11:20-11:40", "11:40-12:00", "12:00-12:20", "12:20-12:40", "12:40-13:00", "13:00-13:20", "13:20-13:40", "13:40-14:00", "14:00-14:20", "14:20-14:40", "14:40-15:00", "15:00-15:20", "15:20-15:40", "15:40-16:00", "16:00-16:20", "16:20-16:40", "16:40-17:00", "17:00-17:20", "17:20-17:40", "17:40-18:00", "18:00-18:20", "18:20-18:40", "18:40-19:00"],
+    "jueves": ["07:00-07:20", "07:20-07:40", "07:40-08:00", "08:00-08:20", "08:20-08:40", "08:40-09:00", "09:00-09:20", "09:20-09:40", "09:40-10:00", "10:00-10:20", "10:20-10:40", "10:40-11:00", "11:00-11:20", "11:20-11:40", "11:40-12:00", "12:00-12:20", "12:20-12:40", "12:40-13:00", "13:00-13:20", "13:20-13:40", "13:40-14:00", "14:00-14:20", "14:20-14:40", "14:40-15:00", "15:00-15:20", "15:20-15:40", "15:40-16:00", "16:00-16:20", "16:20-16:40", "16:40-17:00", "17:00-17:20", "17:20-17:40", "17:40-18:00", "18:00-18:20", "18:20-18:40", "18:40-19:00"],
+    "viernes": ["07:00-07:20", "07:20-07:40", "07:40-08:00", "08:00-08:20", "08:20-08:40", "08:40-09:00", "09:00-09:20", "09:20-09:40", "09:40-10:00", "10:00-10:20", "10:20-10:40", "10:40-11:00", "11:00-11:20", "11:20-11:40", "11:40-12:00", "12:00-12:20", "12:20-12:40", "12:40-13:00", "13:00-13:20", "13:20-13:40", "13:40-14:00", "14:00-14:20", "14:20-14:40", "14:40-15:00", "15:00-15:20", "15:20-15:40", "15:40-16:00", "16:00-16:20", "16:20-16:40", "16:40-17:00", "17:00-17:20", "17:20-17:40", "17:40-18:00", "18:00-18:20", "18:20-18:40", "18:40-19:00"],
+    "sabado": ["08:00-08:20", "08:20-08:40", "08:40-09:00", "09:00-09:20", "09:20-09:40", "09:40-10:00", "10:00-10:20", "10:20-10:40", "10:40-11:00", "11:00-11:20", "11:20-11:40", "11:40-12:00", "12:00-12:20", "12:20-12:40", "12:40-13:00", "13:00-13:20", "13:20-13:40", "13:40-14:00", "14:00-14:20", "14:20-14:40", "14:40-15:00", "15:00-15:20", "15:20-15:40", "15:40-16:00", "16:00-16:20", "16:20-16:40", "16:40-17:00", "17:00-17:20", "17:20-17:40", "17:40-18:00"]
+  },
+  "walkTips": [
+    { "title": "Hidratación", "text": "Asegúrate de que tu perro tenga agua fresca antes y después del paseo.", "icon": "💧" },
+    { "title": "Descanso", "text": "Después del paseo, deja que tu perro descanse en un lugar tranquilo.", "icon": "😴" },
+    { "title": "Recompensa", "text": "Un premio después del paseo refuerza su buena conducta.", "icon": "🦴" }
+  ],
+  "faq": [
+    { "question": "¿En qué horario realizan los paseos?", "answer": "Operamos de Lunes a Viernes de 7:00 AM a 7:00 PM, y Sábados de 8:00 AM a 6:00 PM. Los paseos se agendan según disponibilidad." },
+    { "question": "¿Qué pasa si llueve?", "answer": "En caso de lluvia ligera, el paseo se realiza normalmente. Si hay tormenta o condiciones peligrosas, te contactaremos para reprogramar sin costo." },
+    { "question": "¿Cómo funcionan las cancelaciones?", "answer": "Puedes cancelar sin costo hasta 2 horas antes del paseo. Cancelaciones tardías o no-show pueden generar un cargo del 50%. Entendemos emergencias, háblanos." },
+    { "question": "¿Pasean perros de todas las tallas?", "answer": "¡Claro! Desde chihuahuas hasta grandes daneses. Agrupamos por tamaño y temperamento para la seguridad de todos." },
+    { "question": "¿Qué incluye el Paseo + Reporte?", "answer": "Duración de 45 min con reporte detallado por WhatsApp, fotos, video y ejercicios personalizados." },
+    { "question": "¿Cómo pago?", "answer": "Aceptamos efectivo, transferencia bancaria y depósito. El pago se acuerda al momento de agendar." },
+    { "question": "¿Mi perro necesita estar vacunado?", "answer": "Sí, pedimos que los perros estén al día con sus vacunas (múltiple y antirrábica) para la seguridad de todos los peludos." }
+  ],
+  "termsContent": "TÉRMINOS Y CONDICIONES\n\n1. SERVICIOS\nPET Ap ofrece servicios de paseo canino. Los paseos se realizan con correa y bajo supervisión del paseador.\n\n2. HORARIOS\nLos paseos se realizan de lunes a viernes de 7:00 AM a 7:00 PM, y sábados de 8:00 AM a 6:00 PM. Domingo no hay servicio.\n\n3. CANCELACIONES\nPuedes cancelar tu reserva sin costo hasta 2 horas antes del paseo. Cancelaciones tardías pueden generar cargos.\n\n4. RESPONSABILIDAD\nPET Ap se compromete a cuidar de tu perro durante el paseo. No nos hacemos responsables por condiciones preexistentes de salud ni por incidentes derivados de información no declarada (agresividad, condiciones médicas, celo).\n\n5. PAGOS\nLos pagos se realizan en efectivo o transferencia el día del paseo, o mediante el método acordado al agendar.",
+  "walkers": [
+    { "name": "Efrain", "phone": "5523053772" }
+  ],
+  "maintenance": false,
+  "features": {
+    "petAhoraEnabled": false
+  }
+}
