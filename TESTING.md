@@ -55,8 +55,8 @@ Prerrequisitos: reglas de Firestore desplegadas (`npx firebase deploy --only fir
 ## 9. Iconos / assets
 
 - [ ] No quedan logos de Uber/DiDi en el sitio
+- [ ] Todos los íconos usan `lucide-react` (única librería); sin `react-icons`
 - [ ] `public/assets-manifest.json`, `ASSET_LICENSES.md`, `THIRD_PARTY_NOTICES.md` presentes
-- [ ] (Pendiente de migrar a lucide-react: usos de `react-icons` en componentes admin)
 
 ## 10. Build guard
 

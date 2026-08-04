@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { FaDollarSign, FaChartBar, FaDownload, FaFilter } from 'react-icons/fa'
+import { DollarSign, ChartBar, Download, Filter } from 'lucide-react'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
@@ -127,7 +127,7 @@ export default function AdminFinanzasPage() {
           </p>
         </div>
         <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-          <FaDownload size={12} /> Exportar
+          <Download size={12} /> Exportar
         </button>
       </div>
 

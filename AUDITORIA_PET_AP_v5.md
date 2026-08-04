@@ -39,7 +39,7 @@ Analytics: Google Analytics (G-HQTMCZX66M)
 |---------|---------|------------|
 | firebase | ^10.12.0 | ~200KB gz |
 | framer-motion | ^11.1.0 | ~60KB gz |
-| react-icons | ^5.2.0 | Tree-shakeable |
+| lucide-react | ^1.28.0 | Tree-shakeable |
 | next | ^14.2.0 | Framework core |
 | react/react-dom | ^18.3.0 | Framework core |
 
@@ -973,7 +973,7 @@ match /reservations/{resId} {
 | F6 | Privacidad + consentimiento GA | ✅ Hecho | `ConsentProvider`: banner "Tu privacidad importa", default `denied`, carga GA solo tras aceptar y fuera de rutas auth; script GA eliminado de `layout.tsx` |
 | F7 | Contraste/legibilidad | ✅ Hecho | `.gradient-text` con fallback sólido + `@supports` + `forced-colors`; precios sin gradiente; dark `--text-muted` 0.4→0.5 (AA). Ver `CONTRAST.md` |
 | F8 | Touch targets | ✅ Hecho | Icon-buttons interactivos ≥28px (≥24 min), `.btn` con `min-height:44px`, `aria-label`/`title` presentes |
-| F9 | Unificación de íconos | ✅ Parcial | 47 archivos públicos migrados a `lucide-react`; **pendiente:** 20 archivos admin (`src/app/admin/*`, `AdminChat`, `AdminConfig`, `AdminCoupons`, `EditReservationModal`) |
+| F9 | Unificación de íconos | ✅ Hecho | 67 archivos migrados a `lucide-react`; dependencia `react-icons` eliminada |
 | F10 | IP / licencias | ✅ Hecho | `ASSET_LICENSES.md`, `public/assets-manifest.json`, `THIRD_PARTY_NOTICES.md`; logos Uber/DiDi eliminados |
 | F11 | Legales | ✅ Hecho | Términos corregidos (sin claims falsos), contenido compartido `src/lib/termsContent.ts`, página standalone `/terminos`, privacidad reescrita |
 | F12 | Tests | ✅ Hecho | 46 tests / 5 suites, guard de marca, `TESTING.md` (smoke E2E). `tsc`, `jest`, `build` en verde |
@@ -989,8 +989,7 @@ match /reservations/{resId} {
 
 ## Riesgos pendientes
 
-1. **Admin iconos (F9)** — 20 archivos admin aún usan `react-icons` (MIT/CC-BY 4.0, legal). Migración pendiente a `lucide-react`.
-2. **Migración de datos Firestore (F2)** — depende de acción manual:
+1. **Migración de datos Firestore (F2)** — depende de acción manual:
    - Crear `appSettings/public` (seed o guardando config desde admin)
    - Eliminar/archivar `admin/config` legacy
    - Desplegar `firestore.rules` (`npx firebase deploy --only firestore:rules`)

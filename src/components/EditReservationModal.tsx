@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { FaTimes } from 'react-icons/fa'
+import { X } from 'lucide-react'
 import type { Reservation } from '@/types'
 import { SERVICE_NAMES, normalizeServiceName } from '@/lib/services'
 import { logChange } from '@/lib/audit'
@@ -104,7 +104,7 @@ export default function EditReservationModal({
             <div className="flex items-center justify-between p-5 border-b border-white/5">
               <h3 className="text-lg font-bold text-white">Editar reserva</h3>
               <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all">
-                <FaTimes size={12} />
+                <X size={12} />
               </button>
             </div>
 

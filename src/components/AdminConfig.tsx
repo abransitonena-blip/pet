@@ -11,13 +11,13 @@ type EditorProps = {
   saving: boolean
 }
 import {
-  FaSave,
-  FaPlus,
-  FaTrash,
-  FaChevronDown,
-  FaChevronUp,
-  FaExclamationTriangle,
-} from 'react-icons/fa'
+  Save,
+  Plus,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+} from 'lucide-react'
 import { BUSINESS_HOURS, generateTimeSlots } from '@/lib/defaultConfig'
 
 type Section = 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'features' | 'maintenance'
@@ -49,7 +49,7 @@ export default function AdminConfig() {
             <span className="text-sm font-semibold text-white flex items-center gap-2">
               <span>{sec.icon}</span> {sec.label}
             </span>
-            {openSection === sec.id ? <FaChevronUp size={10} style={{ color: 'var(--text-muted)' }} /> : <FaChevronDown size={10} style={{ color: 'var(--text-muted)' }} />}
+            {openSection === sec.id ? <ChevronUp size={10} style={{ color: 'var(--text-muted)' }} /> : <ChevronDown size={10} style={{ color: 'var(--text-muted)' }} />}
           </button>
 
           <AnimatePresence>
@@ -240,11 +240,11 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
             <input value={tip.title} onChange={(e) => updateTip(i, 'title', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Título del tip" placeholder="Título" />
             <textarea value={tip.text} onChange={(e) => updateTip(i, 'text', e.target.value)} rows={2} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" aria-label="Texto del tip" placeholder="Texto" />
           </div>
-           <button onClick={() => removeTip(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
+           <button onClick={() => removeTip(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><Trash2 size={10} /></button>
         </div>
       ))}
       <button onClick={addTip} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
-        <FaPlus size={8} /> Agregar tip
+        <Plus size={8} /> Agregar tip
       </button>
       <SaveButton onClick={save} saving={saving} />
     </div>
@@ -274,11 +274,11 @@ function FAQEditor({ config, updateConfig, saving }: EditorProps) {
             <input value={item.question} onChange={(e) => updateItem(i, 'question', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Pregunta frecuente" placeholder="Pregunta" />
             <textarea value={item.answer} onChange={(e) => updateItem(i, 'answer', e.target.value)} rows={3} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" aria-label="Respuesta" placeholder="Respuesta" />
           </div>
-           <button onClick={() => removeItem(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
+           <button onClick={() => removeItem(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><Trash2 size={10} /></button>
         </div>
       ))}
       <button onClick={addItem} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
-        <FaPlus size={8} /> Agregar pregunta
+        <Plus size={8} /> Agregar pregunta
       </button>
       <SaveButton onClick={save} saving={saving} />
     </div>
@@ -324,11 +324,11 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
             <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Nombre del paseador" placeholder="Nombre" />
             <input value={w.phone} onChange={(e) => updateWalker(i, 'phone', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Teléfono del paseador" placeholder="Teléfono" />
           </div>
-           <button onClick={() => removeWalker(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><FaTrash size={10} /></button>
+           <button onClick={() => removeWalker(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><Trash2 size={10} /></button>
         </div>
       ))}
       <button onClick={addWalker} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
-        <FaPlus size={8} /> Agregar paseador
+        <Plus size={8} /> Agregar paseador
       </button>
       <SaveButton onClick={save} saving={saving} />
     </div>
@@ -394,7 +394,7 @@ function MaintenanceEditor({ config, updateConfig, saving }: EditorProps) {
       </div>
       {enabled && (
         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
-           <FaExclamationTriangle className="shrink-0 mt-0.5" size={12} style={{ color: 'var(--color-danger)' }} />
+           <AlertTriangle className="shrink-0 mt-0.5" size={12} style={{ color: 'var(--color-danger)' }} />
            <p className="text-xs" style={{ color: 'var(--color-danger)' }}>El sitio mostrará una pantalla de mantenimiento. Los clientes no podrán acceder a la página principal.</p>
         </div>
       )}
@@ -425,7 +425,7 @@ function SaveButton({ onClick, saving }: { onClick: () => void; saving: boolean 
     <button onClick={onClick} disabled={saving}
       className="w-full py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-30 flex items-center justify-center gap-1"
     >
-      <FaSave size={10} /> {saving ? 'Guardando...' : 'Guardar cambios'}
+      <Save size={10} /> {saving ? 'Guardando...' : 'Guardar cambios'}
     </button>
   )
 }

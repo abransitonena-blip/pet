@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, limit, getDocs, startAfter as firestoreStartAfter, DocumentSnapshot, QueryConstraint } from 'firebase/firestore'
-import { FaClipboardList, FaSearch } from 'react-icons/fa'
+import { ClipboardList, Search } from 'lucide-react'
 
 interface AuditLog {
   id: string
@@ -105,7 +105,7 @@ export default function AdminLogsPage() {
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             aria-label="Buscar en logs" placeholder="Buscar en logs..."
@@ -132,7 +132,7 @@ export default function AdminLogsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FaClipboardList className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <ClipboardList className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {searchQuery || actionFilter !== 'all' ? 'Sin resultados' : 'No hay logs de auditoría'}
           </p>

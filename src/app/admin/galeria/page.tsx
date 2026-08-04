@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import Image from 'next/image'
-import { FaImage, FaSpinner, FaTrash, FaUpload, FaDog, FaTag } from 'react-icons/fa'
+import { Image as ImageIcon, Loader2, Trash2, Upload, Dog, Tag } from 'lucide-react'
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'ktyauicg'
 const UPLOAD_PRESET = 'pet_gallery'
@@ -126,7 +126,7 @@ export default function AdminGalleryPage() {
 
       <div className="rounded-xl p-5 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
-          <FaImage size={14} className="text-primary" />
+          <ImageIcon size={14} className="text-primary" />
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Subir nueva imagen</span>
         </div>
 
@@ -141,7 +141,7 @@ export default function AdminGalleryPage() {
                 <Image src={preview} alt="Preview" width={200} height={160} className="h-full w-full object-contain rounded-xl" />
               ) : (
                 <div className="flex flex-col items-center gap-2">
-                  <FaUpload size={20} style={{ color: 'var(--text-muted)' }} />
+                  <Upload size={20} style={{ color: 'var(--text-muted)' }} />
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Click para seleccionar</span>
                   <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>Máx 5MB</span>
                 </div>
@@ -153,7 +153,7 @@ export default function AdminGalleryPage() {
           <div className="space-y-3">
             <div>
               <label htmlFor="img-title" className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
-                <FaTag size={10} className="inline mr-1" /> Título
+                <Tag size={10} className="inline mr-1" /> Título
               </label>
               <input
                 id="img-title"
@@ -166,7 +166,7 @@ export default function AdminGalleryPage() {
             </div>
             <div>
               <label htmlFor="img-dog" className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
-                <FaDog size={10} className="inline mr-1" /> Nombre del perro
+                <Dog size={10} className="inline mr-1" /> Nombre del perro
               </label>
               <input
                 id="img-dog"
@@ -182,7 +182,7 @@ export default function AdminGalleryPage() {
               disabled={!selectedFile || !title.trim() || !dog.trim() || uploading}
               className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
             >
-              {uploading ? <><FaSpinner className="animate-spin" size={14} /> Subiendo...</> : <><FaUpload size={14} /> Subir imagen</>}
+              {uploading ? <><Loader2 className="animate-spin" size={14} /> Subiendo...</> : <><Upload size={14} /> Subir imagen</>}
             </button>
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function AdminGalleryPage() {
           </div>
         ) : images.length === 0 ? (
           <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
-            <FaImage className="text-3xl mx-auto mb-2" />
+            <ImageIcon className="text-3xl mx-auto mb-2" />
             <p className="text-xs">No hay imágenes. Sube la primera.</p>
           </div>
         ) : (
@@ -221,7 +221,7 @@ export default function AdminGalleryPage() {
                   className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-black/60 hover:bg-red-500/80 text-white"
                   aria-label={`Eliminar ${img.title}`}
                 >
-                  {deleting === img.id ? <FaSpinner className="animate-spin" size={12} /> : <FaTrash size={11} />}
+                  {deleting === img.id ? <Loader2 className="animate-spin" size={12} /> : <Trash2 size={11} />}
                 </button>
               </div>
             ))}

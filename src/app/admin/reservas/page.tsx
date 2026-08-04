@@ -8,11 +8,9 @@ import {
   deleteDoc, serverTimestamp, where, getDocs, collection, query as fsQuery, orderBy as fsOrderBy,
   getDoc,
 } from 'firebase/firestore'
-import {
-  FaSearch, FaDog, FaWhatsapp, FaEdit, FaTrash,
-  FaCamera, FaDownload, FaSpinner, FaTimes,
-  FaArrowRight, FaUndo, FaWalking, FaMagic, FaBox, FaChevronDown, FaChevronRight,
-} from 'react-icons/fa'
+import { Search, Dog, Pencil, Trash2,
+  Camera, Download, Loader2, X,
+  ArrowRight, Undo2, PersonStanding, Sparkles, Package, ChevronDown, ChevronRight } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { SessionStatus } from '@/types'
 import { getServicePrice } from '@/lib/services'
@@ -290,11 +288,11 @@ export default function AdminReservas() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={autoAssign} disabled={autoAssigning || stats.pending === 0} className="btn-secondary !text-xs flex items-center gap-1.5 disabled:opacity-40">
-            {autoAssigning ? <FaSpinner className="animate-spin" size={12} /> : <FaMagic size={12} />}
+            {autoAssigning ? <Loader2 className="animate-spin" size={12} /> : <Sparkles size={12} />}
             Auto-asignar
           </button>
           <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-            <FaDownload size={12} /> Exportar
+            <Download size={12} /> Exportar
           </button>
         </div>
       </div>
@@ -317,7 +315,7 @@ export default function AdminReservas() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             placeholder="Buscar por nombre, mascota, teléfono..."
@@ -368,7 +366,7 @@ export default function AdminReservas() {
             viewTab === 'orders' ? 'bg-accent-500/15 text-accent-400 border border-accent-500/30' : 'border border-white/10 text-white/50 hover:text-white/70'
           }`}
         >
-          <FaBox size={11} /> Paquetes {orders.length > 0 && <span className="bg-accent-500/20 text-accent-400 px-1.5 py-0.5 rounded-full text-2xs">{orders.length}</span>}
+          <Package size={11} /> Paquetes {orders.length > 0 && <span className="bg-accent-500/20 text-accent-400 px-1.5 py-0.5 rounded-full text-2xs">{orders.length}</span>}
         </button>
       </div>
 
@@ -406,7 +404,7 @@ export default function AdminReservas() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FaDog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <Dog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {searchQuery || statusFilter !== 'all' ? 'Sin resultados' : 'No hay reservas aún'}
           </p>
@@ -462,33 +460,33 @@ export default function AdminReservas() {
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button onClick={() => openWhatsApp(res.phone, res.name)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="WhatsApp">
-                    <FaWhatsapp size={13} />
+                    <WhatsAppIcon width={13} height={13} />
                   </button>
                   <button onClick={() => setEditingReservation(res)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-blue-500/10 text-blue-400" title="Editar">
-                    <FaEdit size={12} />
+                    <Pencil size={12} />
                   </button>
                   {(res.status === 'pending' || res.status === 'assigned') && (
                     <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'on_the_way' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
-                      <FaArrowRight size={12} />
+                      <ArrowRight size={12} />
                     </button>
                   )}
                   {res.status === 'on_the_way' && (
                     <button onClick={() => setWalkModal({ reservation: res, mode: 'check_in' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Iniciar paseo (check-in)">
-                      <FaCamera size={12} />
+                      <Camera size={12} />
                     </button>
                   )}
                   {res.status === 'in_progress' && (
                     <button onClick={() => setWalkModal({ reservation: res, mode: 'check_out' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="Terminar paseo (check-out)">
-                      <FaWalking size={12} />
+                      <PersonStanding size={12} />
                     </button>
                   )}
                   {res.status === 'completed' && (
                     <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'pending' }); toast('Estado restaurado') } catch { toast('Error al restaurar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Restaurar">
-                      <FaUndo size={11} />
+                      <Undo2 size={11} />
                     </button>
                   )}
                   <button onClick={() => setConfirmDelete(res.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400" title="Eliminar">
-                    <FaTrash size={11} />
+                    <Trash2 size={11} />
                   </button>
                 </div>
               </div>
@@ -502,7 +500,7 @@ export default function AdminReservas() {
         <div className="space-y-3">
           {orders.length === 0 ? (
             <div className="text-center py-16">
-              <FaBox className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+              <Package className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay paquetes semanales activos</p>
             </div>
           ) : (
@@ -533,7 +531,7 @@ export default function AdminReservas() {
                         {order.total > 0 && <span className="font-medium" style={{ color: 'var(--text-primary)' }}>${order.total.toLocaleString()} MXN</span>}
                       </div>
                     </div>
-                    {isExpanded ? <FaChevronDown size={12} style={{ color: 'var(--text-muted)' }} /> : <FaChevronRight size={12} style={{ color: 'var(--text-muted)' }} />}
+                    {isExpanded ? <ChevronDown size={12} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} />}
                   </button>
 
                   <AnimatePresence>
@@ -613,7 +611,7 @@ export default function AdminReservas() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Historial · {historyPhone}</h3>
                 <button onClick={() => setShowHistory(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-                  <FaTimes size={14} />
+                  <X size={14} />
                 </button>
               </div>
               {historyReservations.length === 0 ? (
@@ -648,3 +646,5 @@ export default function AdminReservas() {
     </div>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

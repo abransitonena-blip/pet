@@ -8,10 +8,8 @@ import {
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/firebase/config'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  FaWalking, FaUser, FaPhone, FaDog, FaWhatsapp, FaSpinner, FaPlus, FaTimes,
-  FaCalendarAlt, FaClock, FaMapMarkedAlt, FaChartBar, FaEdit, FaCheck, FaEnvelope, FaKey,
-} from 'react-icons/fa'
+import { PersonStanding, User, Phone, Dog, Loader2, Plus, X,
+  CalendarDays, Clock, MapPinned, ChartBar, Pencil, Check, Mail, Key } from 'lucide-react'
 import { useConfig } from '@/context/ConfigContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
@@ -245,7 +243,7 @@ export default function AdminPaseadoresPage() {
           </p>
         </div>
         <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
-          <FaPlus size={12} /> Agregar paseador
+          <Plus size={12} /> Agregar paseador
         </button>
       </div>
 
@@ -255,10 +253,10 @@ export default function AdminPaseadoresPage() {
         </div>
       ) : walkerStats.length === 0 ? (
         <div className="text-center py-16">
-          <FaWalking className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <PersonStanding className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay paseadores registrados</p>
           <button onClick={openCreate} className="btn-primary !text-xs mt-4 inline-flex gap-2">
-            <FaPlus size={12} /> Agregar primer paseador
+            <Plus size={12} /> Agregar primer paseador
           </button>
         </div>
       ) : (
@@ -284,7 +282,7 @@ export default function AdminPaseadoresPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-blue-500 to-blue-600">
-                        <FaWalking className="text-white" size={16} />
+                        <PersonStanding className="text-white" size={16} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -306,16 +304,16 @@ export default function AdminPaseadoresPage() {
                           )}
                         </div>
                         <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {walkerConfig?.email && <span className="flex items-center gap-1"><FaEnvelope size={9} /> {walkerConfig.email}</span>}
-                          <span className="flex items-center gap-1"><FaPhone size={9} /> {w.phone}</span>
-                          <span className="flex items-center gap-1"><FaCalendarAlt size={9} /> {w.todayAssigned}/{dailyMax} hoy</span>
-                          <span className="flex items-center gap-1"><FaChartBar size={9} /> {w.thisWeek}/{weeklyMax} semana</span>
+                          {walkerConfig?.email && <span className="flex items-center gap-1"><Mail size={9} /> {walkerConfig.email}</span>}
+                          <span className="flex items-center gap-1"><Phone size={9} /> {w.phone}</span>
+                          <span className="flex items-center gap-1"><CalendarDays size={9} /> {w.todayAssigned}/{dailyMax} hoy</span>
+                          <span className="flex items-center gap-1"><ChartBar size={9} /> {w.thisWeek}/{weeklyMax} semana</span>
                         </div>
                         {walkerConfig?.zones && walkerConfig.zones.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
                             {walkerConfig.zones.map((z) => (
                               <span key={z} className="text-2xs px-2 py-0.5 rounded-full bg-success-500/10 text-success-400 flex items-center gap-1">
-                                <FaMapMarkedAlt size={7} /> {z}
+                                <MapPinned size={7} /> {z}
                               </span>
                             ))}
                           </div>
@@ -330,20 +328,20 @@ export default function AdminPaseadoresPage() {
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-accent-500/10 text-accent-400"
                           title="Crear cuenta de acceso"
                         >
-                          {creatingAccount === i ? <FaSpinner className="animate-spin" size={12} /> : <FaKey size={12} />}
+                          {creatingAccount === i ? <Loader2 className="animate-spin" size={12} /> : <Key size={12} />}
                         </button>
                       )}
                       <button onClick={() => setExpandedWalker(isExpanded ? null : w.name)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title="Detalles">
-                        <FaChartBar size={13} />
+                        <ChartBar size={13} />
                       </button>
                       <button onClick={() => openEdit(i)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title="Editar">
-                        <FaEdit size={12} />
+                        <Pencil size={12} />
                       </button>
                       <button onClick={() => openWhatsApp(w.phone)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="WhatsApp">
-                        <FaWhatsapp size={13} />
+                        <WhatsAppIcon width={13} height={13} />
                       </button>
                       <button onClick={() => handleRemove(i)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400" title="Eliminar">
-                        <FaTimes size={12} />
+                        <X size={12} />
                       </button>
                     </div>
                   </div>
@@ -453,7 +451,7 @@ export default function AdminPaseadoresPage() {
                   {editing !== null ? 'Editar paseador' : 'Nuevo paseador'}
                 </h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-                  <FaTimes size={14} />
+                  <X size={14} />
                 </button>
               </div>
 
@@ -470,7 +468,7 @@ export default function AdminPaseadoresPage() {
               </div>
               <div>
                 <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
-                  <FaEnvelope size={10} className="inline mr-1" />
+                  <Mail size={10} className="inline mr-1" />
                   Correo electrónico (para acceso)
                 </label>
                 <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="paseador@petap.com" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
@@ -488,7 +486,7 @@ export default function AdminPaseadoresPage() {
                       const selected = form.zones.includes(z.name)
                       return (
                         <button key={z.id} type="button" onClick={() => setForm({ ...form, zones: selected ? form.zones.filter((n) => n !== z.name) : [...form.zones, z.name] })} className="text-2xs px-3 py-1.5 rounded-full border font-medium transition-all" style={{ background: selected ? 'var(--color-success-light)' : 'var(--glass-bg)', borderColor: selected ? 'var(--color-success)' : 'var(--border)', color: selected ? 'var(--color-success)' : 'var(--text-secondary)' }}>
-                          {selected && <FaCheck size={7} className="inline mr-1" />}
+                          {selected && <Check size={7} className="inline mr-1" />}
                           {z.name}
                         </button>
                       )
@@ -540,7 +538,7 @@ export default function AdminPaseadoresPage() {
                   Cancelar
                 </button>
                 <button onClick={handleSave} disabled={saving || !form.name.trim() || !form.phone.trim()} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-40">
-                  {saving ? <FaSpinner className="animate-spin" size={14} /> : <FaCheck size={14} />}
+                  {saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
                   {editing !== null ? 'Guardar' : 'Agregar'}
                 </button>
               </div>
@@ -570,7 +568,7 @@ export default function AdminPaseadoresPage() {
             >
               <div className="text-center">
                 <div className="w-12 h-12 rounded-xl bg-success-500/10 flex items-center justify-center mx-auto mb-3">
-                  <FaKey size={20} className="text-success-400" />
+                  <Key size={20} className="text-success-400" />
                 </div>
                 <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Cuenta creada</h3>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
@@ -607,3 +605,5 @@ export default function AdminPaseadoresPage() {
     </div>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

@@ -10,7 +10,6 @@ Este registro documenta el origen y licencia de cada asset usado en PET Ap. El m
 | `public/icons/icon-512.svg` | Logo / icono de app | Diseño propio de PET Ap | Propiedad de PET Ap | ✓ Uso permitido |
 | `public/og-image.png` (referenciado) | Imagen OpenGraph | Fotografía propia de perros de clientes (con autorización) | Autorización específica de cada cliente | ⚠ Verificar permiso por perro |
 | Íconos de la interfaz | Íconos vectoriales | `lucide-react` | ISC License | ✓ Libre uso con atribución en THIRD_PARTY_NOTICES |
-| Íconos de la interfaz (admin) | Íconos vectoriales | `react-icons` (Font Awesome / remixicon) | CC BY 4.0 / MIT (ver THIRD_PARTY_NOTICES) | ⚠ En migración a lucide-react (F9) |
 | Fotos de la galería (`gallery-images` en Firestore) | Fotografías | Tomadas por PET Ap durante paseos | Sin cesión automática: se publican SOLO con autorización previa del dueño | ⚠ Requiere auditoría individual |
 | Logos de Uber / DiDi | Logos de marcas ajenas | — | — | ✓ Eliminados del código (no existen referencias) |
 
@@ -26,4 +25,3 @@ Este registro documenta el origen y licencia de cada asset usado en PET Ap. El m
 
 - [ ] Auditar las fotografías actuales en `gallery-images` y obtener/registrar consentimiento por perro, o reemplazarlas por fotos propias con cesión firmada.
 - [ ] Verificación de marca "PET Ap" ante IMPI antes de consolidar el logo.
-- [ ] Completar migración de íconos a `lucide-react` (única librería de íconos permitida).

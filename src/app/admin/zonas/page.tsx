@@ -7,9 +7,9 @@ import {
 import { db } from '@/firebase/config'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  FaMapMarkedAlt, FaPlus, FaEdit, FaTrash, FaTimes, FaCheck, FaSpinner,
-  FaEye, FaEyeSlash, FaSearch,
-} from 'react-icons/fa'
+  MapPinned, Plus, Pencil, Trash2, X, Check, Loader2,
+  Eye, EyeOff, Search,
+} from 'lucide-react'
 import { Zone } from '@/types'
 
 interface ZoneForm {
@@ -141,13 +141,13 @@ export default function AdminZonasPage() {
           </p>
         </div>
         <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
-          <FaPlus size={12} /> Agregar zona
+          <Plus size={12} /> Agregar zona
         </button>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
         <input
           type="text"
           placeholder="Buscar zona..."
@@ -159,13 +159,13 @@ export default function AdminZonasPage() {
 
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FaMapMarkedAlt className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <MapPinned className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {search ? 'Sin resultados' : 'No hay zonas configuradas'}
           </p>
           {!search && (
             <button onClick={openCreate} className="btn-primary !text-xs mt-4 inline-flex gap-2">
-              <FaPlus size={12} /> Crear primera zona
+              <Plus size={12} /> Crear primera zona
             </button>
           )}
         </div>
@@ -183,7 +183,7 @@ export default function AdminZonasPage() {
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${zone.active ? 'bg-success-500/10' : 'bg-white/5'}`}>
-                    <FaMapMarkedAlt size={14} className={zone.active ? 'text-success-400' : 'text-white/30'} />
+                    <MapPinned size={14} className={zone.active ? 'text-success-400' : 'text-white/30'} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{zone.name}</p>
@@ -194,13 +194,13 @@ export default function AdminZonasPage() {
                 </div>
                 <div className="flex items-center gap-1">
                   <button onClick={() => toggleActive(zone)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title={zone.active ? 'Desactivar' : 'Activar'}>
-                    {zone.active ? <FaEye size={12} /> : <FaEyeSlash size={12} />}
+                    {zone.active ? <Eye size={12} /> : <EyeOff size={12} />}
                   </button>
                   <button onClick={() => openEdit(zone)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-                    <FaEdit size={12} />
+                    <Pencil size={12} />
                   </button>
                   <button onClick={() => setConfirmDelete(zone.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400" style={{ color: 'var(--text-muted)' }}>
-                    <FaTrash size={12} />
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </div>
@@ -249,7 +249,7 @@ export default function AdminZonasPage() {
                   {editing ? `Editar ${editing.name}` : 'Nueva zona'}
                 </h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-                  <FaTimes size={14} />
+                  <X size={14} />
                 </button>
               </div>
 
@@ -364,7 +364,7 @@ export default function AdminZonasPage() {
                   Cancelar
                 </button>
                 <button onClick={handleSave} disabled={saving || !form.name.trim()} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-40">
-                  {saving ? <FaSpinner className="animate-spin" size={14} /> : <FaCheck size={14} />}
+                  {saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
                   {editing ? 'Guardar' : 'Crear zona'}
                 </button>
               </div>

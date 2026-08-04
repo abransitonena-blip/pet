@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
-import { FaCalendarAlt, FaUsers, FaStar, FaWalking, FaMoneyBill } from 'react-icons/fa'
+import { CalendarDays, Users, Star, PersonStanding, Banknote } from 'lucide-react'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
@@ -167,10 +167,10 @@ export default function AdminAnaliticaPage() {
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Reservas este mes', value: analytics.thisMonthReservations, trend: `${analytics.growthRevenue >= 0 ? '+' : ''}${analytics.growthRevenue}%`, trendUp: analytics.growthRevenue > 0, color: '#D97706', icon: FaCalendarAlt },
-              { label: 'Ingresos este mes', value: `$${analytics.revenueThisMonth.toLocaleString()}`, trend: `${analytics.growthRevenue >= 0 ? '+' : ''}${analytics.growthRevenue}%`, trendUp: analytics.growthRevenue > 0, color: '#059669', icon: FaMoneyBill },
-              { label: 'Clientes nuevos', value: analytics.uniqueClientsThisMonth, trend: `${analytics.growthClients >= 0 ? '+' : ''}${analytics.growthClients}%`, trendUp: analytics.growthClients > 0, color: '#3b82f6', icon: FaUsers },
-              { label: 'Calificación', value: `${analytics.avgRating} ★`, trend: `${analytics.totalReviews} reseñas`, trendUp: true, color: '#7C3AED', icon: FaStar },
+              { label: 'Reservas este mes', value: analytics.thisMonthReservations, trend: `${analytics.growthRevenue >= 0 ? '+' : ''}${analytics.growthRevenue}%`, trendUp: analytics.growthRevenue > 0, color: '#D97706', icon: CalendarDays },
+              { label: 'Ingresos este mes', value: `$${analytics.revenueThisMonth.toLocaleString()}`, trend: `${analytics.growthRevenue >= 0 ? '+' : ''}${analytics.growthRevenue}%`, trendUp: analytics.growthRevenue > 0, color: '#059669', icon: Banknote },
+              { label: 'Clientes nuevos', value: analytics.uniqueClientsThisMonth, trend: `${analytics.growthClients >= 0 ? '+' : ''}${analytics.growthClients}%`, trendUp: analytics.growthClients > 0, color: '#3b82f6', icon: Users },
+              { label: 'Calificación', value: `${analytics.avgRating} ★`, trend: `${analytics.totalReviews} reseñas`, trendUp: true, color: '#7C3AED', icon: Star },
             ].map((kpi) => (
               <div key={kpi.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                 <kpi.icon size={14} style={{ color: kpi.color }} className="mb-2" />
@@ -288,14 +288,14 @@ export default function AdminAnaliticaPage() {
           {analytics.walkerPerformance.length > 0 && (
             <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2 mb-3">
-                <FaWalking size={14} className="text-blue-400" />
+                <PersonStanding size={14} className="text-blue-400" />
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Rendimiento de paseadores</p>
               </div>
               <div className="space-y-3">
                 {analytics.walkerPerformance.map((w) => (
                   <div key={w.name} className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                      <FaWalking size={12} className="text-blue-400" />
+                      <PersonStanding size={12} className="text-blue-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">

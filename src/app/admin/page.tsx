@@ -5,12 +5,10 @@ import Link from 'next/link'
 import { collection, query, where, onSnapshot, orderBy, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import {
-  FaCalendarAlt, FaUsers,
-  FaDog, FaClock, FaWhatsapp, FaWalking,
-  FaChartLine, FaTag, FaCog, FaUserFriends,
-  FaDollarSign,
-} from 'react-icons/fa'
+import { CalendarDays, Users,
+  Dog, Clock, PersonStanding,
+  ChartLine, Tag, Settings, UserPlus,
+  DollarSign } from 'lucide-react'
 import StatCard from '@/components/ui/StatCard'
 import Badge from '@/components/ui/Badge'
 import AdminWalkerStatus from '@/components/AdminWalkerStatus'
@@ -105,19 +103,19 @@ export default function AdminDashboard() {
   }, [])
 
   const statCards = [
-    { label: 'Paseos hoy', value: stats.todayReservations, icon: FaCalendarAlt, color: '#D97706' },
-    { label: 'Pendientes', value: stats.pendingReservations, icon: FaClock, color: '#3b82f6' },
-    { label: 'Reservas del mes', value: stats.monthReservations, icon: FaDog, color: '#059669' },
-    { label: 'Ingresos del mes', value: stats.totalRevenue > 0 ? `$${stats.totalRevenue.toLocaleString()}` : '—', icon: FaDollarSign, color: '#7C3AED' },
+    { label: 'Paseos hoy', value: stats.todayReservations, icon: CalendarDays, color: '#D97706' },
+    { label: 'Pendientes', value: stats.pendingReservations, icon: Clock, color: '#3b82f6' },
+    { label: 'Reservas del mes', value: stats.monthReservations, icon: Dog, color: '#059669' },
+    { label: 'Ingresos del mes', value: stats.totalRevenue > 0 ? `$${stats.totalRevenue.toLocaleString()}` : '—', icon: DollarSign, color: '#7C3AED' },
   ]
 
   const quickActions = [
-    { label: 'Reservas', icon: FaCalendarAlt, href: '/admin/reservas', color: '#D97706' },
-    { label: 'Paseadores', icon: FaWalking, href: '/admin/paseadores', color: '#059669' },
-    { label: 'Finanzas', icon: FaChartLine, href: '/admin/finanzas', color: '#7C3AED' },
-    { label: 'Cupones', icon: FaTag, href: '/admin/cupones', color: '#EC4899' },
-    { label: 'Referidos', icon: FaUserFriends, href: '/admin/referidos', color: '#3b82f6' },
-    { label: 'Config', icon: FaCog, href: '/admin/config', color: '#64748B' },
+    { label: 'Reservas', icon: CalendarDays, href: '/admin/reservas', color: '#D97706' },
+    { label: 'Paseadores', icon: PersonStanding, href: '/admin/paseadores', color: '#059669' },
+    { label: 'Finanzas', icon: ChartLine, href: '/admin/finanzas', color: '#7C3AED' },
+    { label: 'Cupones', icon: Tag, href: '/admin/cupones', color: '#EC4899' },
+    { label: 'Referidos', icon: UserPlus, href: '/admin/referidos', color: '#3b82f6' },
+    { label: 'Config', icon: Settings, href: '/admin/config', color: '#64748B' },
   ]
 
   return (
@@ -219,7 +217,7 @@ export default function AdminDashboard() {
             </div>
           ) : upcomingReservations.length === 0 ? (
             <div className="text-center py-6">
-              <FaDog className="text-2xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
+              <Dog className="text-2xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No hay paseos pendientes</p>
             </div>
           ) : (
@@ -232,7 +230,7 @@ export default function AdminDashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand-500/10">
-                      <FaDog size={14} className="text-brand-400" />
+                      <Dog size={14} className="text-brand-400" />
                     </div>
                     <div>
                       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -252,7 +250,7 @@ export default function AdminDashboard() {
                         rel="noopener noreferrer"
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-success-400 hover:bg-success-500/10 transition-colors"
                       >
-                        <FaWhatsapp size={12} />
+                        <WhatsAppIcon width={12} height={12} />
                       </a>
                     )}
                   </div>
@@ -268,3 +266,5 @@ export default function AdminDashboard() {
     </div>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

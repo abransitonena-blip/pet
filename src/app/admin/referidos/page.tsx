@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import { FaUserFriends, FaPlus, FaTrash, FaWhatsapp, FaCopy, FaCheck, FaSpinner } from 'react-icons/fa'
+import { UserPlus, Plus, Trash2, Copy, Check, Loader2 } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { useToast } from '@/context/ToastContext'
 
@@ -107,7 +107,7 @@ export default function AdminReferidosPage() {
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Programa de referidos y recompensas</p>
         </div>
         <button onClick={() => setShowAdd(!showAdd)} className="btn-primary text-xs flex items-center gap-2">
-          <FaPlus size={10} /> Nuevo referido
+          <Plus size={10} /> Nuevo referido
         </button>
       </div>
 
@@ -161,7 +161,7 @@ export default function AdminReferidosPage() {
           <div className="flex gap-2">
             <button onClick={() => setShowAdd(false)} className="btn-secondary text-xs">Cancelar</button>
             <button onClick={handleAdd} disabled={saving} className="btn-primary text-xs flex items-center gap-2">
-              {saving ? <FaSpinner className="animate-spin" size={10} /> : <FaPlus size={10} />}
+              {saving ? <Loader2 className="animate-spin" size={10} /> : <Plus size={10} />}
               Guardar
             </button>
           </div>
@@ -173,7 +173,7 @@ export default function AdminReferidosPage() {
         <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="skeleton h-16 rounded-xl" />)}</div>
       ) : referrals.length === 0 ? (
         <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <FaUserFriends className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <UserPlus className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin referidos aún</p>
         </div>
       ) : (
@@ -196,17 +196,17 @@ export default function AdminReferidosPage() {
               <div className="flex items-center gap-1">
                 {r.status === 'pending' && (
                   <button onClick={() => handleStatus(r.id, 'completed')} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-success-500/10 text-success-400" title="Marcar completado">
-                    <FaCheck size={10} />
+                    <Check size={10} />
                   </button>
                 )}
                 <button onClick={() => copyLink(r.referrerPhone)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title="Copiar link">
-                  {copied === r.referrerPhone ? <FaCheck size={10} className="text-success-400" /> : <FaCopy size={10} />}
+                  {copied === r.referrerPhone ? <Check size={10} className="text-success-400" /> : <Copy size={10} />}
                 </button>
                 <button onClick={() => shareWhatsApp(r.referrerName, r.referrerPhone)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-green-500/10 text-green-400" title="Compartir WhatsApp">
-                  <FaWhatsapp size={10} />
+                  <WhatsAppIcon width={10} height={10} />
                 </button>
                 <button onClick={() => handleDelete(r.id)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-danger-500/10 text-danger-400" title="Eliminar">
-                  <FaTrash size={10} />
+                  <Trash2 size={10} />
                 </button>
               </div>
             </div>
@@ -216,3 +216,5 @@ export default function AdminReferidosPage() {
     </div>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

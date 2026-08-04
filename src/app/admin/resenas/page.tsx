@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
-import { FaStar, FaTrash, FaDownload, FaSpinner, FaSearch } from 'react-icons/fa'
+import { Star, Trash2, Download, Loader2, Search } from 'lucide-react'
 import { logChange } from '@/lib/audit'
 import { useToast } from '@/context/ToastContext'
 
@@ -87,7 +87,7 @@ export default function AdminResenasPage() {
           </p>
         </div>
         <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-          <FaDownload size={12} /> Exportar CSV
+          <Download size={12} /> Exportar CSV
         </button>
       </div>
 
@@ -97,7 +97,7 @@ export default function AdminResenasPage() {
           <p className="text-3xl font-bold" style={{ color: '#D97706' }}>{stats.avg}</p>
           <div className="flex items-center justify-center gap-0.5 mt-1">
             {[1, 2, 3, 4, 5].map((i) => (
-              <FaStar key={i} size={12} className={i <= Math.round(Number(stats.avg)) ? 'text-brand-400' : 'text-white/10'} />
+              <Star key={i} size={12} className={i <= Math.round(Number(stats.avg)) ? 'text-brand-400' : 'text-white/10'} />
             ))}
           </div>
           <p className="text-2xs mt-1" style={{ color: 'var(--text-muted)' }}>Promedio</p>
@@ -107,7 +107,7 @@ export default function AdminResenasPage() {
           {[5, 4, 3, 2, 1].map((stars) => (
             <div key={stars} className="flex items-center gap-2 text-2xs mb-0.5">
               <span style={{ color: 'var(--text-muted)', width: 12 }}>{stars}</span>
-              <FaStar className="text-brand-400" size={8} />
+              <Star className="text-brand-400" size={8} />
               <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
                 <div
                   className="h-full rounded-full bg-brand-500/60"
@@ -121,7 +121,7 @@ export default function AdminResenasPage() {
       </div>
 
       <div className="relative">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
         <input
           type="text"
           placeholder="Buscar en reseñas..."
@@ -137,7 +137,7 @@ export default function AdminResenasPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FaStar className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <Star className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {searchQuery ? 'Sin resultados' : 'No hay reseñas aún'}
           </p>
@@ -156,10 +156,10 @@ export default function AdminResenasPage() {
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{rev.name}</span>
                     <div className="flex items-center gap-0.5">
                       {Array.from({ length: rev.rating }).map((_, i) => (
-                        <FaStar key={i} className="text-brand-400" size={10} />
+                        <Star key={i} className="text-brand-400" size={10} />
                       ))}
                       {Array.from({ length: 5 - rev.rating }).map((_, i) => (
-                        <FaStar key={`empty-${i}`} className="text-white/10" size={10} />
+                        <Star key={`empty-${i}`} className="text-white/10" size={10} />
                       ))}
                     </div>
                     <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{rev.date}</span>
@@ -175,7 +175,7 @@ export default function AdminResenasPage() {
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400 shrink-0"
                   title="Eliminar"
                 >
-                  {deleting === rev.id ? <FaSpinner className="animate-spin" size={11} /> : <FaTrash size={11} />}
+                  {deleting === rev.id ? <Loader2 className="animate-spin" size={11} /> : <Trash2 size={11} />}
                 </button>
               </div>
             </div>

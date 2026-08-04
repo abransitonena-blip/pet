@@ -65,13 +65,7 @@
       "source": "lucide-react",
       "type": "inline-svg-icons",
       "license": "ISC",
-      "notes": "Ver THIRD_PARTY_NOTICES.md"
-    },
-    {
-      "source": "react-icons",
-      "type": "inline-svg-icons",
-      "license": "CC BY 4.0 (FA) / MIT (Remix, etc.)",
-      "notes": "En migración a lucide-react (F9). No agregar usos nuevos."
+      "notes": "Única librería de íconos en uso. Ver THIRD_PARTY_NOTICES.md"
     },
     {
       "source": "gallery-images (Firestore)",

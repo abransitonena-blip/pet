@@ -1,6 +1,6 @@
 'use client'
 
-import { FaDog } from 'react-icons/fa'
+import { Dog } from 'lucide-react'
 
 export default function AdminLoading() {
   return (

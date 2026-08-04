@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { FaTag, FaPlus, FaTrash, FaSpinner, FaPercent, FaDollarSign, FaToggleOn, FaToggleOff, FaEdit, FaCheck, FaTimes } from 'react-icons/fa'
+import { Tag, Plus, Trash2, Loader2, Percent, DollarSign, ToggleLeft, ToggleRight, Pencil, Check, X } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
 
 interface Coupon {
@@ -102,7 +102,7 @@ export default function AdminCoupons() {
   return (
     <div>
       <div className="flex items-center gap-2 mb-6">
-        <FaTag className="text-primary" size={14} />
+        <Tag className="text-primary" size={14} />
         <h4 className="text-sm font-semibold text-white">Cupones de descuento</h4>
       </div>
 
@@ -142,14 +142,14 @@ export default function AdminCoupons() {
           disabled={creating || !code.trim() || !discount}
           className="flex items-center gap-2 text-xs px-4 py-2 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-all disabled:opacity-30"
         >
-          {creating ? <FaSpinner className="animate-spin" size={10} /> : <FaPlus size={10} />}
+          {creating ? <Loader2 className="animate-spin" size={10} /> : <Plus size={10} />}
           Crear cupón
         </button>
       </div>
 
       {coupons.length === 0 ? (
         <div className="text-center py-10 text-white/40">
-          <FaTag className="text-3xl mx-auto mb-2" />
+          <Tag className="text-3xl mx-auto mb-2" />
           <p className="text-xs">Crea tu primer cupón de descuento</p>
         </div>
       ) : (
@@ -198,13 +198,13 @@ export default function AdminCoupons() {
                       onClick={() => saveEdit(c.id)}
                       className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
                     >
-                      <FaCheck size={10} /> Guardar
+                      <Check size={10} /> Guardar
                     </button>
                     <button
                       onClick={cancelEdit}
                       className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 transition-all"
                     >
-                      <FaTimes size={10} /> Cancelar
+                      <X size={10} /> Cancelar
                     </button>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export default function AdminCoupons() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.active ? 'bg-green-500/20' : 'bg-white/5'}`}>
-                      {c.type === 'percentage' ? <FaPercent size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} /> : <FaDollarSign size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} />}
+                      {c.type === 'percentage' ? <Percent size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} /> : <DollarSign size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} />}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -231,19 +231,19 @@ export default function AdminCoupons() {
                       onClick={() => toggleActive(c)}
                       className="transition-all" style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }}
                     >
-                      {c.active ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
+                      {c.active ? <ToggleLeft size={18} /> : <ToggleRight size={18} />}
                     </button>
                     <button
                       onClick={() => startEdit(c)}
                       className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center transition-all" style={{ color: 'var(--color-accent)' }}
                     >
-                      <FaEdit size={10} />
+                      <Pencil size={10} />
                     </button>
                     <button
                       onClick={async () => { try { await deleteDoc(doc(db, 'coupons', c.id)); toast('Cupón eliminado') } catch { toast('Error al eliminar cupón', 'error') } }}
                       className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-all" style={{ color: 'var(--color-danger)' }}
                     >
-                      <FaTrash size={10} />
+                      <Trash2 size={10} />
                     </button>
                   </div>
                 </div>

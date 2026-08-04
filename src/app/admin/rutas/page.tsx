@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import { FaMapMarkedAlt, FaDog, FaUser, FaLocationArrow, FaCamera, FaFilter, FaCheck } from 'react-icons/fa'
+import { MapPinned, Dog, User, Navigation, Camera, Filter, Check } from 'lucide-react'
 import type { Reservation, WalkMedia } from '@/types'
 
 function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -76,7 +76,7 @@ export default function AdminRutasPage() {
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Rutas de paseo con datos GPS</p>
         </div>
         <div className="flex items-center gap-2">
-          <FaFilter size={12} style={{ color: 'var(--text-muted)' }} />
+          <Filter size={12} style={{ color: 'var(--text-muted)' }} />
           <select
             value={filterWalker}
             onChange={(e) => setFilterWalker(e.target.value)}
@@ -92,10 +92,10 @@ export default function AdminRutasPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: 'Rutas registradas', value: stats.total, icon: FaMapMarkedAlt },
-          { label: 'Completadas', value: stats.completed, icon: FaCheck },
-          { label: 'Distancia promedio', value: formatDistance(stats.avgDistance), icon: FaLocationArrow },
-          { label: 'Distancia total', value: formatDistance(stats.totalDistance), icon: FaDog },
+          { label: 'Rutas registradas', value: stats.total, icon: MapPinned },
+          { label: 'Completadas', value: stats.completed, icon: Check },
+          { label: 'Distancia promedio', value: formatDistance(stats.avgDistance), icon: Navigation },
+          { label: 'Distancia total', value: formatDistance(stats.totalDistance), icon: Dog },
         ].map((s, i) => {
           const Icon = s.icon
           return (
@@ -113,7 +113,7 @@ export default function AdminRutasPage() {
         <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-xl" />)}</div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <FaMapMarkedAlt className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <MapPinned className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin rutas registradas</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Las rutas aparecen cuando un paseador registra check-in con GPS</p>
         </div>
@@ -136,7 +136,7 @@ export default function AdminRutasPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center">
-                      <FaDog size={16} className="text-brand-400" />
+                      <Dog size={16} className="text-brand-400" />
                     </div>
                     <div>
                       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -144,7 +144,7 @@ export default function AdminRutasPage() {
                       </p>
                       <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
                         {route.assignedWalker && (
-                          <span className="flex items-center gap-1"><FaUser size={9} /> {route.assignedWalker}</span>
+                          <span className="flex items-center gap-1"><User size={9} /> {route.assignedWalker}</span>
                         )}
                         <span>{route.date}</span>
                         {distance !== null && <span>{formatDistance(distance)}</span>}
@@ -172,14 +172,14 @@ export default function AdminRutasPage() {
                       {route.walkCheckIn && (
                         <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
                           <p className="text-2xs font-medium mb-1 text-success-400 flex items-center gap-1">
-                            <FaLocationArrow size={8} /> Check-in
+                            <Navigation size={8} /> Check-in
                           </p>
                           <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
                             {route.walkCheckIn.lat.toFixed(6)}, {route.walkCheckIn.lng.toFixed(6)}
                           </p>
                           {route.walkCheckIn.photo && (
                             <a href={route.walkCheckIn.photo} target="_blank" rel="noopener noreferrer" className="text-2xs text-brand-400 flex items-center gap-1 mt-1">
-                              <FaCamera size={8} /> Ver foto
+                              <Camera size={8} /> Ver foto
                             </a>
                           )}
                         </div>
@@ -187,14 +187,14 @@ export default function AdminRutasPage() {
                       {route.walkCheckOut && (
                         <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
                           <p className="text-2xs font-medium mb-1 text-danger-400 flex items-center gap-1">
-                            <FaLocationArrow size={8} /> Check-out
+                            <Navigation size={8} /> Check-out
                           </p>
                           <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
                             {route.walkCheckOut.lat.toFixed(6)}, {route.walkCheckOut.lng.toFixed(6)}
                           </p>
                           {route.walkCheckOut.photo && (
                             <a href={route.walkCheckOut.photo} target="_blank" rel="noopener noreferrer" className="text-2xs text-brand-400 flex items-center gap-1 mt-1">
-                              <FaCamera size={8} /> Ver foto
+                              <Camera size={8} /> Ver foto
                             </a>
                           )}
                         </div>

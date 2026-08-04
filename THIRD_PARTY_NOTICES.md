@@ -11,8 +11,7 @@ PET Ap (pet-reservations) usa el siguiente software y servicios de terceros. Los
 | `next` | ^14.2.0 | MIT | Framework | Copyright (c) 2024 Vercel, Inc. Licencia MIT incluida en `node_modules/next/LICENSE` |
 | `react` / `react-dom` | ^18.3.0 | MIT | UI | Copyright (c) Meta Platforms, Inc. MIT |
 | `firebase` | ^10.12.0 | Apache-2.0 | Backend (Auth, Firestore, Messaging) | Copyright (c) Google LLC / The Firebase Authors. Apache-2.0 |
-| `lucide-react` | ^1.28.0 | ISC | Íconos (única librería permitida) | Copyright (c) Lucide Contributors. ISC — uso libre con atribución de autor |
-| `react-icons` | ^5.2.0 | MIT | Íconos (admin; en migración) | Incluye Font Awesome (CC BY 4.0) y Remix Icon (Apache-2.0). Ver `react-icons/LICENSE` |
+| `lucide-react` | ^1.28.0 | ISC | Íconos (única librería permitida y usada) | Copyright (c) Lucide Contributors. ISC — uso libre con atribución de autor |
 | `framer-motion` | ^11.1.0 | MIT | Animaciones | Copyright (c) Framer. MIT |
 
 Licencia ISC (lucide-react) — texto resumido:

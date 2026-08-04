@@ -3,10 +3,10 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
-  FaRobot, FaCalendarAlt, FaDog, FaUsers, FaChartLine, FaClock,
-  FaLightbulb, FaArrowUp, FaArrowDown, FaExclamationTriangle,
-  FaBolt, FaStar, FaWalking, FaMoneyBill, FaArrowRight, FaPercent,
-} from 'react-icons/fa'
+  Bot, CalendarDays, Dog, Users, ChartLine, Clock,
+  Lightbulb, ArrowUp, ArrowDown, AlertTriangle,
+  Zap, Star, PersonStanding, Banknote, ArrowRight, Percent,
+} from 'lucide-react'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
@@ -17,7 +17,7 @@ interface Insight {
   id: string
   title: string
   description: string
-  icon: typeof FaRobot
+  icon: typeof Bot
   color: string
   priority: 'high' | 'medium' | 'low'
   action?: string
@@ -105,47 +105,47 @@ export default function AdminIAPage() {
 
     // Revenue insight
     if (revenueGrowth > 10) {
-      result.push({ id: 'rev_up', title: 'Ingresos en alza', description: `Los ingresos subieron ${revenueGrowth}% vs el periodo anterior. Tendencia positiva.`, icon: FaArrowUp, color: '#059669', priority: 'high' })
+      result.push({ id: 'rev_up', title: 'Ingresos en alza', description: `Los ingresos subieron ${revenueGrowth}% vs el periodo anterior. Tendencia positiva.`, icon: ArrowUp, color: '#059669', priority: 'high' })
     } else if (revenueGrowth < -10) {
-      result.push({ id: 'rev_down', title: 'Ingresos bajando', description: `Los ingresos bajaron ${Math.abs(revenueGrowth)}%. Considera promociones para reactivar.`, icon: FaArrowDown, color: '#DC2626', priority: 'high', action: 'Crear cupón de descuento' })
+      result.push({ id: 'rev_down', title: 'Ingresos bajando', description: `Los ingresos bajaron ${Math.abs(revenueGrowth)}%. Considera promociones para reactivar.`, icon: ArrowDown, color: '#DC2626', priority: 'high', action: 'Crear cupón de descuento' })
     }
 
     // Pending alerts
     if (pendingToday.length > 0) {
-      result.push({ id: 'pending', title: `${pendingToday.length} reserva${pendingToday.length !== 1 ? 's' : ''} pendiente${pendingToday.length !== 1 ? 's' : ''} hoy`, description: 'Reservas sin asignar o confirmar para hoy. Asigna paseadores o confirma con el cliente.', icon: FaExclamationTriangle, color: '#F59E0B', priority: 'high', action: 'Ir a reservas' })
+      result.push({ id: 'pending', title: `${pendingToday.length} reserva${pendingToday.length !== 1 ? 's' : ''} pendiente${pendingToday.length !== 1 ? 's' : ''} hoy`, description: 'Reservas sin asignar o confirmar para hoy. Asigna paseadores o confirma con el cliente.', icon: AlertTriangle, color: '#F59E0B', priority: 'high', action: 'Ir a reservas' })
     }
 
     // Peak day
     if (peakDay && peakDay[1] > 0) {
-      result.push({ id: 'peak_day', title: `Día más demandado: ${peakDay[0]}`, description: `El ${peakDay[0]} concentra ${peakDay[1]} reservas del periodo. Asegúrate de tener paseadores disponibles.`, icon: FaCalendarAlt, color: '#3b82f6', priority: 'medium' })
+      result.push({ id: 'peak_day', title: `Día más demandado: ${peakDay[0]}`, description: `El ${peakDay[0]} concentra ${peakDay[1]} reservas del periodo. Asegúrate de tener paseadores disponibles.`, icon: CalendarDays, color: '#3b82f6', priority: 'medium' })
     }
 
     // Peak hour
     if (peakHour) {
-      result.push({ id: 'peak_hour', title: `Hora pico: ${peakHour[0]}:00`, description: `La mayoría de reservas son a las ${peakHour[0]}:00. Considera bloquear paseadores en ese horario.`, icon: FaClock, color: '#8B5CF6', priority: 'medium' })
+      result.push({ id: 'peak_hour', title: `Hora pico: ${peakHour[0]}:00`, description: `La mayoría de reservas son a las ${peakHour[0]}:00. Considera bloquear paseadores en ese horario.`, icon: Clock, color: '#8B5CF6', priority: 'medium' })
     }
 
     // Retention
     if (retentionRate < 30 && totalClients > 5) {
-      result.push({ id: 'low_retention', title: 'Retención baja', description: `Solo ${retentionRate}% de tus clientes repiten. Usa el sistema de lealtad y referidos para mejorar.`, icon: FaUsers, color: '#F59E0B', priority: 'high', action: 'Revisar lealtad' })
+      result.push({ id: 'low_retention', title: 'Retención baja', description: `Solo ${retentionRate}% de tus clientes repiten. Usa el sistema de lealtad y referidos para mejorar.`, icon: Users, color: '#F59E0B', priority: 'high', action: 'Revisar lealtad' })
     } else if (retentionRate > 50) {
-      result.push({ id: 'good_retention', title: 'Buena retención', description: `${retentionRate}% de tus clientes son recurrentes. ¡Excelente relación con ellos!`, icon: FaStar, color: '#059669', priority: 'low' })
+      result.push({ id: 'good_retention', title: 'Buena retención', description: `${retentionRate}% de tus clientes son recurrentes. ¡Excelente relación con ellos!`, icon: Star, color: '#059669', priority: 'low' })
     }
 
     // Top service
     if (topService) {
       const pct = periodRes.length > 0 ? Math.round((topService[1] / periodRes.length) * 100) : 0
-      result.push({ id: 'top_service', title: `Servicio estrella: ${topService[0]}`, description: `Representa el ${pct}% de las reservas. Podrías destacarlo en tu página.`, icon: FaBolt, color: '#D97706', priority: 'medium' })
+      result.push({ id: 'top_service', title: `Servicio estrella: ${topService[0]}`, description: `Representa el ${pct}% de las reservas. Podrías destacarlo en tu página.`, icon: Zap, color: '#D97706', priority: 'medium' })
     }
 
     // Overloaded walkers
     if (overloaded.length > 0) {
-      result.push({ id: 'overloaded', title: 'Paseadores sobrecargados', description: `${overloaded.map((w) => w.name).join(', ')} tienen más de 6 reservas hoy. Considera redistribuir.`, icon: FaWalking, color: '#DC2626', priority: 'high' })
+      result.push({ id: 'overloaded', title: 'Paseadores sobrecargados', description: `${overloaded.map((w) => w.name).join(', ')} tienen más de 6 reservas hoy. Considera redistribuir.`, icon: PersonStanding, color: '#DC2626', priority: 'high' })
     }
 
     // Cancel rate
     if (cancelRate > 15) {
-      result.push({ id: 'high_cancel', title: `${cancelRate}% de cancelaciones`, description: 'Tasa de cancelación alta. Revisa si hay patrones (servicio, horario, zona).', icon: FaExclamationTriangle, color: '#F59E0B', priority: 'medium' })
+      result.push({ id: 'high_cancel', title: `${cancelRate}% de cancelaciones`, description: 'Tasa de cancelación alta. Revisa si hay patrones (servicio, horario, zona).', icon: AlertTriangle, color: '#F59E0B', priority: 'medium' })
     }
 
     return result.sort((a, b) => {
@@ -206,7 +206,7 @@ export default function AdminIAPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <FaRobot size={20} className="text-brand-400" />
+            <Bot size={20} className="text-brand-400" />
             Centro de Insights
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
@@ -225,10 +225,10 @@ export default function AdminIAPage() {
       {/* Quick Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Reservas', value: metrics.totalRes, icon: FaCalendarAlt, color: '#D97706' },
-          { label: 'Completadas', value: metrics.completed, icon: FaDog, color: '#059669' },
-          { label: 'Ingresos', value: `$${metrics.revenue.toLocaleString()}`, icon: FaMoneyBill, color: '#3b82f6' },
-          { label: 'Cancelaciones', value: `${metrics.cancelRate}%`, icon: FaExclamationTriangle, color: metrics.cancelRate > 15 ? '#DC2626' : '#059669' },
+          { label: 'Reservas', value: metrics.totalRes, icon: CalendarDays, color: '#D97706' },
+          { label: 'Completadas', value: metrics.completed, icon: Dog, color: '#059669' },
+          { label: 'Ingresos', value: `$${metrics.revenue.toLocaleString()}`, icon: Banknote, color: '#3b82f6' },
+          { label: 'Cancelaciones', value: `${metrics.cancelRate}%`, icon: AlertTriangle, color: metrics.cancelRate > 15 ? '#DC2626' : '#059669' },
         ].map((m) => (
           <div key={m.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <m.icon size={14} style={{ color: m.color }} className="mb-2" />
@@ -241,7 +241,7 @@ export default function AdminIAPage() {
       {/* Insights */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <FaLightbulb size={14} className="text-warning-400" />
+          <Lightbulb size={14} className="text-warning-400" />
           <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Insights</h3>
           <span className="text-2xs px-2 py-0.5 rounded-full" style={{ background: 'var(--glass-bg)', color: 'var(--text-muted)' }}>
             {insights.length}
@@ -254,7 +254,7 @@ export default function AdminIAPage() {
           </div>
         ) : insights.length === 0 ? (
           <div className="rounded-xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <FaRobot className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <Bot className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay insights para este periodo</p>
           </div>
         ) : (
@@ -283,7 +283,7 @@ export default function AdminIAPage() {
                     <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{insight.description}</p>
                     {insight.action && (
                       <button className="text-2xs font-medium mt-2 flex items-center gap-1 transition-colors hover:opacity-80" style={{ color: 'var(--color-primary)' }}>
-                        {insight.action} <FaArrowRight size={8} />
+                        {insight.action} <ArrowRight size={8} />
                       </button>
                     )}
                   </div>
@@ -298,7 +298,7 @@ export default function AdminIAPage() {
       {serviceMargins.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <div className="flex items-center gap-2 mb-3">
-            <FaPercent size={14} className="text-accent-400" />
+            <Percent size={14} className="text-accent-400" />
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Análisis de margen por servicio</h3>
           </div>
           <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>

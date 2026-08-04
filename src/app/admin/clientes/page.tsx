@@ -3,10 +3,8 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReservations } from '@/context/ReservationsContext'
-import {
-  FaSearch, FaUsers, FaWhatsapp, FaDog, FaCalendarAlt,
-  FaClock, FaUserFriends, FaTimes, FaCrown, FaHeart, FaExclamationTriangle,
-} from 'react-icons/fa'
+import { Search, Users, Dog, CalendarDays,
+  Clock, UserPlus, X, Crown, Heart, AlertTriangle } from 'lucide-react'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import Badge from '@/components/ui/Badge'
@@ -46,12 +44,12 @@ function relativeTime(dateStr: string): string {
   return `Hace ${Math.round(days / 365)} año${Math.round(days / 365) !== 1 ? 's' : ''}`
 }
 
-const SEGMENT_CONFIG: Record<string, { label: string; color: string; icon: typeof FaCrown }> = {
-  vip: { label: 'VIP', color: 'text-warning-400 bg-warning-500/15', icon: FaCrown },
-  regular: { label: 'Frecuente', color: 'text-success-400 bg-success-500/15', icon: FaHeart },
-  new: { label: 'Nuevo', color: 'text-blue-400 bg-blue-500/15', icon: FaDog },
-  at_risk: { label: 'En riesgo', color: 'text-orange-400 bg-orange-500/15', icon: FaExclamationTriangle },
-  churned: { label: 'Inactivo', color: 'text-white/40 bg-white/5', icon: FaClock },
+const SEGMENT_CONFIG: Record<string, { label: string; color: string; icon: typeof Crown }> = {
+  vip: { label: 'VIP', color: 'text-warning-400 bg-warning-500/15', icon: Crown },
+  regular: { label: 'Frecuente', color: 'text-success-400 bg-success-500/15', icon: Heart },
+  new: { label: 'Nuevo', color: 'text-blue-400 bg-blue-500/15', icon: Dog },
+  at_risk: { label: 'En riesgo', color: 'text-orange-400 bg-orange-500/15', icon: AlertTriangle },
+  churned: { label: 'Inactivo', color: 'text-white/40 bg-white/5', icon: Clock },
 }
 
 export default function AdminClientesPage() {
@@ -179,10 +177,10 @@ export default function AdminClientesPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total', value: stats.totalClients, icon: FaUsers, color: '#D97706' },
-          { label: 'Recurrentes', value: stats.repeatClients, icon: FaUserFriends, color: '#059669' },
-          { label: 'Activos mes', value: stats.activeClients, icon: FaCalendarAlt, color: '#3b82f6' },
-          { label: 'VIP', value: stats.vipClients, icon: FaCrown, color: '#F59E0B' },
+          { label: 'Total', value: stats.totalClients, icon: Users, color: '#D97706' },
+          { label: 'Recurrentes', value: stats.repeatClients, icon: UserPlus, color: '#059669' },
+          { label: 'Activos mes', value: stats.activeClients, icon: CalendarDays, color: '#3b82f6' },
+          { label: 'VIP', value: stats.vipClients, icon: Crown, color: '#F59E0B' },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <s.icon size={14} style={{ color: s.color }} className="mb-2" />
@@ -195,7 +193,7 @@ export default function AdminClientesPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             placeholder="Buscar por nombre, teléfono o mascota..."
@@ -226,7 +224,7 @@ export default function AdminClientesPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FaUsers className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <Users className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {searchQuery || segmentFilter !== 'all' ? 'Sin resultados' : 'No hay clientes aún'}
           </p>
@@ -273,7 +271,7 @@ export default function AdminClientesPage() {
                       className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400"
                       title="WhatsApp"
                     >
-                      <FaWhatsapp size={13} />
+                      <WhatsAppIcon width={13} height={13} />
                     </button>
                   </div>
                 </div>
@@ -309,7 +307,7 @@ export default function AdminClientesPage() {
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>📞 {selectedClient.phone}</p>
                 </div>
                 <button onClick={() => setSelectedClient(null)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
-                  <FaTimes size={14} />
+                  <X size={14} />
                 </button>
               </div>
 
@@ -367,7 +365,7 @@ export default function AdminClientesPage() {
                 onClick={() => openWhatsApp(selectedClient.phone)}
                 className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all bg-success-500/10 text-success-400 hover:bg-success-500/20"
               >
-                <FaWhatsapp size={14} /> Contactar por WhatsApp
+                <WhatsAppIcon width={13} height={13} /> Contactar por WhatsApp
               </button>
             </motion.div>
           </motion.div>
@@ -376,3 +374,5 @@ export default function AdminClientesPage() {
     </div>
   )
 }
+
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'

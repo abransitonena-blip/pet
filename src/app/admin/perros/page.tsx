@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useReservations } from '@/context/ReservationsContext'
-import { FaSearch, FaPaw, FaDog } from 'react-icons/fa'
+import { Search, PawPrint, Dog } from 'lucide-react'
 import type { Reservation } from '@/types'
 
 interface PetProfile {
@@ -77,7 +77,7 @@ export default function AdminPerrosPage() {
       </div>
 
       <div className="relative">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
         <input
           type="text"
           placeholder="Buscar por nombre de perro, dueño o teléfono..."
@@ -93,7 +93,7 @@ export default function AdminPerrosPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FaPaw className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <PawPrint className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {searchQuery ? 'Sin resultados' : 'No hay perros registrados aún'}
           </p>
@@ -109,7 +109,7 @@ export default function AdminPerrosPage() {
             >
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--bg-elevated)' }}>
-                  <FaDog size={18} style={{ color: 'var(--text-muted)' }} />
+                  <Dog size={18} style={{ color: 'var(--text-muted)' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">

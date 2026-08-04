@@ -8,8 +8,8 @@ import {
   addDoc, serverTimestamp, updateDoc, increment,
 } from 'firebase/firestore'
 import {
-  FaComments, FaPaperPlane, FaUser, FaChevronLeft,
-} from 'react-icons/fa'
+  MessagesSquare, Send, User, ChevronLeft,
+} from 'lucide-react'
 import type { Conversation, ChatMessage } from '@/types'
 
 export default function AdminChat() {
@@ -86,12 +86,12 @@ export default function AdminChat() {
               style={{ color: 'var(--text-secondary)' }}
               aria-label="Volver a conversaciones"
             >
-              <FaChevronLeft size={14} />
+              <ChevronLeft size={14} />
             </button>
             <div className="w-9 h-9 rounded-full flex items-center justify-center"
               style={{ background: 'var(--glass-bg)' }}
             >
-              <FaUser size={14} style={{ color: 'var(--text-secondary)' }} />
+              <User size={14} style={{ color: 'var(--text-secondary)' }} />
             </div>
             <div>
               <p className="text-sm font-medium">{selectedConv.clientName || 'Cliente'}</p>
@@ -152,7 +152,7 @@ export default function AdminChat() {
               }}
               aria-label="Enviar mensaje"
             >
-              <FaPaperPlane size={14} className="text-white" />
+              <Send size={14} className="text-white" />
             </button>
           </div>
         </>
@@ -160,7 +160,7 @@ export default function AdminChat() {
         <>
           <div className="px-4 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <FaComments size={14} style={{ color: 'var(--text-secondary)' }} />
+              <MessagesSquare size={14} style={{ color: 'var(--text-secondary)' }} />
               Conversaciones
             </h3>
           </div>
@@ -180,7 +180,7 @@ export default function AdminChat() {
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                   style={{ background: 'var(--glass-bg)' }}
                 >
-                  <FaUser size={14} style={{ color: 'var(--text-secondary)' }} />
+                  <User size={14} style={{ color: 'var(--text-secondary)' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">

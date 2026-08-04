@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, Timestamp, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import { FaBolt, FaBan, FaCheckCircle, FaSpinner, FaDog, FaSearch } from 'react-icons/fa'
+import { Zap, Ban, CheckCircle2, Loader2, Dog, Search } from 'lucide-react'
 import type { PetAhoraRequest } from '@/types'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -94,7 +94,7 @@ export default function AdminPetAhoraPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-3 mb-1">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.1)' }}>
-            <FaBolt className="text-secondary" size={18} />
+            <Zap className="text-secondary" size={18} />
           </div>
           <div>
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>PET Ahora</h1>
@@ -130,7 +130,7 @@ export default function AdminPetAhoraPage() {
 
       {/* Search */}
       <div className="relative">
-        <FaSearch size={12} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+        <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
         <input
           type="text"
           placeholder="Buscar por perro, paseador o ID..."
@@ -142,10 +142,10 @@ export default function AdminPetAhoraPage() {
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center py-12"><FaSpinner className="animate-spin" size={20} style={{ color: 'var(--text-muted)' }} /></div>
+        <div className="flex justify-center py-12"><Loader2 className="animate-spin" size={20} style={{ color: 'var(--text-muted)' }} /></div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <FaBolt className="text-3xl mx-auto mb-3 opacity-30" style={{ color: 'var(--text-muted)' }} />
+          <Zap className="text-3xl mx-auto mb-3 opacity-30" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay solicitudes</p>
         </div>
       ) : (
@@ -160,9 +160,9 @@ export default function AdminPetAhoraPage() {
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >
               <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: statusStyle(r.status).bg }}>
-                {r.status === 'completed' ? <FaCheckCircle size={13} style={{ color: statusStyle(r.status).text }} /> :
-                 r.status === 'cancelled' || r.status === 'expired' ? <FaBan size={13} style={{ color: statusStyle(r.status).text }} /> :
-                 <FaDog size={13} style={{ color: statusStyle(r.status).text }} />}
+                {r.status === 'completed' ? <CheckCircle2 size={13} style={{ color: statusStyle(r.status).text }} /> :
+                 r.status === 'cancelled' || r.status === 'expired' ? <Ban size={13} style={{ color: statusStyle(r.status).text }} /> :
+                 <Dog size={13} style={{ color: statusStyle(r.status).text }} />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export default function AdminPetAhoraPage() {
                     style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}
                     title="Forzar completado"
                   >
-                    {actionLoading === r.id ? <FaSpinner className="animate-spin" size={10} /> : <FaCheckCircle size={10} />}
+                    {actionLoading === r.id ? <Loader2 className="animate-spin" size={10} /> : <CheckCircle2 size={10} />}
                   </button>
                 )}
                 {!['completed', 'cancelled', 'expired'].includes(r.status) && (
@@ -200,7 +200,7 @@ export default function AdminPetAhoraPage() {
                     style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}
                     title="Cancelar"
                   >
-                    {actionLoading === r.id ? <FaSpinner className="animate-spin" size={10} /> : <FaBan size={10} />}
+                    {actionLoading === r.id ? <Loader2 className="animate-spin" size={10} /> : <Ban size={10} />}
                   </button>
                 )}
               </div>
