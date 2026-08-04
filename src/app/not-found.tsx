@@ -1,8 +1,9 @@
 'use client'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Dog, PawPrint } from 'lucide-react'
+import { Dog } from 'lucide-react'
 import Button from '@/components/ui/Button'
+import { Logo } from '@/components/ui/Logo'
 
 export default function NotFound() {
   return (
@@ -17,9 +18,9 @@ export default function NotFound() {
           initial={{ scale: 0, rotate: -20 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-          className="text-8xl mb-6"
+          className="mb-6"
         >
-          🐾
+          <Logo size={64} />
         </motion.div>
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
@@ -55,15 +56,6 @@ export default function NotFound() {
           <Link href="/" className="inline-flex">
             <Button icon={<Dog />}>Volver al inicio</Button>
           </Link>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="mt-12 flex items-center justify-center gap-2 text-xs"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          <PawPrint /> PET Ap <PawPrint />
         </motion.div>
       </motion.div>
     </div>

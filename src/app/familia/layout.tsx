@@ -106,21 +106,21 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
           {/* Sidebar */}
           <aside className="lg:col-span-1">
             <nav className="space-y-1">
-              {ACCOUNT_ITEMS.map((item) => {
-                const Icon = item.icon
-                const active = pathname === item.href
-                return (
-                  <a
-                    key={item.id}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-ink/5 ${active ? 'bg-ink/10' : ''}`}
-                    style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                  >
-                    <Icon size={16} style={{ color: item.color }} />
-                    {item.label}
-                  </a>
-                )
-              })}
+{ACCOUNT_ITEMS.map((item) => {
+                  const Icon = item.icon
+                  const active = pathname === item.href
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-ink/5 ${active ? 'bg-brand-500/10 text-brand-600' : ''}`}
+                      style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+                    >
+                      <Icon size={16} style={{ color: item.color }} />
+                      {item.label}
+                    </Link>
+                  )
+                })}
             </nav>
           </aside>
 
