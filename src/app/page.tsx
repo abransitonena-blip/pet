@@ -36,9 +36,6 @@ const TermsModal = dynamic(() => import('@/components/TermsModal'), { ssr: false
 const ReviewForm = dynamic(() => import('@/components/ReviewForm'), {
   loading: () => <div className="skeleton h-32 rounded-2xl" />,
 })
-const QuoteForm = dynamic(() => import('@/components/QuoteForm'), {
-  loading: () => <div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>,
-})
 
 function HomeContent() {
   const [showTerms, setShowTerms] = useState(false)
@@ -78,9 +75,6 @@ function HomeContent() {
         <Hero />
         <TrustBar />
         <Services />
-        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-96 rounded-2xl" /></div>}>
-          <QuoteForm />
-        </Suspense>
         <HowItWorks />
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>}>
           <Gallery />
@@ -127,12 +121,12 @@ function HomeContent() {
                 <p className="section-subtitle mb-6">
                   Obtén tu precio claro en la cotizador de arriba y confírmalo en minutos por WhatsApp.
                 </p>
-                <a
-                  href="#cotizar"
-                  className="btn-primary inline-flex items-center gap-2"
-                >
-                  Cotizar mi paseo <ArrowRight size={14} />
-                </a>
+                  <Link
+                    href="/familia/nueva-reserva"
+                    className="btn-primary inline-flex items-center gap-2"
+                  >
+                    Ir a reservar <ArrowRight size={14} />
+                  </Link>
               </div>
             </section>
           )}

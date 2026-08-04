@@ -55,32 +55,24 @@ export default function Hero() {
           </span>
         </motion.div>
 
-        <motion.h1 variants={item} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight text-ink">
-          {config.heroTitle}
-        </motion.h1>
+          <motion.h1 variants={item} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight text-ink">
+            {config.heroTitle}
+          </motion.h1>
 
-        <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed text-muted">
-          {config.heroSubtitle}
-        </motion.p>
+          <motion.p variants={item} className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed text-muted">
+            {config.heroSubtitle}
+          </motion.p>
 
-        <motion.div variants={item} className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
-          <motion.a
-            href="#cotizar"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="btn-primary inline-flex items-center gap-2"
-          >
-            Empieza ahora <ArrowRight size={16} />
-          </motion.a>
-          <motion.a
-            href="#como-funciona"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="btn-secondary"
-          >
-            Cómo funciona
-          </motion.a>
-        </motion.div>
+          <motion.div variants={item} className="flex flex-col sm:flex-row gap-3 justify-center">
+            <motion.a
+              href="#como-funciona"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="btn-secondary"
+            >
+              Cómo funciona
+            </motion.a>
+          </motion.div>
 
         <motion.div variants={item} className="flex items-center justify-center gap-8 sm:gap-12 mb-10">
           {[

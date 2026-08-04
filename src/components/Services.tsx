@@ -86,14 +86,6 @@ export default function Services() {
                     ))}
                   </div>
                 )}
-
-                <motion.a
-                  href="#cotizar"
-                  whileHover={{ x: 4 }}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary mt-2"
-                >
-                  Obtén una cotización <ArrowRight size={14} />
-                </motion.a>
               </motion.div>
             )
           })}
