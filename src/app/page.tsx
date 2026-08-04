@@ -94,20 +94,20 @@ function HomeContent() {
         </div>
         <Suspense>
           {user ? (
-            <section aria-label="Reservar" id="reservar" className="section-container py-16 sm:py-20">
+            <section className="section-container py-16 sm:py-20">
               <div className="max-w-lg mx-auto text-center">
                 <div className="w-14 h-14 rounded-xl mx-auto mb-3 flex items-center justify-center card">
                   <User className="text-primary" size={20} />
                 </div>
                 <h2 className="section-title">Bienvenido de vuelta</h2>
                 <p className="section-subtitle mb-4">
-                  Ya eres parte de Familia PET. Reserva tu paseo desde tu cuenta.
+                  Ya eres parte de Familia PET. Solicita o programa tu próximo paseo.
                 </p>
                 <Link
                   href="/familia/nueva-reserva"
                   className="btn-primary inline-flex items-center gap-2"
                 >
-                  Ir a reservar <ArrowRight size={14} />
+                  Solicitar paseo <ArrowRight size={14} />
                 </Link>
               </div>
             </section>

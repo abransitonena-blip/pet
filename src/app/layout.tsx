@@ -1,15 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Manrope } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ConfigErrorBanner from '@/components/ConfigErrorBanner'
 import { BUSINESS_HOURS } from '@/lib/defaultConfig'
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-manrope',
   display: 'swap',
-  fallback: ['system-ui', 'sans-serif'],
 })
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-euhz.vercel.app'
@@ -108,7 +107,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={inter.variable}>
+    <html lang="es" className={manrope.variable}>
       <head>
         <link rel="canonical" href={siteUrl} />
         <link rel="manifest" href="/manifest.json" />

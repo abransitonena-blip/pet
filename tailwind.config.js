@@ -9,8 +9,8 @@ module.exports = {
         '2xs': '0.625rem',
       },
       fontFamily: {
-        sans: ['Inter Variable', ...fontFamily.sans],
-        display: ['Inter Variable', ...fontFamily.sans],
+        sans: ['Manrope', ...fontFamily.sans],
+        display: ['Manrope', ...fontFamily.sans],
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       colors: {

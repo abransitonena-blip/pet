@@ -28,8 +28,8 @@
   --focus-ring: #185abc;
 
   /* ── Typography ── */
-  --font-body: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-inter), system-ui, sans-serif;
+  --font-body: var(--font-manrope), system-ui, sans-serif;
+  --font-display: var(--font-manrope), system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   --text-display: 2.5rem;
