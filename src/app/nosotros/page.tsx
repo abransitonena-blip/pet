@@ -40,7 +40,7 @@ export default function NosotrosPage() {
       {/* Hero */}
       <section className="relative pt-32 pb-16 sm:pt-40 sm:pb-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <span className="text-primary/80 text-sm uppercase tracking-widest font-medium">
+          <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">
             Conócenos
           </span>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 text-ink">
@@ -80,7 +80,7 @@ export default function NosotrosPage() {
       <section className="pb-24 sm:pb-32">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="text-primary/80 text-sm uppercase tracking-widest font-medium">
+            <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">
               Nuestros pilares
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold mt-3 text-ink">

@@ -99,11 +99,11 @@ export default function EditReservationModal({
             role="dialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
-            className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl shadow-primary/10"
+            className="bg-white border border-ink/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl shadow-primary/10"
           >
-            <div className="flex items-center justify-between p-5 border-b border-white/5">
-              <h3 className="text-lg font-bold text-white">Editar reserva</h3>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all">
+            <div className="flex items-center justify-between p-5 border-b border-ink/10">
+              <h3 className="text-lg font-bold text-ink">Editar reserva</h3>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center text-muted hover:text-ink hover:bg-ink/10 transition-all">
                 <X size={12} />
               </button>
             </div>
@@ -111,32 +111,32 @@ export default function EditReservationModal({
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-white/40 mb-1">Fecha</label>
+                  <label className="block text-xs text-muted mb-1">Fecha</label>
                   <input
                     type="date"
                     min={new Date().toISOString().split("T")[0]}
                     value={form.date}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                    className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/40 mb-1">Hora</label>
+                  <label className="block text-xs text-muted mb-1">Hora</label>
                   <input
                     type="time"
                     value={form.time}
                     onChange={(e) => setForm({ ...form, time: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                    className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-white/40 mb-1">Servicio</label>
+                <label className="block text-xs text-muted mb-1">Servicio</label>
                 <select
                   value={form.service}
                   onChange={(e) => setForm({ ...form, service: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                  className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                 >
                   <option value="">Seleccionar...</option>
                   {SERVICE_NAMES.map((s) => (
@@ -152,11 +152,11 @@ export default function EditReservationModal({
               )}
 
               <div>
-                <label className="block text-xs text-white/40 mb-1">Estado</label>
+                <label className="block text-xs text-muted mb-1">Estado</label>
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                  className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                 >
                   <option value="pending">Pendiente</option>
                   <option value="on_the_way">En camino</option>
@@ -166,33 +166,33 @@ export default function EditReservationModal({
               </div>
 
               <div>
-                <label className="block text-xs text-white/40 mb-1">Notas del cliente</label>
+                <label className="block text-xs text-muted mb-1">Notas del cliente</label>
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   rows={2}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary resize-none"
+                  className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary resize-none"
                 />
               </div>
 
-              <div className="border-t border-white/5 pt-4">
+              <div className="border-t border-ink/10 pt-4">
                 <p className="text-xs text-primary mb-3 font-medium">🔒 Solo administrador</p>
                 <div>
-                  <label className="block text-xs text-white/40 mb-1">Notas internas</label>
+                  <label className="block text-xs text-muted mb-1">Notas internas</label>
                   <textarea
                     value={form.internalNotes}
                     onChange={(e) => setForm({ ...form, internalNotes: e.target.value })}
                     rows={2}
                     placeholder="Notas privadas (solo visible en el panel)..."
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary resize-none placeholder:text-white/20"
+                    className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary resize-none placeholder:text-muted"
                   />
                 </div>
                 <div className="mt-3">
-                  <label className="block text-xs text-white/40 mb-1">Paseador asignado</label>
+                  <label className="block text-xs text-muted mb-1">Paseador asignado</label>
                   <select
                     value={form.assignedWalker}
                     onChange={(e) => setForm({ ...form, assignedWalker: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                    className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                   >
                     <option value="">Sin asignar</option>
                     {((config.walkers || []) as { name: string; phone: string }[]).map((w) => (
@@ -203,10 +203,10 @@ export default function EditReservationModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-5 border-t border-white/5">
+            <div className="flex items-center gap-3 p-5 border-t border-ink/10">
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl text-sm text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+                className="flex-1 py-2.5 rounded-xl text-sm text-muted hover:text-ink border border-ink/10 hover:border-ink/20 transition-all"
               >
                 Cancelar
               </button>

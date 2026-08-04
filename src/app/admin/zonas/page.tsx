@@ -177,13 +177,13 @@ export default function AdminZonasPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.03 }}
-              className="rounded-2xl p-4 transition-all hover:bg-white/[0.02]"
+              className="rounded-2xl p-4 transition-all hover:bg-ink/5"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', opacity: zone.active ? 1 : 0.6 }}
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${zone.active ? 'bg-success-500/10' : 'bg-white/5'}`}>
-                    <MapPinned size={14} className={zone.active ? 'text-success-400' : 'text-white/30'} />
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${zone.active ? 'bg-success-500/10' : 'bg-ink/5'}`}>
+                    <MapPinned size={14} className={zone.active ? 'text-success-400' : 'text-muted'} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{zone.name}</p>
@@ -193,10 +193,10 @@ export default function AdminZonasPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => toggleActive(zone)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title={zone.active ? 'Desactivar' : 'Activar'}>
+                  <button onClick={() => toggleActive(zone)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }} title={zone.active ? 'Desactivar' : 'Activar'}>
                     {zone.active ? <Eye size={12} /> : <EyeOff size={12} />}
                   </button>
-                  <button onClick={() => openEdit(zone)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                  <button onClick={() => openEdit(zone)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
                     <Pencil size={12} />
                   </button>
                   <button onClick={() => setConfirmDelete(zone.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400" style={{ color: 'var(--text-muted)' }}>
@@ -248,7 +248,7 @@ export default function AdminZonasPage() {
                 <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                   {editing ? `Editar ${editing.name}` : 'Nueva zona'}
                 </h2>
-                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
                   <X size={14} />
                 </button>
               </div>
@@ -360,7 +360,7 @@ export default function AdminZonasPage() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                   Cancelar
                 </button>
                 <button onClick={handleSave} disabled={saving || !form.name.trim()} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-40">

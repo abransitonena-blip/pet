@@ -293,7 +293,7 @@ export default function WalkerProfilePage() {
         >
           {saving ? (
             <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-ink/20 border-t-ink rounded-full animate-spin" />
               Guardando...
             </span>
           ) : (

@@ -64,7 +64,7 @@ export default function HistorialPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/mi-cuenta')}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
             style={{ color: 'var(--text-muted)' }}
           >
             <ArrowLeft size={14} />
@@ -128,14 +128,14 @@ export default function HistorialPage() {
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 <div
-                  className="p-4 flex items-start gap-3 transition-all hover:bg-white/[0.02]"
+                  className="p-4 flex items-start gap-3 transition-all hover:bg-ink/5"
                   onClick={() => hasWalkData && setExpandedId(isExpanded ? null : res.id)}
                   style={{ cursor: hasWalkData ? 'pointer' : undefined }}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-brand-500/10'}`}>
                     {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :
-                     res.status === 'cancelled' ? <span className="text-danger-400 text-sm">✕</span> :
-                     <Dog size={14} className="text-brand-400" />}
+                     res.status === 'cancelled' ? <span className="text-red-700 text-sm">✕</span> :
+                     <Dog size={14} className="text-brand-600" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
@@ -147,7 +147,7 @@ export default function HistorialPage() {
                               e.stopPropagation()
                               router.push(`/mi-cuenta/nueva-reserva?repeat=${encodeURIComponent(res.service)}`)
                             }}
-                            className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-400 border border-brand-500/20"
+                            className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-600 border border-brand-500/20"
                             title="Repetir este paseo"
                           >
                             <Redo2 size={8} /> Repetir
@@ -156,7 +156,7 @@ export default function HistorialPage() {
                         {hasWalkData && (
                           <Camera size={10} className="text-success-400" />
                         )}
-                        <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[res.status]?.bg || 'bg-white/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>
+                        <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[res.status]?.bg || 'bg-ink/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>
                           {STATUS_LABELS[res.status] || res.status}
                         </span>
                       </div>
@@ -239,7 +239,7 @@ export default function HistorialPage() {
                             )}
                             <div className="flex items-center gap-3 text-2xs" style={{ color: 'var(--text-muted)' }}>
                               <span className="flex items-center gap-1">
-                                <MapPin size={9} className="text-brand-400" />
+                                <MapPin size={9} className="text-brand-600" />
                                 {res.walkCheckOut.lat.toFixed(4)}, {res.walkCheckOut.lng.toFixed(4)}
                               </span>
                             </div>

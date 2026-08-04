@@ -325,14 +325,14 @@ export default function LoginPage() {
               <>
                 <button
                   onClick={() => setMode('equipo')}
-                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-white/60"
+                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-primary"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   Acceso equipo →
                 </button>
                 <button
                   onClick={() => setMode('paseador')}
-                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-white/60"
+                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-primary"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   Acceso paseador →
@@ -435,8 +435,8 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {error && <p className="text-danger-400 text-xs" role="alert">{error}</p>}
-              {info && <p className="text-success-400 text-xs" role="status">{info}</p>}
+              {error && <p className="text-red-700 text-xs" role="alert">{error}</p>}
+              {info && <p className="text-success-600 text-xs" role="status">{info}</p>}
 
               <button
                 onClick={familiaMode === 'login' ? () => handleEmailLogin('client') : handleRegister}
@@ -508,8 +508,8 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {error && <p className="text-danger-400 text-xs" role="alert">{error}</p>}
-              {info && <p className="text-success-400 text-xs" role="status">{info}</p>}
+              {error && <p className="text-red-700 text-xs" role="alert">{error}</p>}
+              {info && <p className="text-success-600 text-xs" role="status">{info}</p>}
 
               <button
                 onClick={() => handleEmailLogin('admin')}
@@ -572,8 +572,8 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {error && <p className="text-danger-400 text-xs" role="alert">{error}</p>}
-              {info && <p className="text-success-400 text-xs" role="status">{info}</p>}
+              {error && <p className="text-red-700 text-xs" role="alert">{error}</p>}
+              {info && <p className="text-success-600 text-xs" role="status">{info}</p>}
 
               <button
                 onClick={() => handleEmailLogin('walker')}
@@ -603,7 +603,7 @@ export default function LoginPage() {
         )}
 
         <div className="text-center mt-6">
-          <a href="/" className="text-xs transition-colors hover:text-brand-400" style={{ color: 'var(--text-muted)' }}>
+          <a href="/" className="text-xs transition-colors hover:text-brand-600" style={{ color: 'var(--text-muted)' }}>
             ← Volver al sitio
           </a>
         </div>

@@ -115,7 +115,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
 
         <div className="flex gap-2">
           {photo && (
-            <button onClick={() => { setPhoto(null); setPhotoFile(null) }} className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }}>
+            <button onClick={() => { setPhoto(null); setPhotoFile(null) }} className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all" style={{ background: 'var(--glass-bg)', color: 'var(--text-muted)' }}>
               Retomar
             </button>
           )}

@@ -86,7 +86,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+            <Link href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
               Inicio
             </Link>
             {uid && <NotificationBell uid={uid} />}
@@ -114,7 +114,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
                   <a
                     key={item.id}
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/[0.03] ${active ? 'bg-white/[0.05]' : ''}`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-ink/5 ${active ? 'bg-ink/10' : ''}`}
                     style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
                   >
                     <Icon size={16} style={{ color: item.color }} />

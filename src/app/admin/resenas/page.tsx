@@ -97,7 +97,7 @@ export default function AdminResenasPage() {
           <p className="text-3xl font-bold" style={{ color: '#D97706' }}>{stats.avg}</p>
           <div className="flex items-center justify-center gap-0.5 mt-1">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Star key={i} size={12} className={i <= Math.round(Number(stats.avg)) ? 'text-brand-400' : 'text-white/10'} />
+              <Star key={i} size={12} className={i <= Math.round(Number(stats.avg)) ? 'text-brand-400' : 'text-ink/10'} />
             ))}
           </div>
           <p className="text-2xs mt-1" style={{ color: 'var(--text-muted)' }}>Promedio</p>
@@ -147,7 +147,7 @@ export default function AdminResenasPage() {
           {filtered.map((rev) => (
             <div
               key={rev.id}
-              className="rounded-xl p-4 transition-all hover:bg-white/[0.02]"
+              className="rounded-xl p-4 transition-all hover:bg-ink/5"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >
               <div className="flex items-start justify-between gap-3">
@@ -159,7 +159,7 @@ export default function AdminResenasPage() {
                         <Star key={i} className="text-brand-400" size={10} />
                       ))}
                       {Array.from({ length: 5 - rev.rating }).map((_, i) => (
-                        <Star key={`empty-${i}`} className="text-white/10" size={10} />
+                        <Star key={`empty-${i}`} className="text-ink/10" size={10} />
                       ))}
                     </div>
                     <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{rev.date}</span>

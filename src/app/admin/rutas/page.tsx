@@ -130,7 +130,7 @@ export default function AdminRutasPage() {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={() => setSelectedRoute(selectedRoute?.id === route.id ? null : route)}
-                className="rounded-xl p-4 cursor-pointer transition-all hover:bg-white/[0.02]"
+                className="rounded-xl p-4 cursor-pointer transition-all hover:bg-ink/5"
                 style={{ background: 'var(--bg-card)', border: `1px solid ${selectedRoute?.id === route.id ? 'var(--primary)' : 'var(--border)'}` }}
               >
                 <div className="flex items-center justify-between">
@@ -186,7 +186,7 @@ export default function AdminRutasPage() {
                       )}
                       {route.walkCheckOut && (
                         <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
-                          <p className="text-2xs font-medium mb-1 text-danger-400 flex items-center gap-1">
+                          <p className="text-2xs font-medium mb-1 text-red-700 flex items-center gap-1">
                             <Navigation size={8} /> Check-out
                           </p>
                           <p className="text-xs" style={{ color: 'var(--text-primary)' }}>

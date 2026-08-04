@@ -30,7 +30,7 @@ export default function AvailabilityCalendar({ date, onSelect }: { date?: string
 
   if (!date) {
     return (
-      <div className="text-xs text-white/30 text-center py-6">
+      <div className="text-xs text-muted text-center py-6">
         Selecciona una fecha para ver disponibilidad
       </div>
     )
@@ -38,7 +38,7 @@ export default function AvailabilityCalendar({ date, onSelect }: { date?: string
 
   if (timeSlots.length === 0) {
     return (
-      <div className="text-xs text-white/30 text-center py-6">
+      <div className="text-xs text-muted text-center py-6">
         No hay servicio este día
       </div>
     )
@@ -47,7 +47,7 @@ export default function AvailabilityCalendar({ date, onSelect }: { date?: string
   return (
     <div>
       {loading ? (
-        <div className="text-xs text-white/30 text-center py-6">Cargando disponibilidad...</div>
+        <div className="text-xs text-muted text-center py-6">Cargando disponibilidad...</div>
       ) : (
         <div className="grid grid-cols-3 gap-1.5">
           {timeSlots.map((slot) => {
@@ -60,8 +60,8 @@ export default function AvailabilityCalendar({ date, onSelect }: { date?: string
                 onClick={() => onSelect?.(slot)}
                 className={`flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg transition-all ${
                   isBooked
-                    ? 'bg-red-500/10 text-red-400/50 cursor-not-allowed line-through'
-                    : 'bg-white/5 text-white/60 hover:bg-primary/20 hover:text-primary'
+                    ? 'bg-red-500/10 text-red-700/50 cursor-not-allowed line-through'
+                    : 'bg-ink/5 text-muted hover:bg-primary/20 hover:text-primary'
                 }`}
               >
                 {isBooked ? <X size={9} /> : <Check size={9} className="opacity-0" />}
@@ -71,7 +71,7 @@ export default function AvailabilityCalendar({ date, onSelect }: { date?: string
           })}
         </div>
       )}
-      <p className="text-2xs text-white/20 mt-2 text-center">
+      <p className="text-2xs text-muted mt-2 text-center">
         {availableSlots.length} de {timeSlots.length} horarios disponibles
       </p>
     </div>

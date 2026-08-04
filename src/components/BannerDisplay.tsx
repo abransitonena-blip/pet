@@ -43,7 +43,7 @@ export default function BannerDisplay() {
       animate={{ height: 'auto', opacity: 1 }}
       className="relative bg-gradient-to-r from-primary/20 via-amber-600/10 to-primary/20 border-b border-primary/20"
     >
-      <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-2 text-sm text-primary text-center">
+      <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-2 text-sm text-primary-hover text-center">
         <span>{banner.message}</span>
         <button
           onClick={dismiss}

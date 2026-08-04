@@ -49,7 +49,7 @@ export default function StepConfirm({
               </p>
             </div>
           </div>
-          <button onClick={() => goToStep(1)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => goToStep(1)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
             <Pencil size={10} /> Editar
           </button>
         </div>
@@ -86,7 +86,7 @@ export default function StepConfirm({
               </div>
             )}
           </div>
-          <button onClick={() => goToStep(2)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5 shrink-0" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => goToStep(2)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-ink/5 shrink-0" style={{ color: 'var(--text-muted)' }}>
             <Pencil size={10} /> Editar
           </button>
         </div>
@@ -99,7 +99,7 @@ export default function StepConfirm({
             <PawPrint size={12} className="text-primary" />
             {form.petName} ({PET_TYPES.find((p) => p.value === form.petType)?.label})
           </div>
-          <button onClick={() => goToStep(3)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => goToStep(3)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
             <Pencil size={10} /> Editar
           </button>
         </div>
@@ -116,7 +116,7 @@ export default function StepConfirm({
               <Phone size={12} className="text-primary" /> {form.phone}
             </span>
           </div>
-          <button onClick={() => goToStep(4)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => goToStep(4)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
             <Pencil size={10} /> Editar
           </button>
         </div>
@@ -131,7 +131,7 @@ export default function StepConfirm({
               ? availableWalkers.find((w) => w.id === walkerPreference)?.name || 'Paseador preferido'
               : 'Asignación automática'}
           </div>
-          <button onClick={() => goToStep(5)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => goToStep(5)} className="text-xs flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
             <Pencil size={10} /> Editar
           </button>
         </div>

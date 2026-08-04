@@ -103,7 +103,7 @@ export default function AdminCoupons() {
     <div>
       <div className="flex items-center gap-2 mb-6">
         <Tag className="text-primary" size={14} />
-        <h4 className="text-sm font-semibold text-white">Cupones de descuento</h4>
+        <h4 className="text-sm font-semibold text-ink">Cupones de descuento</h4>
       </div>
 
       <div className="glass p-4 rounded-xl mb-6 space-y-3">
@@ -112,26 +112,26 @@ export default function AdminCoupons() {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             aria-label="Código del cupón" placeholder="Código (ej: BIENVENIDO)"
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/40"
+            className="bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary placeholder:text-muted"
           />
           <input
             type="number"
             value={discount}
             onChange={(e) => setDiscount(e.target.value)}
             aria-label="Monto del descuento" placeholder="Descuento"
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/40"
+            className="bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary placeholder:text-muted"
           />
           <input
             type="number"
             value={maxUses}
             onChange={(e) => setMaxUses(e.target.value)}
             aria-label="Usos máximos" placeholder="Usos máx (0 = ilimitado)"
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary placeholder:text-white/40"
+            className="bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary placeholder:text-muted"
           />
           <select aria-label="Tipo de descuento"
             value={type}
             onChange={(e) => setType(e.target.value as 'percentage' | 'fixed')}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+            className="bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
           >
             <option value="percentage">Porcentaje (%)</option>
             <option value="fixed">Monto fijo ($)</option>
@@ -140,7 +140,7 @@ export default function AdminCoupons() {
         <button
           onClick={handleCreate}
           disabled={creating || !code.trim() || !discount}
-          className="flex items-center gap-2 text-xs px-4 py-2 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-all disabled:opacity-30"
+          className="flex items-center gap-2 text-xs px-4 py-2 rounded-full bg-primary/20 text-primary-hover hover:bg-primary/30 transition-all disabled:opacity-30"
         >
           {creating ? <Loader2 className="animate-spin" size={10} /> : <Plus size={10} />}
           Crear cupón
@@ -148,7 +148,7 @@ export default function AdminCoupons() {
       </div>
 
       {coupons.length === 0 ? (
-        <div className="text-center py-10 text-white/40">
+        <div className="text-center py-10 text-muted">
           <Tag className="text-3xl mx-auto mb-2" />
           <p className="text-xs">Crea tu primer cupón de descuento</p>
         </div>
@@ -168,26 +168,26 @@ export default function AdminCoupons() {
                       value={editCode}
                       onChange={(e) => setEditCode(e.target.value)}
                       aria-label="Código del cupón" placeholder="Código"
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                      className="bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                     />
                     <input
                       type="number"
                       value={editDiscount}
                       onChange={(e) => setEditDiscount(e.target.value)}
                       aria-label="Monto del descuento" placeholder="Descuento"
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                      className="bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                     />
                     <input
                       type="number"
                       value={editMaxUses}
                       onChange={(e) => setEditMaxUses(e.target.value)}
                       aria-label="Usos máximos" placeholder="Usos máx (0 = ilimitado)"
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                      className="bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                     />
                     <select aria-label="Tipo de descuento"
                       value={editType}
                       onChange={(e) => setEditType(e.target.value as 'percentage' | 'fixed')}
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                      className="bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
                     >
                       <option value="percentage">Porcentaje (%)</option>
                       <option value="fixed">Monto fijo ($)</option>
@@ -196,13 +196,13 @@ export default function AdminCoupons() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => saveEdit(c.id)}
-                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-green-500/15 text-green-800 hover:bg-green-500/25 transition-all"
                     >
                       <Check size={10} /> Guardar
                     </button>
                     <button
                       onClick={cancelEdit}
-                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-white/5 text-white/40 hover:bg-white/10 transition-all"
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-ink/5 text-muted hover:bg-ink/10 transition-all"
                     >
                       <X size={10} /> Cancelar
                     </button>
@@ -211,17 +211,17 @@ export default function AdminCoupons() {
               ) : (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.active ? 'bg-green-500/20' : 'bg-white/5'}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.active ? 'bg-green-500/15' : 'bg-ink/5'}`}>
                       {c.type === 'percentage' ? <Percent size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} /> : <DollarSign size={12} style={c.active ? { color: 'var(--color-success)' } : { color: 'var(--text-muted)' }} />}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">{c.code}</span>
+                        <span className="text-sm font-semibold text-ink">{c.code}</span>
                         <span className="text-xs font-bold text-primary">
                           {c.type === 'percentage' ? `${c.discount}%` : `$${c.discount}`}
                         </span>
                       </div>
-                      <p className="text-2xs text-white/30">
+                      <p className="text-2xs text-muted">
                         Usado {c.usedCount} veces {c.maxUses > 0 ? `/ ${c.maxUses}` : '• sin límite'}
                       </p>
                     </div>

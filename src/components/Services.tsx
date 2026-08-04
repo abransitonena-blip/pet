@@ -26,7 +26,7 @@ export default function Services() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-primary text-sm uppercase tracking-widest font-medium">
+          <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">
             Categorías
           </span>
           <h2 className="section-title mt-3">

@@ -50,7 +50,7 @@ export default function Hero() {
       >
         <motion.div variants={item} className="mb-6 flex items-center justify-center gap-2">
           <PawPrint className="text-primary" size={14} />
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary-hover uppercase tracking-wider">
             Paseos y bienestar canino
           </span>
         </motion.div>

@@ -178,7 +178,7 @@ export default function AdminDashboard() {
               <a
                 key={action.label}
                 href={action.href}
-                className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:bg-white/[0.03] hover:scale-[1.03]"
+                className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:bg-ink/5 hover:scale-[1.03]"
                 style={{ border: '1px solid var(--border)' }}
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${action.color}15` }}>
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
               Próximos paseos
             </h3>
-            <Link href="/admin/reservas" className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors">
+            <Link href="/admin/reservas" className="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors">
               Ver todos →
             </Link>
           </div>
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
               {upcomingReservations.slice(0, 5).map((res) => (
                 <div
                   key={res.id}
-                  className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-white/[0.02]"
+                  className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-ink/5"
                   style={{ border: '1px solid var(--border)' }}
                 >
                   <div className="flex items-center gap-3">

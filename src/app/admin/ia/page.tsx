@@ -206,7 +206,7 @@ export default function AdminIAPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <Bot size={20} className="text-brand-400" />
+            <Bot size={20} className="text-brand-600" />
             Centro de Insights
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
@@ -215,7 +215,7 @@ export default function AdminIAPage() {
         </div>
         <div className="flex gap-1.5">
           {(['7d', '30d', '90d'] as const).map((p) => (
-            <button key={p} onClick={() => setSelectedPeriod(p)} className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${selectedPeriod === p ? 'bg-brand-500/15 text-brand-400' : 'bg-white/[0.04] text-white/40 hover:text-white/60'}`}>
+            <button key={p} onClick={() => setSelectedPeriod(p)} className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${selectedPeriod === p ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted hover:text-primary'}`}>
               {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
             </button>
           ))}
@@ -277,7 +277,7 @@ export default function AdminIAPage() {
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{insight.title}</p>
                       {insight.priority === 'high' && (
-                        <span className="text-2xs px-1.5 py-0.5 rounded-full bg-danger-500/15 text-danger-400 font-medium">Urgente</span>
+                        <span className="text-2xs px-1.5 py-0.5 rounded-full bg-danger-500/15 text-red-700 font-medium">Urgente</span>
                       )}
                     </div>
                     <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{insight.description}</p>
@@ -298,7 +298,7 @@ export default function AdminIAPage() {
       {serviceMargins.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <div className="flex items-center gap-2 mb-3">
-            <Percent size={14} className="text-accent-400" />
+            <Percent size={14} className="text-brand-600" />
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Análisis de margen por servicio</h3>
           </div>
           <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
@@ -313,7 +313,7 @@ export default function AdminIAPage() {
                 <span className="col-span-2 font-medium truncate" style={{ color: 'var(--text-primary)' }}>{s.name}</span>
                 <span className="text-right" style={{ color: 'var(--text-secondary)' }}>{s.count}</span>
                 <span className="text-right font-medium" style={{ color: 'var(--text-primary)' }}>${s.revenue.toLocaleString()}</span>
-                <span className={`text-right font-medium ${s.discountRate > 20 ? 'text-danger-400' : s.discountRate > 10 ? 'text-warning-400' : 'text-success-400'}`}>
+                <span className={`text-right font-medium ${s.discountRate > 20 ? 'text-red-700' : s.discountRate > 10 ? 'text-amber-700' : 'text-success-600'}`}>
                   {s.discountRate}%
                 </span>
               </div>

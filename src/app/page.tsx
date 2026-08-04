@@ -4,7 +4,6 @@ import { Suspense, useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/firebase/config'
-import { ThemeProvider } from '@/context/ThemeContext'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import TrustBar from '@/components/TrustBar'
@@ -154,8 +153,6 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <ThemeProvider>
-      <HomeContent />
-    </ThemeProvider>
+    <HomeContent />
   )
 }

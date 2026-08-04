@@ -537,7 +537,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           transition={{ duration: 0.6 }}
           className="text-center mb-12 sm:mb-16"
         >
-          <span className="text-primary/80 text-sm uppercase tracking-widest font-medium">Agenda su paseo</span>
+          <span className="text-primary text-sm uppercase tracking-widest font-medium">Agenda su paseo</span>
           <h2 className="section-title mt-3">
             Reserva su <span className="gradient-text">paseo</span>
           </h2>

@@ -23,7 +23,7 @@ export default function FAQ() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-primary/80 text-sm uppercase tracking-widest font-medium">
+          <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">
             Resolvemos tus dudas
           </span>
           <h2 className="section-title mt-3">
@@ -44,7 +44,7 @@ export default function FAQ() {
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
                 aria-expanded={openIndex === i}
                 aria-controls={`faq-answer-${i}`}
-                className="w-full glass-card p-4 sm:p-5 text-left flex items-center justify-between gap-4 transition-all hover:bg-white/[0.03]"
+                className="w-full glass-card p-4 sm:p-5 text-left flex items-center justify-between gap-4 transition-all hover:bg-ink/5"
               >
                 <span className="flex items-center gap-3 text-sm sm:text-base font-medium" style={{ color: 'var(--text-primary)' }}>
                   <HelpCircle className="text-primary shrink-0" size={14} />

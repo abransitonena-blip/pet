@@ -135,7 +135,7 @@ export default function AdminGalleryPage() {
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
               Seleccionar imagen
             </label>
-            <label className="flex flex-col items-center justify-center h-40 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:bg-white/[0.02]"
+            <label className="flex flex-col items-center justify-center h-40 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:bg-ink/5"
               style={{ borderColor: 'var(--border)', background: 'var(--glass-bg)' }}>
               {preview ? (
                 <Image src={preview} alt="Preview" width={200} height={160} className="h-full w-full object-contain rounded-xl" />

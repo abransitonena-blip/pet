@@ -42,7 +42,7 @@ export default function LealtadPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push('/mi-cuenta')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
           style={{ color: 'var(--text-muted)' }}
         >
           <ArrowLeft size={14} />
@@ -61,7 +61,7 @@ export default function LealtadPage() {
         style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.1), rgba(217,119,6,0.05))', border: '1px solid var(--border)' }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <Gift size={16} className="text-brand-400" />
+          <Gift size={16} className="text-brand-600" />
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>¿Cómo funciona?</h2>
         </div>
         <div className="grid grid-cols-3 gap-3">
@@ -74,7 +74,7 @@ export default function LealtadPage() {
             return (
               <div key={i} className="text-center">
                 <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center mx-auto mb-2">
-                  <Icon size={16} className="text-brand-400" />
+                  <Icon size={16} className="text-brand-600" />
                 </div>
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{step.label}</p>
                 <p className="text-2xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
@@ -107,7 +107,7 @@ export default function LealtadPage() {
           </p>
           <button
             onClick={() => router.push('/mi-cuenta/config')}
-            className="text-xs px-4 py-2 rounded-lg transition-colors hover:bg-white/5"
+            className="text-xs px-4 py-2 rounded-lg transition-colors hover:bg-ink/5"
             style={{ color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
           >
             Ir a configuración

@@ -189,7 +189,7 @@ export default function DireccionesPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{addr.alias}</span>
                     {addr.isDefault && (
-                      <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-medium flex items-center gap-1">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-600 font-medium flex items-center gap-1">
                         <Star size={8} /> Predeterminada
                       </span>
                     )}
@@ -206,7 +206,7 @@ export default function DireccionesPage() {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {!addr.isDefault && (
-                    <button onClick={() => setDefault(addr.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Predeterminada">
+                    <button onClick={() => setDefault(addr.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-600" title="Predeterminada">
                       <Star size={11} />
                     </button>
                   )}
@@ -247,7 +247,7 @@ export default function DireccionesPage() {
                 <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                   {editing ? 'Editar dirección' : 'Nueva dirección'}
                 </h2>
-                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
                   <X size={14} />
                 </button>
               </div>
@@ -262,8 +262,8 @@ export default function DireccionesPage() {
                       onClick={() => setForm({ ...form, alias: opt.value })}
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                         form.alias === opt.value
-                          ? 'bg-brand-500/15 text-brand-400 border border-brand-500/30'
-                          : 'border border-white/10 hover:border-white/20'
+                          ? 'bg-brand-500/15 text-brand-600 border border-brand-500/30'
+                          : 'border border-ink/15 hover:border-ink/20'
                       }`}
                       style={form.alias !== opt.value ? { color: 'var(--text-muted)' } : undefined}
                     >
@@ -435,7 +435,7 @@ export default function DireccionesPage() {
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                   Cancelar
                 </button>
                 <button
@@ -473,7 +473,7 @@ export default function DireccionesPage() {
               <Trash2 className="text-danger-400 text-2xl mx-auto mb-3" />
               <p className="text-sm font-medium mb-4" style={{ color: 'var(--text-primary)' }}>¿Eliminar esta dirección?</p>
               <div className="flex gap-3">
-                <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl text-sm border hover:bg-white/5" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl text-sm border hover:bg-ink/5" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
                   Cancelar
                 </button>
                 <button onClick={() => handleDelete(confirmDelete)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-danger-500 text-white hover:opacity-90">

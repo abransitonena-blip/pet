@@ -9,7 +9,7 @@ export default function OnlineWalkerBadge() {
   if (loading) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-        <span className="w-2 h-2 rounded-full bg-white/20 animate-pulse" />
+        <span className="w-2 h-2 rounded-full bg-ink/20 animate-pulse" />
         ...
       </span>
     )
@@ -21,7 +21,7 @@ export default function OnlineWalkerBadge() {
       border: `1px solid ${totalOnline > 0 ? 'rgba(16,185,129,0.2)' : 'var(--border)'}`,
       color: totalOnline > 0 ? 'var(--color-success)' : 'var(--text-muted)',
     }}>
-      <Circle size={6} className={totalOnline > 0 ? 'text-success-500' : 'text-white/20'} />
+      <Circle size={6} className={totalOnline > 0 ? 'text-success-500' : 'text-muted/40'} />
       {totalOnline > 0 ? `${totalOnline} en línea` : 'Sin conexiones'}
     </span>
   )

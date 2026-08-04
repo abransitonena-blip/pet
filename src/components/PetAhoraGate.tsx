@@ -54,8 +54,8 @@ function EligibilityBlocked({ reasons, result }: { reasons: string[]; result: El
 
 function Requirement({ met, label, href, icon }: { met: boolean; label: string; href: string; icon: ReactNode }) {
   return (
-    <Link href={href} className="flex items-center gap-2 p-2 rounded-lg text-xs transition-colors hover:bg-white/[0.03]" style={{ color: met ? 'var(--color-success)' : 'var(--text-muted)' }}>
-      <span className={`w-5 h-5 rounded-full flex items-center justify-center ${met ? 'bg-success-500/20 text-success-500' : 'bg-white/5'}`}>
+    <Link href={href} className="flex items-center gap-2 p-2 rounded-lg text-xs transition-colors hover:bg-ink/5" style={{ color: met ? 'var(--color-success)' : 'var(--text-muted)' }}>
+      <span className={`w-5 h-5 rounded-full flex items-center justify-center ${met ? 'bg-success-500/20 text-success-500' : 'bg-ink/5'}`}>
         {met ? '✓' : icon}
       </span>
       <span className="flex-1">{met ? label : label}</span>

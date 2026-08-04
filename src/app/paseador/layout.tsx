@@ -98,7 +98,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
           <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>{error}</p>
           <button
             onClick={handleLogout}
-            className="w-full py-3 rounded-xl text-sm font-semibold bg-danger-500/10 text-danger-400 hover:bg-danger-500/20 transition-all"
+            className="w-full py-3 rounded-xl text-sm font-semibold bg-danger-500/10 text-red-700 hover:bg-danger-500/20 transition-all"
           >
             Cerrar sesión
           </button>
@@ -123,7 +123,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <a href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+            <a href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
               Inicio
             </a>
             <button
@@ -141,7 +141,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
       {mustChangePassword && (
         <div className="bg-brand-500/10 border-b border-brand-500/20 px-4 py-3">
           <div className="section-container">
-            <p className="text-xs font-medium text-brand-400">
+            <p className="text-xs font-medium text-brand-600">
               Debes cambiar tu contraseña temporal. Ve a tu perfil para actualizarla.
             </p>
           </div>
@@ -160,7 +160,7 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
                   <a
                     key={item.id}
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/[0.03] ${active ? 'bg-white/[0.05]' : ''}`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-ink/5 ${active ? 'bg-ink/10' : ''}`}
                     style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
                   >
                     <Icon size={16} style={{ color: item.color }} />

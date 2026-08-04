@@ -2,21 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Dog, Sun, Moon, Menu, X } from 'lucide-react'
-import { useTheme } from '@/context/ThemeContext'
+import { Dog, Menu, X } from 'lucide-react'
 
 const navLinks = [
   { label: 'Inicio', href: '#hero' },
   { label: 'Servicios', href: '#servicios' },
   { label: 'Cómo funciona', href: '#como-funciona' },
   { label: 'Reseñas', href: '#resenas' },
-  { label: 'Cotizar', href: '#cotizar' },
 ]
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { theme, toggle } = useTheme()
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -73,24 +70,6 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggle}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-primary/5 text-muted hover:text-ink"
-            aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={theme}
-                initial={{ rotate: -90, scale: 0 }}
-                animate={{ rotate: 0, scale: 1 }}
-                exit={{ rotate: 90, scale: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-              </motion.div>
-            </AnimatePresence>
-          </button>
-
           <a
             href="/login"
             className="hidden sm:flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg transition-all hover:bg-primary/5 font-medium text-muted hover:text-ink"
@@ -99,12 +78,12 @@ export default function Header() {
           </a>
 
           <motion.a
-            href="#cotizar"
+            href="/login"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             className="btn-primary !py-2 !px-4 !text-xs"
           >
-            Cotizar
+            Entrar a Familia PET
           </motion.a>
 
           <button

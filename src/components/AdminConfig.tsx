@@ -44,12 +44,12 @@ export default function AdminConfig() {
         <div key={sec.id} className="glass-card overflow-hidden">
           <button
             onClick={() => setOpenSection(openSection === sec.id ? null : sec.id)}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-white/[0.02] transition-all"
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-ink/5 transition-all"
           >
-            <span className="text-sm font-semibold text-white flex items-center gap-2">
+            <span className="text-sm font-semibold text-ink flex items-center gap-2">
               <span>{sec.icon}</span> {sec.label}
             </span>
-            {openSection === sec.id ? <ChevronUp size={10} style={{ color: 'var(--text-muted)' }} /> : <ChevronDown size={10} style={{ color: 'var(--text-muted)' }} />}
+            {openSection === sec.id ? <ChevronUp size={10} className="text-muted" /> : <ChevronDown size={10} className="text-muted" />}
           </button>
 
           <AnimatePresence>
@@ -58,7 +58,7 @@ export default function AdminConfig() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="border-t border-white/5"
+                className="border-t border-ink/10"
               >
                 <div className="p-4">
                   <SectionContent section={sec.id} config={config} updateConfig={updateConfig} saving={saving} />
@@ -187,7 +187,7 @@ function HoursEditor({ config, updateConfig, saving }: EditorProps) {
         const dayHours = BUSINESS_HOURS[day]
         return (
           <div key={day}>
-            <p className="text-xs font-medium text-white/60 mb-1.5 capitalize">
+            <p className="text-xs font-medium text-muted mb-1.5 capitalize">
               {day} {dayHours ? `(${dayHours.open} - ${dayHours.close})` : '(Cerrado)'}
             </p>
             <div className="flex flex-wrap gap-1">
@@ -199,8 +199,8 @@ function HoursEditor({ config, updateConfig, saving }: EditorProps) {
                     onClick={() => toggleHour(day, hour)}
                     className={`text-2xs px-2 py-1 rounded-md transition-all ${
                       active
-                        ? 'bg-primary/20 text-primary border border-primary/30'
-                        : 'bg-white/5 text-white/30 border border-white/5 hover:border-white/20'
+                        ? 'bg-primary/20 text-primary-hover border border-primary/30'
+                        : 'bg-ink/5 text-muted border border-ink/10 hover:border-ink/30'
                     }`}
                   >
                     {hour}
@@ -234,11 +234,11 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
   return (
     <div className="space-y-3">
       {tips.map((tip: { title: string; text: string; icon: string }, i: number) => (
-        <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
+        <div key={i} className="flex gap-2 items-start bg-ink/5 p-3 rounded-lg">
           <div className="flex-1 space-y-2">
-            <input value={tip.icon} onChange={(e) => updateTip(i, 'icon', e.target.value)} className="w-10 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs text-center" aria-label="Icono del tip" placeholder="Icono" />
-            <input value={tip.title} onChange={(e) => updateTip(i, 'title', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Título del tip" placeholder="Título" />
-            <textarea value={tip.text} onChange={(e) => updateTip(i, 'text', e.target.value)} rows={2} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" aria-label="Texto del tip" placeholder="Texto" />
+            <input value={tip.icon} onChange={(e) => updateTip(i, 'icon', e.target.value)} className="w-10 bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs text-center" aria-label="Icono del tip" placeholder="Icono" />
+            <input value={tip.title} onChange={(e) => updateTip(i, 'title', e.target.value)} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" aria-label="Título del tip" placeholder="Título" />
+            <textarea value={tip.text} onChange={(e) => updateTip(i, 'text', e.target.value)} rows={2} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs resize-none" aria-label="Texto del tip" placeholder="Texto" />
           </div>
            <button onClick={() => removeTip(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><Trash2 size={10} /></button>
         </div>
@@ -269,10 +269,10 @@ function FAQEditor({ config, updateConfig, saving }: EditorProps) {
   return (
     <div className="space-y-3">
       {faq.map((item: { question: string; answer: string }, i: number) => (
-        <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
+        <div key={i} className="flex gap-2 items-start bg-ink/5 p-3 rounded-lg">
           <div className="flex-1 space-y-2">
-            <input value={item.question} onChange={(e) => updateItem(i, 'question', e.target.value)} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Pregunta frecuente" placeholder="Pregunta" />
-            <textarea value={item.answer} onChange={(e) => updateItem(i, 'answer', e.target.value)} rows={3} className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs resize-none" aria-label="Respuesta" placeholder="Respuesta" />
+            <input value={item.question} onChange={(e) => updateItem(i, 'question', e.target.value)} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" aria-label="Pregunta frecuente" placeholder="Pregunta" />
+            <textarea value={item.answer} onChange={(e) => updateItem(i, 'answer', e.target.value)} rows={3} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs resize-none" aria-label="Respuesta" placeholder="Respuesta" />
           </div>
            <button onClick={() => removeItem(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><Trash2 size={10} /></button>
         </div>
@@ -294,7 +294,7 @@ function TermsEditor({ config, updateConfig, saving }: EditorProps) {
   return (
     <div className="space-y-3">
       <textarea aria-label="Términos y condiciones" value={content} onChange={(e) => setContent(e.target.value)} rows={12}
-        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono resize-none focus:outline-none focus:border-primary"
+        className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-xs font-mono resize-none focus:outline-none focus:border-primary"
       />
       <SaveButton onClick={save} saving={saving} />
     </div>
@@ -319,10 +319,10 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
   return (
     <div className="space-y-3">
       {walkers.map((w: { name: string; phone: string }, i: number) => (
-        <div key={i} className="flex gap-2 items-start bg-white/[0.02] p-3 rounded-lg">
+        <div key={i} className="flex gap-2 items-start bg-ink/5 p-3 rounded-lg">
           <div className="flex-1 flex gap-2">
-            <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Nombre del paseador" placeholder="Nombre" />
-            <input value={w.phone} onChange={(e) => updateWalker(i, 'phone', e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-xs" aria-label="Teléfono del paseador" placeholder="Teléfono" />
+            <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" aria-label="Nombre del paseador" placeholder="Nombre" />
+            <input value={w.phone} onChange={(e) => updateWalker(i, 'phone', e.target.value)} className="flex-1 bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" aria-label="Teléfono del paseador" placeholder="Teléfono" />
           </div>
            <button onClick={() => removeWalker(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><Trash2 size={10} /></button>
         </div>
@@ -349,20 +349,20 @@ function FeaturesEditor({ config, updateConfig, saving }: EditorProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
-          className={`w-10 h-6 rounded-full transition-all ${analyticsEnabled ? 'bg-brand-500' : 'bg-white/10'}`}
+          className={`w-10 h-6 rounded-full transition-all ${analyticsEnabled ? 'bg-brand-500' : 'bg-ink/15'}`}
         >
-          <div className={`w-4 h-4 rounded-full bg-white transition-all ${analyticsEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+          <div className={`w-4 h-4 rounded-full bg-white shadow transition-all ${analyticsEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
         </button>
-        <span className="text-xs text-white/60">{analyticsEnabled ? 'Analítica activada' : 'Analítica desactivada'}</span>
+        <span className="text-xs text-muted">{analyticsEnabled ? 'Analítica activada' : 'Analítica desactivada'}</span>
       </div>
       <div className="flex items-center gap-3">
         <button
           onClick={() => setPetAhora(!petAhora)}
-          className={`w-10 h-6 rounded-full transition-all ${petAhora ? 'bg-brand-500' : 'bg-white/10'}`}
+          className={`w-10 h-6 rounded-full transition-all ${petAhora ? 'bg-brand-500' : 'bg-ink/15'}`}
         >
-          <div className={`w-4 h-4 rounded-full bg-white transition-all ${petAhora ? 'translate-x-5' : 'translate-x-1'}`} />
+          <div className={`w-4 h-4 rounded-full bg-white shadow transition-all ${petAhora ? 'translate-x-5' : 'translate-x-1'}`} />
         </button>
-        <span className="text-xs text-white/60">{petAhora ? 'PET Ahora activado' : 'PET Ahora desactivado'}</span>
+        <span className="text-xs text-muted">{petAhora ? 'PET Ahora activado' : 'PET Ahora desactivado'}</span>
       </div>
       {petAhora && (
         <div className="p-3 bg-brand-500/10 border border-brand-500/20 rounded-lg flex items-start gap-2">
@@ -386,11 +386,11 @@ function MaintenanceEditor({ config, updateConfig, saving }: EditorProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setEnabled(!enabled)}
-          className={`w-10 h-6 rounded-full transition-all ${enabled ? 'bg-red-500' : 'bg-white/10'}`}
+          className={`w-10 h-6 rounded-full transition-all ${enabled ? 'bg-red-500' : 'bg-ink/15'}`}
         >
-          <div className={`w-4 h-4 rounded-full bg-white transition-all ${enabled ? 'translate-x-5' : 'translate-x-1'}`} />
+          <div className={`w-4 h-4 rounded-full bg-white shadow transition-all ${enabled ? 'translate-x-5' : 'translate-x-1'}`} />
         </button>
-        <span className="text-xs text-white/60">{enabled ? 'Activado - el sitio muestra "En mantenimiento"' : 'Desactivado - sitio normal'}</span>
+        <span className="text-xs text-muted">{enabled ? 'Activado - el sitio muestra "En mantenimiento"' : 'Desactivado - sitio normal'}</span>
       </div>
       {enabled && (
         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
@@ -406,14 +406,14 @@ function MaintenanceEditor({ config, updateConfig, saving }: EditorProps) {
 function InputField({ label, value, onChange, multiline }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean }) {
   return (
     <div>
-      <label className="block text-xs text-white/40 mb-1">{label}</label>
+      <label className="block text-xs text-muted mb-1">{label}</label>
       {multiline ? (
         <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-primary"
+          className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm resize-none focus:outline-none focus:border-primary"
         />
       ) : (
         <input value={value} onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+          className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
         />
       )}
     </div>

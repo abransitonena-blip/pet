@@ -76,28 +76,28 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
     <div className="glass-card p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-3">
         <Users className="text-primary" size={16} />
-        <h3 className="text-sm font-semibold text-white">Recomienda y gana</h3>
+        <h3 className="text-sm font-semibold text-ink">Recomienda y gana</h3>
       </div>
 
       {!phone ? (
-        <p className="text-xs text-white/30 text-center py-4">
+        <p className="text-xs text-muted text-center py-4">
           Registra tu WhatsApp para obtener tu link de referido
         </p>
       ) : creating ? (
-        <p className="text-xs text-white/30 text-center py-4 flex items-center justify-center gap-2">
+        <p className="text-xs text-muted text-center py-4 flex items-center justify-center gap-2">
           <Loader2 className="animate-spin" size={12} /> Generando tu código...
         </p>
       ) : (
         <>
-          <p className="text-xs text-white/50 mb-4 leading-relaxed">
+          <p className="text-xs text-muted mb-4 leading-relaxed">
             Invita a tus amigos y por cada persona que agende un paseo con tu link, ambos reciben <span className="text-primary font-medium">$20 de descuento</span> 🐾
           </p>
 
-          <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2.5 mb-3">
-            <span className="text-xs text-white/30 truncate flex-1">{referralLink}</span>
+          <div className="flex items-center gap-2 bg-ink/5 rounded-xl px-3 py-2.5 mb-3">
+            <span className="text-xs text-muted truncate flex-1">{referralLink}</span>
             <button
               onClick={copyLink}
-              className="shrink-0 text-xs px-2.5 py-1 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-all"
+              className="shrink-0 text-xs px-2.5 py-1 rounded-lg bg-primary/20 text-primary-hover hover:bg-primary/30 transition-all"
             >
               {copied ? <Check size={11} /> : <Copy size={11} />}
             </button>

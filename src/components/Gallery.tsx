@@ -70,7 +70,7 @@ export default function Gallery() {
     <section aria-label="Galería" id="galeria" className="relative py-24 sm:py-32 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-trust/5 rounded-full blur-3xl" />
       </div>
 
       <div className="section-container relative z-10">
@@ -85,7 +85,7 @@ export default function Gallery() {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-primary/80 text-sm uppercase tracking-[0.2em] font-medium"
+            className="text-primary-hover text-sm uppercase tracking-[0.2em] font-medium"
           >
             Galería
           </motion.span>

@@ -120,7 +120,7 @@ export default function LoyaltyProgram() {
               >
                 {redeeming ? (
                   <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="w-3 h-3 border-2 border-ink/20 border-t-ink rounded-full animate-spin" />
                     Canjeando...
                   </span>
                 ) : (

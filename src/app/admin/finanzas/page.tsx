@@ -144,7 +144,7 @@ export default function AdminFinanzasPage() {
             key={p.key}
             onClick={() => { setDatePreset(p.key); if (p.key === 'all') { setDateFrom(''); setDateTo('') } }}
             className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-              datePreset === p.key ? 'bg-brand-500/15 text-brand-400' : 'bg-white/[0.04] text-white/40 hover:text-white/60'
+              datePreset === p.key ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted hover:text-primary'
             }`}
           >
             {p.label}

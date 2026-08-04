@@ -45,11 +45,11 @@ function relativeTime(dateStr: string): string {
 }
 
 const SEGMENT_CONFIG: Record<string, { label: string; color: string; icon: typeof Crown }> = {
-  vip: { label: 'VIP', color: 'text-warning-400 bg-warning-500/15', icon: Crown },
-  regular: { label: 'Frecuente', color: 'text-success-400 bg-success-500/15', icon: Heart },
-  new: { label: 'Nuevo', color: 'text-blue-400 bg-blue-500/15', icon: Dog },
-  at_risk: { label: 'En riesgo', color: 'text-orange-400 bg-orange-500/15', icon: AlertTriangle },
-  churned: { label: 'Inactivo', color: 'text-white/40 bg-white/5', icon: Clock },
+  vip: { label: 'VIP', color: 'text-amber-800 bg-warning-500/15', icon: Crown },
+  regular: { label: 'Frecuente', color: 'text-success-600 bg-success-500/15', icon: Heart },
+  new: { label: 'Nuevo', color: 'text-blue-700 bg-blue-500/15', icon: Dog },
+  at_risk: { label: 'En riesgo', color: 'text-orange-800 bg-orange-500/15', icon: AlertTriangle },
+  churned: { label: 'Inactivo', color: 'text-muted bg-ink/5', icon: Clock },
 }
 
 export default function AdminClientesPage() {
@@ -208,7 +208,7 @@ export default function AdminClientesPage() {
               key={s}
               onClick={() => setSegmentFilter(s)}
               className={`text-xs whitespace-nowrap px-3 py-1.5 rounded-lg font-medium transition-all ${
-                segmentFilter === s ? 'bg-brand-500/15 text-brand-400' : 'bg-white/[0.04] text-white/40 hover:text-white/60'
+                segmentFilter === s ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted hover:text-primary'
               }`}
             >
               {s === 'all' ? 'Todos' : SEGMENT_CONFIG[s].label}
@@ -239,7 +239,7 @@ export default function AdminClientesPage() {
                 key={c.phone}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl p-4 transition-all hover:bg-white/[0.02] cursor-pointer"
+                className="rounded-xl p-4 transition-all hover:bg-ink/5 cursor-pointer"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
                 onClick={() => setSelectedClient(selectedClient?.phone === c.phone ? null : c)}
               >
@@ -306,7 +306,7 @@ export default function AdminClientesPage() {
                   <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>{selectedClient.name}</h2>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>📞 {selectedClient.phone}</p>
                 </div>
-                <button onClick={() => setSelectedClient(null)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                <button onClick={() => setSelectedClient(null)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
                   <X size={14} />
                 </button>
               </div>
@@ -331,7 +331,7 @@ export default function AdminClientesPage() {
                 <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Mascotas</p>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedClient.petNames.map((p) => (
-                    <span key={p} className="text-2xs px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-400">
+                    <span key={p} className="text-2xs px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600">
                       🐾 {p}
                     </span>
                   ))}
@@ -363,7 +363,7 @@ export default function AdminClientesPage() {
               {/* WhatsApp */}
               <button
                 onClick={() => openWhatsApp(selectedClient.phone)}
-                className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all bg-success-500/10 text-success-400 hover:bg-success-500/20"
+                className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all bg-success-500/10 text-success-600 hover:bg-success-500/20"
               >
                 <WhatsAppIcon width={13} height={13} /> Contactar por WhatsApp
               </button>

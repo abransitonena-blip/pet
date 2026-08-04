@@ -84,7 +84,7 @@ export default function NotificationBell({ uid }: { uid: string }) {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/5"
+        className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-ink/5"
         style={{ color: 'var(--text-muted)' }}
         aria-label={`Notificaciones${unread > 0 ? `, ${unread} sin leer` : ''}`}
         aria-expanded={open}
@@ -136,7 +136,7 @@ export default function NotificationBell({ uid }: { uid: string }) {
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!n.read) markRead(n.id) } }}
                         role="button"
                         tabIndex={0}
-                        className="flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-white/3"
+                        className="flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-ink/5"
                         style={{ background: n.read ? 'transparent' : 'rgba(217,119,6,0.05)' }}
                       >
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
@@ -161,7 +161,7 @@ export default function NotificationBell({ uid }: { uid: string }) {
                 <a
                   href="/mi-cuenta/notificaciones"
                   onClick={() => setOpen(false)}
-                  className="block text-center py-2.5 text-xs font-medium transition-colors hover:bg-white/3"
+                  className="block text-center py-2.5 text-xs font-medium transition-colors hover:bg-ink/5"
                   style={{ color: 'var(--color-primary)', borderTop: '1px solid var(--border)' }}
                 >
                   Ver todas

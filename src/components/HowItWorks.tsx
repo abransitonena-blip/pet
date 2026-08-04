@@ -22,7 +22,7 @@ export default function HowItWorks() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-sm uppercase tracking-widest font-medium text-primary">Cómo funciona</span>
+          <span className="text-sm uppercase tracking-widest font-medium text-primary-hover">Cómo funciona</span>
           <h2 className="section-title mt-3">
             Así de <span className="text-primary">fácil</span> es
           </h2>

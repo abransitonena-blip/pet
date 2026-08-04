@@ -355,7 +355,7 @@ export default function AdminReservas() {
         <button
           onClick={() => setViewTab('reservations')}
           className={`text-xs px-4 py-2 rounded-lg font-medium transition-all ${
-            viewTab === 'reservations' ? 'bg-brand-500/15 text-brand-400 border border-brand-500/30' : 'border border-white/10 text-white/50 hover:text-white/70'
+            viewTab === 'reservations' ? 'bg-brand-500/15 text-brand-600 border border-brand-500/30' : 'border border-ink/15 text-muted hover:text-ink/70'
           }`}
         >
           🐾 Reservas
@@ -363,10 +363,10 @@ export default function AdminReservas() {
         <button
           onClick={() => setViewTab('orders')}
           className={`text-xs px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-            viewTab === 'orders' ? 'bg-accent-500/15 text-accent-400 border border-accent-500/30' : 'border border-white/10 text-white/50 hover:text-white/70'
+            viewTab === 'orders' ? 'bg-brand-500/15 text-brand-600 border border-brand-500/30' : 'border border-ink/15 text-muted hover:text-ink/70'
           }`}
         >
-          <Package size={11} /> Paquetes {orders.length > 0 && <span className="bg-accent-500/20 text-accent-400 px-1.5 py-0.5 rounded-full text-2xs">{orders.length}</span>}
+          <Package size={11} /> Paquetes {orders.length > 0 && <span className="bg-brand-500/20 text-brand-600 px-1.5 py-0.5 rounded-full text-2xs">{orders.length}</span>}
         </button>
       </div>
 
@@ -379,14 +379,14 @@ export default function AdminReservas() {
             onClick={() => setStatusFilter(s)}
             className={`text-xs whitespace-nowrap px-3 py-1.5 rounded-lg font-medium transition-all ${
               statusFilter === s
-                ? s === 'completed' ? 'bg-success-500/15 text-success-400'
-                : s === 'on_the_way' ? 'bg-blue-500/15 text-blue-400'
-                : s === 'in_progress' ? 'bg-purple-500/15 text-purple-400'
-                : s === 'assigned' ? 'bg-accent-500/15 text-accent-400'
-                : s === 'cancelled' ? 'bg-danger-500/15 text-danger-400'
-                : s === 'pending' ? 'bg-brand-500/15 text-brand-400'
-                : 'bg-white/10 text-white'
-              : 'bg-white/[0.04] text-white/40 hover:text-white/60'
+                ? s === 'completed' ? 'bg-success-500/15 text-success-600'
+                : s === 'on_the_way' ? 'bg-blue-500/15 text-blue-700'
+                : s === 'in_progress' ? 'bg-purple-500/15 text-purple-700'
+                : s === 'assigned' ? 'bg-brand-500/15 text-brand-600'
+                : s === 'cancelled' ? 'bg-danger-500/15 text-red-700'
+                : s === 'pending' ? 'bg-brand-500/15 text-brand-600'
+                : 'bg-ink/10 text-ink'
+              : 'bg-ink/5 text-muted hover:text-primary'
             }`}
           >
             {s === 'all' ? 'Todas' : (STATUS_LABELS as Record<string, string>)[s] || s}
@@ -414,7 +414,7 @@ export default function AdminReservas() {
           {filtered.map((res) => (
             <div
               key={res.id}
-              className="rounded-xl p-4 transition-all hover:bg-white/[0.02]"
+              className="rounded-xl p-4 transition-all hover:bg-ink/5"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -430,14 +430,14 @@ export default function AdminReservas() {
                       </span>
                     )}
                     {res.orderId && (
-                      <span className="text-2xs px-2 py-0.5 rounded-full bg-accent-500/10 text-accent-400">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600">
                         📦 Paquete
                       </span>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
                     <span>🐾 {res.petName}</span>
-                    <button onClick={() => viewHistory(res.phone)} className="hover:text-brand-400 transition-colors">
+                    <button onClick={() => viewHistory(res.phone)} className="hover:text-brand-600 transition-colors">
                       📞 {res.phone}
                     </button>
                     <span>📋 {res.service}</span>
@@ -446,7 +446,7 @@ export default function AdminReservas() {
                     <button
                       onClick={() => handlePaymentToggle(res.id, res.paymentStatus)}
                       className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-all ${
-                        res.paymentStatus === 'paid' ? 'bg-success-500/15 text-success-400' : 'bg-brand-500/15 text-brand-400'
+                        res.paymentStatus === 'paid' ? 'bg-success-500/15 text-success-600' : 'bg-brand-500/15 text-brand-600'
                       }`}
                     >
                       {res.paymentStatus === 'paid' ? '✓ Pagado' : '⏳ Pendiente'}
@@ -512,7 +512,7 @@ export default function AdminReservas() {
                 <div key={order.id} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                   <button
                     onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                    className="w-full flex items-center justify-between p-4 text-left hover:bg-white/[0.02] transition-colors"
+                    className="w-full flex items-center justify-between p-4 text-left hover:bg-ink/5 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -520,7 +520,7 @@ export default function AdminReservas() {
                         <Badge variant={order.status === 'active' ? 'success' : order.status === 'completed' ? 'default' : 'danger'}>
                           {order.status === 'active' ? 'Activo' : order.status === 'completed' ? 'Completado' : order.status}
                         </Badge>
-                        <span className="text-2xs px-2 py-0.5 rounded-full bg-accent-500/15 text-accent-400 font-medium">
+                        <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-600 font-medium">
                           {completedSessions.length}/{scheduledSessions.length} sesiones
                         </span>
                       </div>
@@ -610,7 +610,7 @@ export default function AdminReservas() {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Historial · {historyPhone}</h3>
-                <button onClick={() => setShowHistory(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                <button onClick={() => setShowHistory(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
                   <X size={14} />
                 </button>
               </div>

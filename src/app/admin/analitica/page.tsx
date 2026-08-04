@@ -176,7 +176,7 @@ export default function AdminAnaliticaPage() {
                 <kpi.icon size={14} style={{ color: kpi.color }} className="mb-2" />
                 <p className="text-2xs mb-1" style={{ color: 'var(--text-muted)' }}>{kpi.label}</p>
                 <p className="text-2xl font-bold" style={{ color: kpi.color }}>{kpi.value}</p>
-                <p className={`text-2xs mt-0.5 ${kpi.trendUp ? 'text-success-400' : 'text-danger-400'}`}>
+                <p className={`text-2xs mt-0.5 ${kpi.trendUp ? 'text-success-600' : 'text-red-700'}`}>
                   {kpi.trend}
                 </p>
               </div>

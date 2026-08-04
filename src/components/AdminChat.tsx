@@ -174,7 +174,7 @@ export default function AdminChat() {
               <button
                 key={conv.id}
                 onClick={() => setSelectedId(conv.id)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/5 touch-action-manipulation"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-ink/5 touch-action-manipulation"
                 style={{ borderBottom: '1px solid var(--border)' }}
               >
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"

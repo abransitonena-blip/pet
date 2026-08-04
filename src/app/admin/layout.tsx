@@ -121,7 +121,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.id}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
-                  active ? 'bg-brand-500/10 text-brand-400' : ''
+                  active ? 'bg-brand-500/10 text-brand-600' : ''
                 }`}
                 style={{ color: active ? undefined : 'var(--text-secondary)' }}
                 title={collapsed ? item.label : undefined}
@@ -205,7 +205,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    active ? 'bg-brand-500/10 text-brand-400' : ''
+                    active ? 'bg-brand-500/10 text-brand-600' : ''
                   }`}
                   style={{ color: active ? undefined : 'var(--text-secondary)' }}
                 >
@@ -238,7 +238,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+            <Link href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
               Ver sitio
             </Link>
           </div>

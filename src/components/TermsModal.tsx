@@ -39,13 +39,13 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
                   <Dog />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Términos y condiciones</h2>
-                  <p className="text-xs text-white/40">PET Ap</p>
+                  <h2 className="text-lg font-bold text-ink">Términos y condiciones</h2>
+                  <p className="text-xs text-muted">PET Ap</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10 text-white/40 hover:text-white"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-ink/10 text-muted hover:text-ink"
               >
                 <X size={14} />
               </button>
@@ -75,8 +75,8 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
                         <Icon className="text-primary" size={14} />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-sm text-white mb-1.5">{section.title}</h3>
-                        <p className="text-sm text-white/60 leading-relaxed">{section.content}</p>
+                        <h3 className="font-semibold text-sm text-ink mb-1.5">{section.title}</h3>
+                        <p className="text-sm text-ink/70 leading-relaxed">{section.content}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -84,11 +84,11 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
               })}
             </motion.div>
 
-            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-              <p className="text-2xs text-white/30">Última actualización: {TERMS_LAST_UPDATED}</p>
+            <div className="mt-6 pt-4 border-t border-ink/10 flex items-center justify-between">
+              <p className="text-2xs text-muted">Última actualización: {TERMS_LAST_UPDATED}</p>
               <button
                 onClick={onClose}
-                className="text-xs px-4 py-2 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-all"
+                className="text-xs px-4 py-2 rounded-full bg-primary/20 text-primary-hover hover:bg-primary/30 transition-all"
               >
                 Cerrar
               </button>

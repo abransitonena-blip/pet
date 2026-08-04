@@ -56,7 +56,7 @@ export default function ReferirPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push('/mi-cuenta')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
           style={{ color: 'var(--text-muted)' }}
         >
           <ArrowLeft size={14} />
@@ -148,7 +148,7 @@ export default function ReferirPage() {
           </p>
           <button
             onClick={() => router.push('/mi-cuenta/config')}
-            className="text-xs px-4 py-2 rounded-lg transition-colors hover:bg-white/5"
+            className="text-xs px-4 py-2 rounded-lg transition-colors hover:bg-ink/5"
             style={{ color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
           >
             Ir a configuración

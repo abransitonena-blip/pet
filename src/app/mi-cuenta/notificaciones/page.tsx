@@ -97,7 +97,7 @@ export default function NotificacionesPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push('/mi-cuenta')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
           style={{ color: 'var(--text-muted)' }}
         >
           <ArrowLeft size={14} />
@@ -131,7 +131,7 @@ export default function NotificacionesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
                 onClick={() => { if (!n.read) markRead(n.id) }}
-                className="flex items-start gap-3 p-4 rounded-2xl transition-all cursor-pointer hover:bg-white/[0.02]"
+                className="flex items-start gap-3 p-4 rounded-2xl transition-all cursor-pointer hover:bg-ink/5"
                 style={{
                   background: n.read ? 'var(--bg-card)' : 'rgba(217,119,6,0.04)',
                   border: '1px solid var(--border)',

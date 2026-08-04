@@ -106,7 +106,7 @@ export default function AyudaPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push('/mi-cuenta')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
           style={{ color: 'var(--text-muted)' }}
         >
           <ArrowLeft size={14} />
@@ -162,7 +162,7 @@ export default function AyudaPage() {
                   >
                     <button
                       onClick={() => toggle(key)}
-                      className="w-full px-4 py-3 flex items-center justify-between text-left transition-colors hover:bg-white/[0.02]"
+                      className="w-full px-4 py-3 flex items-center justify-between text-left transition-colors hover:bg-ink/5"
                     >
                       <span className="text-sm font-medium pr-4" style={{ color: 'var(--text-primary)' }}>{item.q}</span>
                       <motion.div

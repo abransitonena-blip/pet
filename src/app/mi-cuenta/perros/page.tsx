@@ -113,7 +113,7 @@ function ChipInput({ items, onChange, placeholder, color }: {
           className="flex-1 px-3 py-2 rounded-xl text-xs border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
           style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
         />
-        <button type="button" onClick={add} className="px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-white/5" style={{ color: 'var(--color-primary)', border: '1px solid var(--border)' }}>
+        <button type="button" onClick={add} className="px-3 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--color-primary)', border: '1px solid var(--border)' }}>
           + Agregar
         </button>
       </div>
@@ -300,7 +300,7 @@ export default function MisPerrosPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/mi-cuenta')} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => router.push('/mi-cuenta')} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
             <ArrowLeft size={14} />
           </button>
           <div>
@@ -352,7 +352,7 @@ export default function MisPerrosPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => openEdit(pet)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }} aria-label={`Editar ${pet.name}`}>
+                      <button onClick={() => openEdit(pet)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }} aria-label={`Editar ${pet.name}`}>
                         <Pencil size={12} />
                       </button>
                       <button onClick={() => setConfirmDelete(pet.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400" style={{ color: 'var(--text-muted)' }} aria-label={`Eliminar ${pet.name}`}>
@@ -366,7 +366,7 @@ export default function MisPerrosPage() {
                   <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                     {pet.age && (
                       <span className="flex items-center gap-1">
-                        <Ruler size={10} className="text-brand-400" /> {pet.age}
+                        <Ruler size={10} className="text-brand-600" /> {pet.age}
                       </span>
                     )}
                     {pet.weight && (
@@ -410,8 +410,8 @@ export default function MisPerrosPage() {
                     <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: '1px solid var(--border)' }}>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>¿Eliminar a {pet.name}?</p>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => setConfirmDelete(null)} className="text-xs px-3 py-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>Cancelar</button>
-                        <button onClick={() => handleDelete(pet.id)} className="text-xs px-3 py-1.5 rounded-lg bg-danger-500/10 text-danger-400 transition-colors hover:bg-danger-500/20">Eliminar</button>
+                        <button onClick={() => setConfirmDelete(null)} className="text-xs px-3 py-1.5 rounded-lg transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>Cancelar</button>
+                        <button onClick={() => handleDelete(pet.id)} className="text-xs px-3 py-1.5 rounded-lg bg-danger-500/10 text-red-700 transition-colors hover:bg-danger-500/20">Eliminar</button>
                       </div>
                     </div>
                   </motion.div>
@@ -447,7 +447,7 @@ export default function MisPerrosPage() {
                 <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                   {editingPet ? `Editar ${editingPet.name}` : 'Nueva mascota'}
                 </h2>
-                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
                   <X size={14} />
                 </button>
               </div>
@@ -630,7 +630,7 @@ export default function MisPerrosPage() {
                       </div>
                       {form.health.vaccines.map((vac, i) => (
                         <div key={i} className="flex items-center gap-2 mb-2 p-2 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-                          <Syringe size={12} className="text-brand-400 shrink-0" />
+                          <Syringe size={12} className="text-brand-600 shrink-0" />
                           <input type="text" value={vac.name} onChange={(e) => updateVaccine(i, 'name', e.target.value)} placeholder="Nombre" className="flex-1 text-xs bg-transparent border-none outline-none" style={{ color: 'var(--text-primary)' }} />
                           <input type="date" value={vac.date} onChange={(e) => updateVaccine(i, 'date', e.target.value)} className="text-2xs bg-transparent outline-none" style={{ color: 'var(--text-muted)' }} />
                           <button type="button" onClick={() => removeVaccine(i)} className="text-danger-400 hover:opacity-80"><X size={10} /></button>
@@ -679,7 +679,7 @@ export default function MisPerrosPage() {
 
               {/* Actions */}
               <div className="flex gap-3 px-5 pb-5 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                   Cancelar
                 </button>
                 <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2">

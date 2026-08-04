@@ -78,13 +78,13 @@ export const LEGACY_STATUS_MAP: Record<string, SessionStatus> = {
 
 /** Status badge color class hints */
 export const STATUS_COLORS: Record<SessionStatus, { bg: string; text: string }> = {
-  pending:          { bg: 'bg-yellow-500/15', text: 'text-yellow-400' },
-  assigned:         { bg: 'bg-accent-500/15', text: 'text-accent-400' },
-  walker_confirmed: { bg: 'bg-blue-500/15', text: 'text-blue-400' },
-  on_the_way:       { bg: 'bg-blue-500/10', text: 'text-blue-400' },
-  arrived:          { bg: 'bg-purple-500/15', text: 'text-purple-400' },
-  in_progress:      { bg: 'bg-success-500/20', text: 'text-success-400' },
-  completed:        { bg: 'bg-success-500/15', text: 'text-success-400' },
-  cancelled:        { bg: 'bg-danger-500/15', text: 'text-danger-400' },
-  no_show:          { bg: 'bg-orange-500/15', text: 'text-orange-400' },
+  pending:          { bg: 'bg-yellow-500/15', text: 'text-yellow-800' },
+  assigned:         { bg: 'bg-brand-500/15', text: 'text-brand-600' },
+  walker_confirmed: { bg: 'bg-blue-500/15', text: 'text-blue-700' },
+  on_the_way:       { bg: 'bg-blue-500/10', text: 'text-blue-700' },
+  arrived:          { bg: 'bg-purple-500/15', text: 'text-purple-700' },
+  in_progress:      { bg: 'bg-success-500/20', text: 'text-success-600' },
+  completed:        { bg: 'bg-success-500/15', text: 'text-success-600' },
+  cancelled:        { bg: 'bg-danger-500/15', text: 'text-red-700' },
+  no_show:          { bg: 'bg-orange-500/15', text: 'text-orange-800' },
 }

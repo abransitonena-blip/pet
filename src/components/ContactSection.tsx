@@ -33,7 +33,7 @@ export default function ContactSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <span className="text-primary text-sm uppercase tracking-widest font-medium">Contáctanos</span>
+          <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">Contáctanos</span>
           <h2 className="section-title mt-3">
             Estamos <span className="text-primary">aquí</span>
           </h2>

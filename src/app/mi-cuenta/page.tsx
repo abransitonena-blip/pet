@@ -104,7 +104,7 @@ export default function DashboardPage() {
           {nextWalk ? (
             <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
               <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0">
-                <Dog size={16} className="text-brand-400" />
+                <Dog size={16} className="text-brand-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Tu próximo paseo</p>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
           onClick={() => router.push('/mi-cuenta/nueva-reserva')}
         >
           <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center mb-3">
-            <CalendarDays size={16} className="text-brand-400" />
+            <CalendarDays size={16} className="text-brand-600" />
           </div>
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{upcoming.length}</p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Próximos paseos</p>
@@ -205,7 +205,7 @@ export default function DashboardPage() {
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-brand-500/30"
           style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.1), rgba(217,119,6,0.05))', border: '1px solid var(--border)' }}
         >
-          <CalendarDays size={20} className="text-brand-400 mb-2" />
+          <CalendarDays size={20} className="text-brand-600 mb-2" />
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Nueva reserva</p>
           <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
             Agendar un paseo <ArrowRight size={8} />
@@ -239,7 +239,7 @@ export default function DashboardPage() {
           {reservations.length > 0 && (
             <button
               onClick={() => router.push('/mi-cuenta/historial')}
-              className="text-xs flex items-center gap-1 transition-colors hover:text-brand-400"
+              className="text-xs flex items-center gap-1 transition-colors hover:text-brand-600"
               style={{ color: 'var(--text-muted)' }}
             >
               Ver todo <ArrowRight size={8} />
@@ -266,13 +266,13 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + i * 0.05 }}
-                className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-white/[0.02]"
+                className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-ink/5"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-white/5'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-ink/5'}`}>
                   {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :
                    res.status === 'cancelled' ? <AlertTriangle size={14} className="text-danger-400" /> :
-                   <Dog size={14} className="text-brand-400" />}
+                   <Dog size={14} className="text-brand-600" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{res.service}</p>
@@ -286,13 +286,13 @@ export default function DashboardPage() {
                   {res.status === 'completed' && (
                     <button
                       onClick={(e) => { e.preventDefault(); router.push(`/mi-cuenta/nueva-reserva?repeat=${encodeURIComponent(res.service)}`) }}
-                      className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-400 border border-brand-500/20"
+                      className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-600 border border-brand-500/20"
                       title="Repetir este paseo"
                     >
                       <Redo2 size={8} /> Repetir
                     </button>
                   )}
-                  <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-white/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>
+                  <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-ink/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>
                     {STATUS_LABELS[res.status] || res.status}
                   </span>
                 </div>

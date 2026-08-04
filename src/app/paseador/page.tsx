@@ -212,7 +212,7 @@ export default function PaseadorDashboard() {
           className="rounded-2xl p-4"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
-          <p className="text-2xl font-bold text-success-400">{active.length + completedToday.length}</p>
+          <p className="text-2xl font-bold text-success-600">{active.length + completedToday.length}</p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>En progreso</p>
         </motion.div>
         <motion.div
@@ -234,7 +234,7 @@ export default function PaseadorDashboard() {
       {petAhoraWalks.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-success-500 animate-pulse" />
             PET Ahora activos
           </h2>
           <div className="space-y-2">
@@ -320,7 +320,7 @@ export default function PaseadorDashboard() {
                   </div>
                   <button
                     onClick={() => setWalkModal({ reservation: res, mode: 'check_out' })}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-white/10 font-medium transition-all hover:bg-white/20"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-ink/10 font-medium transition-all hover:bg-ink/20"
                     style={{ color: 'var(--text-primary)' }}
                   >
                     Terminar
@@ -375,7 +375,7 @@ export default function PaseadorDashboard() {
                       <button
                         onClick={() => handleStatusUpdate(res.id, 'on_the_way')}
                         disabled={updatingId === res.id}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 font-medium transition-all hover:bg-blue-500/20"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-700 font-medium transition-all hover:bg-blue-500/20"
                       >
                         {updatingId === res.id ? <Loader2 className="animate-spin" size={12} /> : 'En camino'}
                       </button>
@@ -384,7 +384,7 @@ export default function PaseadorDashboard() {
                       <button
                         onClick={() => handleStatusUpdate(res.id, 'on_the_way')}
                         disabled={updatingId === res.id}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 font-medium transition-all hover:bg-blue-500/20"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-700 font-medium transition-all hover:bg-blue-500/20"
                       >
                         {updatingId === res.id ? <Loader2 className="animate-spin" size={12} /> : 'En camino'}
                       </button>
@@ -392,7 +392,7 @@ export default function PaseadorDashboard() {
                     {res.status === 'on_the_way' && (
                       <button
                         onClick={() => setWalkModal({ reservation: res, mode: 'check_in' })}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-400 font-medium transition-all hover:bg-brand-500/20"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-600 font-medium transition-all hover:bg-brand-500/20"
                       >
                         Llegué
                       </button>
@@ -418,7 +418,7 @@ export default function PaseadorDashboard() {
       {todaySessions.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <Package size={12} className="text-accent-400" />
+            <Package size={12} className="text-brand-400" />
             Sesiones de paquete ({todaySessions.length})
           </h2>
           <div className="space-y-2">
@@ -429,10 +429,10 @@ export default function PaseadorDashboard() {
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                  STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-accent-500/10'
+                  STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-brand-500/10'
                 }`}>
-                  {session.sessionStatus === 'in_progress' ? <PersonStanding size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-accent-400'} /> :
-                   <Dog size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-accent-400'} />}
+                  {session.sessionStatus === 'in_progress' ? <PersonStanding size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-brand-400'} /> :
+                   <Dog size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-brand-400'} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{session.dogName}</p>
@@ -441,7 +441,7 @@ export default function PaseadorDashboard() {
                   </p>
                 </div>
                 <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
-                  STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-white/10'
+                  STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-ink/10'
                 } ${STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-[var(--text-muted)]'}`}>
                   {STATUS_LABELS[session.sessionStatus as SessionStatus] || session.sessionStatus}
                 </span>

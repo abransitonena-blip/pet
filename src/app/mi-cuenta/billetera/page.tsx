@@ -90,7 +90,7 @@ export default function BilleteraPage() {
           <h2 className="text-sm font-semibold text-ink">Movimientos</h2>
           <button
             onClick={() => { setTxLoading(true); getTransactions(30).then(setTransactions).finally(() => setTxLoading(false)) }}
-            className="text-xs text-primary hover:text-primary-hover transition-colors flex items-center gap-1"
+            className="text-xs text-primary-hover transition-colors flex items-center gap-1"
           >
             <RefreshCw size={12} />
             Actualizar

@@ -103,7 +103,7 @@ export default function AdminPerrosPage() {
           {filtered.map((p) => (
             <div
               key={`${p.ownerPhone}__${p.name}`}
-              className="rounded-xl p-4 transition-all hover:bg-white/[0.02] cursor-pointer"
+              className="rounded-xl p-4 transition-all hover:bg-ink/5 cursor-pointer"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               onClick={() => setSelectedPet(selectedPet?.name === p.name && selectedPet?.ownerPhone === p.ownerPhone ? null : p)}
             >

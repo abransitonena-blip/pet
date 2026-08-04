@@ -86,7 +86,7 @@ export default function PaseadorHistorialPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/paseador')}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
             style={{ color: 'var(--text-muted)' }}
           >
             <ArrowLeft size={14} />
@@ -154,9 +154,9 @@ export default function PaseadorHistorialPage() {
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.petName}</p>
                     <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                      res.status === 'completed' ? 'bg-success-500/15 text-success-400' :
-                      res.status === 'in_progress' ? 'bg-success-500/20 text-success-400' :
-                      'bg-white/10 text-[var(--text-muted)]'
+                      res.status === 'completed' ? 'bg-success-500/15 text-success-600' :
+                      res.status === 'in_progress' ? 'bg-success-500/20 text-success-600' :
+                      'bg-ink/10 text-[var(--text-muted)]'
                     }`}>
                       {res.status === 'completed' ? 'Completado' :
                        res.status === 'in_progress' ? 'En paseo' :

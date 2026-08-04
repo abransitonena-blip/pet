@@ -69,6 +69,13 @@ module.exports = {
           500: '#B91C1C',
           600: '#991B1B',
         },
+        danger: {
+          DEFAULT: '#B91C1C',
+          light: 'rgba(185, 28, 28, 0.1)',
+          400: '#F87171',
+          500: '#B91C1C',
+          600: '#991B1B',
+        },
         brand: {
           50: '#FFF5ED',
           100: '#FFE8D5',

@@ -23,11 +23,11 @@ const ACTION_LABELS: Record<string, string> = {
 }
 
 const ACTION_COLORS: Record<string, string> = {
-  delete: 'bg-danger-500/15 text-danger-400',
-  payment_toggle: 'bg-brand-500/15 text-brand-400',
-  status_change: 'bg-blue-500/15 text-blue-400',
-  edit: 'bg-blue-500/15 text-blue-400',
-  create: 'bg-success-500/15 text-success-400',
+  delete: 'bg-danger-500/15 text-red-700',
+  payment_toggle: 'bg-brand-500/15 text-brand-600',
+  status_change: 'bg-blue-500/15 text-blue-700',
+  edit: 'bg-blue-500/15 text-blue-700',
+  create: 'bg-success-500/15 text-success-600',
 }
 
 export default function AdminLogsPage() {
@@ -142,10 +142,10 @@ export default function AdminLogsPage() {
           {filtered.map((log) => (
             <div
               key={log.id}
-              className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-white/[0.02]"
+              className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-ink/5"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >
-              <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${ACTION_COLORS[log.action] || 'bg-white/10 text-white/40'}`}>
+              <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${ACTION_COLORS[log.action] || 'bg-ink/10 text-muted'}`}>
                 {ACTION_LABELS[log.action] || log.action}
               </span>
               <div className="flex-1 min-w-0">

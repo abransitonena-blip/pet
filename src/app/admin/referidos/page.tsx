@@ -94,9 +94,9 @@ export default function AdminReferidosPage() {
   }
 
   const STATUS_STYLES: Record<string, string> = {
-    pending: 'bg-brand-500/15 text-brand-400',
-    completed: 'bg-success-500/15 text-success-400',
-    rewarded: 'bg-accent-500/15 text-accent-400',
+    pending: 'bg-brand-500/15 text-brand-600',
+    completed: 'bg-success-500/15 text-success-600',
+    rewarded: 'bg-brand-500/15 text-brand-600',
   }
 
   return (
@@ -187,7 +187,7 @@ export default function AdminReferidosPage() {
                   <span className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{r.refereeName}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[r.status] || 'bg-white/10 text-[var(--text-muted)]'}`}>
+                  <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[r.status] || 'bg-ink/10 text-[var(--text-muted)]'}`}>
                     {r.status === 'pending' ? 'Pendiente' : r.status === 'completed' ? 'Completado' : 'Recompensado'}
                   </span>
                   <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>${r.rewardAmount} MXN</span>
@@ -199,7 +199,7 @@ export default function AdminReferidosPage() {
                     <Check size={10} />
                   </button>
                 )}
-                <button onClick={() => copyLink(r.referrerPhone)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/5" style={{ color: 'var(--text-muted)' }} title="Copiar link">
+                <button onClick={() => copyLink(r.referrerPhone)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }} title="Copiar link">
                   {copied === r.referrerPhone ? <Check size={10} className="text-success-400" /> : <Copy size={10} />}
                 </button>
                 <button onClick={() => shareWhatsApp(r.referrerName, r.referrerPhone)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-green-500/10 text-green-400" title="Compartir WhatsApp">

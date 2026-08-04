@@ -76,7 +76,7 @@ export default function Reviews() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-primary/80 text-sm uppercase tracking-widest font-medium">
+          <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">
             Testimonios
           </span>
           <h2 className="section-title mt-3">
