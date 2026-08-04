@@ -66,29 +66,7 @@ export default function PaseadorDashboard() {
 
       if (!name) { setLoading(false); return }
 
-      // Query by name (legacy) AND by uid (new auto-assign)
-      // Only show active sessions (not completed or cancelled) for today's view
-      const qName = query(collection(db, 'reservations'), where('assignedWalker', '==', name))
-      unsubRes = onSnapshot(qName, (snap) => {
-        snap.docChanges().forEach((change) => {
-          const docData = { id: change.doc.id, ...change.doc.data() } as Reservation
-          if (change.type === 'added' || change.type === 'modified') {
-            seenIds.add(docData.id)
-            const idx = allReservations.findIndex((r) => r.id === docData.id)
-            if (idx >= 0) allReservations[idx] = docData
-            else allReservations.push(docData)
-          } else if (change.type === 'removed') {
-            seenIds.delete(docData.id)
-            allReservations = allReservations.filter((r) => r.id !== docData.id)
-          }
-        })
-        emitUpdate()
-      }, (err) => {
-        console.error('Walker name query error:', err)
-        setLoading(false)
-      })
-
-      // Query by assignment.walkerId (uid) - new auto-assign
+// Query by assignment.walkerId (uid) — auto-assign
       const qUid = query(collection(db, 'reservations'), where('assignment.walkerId', '==', user.uid))
       unsubResUid = onSnapshot(qUid, (snap) => {
         snap.docChanges().forEach((change) => {

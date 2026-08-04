@@ -33,16 +33,7 @@ export default function PaseadorHistorialPage() {
 
       const seenIds = new Set<string>()
 
-      // Query by name (legacy)
-      const qName = query(collection(db, 'reservations'), where('assignedWalker', '==', name))
-      unsubRes = onSnapshot(qName, (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-        docs.forEach((d) => seenIds.add(d.id))
-        setReservations(docs)
-        setLoading(false)
-      }, () => setLoading(false))
-
-      // Query by uid (new auto-assign)
+      // Query by uid (auto-assign)
       const qUid = query(collection(db, 'reservations'), where('assignment.walkerId', '==', user.uid))
       unsubResUid = onSnapshot(qUid, (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
