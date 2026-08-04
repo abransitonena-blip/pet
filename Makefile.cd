@@ -1,0 +1,52 @@
+# Makefile.cd - Herramientas de desarrollo (eslint, tsc, jest, build)
+.PHONY: setup-all setup-eslint setup-types setup-tests setup-build
+
+# Variables
+NODE_MODULES := node_modules
+ESLINT := $(NODE_MODULES)/.bin/eslint
+TYPESCRIPT := $(NODE_MODULES)/.bin/tsc
+JEST := $(NODE_MODULES)/.bin/jest
+NEXT := $(NODE_MODULES)/.bin/next
+
+all: setup-all
+
+# Instalación completa
+setup-all: setup-eslint setup-types setup-tests setup-build
+
+# Instalación de ESLint y plugins
+setup-eslint:
+  npm install --save-dev eslint @eslint/js eslint-plugin-jsx-a11y eslint-plugin-react eslint-plugin-react-hooks
+
+# Instalación de tipos y compilación de TypeScript
+setup-types:
+  npm install --save-dev @types/node @types/react @types/react-dom typescript
+
+# Instalación de Jest y helpers de testing
+setup-tests:
+  npm install --save-dev jest @jest/globals @testing-library/react @testing-library/jest-dom
+
+# Instalación del CLI de Next.js
+setup-build:
+  npm install --save-dev next
+
+# Validación de linting (solo src)
+lint:
+  $(ESLINT) src --ext .ts,.tsx,.js,.jsx
+
+# Validación de tipos (compilación sin escribir a disco)
+typecheck:
+  $(TYPESCRIPT) --noEmit
+
+# Ejecución de pruebas unitarias
+jest:
+  $(JEST) --passWithNoTests
+
+# Construcción de producción
+build:
+  $(NEXT) build
+
+# Limpieza de cachés y artefacts
+distclean:
+  rm -rf .next node_modules package-lock.json
+
+.PHONY: all setup-all setup-eslint setup-types setup-tests setup-build lint typecheck jest build distclean

@@ -13,7 +13,7 @@ import Preloader from '@/components/Preloader'
 import PWARegister from '@/components/PWARegister'
 import BannerDisplay from '@/components/BannerDisplay'
 import Link from 'next/link'
-import { User, ArrowRight, CalendarCheck } from 'lucide-react'
+import { User, ArrowRight } from 'lucide-react'
 
 const Gallery = dynamic(() => import('@/components/Gallery'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>,
@@ -94,13 +94,13 @@ function HomeContent() {
         </div>
         <Suspense>
           {user ? (
-            <section aria-label="Reservar" id="reservar" className="section-container py-20 sm:py-28">
+            <section aria-label="Reservar" id="reservar" className="section-container py-16 sm:py-20">
               <div className="max-w-lg mx-auto text-center">
-                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center card">
-                  <User className="text-primary" size={24} />
+                <div className="w-14 h-14 rounded-xl mx-auto mb-3 flex items-center justify-center card">
+                  <User className="text-primary" size={20} />
                 </div>
                 <h2 className="section-title">Bienvenido de vuelta</h2>
-                <p className="section-subtitle mb-6">
+                <p className="section-subtitle mb-4">
                   Ya eres parte de Familia PET. Reserva tu paseo desde tu cuenta.
                 </p>
                 <Link
@@ -111,25 +111,7 @@ function HomeContent() {
                 </Link>
               </div>
             </section>
-          ) : (
-            <section aria-label="Reservar" id="reservar" className="section-container py-20 sm:py-28">
-              <div className="max-w-lg mx-auto text-center">
-                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center card">
-                  <CalendarCheck className="text-primary" size={24} />
-                </div>
-                <h2 className="section-title">Cotiza y agenda tu paseo</h2>
-                <p className="section-subtitle mb-6">
-                  Obtén tu precio claro en la cotizador de arriba y confírmalo en minutos por WhatsApp.
-                </p>
-                  <Link
-                    href="/familia/nueva-reserva"
-                    className="btn-primary inline-flex items-center gap-2"
-                  >
-                    Ir a reservar <ArrowRight size={14} />
-                  </Link>
-              </div>
-            </section>
-          )}
+          ) : null}
         </Suspense>
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-32 rounded-2xl" /></div>}>
           <ContactSection />
