@@ -40,7 +40,10 @@ const nextConfig = {
   },
 
   async redirects() {
-    return []
+    return [
+      { source: '/mi-cuenta/:path*', destination: '/familia/:path*', permanent: true },
+      { source: '/paseador/:path*', destination: '/walker/:path*', permanent: true },
+    ]
   },
 }
 

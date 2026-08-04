@@ -63,7 +63,7 @@ export default function HistorialPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push('/mi-cuenta')}
+            onClick={() => router.push('/familia')}
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
             style={{ color: 'var(--text-muted)' }}
           >
@@ -109,7 +109,7 @@ export default function HistorialPage() {
           <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
             Tu historial se actualizará automáticamente
           </p>
-          <button onClick={() => router.push('/mi-cuenta/nueva-reserva')} className="btn-primary text-xs inline-flex">
+          <button onClick={() => router.push('/familia/nueva-reserva')} className="btn-primary text-xs inline-flex">
             Reservar un paseo
           </button>
         </div>
@@ -145,7 +145,7 @@ export default function HistorialPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              router.push(`/mi-cuenta/nueva-reserva?repeat=${encodeURIComponent(res.service)}`)
+                              router.push(`/familia/nueva-reserva?repeat=${encodeURIComponent(res.service)}`)
                             }}
                             className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-600 border border-brand-500/20"
                             title="Repetir este paseo"

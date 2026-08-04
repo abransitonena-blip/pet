@@ -146,7 +146,7 @@ export default function StepContact({
                   </button>
                 )
               })}
-              <a href="/mi-cuenta/direcciones" target="_blank" className="text-2xs flex items-center gap-1 transition-colors hover:text-primary" style={{ color: 'var(--text-muted)' }}>
+              <a href="/familia/direcciones" target="_blank" className="text-2xs flex items-center gap-1 transition-colors hover:text-primary" style={{ color: 'var(--text-muted)' }}>
                 <Plus size={8} /> Agregar nueva dirección
               </a>
             </div>

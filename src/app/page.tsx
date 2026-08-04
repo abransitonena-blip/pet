@@ -110,7 +110,7 @@ function HomeContent() {
                   Ya eres parte de Familia PET. Reserva tu paseo desde tu cuenta.
                 </p>
                 <Link
-                  href="/mi-cuenta/nueva-reserva"
+                  href="/familia/nueva-reserva"
                   className="btn-primary inline-flex items-center gap-2"
                 >
                   Ir a reservar <ArrowRight size={14} />

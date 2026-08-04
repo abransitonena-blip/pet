@@ -15,18 +15,18 @@ import {
 import NotificationBell from '@/components/NotificationBell'
 
 const ACCOUNT_ITEMS = [
-  { id: 'dashboard', label: 'Inicio', icon: Home, color: '#D97706', href: '/mi-cuenta' },
-  { id: 'nueva-reserva', label: 'Nueva reserva', icon: Calendar, color: '#059669', href: '/mi-cuenta/nueva-reserva' },
-  { id: 'perros', label: 'Mis perros', icon: PawPrint, color: '#3b82f6', href: '/mi-cuenta/perros' },
-  { id: 'direcciones', label: 'Mis direcciones', icon: MapPin, color: '#F97316', href: '/mi-cuenta/direcciones' },
-  { id: 'historial', label: 'Mi historial', icon: History, color: '#8B5CF6', href: '/mi-cuenta/historial' },
-  { id: 'fotos', label: 'Fotos de paseos', icon: Camera, color: '#06B6D4', href: '/mi-cuenta/fotos' },
-  { id: 'notificaciones', label: 'Notificaciones', icon: Bell, color: '#D97706', href: '/mi-cuenta/notificaciones' },
-  { id: 'billetera', label: 'Billetera', icon: Dog, color: '#0F766E', href: '/mi-cuenta/billetera' },
-  { id: 'referir', label: 'Referir amigo', icon: Users, color: '#EC4899', href: '/mi-cuenta/referir' },
-  { id: 'lealtad', label: 'Mi lealtad', icon: Gift, color: '#F59E0B', href: '/mi-cuenta/lealtad' },
-  { id: 'ayuda', label: 'Centro de ayuda', icon: BookOpen, color: '#64748B', href: '/mi-cuenta/ayuda' },
-  { id: 'config', label: 'Configuración', icon: Settings, color: '#64748B', href: '/mi-cuenta/config' },
+  { id: 'dashboard', label: 'Inicio', icon: Home, color: '#D97706', href: '/familia' },
+  { id: 'nueva-reserva', label: 'Nueva reserva', icon: Calendar, color: '#059669', href: '/familia/nueva-reserva' },
+  { id: 'perros', label: 'Mis perros', icon: PawPrint, color: '#3b82f6', href: '/familia/perros' },
+  { id: 'direcciones', label: 'Mis direcciones', icon: MapPin, color: '#F97316', href: '/familia/direcciones' },
+  { id: 'historial', label: 'Mi historial', icon: History, color: '#8B5CF6', href: '/familia/historial' },
+  { id: 'fotos', label: 'Fotos de paseos', icon: Camera, color: '#06B6D4', href: '/familia/fotos' },
+  { id: 'notificaciones', label: 'Notificaciones', icon: Bell, color: '#D97706', href: '/familia/notificaciones' },
+  { id: 'billetera', label: 'Billetera', icon: Dog, color: '#0F766E', href: '/familia/billetera' },
+  { id: 'referir', label: 'Referir amigo', icon: Users, color: '#EC4899', href: '/familia/referir' },
+  { id: 'lealtad', label: 'Mi lealtad', icon: Gift, color: '#F59E0B', href: '/familia/lealtad' },
+  { id: 'ayuda', label: 'Centro de ayuda', icon: BookOpen, color: '#64748B', href: '/familia/ayuda' },
+  { id: 'config', label: 'Configuración', icon: Settings, color: '#64748B', href: '/familia/config' },
 ]
 
 export default function MiCuentaLayout({ children }: { children: React.ReactNode }) {
@@ -81,7 +81,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
               <Dog size={16} />
             </Link>
             <div>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Mi cuenta</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Familia PET</p>
               <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{userName}</p>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
                 <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
                   Selecciona una opción del menú para comenzar.
                 </p>
-                <Link href="/mi-cuenta/nueva-reserva" className="btn-primary inline-flex">
+                <Link href="/familia/nueva-reserva" className="btn-primary inline-flex">
                   Reservar un paseo
                 </Link>
               </div>

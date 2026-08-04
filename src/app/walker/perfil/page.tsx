@@ -157,7 +157,7 @@ export default function WalkerProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/paseador" className="w-9 h-9 rounded-xl card flex items-center justify-center text-muted hover:text-ink transition-colors">
+        <Link href="/walker" className="w-9 h-9 rounded-xl card flex items-center justify-center text-muted hover:text-ink transition-colors">
           <ArrowLeft size={16} />
         </Link>
         <div>

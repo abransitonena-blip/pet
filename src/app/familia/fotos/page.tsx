@@ -11,7 +11,7 @@ export default function FotosPage() {
       <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
         Las fotos de los paseos de tu peludo aparecerán aquí.
       </p>
-      <Link href="/mi-cuenta/nueva-reserva" className="btn-primary inline-flex text-xs">Reservar un paseo</Link>
+      <Link href="/familia/nueva-reserva" className="btn-primary inline-flex text-xs">Reservar un paseo</Link>
     </div>
   )
 }

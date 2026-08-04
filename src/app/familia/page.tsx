@@ -145,7 +145,7 @@ export default function DashboardPage() {
           transition={{ delay: 0.1 }}
           className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-          onClick={() => router.push('/mi-cuenta/nueva-reserva')}
+          onClick={() => router.push('/familia/nueva-reserva')}
         >
           <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center mb-3">
             <CalendarDays size={16} className="text-brand-600" />
@@ -160,7 +160,7 @@ export default function DashboardPage() {
           transition={{ delay: 0.15 }}
           className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-          onClick={() => router.push('/mi-cuenta/historial')}
+          onClick={() => router.push('/familia/historial')}
         >
           <div className="w-10 h-10 rounded-xl bg-success-500/10 flex items-center justify-center mb-3">
             <History size={16} className="text-success-400" />
@@ -175,7 +175,7 @@ export default function DashboardPage() {
           transition={{ delay: 0.2 }}
           className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-          onClick={() => router.push('/mi-cuenta/lealtad')}
+          onClick={() => router.push('/familia/lealtad')}
         >
           <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center mb-3">
             <Gift size={16} className="text-pink-400" />
@@ -201,7 +201,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          onClick={() => router.push('/mi-cuenta/nueva-reserva')}
+          onClick={() => router.push('/familia/nueva-reserva')}
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-brand-500/30"
           style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.1), rgba(217,119,6,0.05))', border: '1px solid var(--border)' }}
         >
@@ -216,7 +216,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          onClick={() => router.push('/mi-cuenta/perros')}
+          onClick={() => router.push('/familia/perros')}
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-success-500/30"
           style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.1), rgba(5,150,105,0.05))', border: '1px solid var(--border)' }}
         >
@@ -238,7 +238,7 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Mis reservas</h2>
           {reservations.length > 0 && (
             <button
-              onClick={() => router.push('/mi-cuenta/historial')}
+              onClick={() => router.push('/familia/historial')}
               className="text-xs flex items-center gap-1 transition-colors hover:text-brand-600"
               style={{ color: 'var(--text-muted)' }}
             >
@@ -254,7 +254,7 @@ export default function DashboardPage() {
             <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
               Tu primer paseo está a un clic de distancia
             </p>
-            <button onClick={() => router.push('/mi-cuenta/nueva-reserva')} className="btn-primary inline-flex text-xs">
+            <button onClick={() => router.push('/familia/nueva-reserva')} className="btn-primary inline-flex text-xs">
               Reservar ahora
             </button>
           </div>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-1.5 shrink-0">
                   {res.status === 'completed' && (
                     <button
-                      onClick={(e) => { e.preventDefault(); router.push(`/mi-cuenta/nueva-reserva?repeat=${encodeURIComponent(res.service)}`) }}
+                      onClick={(e) => { e.preventDefault(); router.push(`/familia/nueva-reserva?repeat=${encodeURIComponent(res.service)}`) }}
                       className="flex items-center gap-1 text-2xs px-2 py-1 rounded-lg font-medium transition-all hover:bg-brand-500/10 text-brand-600 border border-brand-500/20"
                       title="Repetir este paseo"
                     >

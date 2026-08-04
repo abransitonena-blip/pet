@@ -14,9 +14,9 @@ import {
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Mis paseos', icon: Home, color: '#059669', href: '/paseador' },
-  { id: 'historial', label: 'Historial', icon: History, color: '#3b82f6', href: '/paseador/historial' },
-  { id: 'perfil', label: 'Mi perfil', icon: Dog, color: '#D97706', href: '/paseador/perfil' },
+  { id: 'dashboard', label: 'Mis paseos', icon: Home, color: '#059669', href: '/walker' },
+  { id: 'historial', label: 'Historial', icon: History, color: '#3b82f6', href: '/walker/historial' },
+  { id: 'perfil', label: 'Mi perfil', icon: Dog, color: '#D97706', href: '/walker/perfil' },
 ]
 
 export default function PaseadorLayout({ children }: { children: React.ReactNode }) {

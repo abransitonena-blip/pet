@@ -126,7 +126,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
         <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
           <AlertTriangle size={12} className="inline mr-1 text-amber-500" />
           No tienes perros registrados.{' '}
-          <Link href="/mi-cuenta/perros" className="text-primary underline">Registra uno</Link>
+          <Link href="/familia/perros" className="text-primary underline">Registra uno</Link>
         </div>
       ) : (
         <div className="space-y-3 mb-4">
@@ -141,7 +141,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
         <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
           <AlertTriangle size={12} className="inline mr-1 text-amber-500" />
           No tienes direcciones guardadas.{' '}
-          <Link href="/mi-cuenta/direcciones" className="text-primary underline">Agrega una</Link>
+          <Link href="/familia/direcciones" className="text-primary underline">Agrega una</Link>
         </div>
       ) : (
         <div className="space-y-3 mb-4">

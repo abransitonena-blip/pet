@@ -40,8 +40,8 @@ function EligibilityBlocked({ reasons, result }: { reasons: string[]; result: El
         Completa los siguientes requisitos para acceder a paseos al instante:
       </p>
       <div className="space-y-2 text-left max-w-xs mx-auto mb-4">
-        <Requirement met={result.hasPet} label="Registrar un perro" href="/mi-cuenta/perros" icon={<Dog size={12} />} />
-        <Requirement met={result.hasAddress} label="Agregar dirección" href="/mi-cuenta/direcciones" icon={<MapPin size={12} />} />
+        <Requirement met={result.hasPet} label="Registrar un perro" href="/familia/perros" icon={<Dog size={12} />} />
+        <Requirement met={result.hasAddress} label="Agregar dirección" href="/familia/direcciones" icon={<MapPin size={12} />} />
         <Requirement met={result.hasCompletedWalk} label="Completar primer paseo" href="/#reservar" icon={<PersonStanding size={12} />} />
       </div>
       <div className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--text-muted)', border: '1px solid rgba(245,158,11,0.2)' }}>

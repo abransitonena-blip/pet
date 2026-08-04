@@ -47,7 +47,7 @@ export default function BilleteraPage() {
   return (
     <div className="max-w-lg mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <Link href="/mi-cuenta" className="w-9 h-9 rounded-xl card flex items-center justify-center text-muted hover:text-ink transition-colors">
+        <Link href="/familia" className="w-9 h-9 rounded-xl card flex items-center justify-center text-muted hover:text-ink transition-colors">
           <ArrowLeft size={16} />
         </Link>
         <div>

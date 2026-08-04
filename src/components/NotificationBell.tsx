@@ -159,7 +159,7 @@ export default function NotificationBell({ uid }: { uid: string }) {
 
               {notifications.length > 0 && (
                 <a
-                  href="/mi-cuenta/notificaciones"
+                  href="/familia/notificaciones"
                   onClick={() => setOpen(false)}
                   className="block text-center py-2.5 text-xs font-medium transition-colors hover:bg-ink/5"
                   style={{ color: 'var(--color-primary)', borderTop: '1px solid var(--border)' }}

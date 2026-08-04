@@ -23,7 +23,7 @@ export default function WalletCard({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <Link href="/mi-cuenta/billetera" className="card card-interactive p-4 flex items-center justify-between group">
+      <Link href="/familia/billetera" className="card card-interactive p-4 flex items-center justify-between group">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-trust/10 flex items-center justify-center text-trust">
             <Wallet size={18} />

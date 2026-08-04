@@ -55,7 +55,7 @@ export default function ReferirPage() {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <button
-          onClick={() => router.push('/mi-cuenta')}
+          onClick={() => router.push('/familia')}
           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
           style={{ color: 'var(--text-muted)' }}
         >
@@ -147,7 +147,7 @@ export default function ReferirPage() {
             Registra tu WhatsApp en tu perfil para obtener tu link de referido
           </p>
           <button
-            onClick={() => router.push('/mi-cuenta/config')}
+            onClick={() => router.push('/familia/config')}
             className="text-xs px-4 py-2 rounded-lg transition-colors hover:bg-ink/5"
             style={{ color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
           >

@@ -12,8 +12,11 @@ const ROLE_COOKIE = '__role'
 
 const ROLE_ROUTES: Record<string, string[]> = {
   '/admin': ['admin'],
-  '/paseador': ['walker'],
+  '/familia': ['client', 'admin', 'walker'],
+  '/walker': ['walker'],
+  // legacy aliases (next.config redirects /mi-cuenta → /familia, /paseador → /walker)
   '/mi-cuenta': ['client', 'admin', 'walker'],
+  '/paseador': ['walker'],
 }
 
 function matchRoute(pathname: string): string | null {
@@ -39,7 +42,7 @@ export function middleware(request: NextRequest) {
   const allowedRoles = ROLE_ROUTES[routePrefix]
 
   if (!role || !allowedRoles.includes(role)) {
-    // Admins going to /paseador or /mi-cuenta → OK. Everyone else → redirect to home.
+    // Admins going to /walker or /familia → OK. Everyone else → redirect to home.
     if (role === 'admin') return NextResponse.next()
     return NextResponse.redirect(new URL('/', request.url))
   }
@@ -48,5 +51,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/mi-cuenta/:path*', '/paseador/:path*'],
+  matcher: ['/admin/:path*', '/familia/:path*', '/walker/:path*', '/mi-cuenta/:path*', '/paseador/:path*'],
 }

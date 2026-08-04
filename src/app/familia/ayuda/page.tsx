@@ -105,7 +105,7 @@ export default function AyudaPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <button
-          onClick={() => router.push('/mi-cuenta')}
+          onClick={() => router.push('/familia')}
           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
           style={{ color: 'var(--text-muted)' }}
         >

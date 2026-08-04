@@ -300,7 +300,7 @@ export default function MisPerrosPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/mi-cuenta')} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => router.push('/familia')} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
             <ArrowLeft size={14} />
           </button>
           <div>
