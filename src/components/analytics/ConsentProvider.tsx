@@ -3,10 +3,10 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { useConfig } from '@/context/ConfigContext'
+import { isAuthPath } from '@/lib/consentPaths'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-HQTMCZX66M'
 const CONSENT_KEY = 'petap_consent_v1'
-const AUTH_PATHS = ['/login', '/admin', '/paseador', '/familia', '/mi-cuenta']
 
 export type ConsentChoice = 'granted' | 'denied'
 
@@ -19,10 +19,6 @@ const ConsentContext = createContext<ConsentContextValue>({
   consent: null,
   setConsent: () => {},
 })
-
-function isAuthPath(pathname: string) {
-  return AUTH_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
-}
 
 function initDataLayer() {
   if (typeof window === 'undefined') return

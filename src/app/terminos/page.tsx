@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { termsSections, TERMS_LAST_UPDATED } from '@/lib/termsContent'
 
 export const metadata = {
-  title: 'Términos y condiciones | PET Ap',
+  title: 'Términos y condiciones',
   description:
     'Términos y condiciones de PET Ap: reservas, cancelaciones, salud y seguridad, responsabilidad, privacidad y precios.',
 }
