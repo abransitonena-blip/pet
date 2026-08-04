@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /paseador
+Disallow: /mi-cuenta
+Allow: /*/familia
+Allow: /*/walker
+Allow: /*/admin
