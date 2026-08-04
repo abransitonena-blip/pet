@@ -23,7 +23,7 @@ Inventario de colecciones Firestore de PET Ap, con tipos de datos personales (PI
 | `gallery-images/{docId}` | Fotos de galería | Imágenes, permiso de publicación | Pública lectura, admin escritura | Hasta revocación del consentimiento | Admin + consentimiento |
 | `coupons/{docId}` | Cupones | — | Pública lectura, admin escritura | Vigencia del cupón | Admin |
 | `admin/prices` | Precios de servicios | — | Pública lectura, admin escritura | Permanente (catálogo) | Admin |
-| `admin/config` | **Config legacy (deprecada)** | — | Pública lectura, admin escritura | **En migración → `appSettings/public`** | ⚠ Legacy |
+| `admin/config` | **Config legacy (archivada)** | — | Pública lectura, admin escritura | Archivo (no eliminar automáticamente) | ⚠ Archivo — el código ya no la lee |
 | `appSettings/public` | **Config de sitio (nueva fuente de verdad)** | — | Pública lectura, admin escritura | Permanente | Admin (schemaVersion 2) |
 | `admin/banner` | Banner promocional | — | Pública lectura, admin escritura | Vigencia | Admin |
 | `admin/tokens` | Tokens FCM | Token de dispositivo | Admin lectura, auth escritura (propio) | 30 días de inactividad | Sistema |
@@ -66,6 +66,7 @@ Inventario de colecciones Firestore de PET Ap, con tipos de datos personales (PI
 
 ## Fuente de verdad de configuración
 
-- **Nuevo:** `appSettings/public` (schemaVersion 2) — `brandName`, `heroTitle`, `heroSubtitle`, `contactEmail`, `whatsappE164`, `displayPhone`, `businessHours`, `instagramUrl`, `analyticsEnabled`, `features`.
-- **Legacy (deprecado):** `admin/config` — se lee solo como fallback durante la migración. Debe vaciarse/eliminarse una vez migrado.
+- **Nuevo (única fuente):** `appSettings/public` (schemaVersion 2) — `brandName`, `heroTitle`, `heroSubtitle`, `contactEmail`, `whatsappE164`, `displayPhone`, `businessHours`, `instagramUrl`, `analyticsEnabled`, `features`. El código **solo** lee/escribe este documento.
+- **Legacy (archivado, no eliminado):** `admin/config` — se conserva como archivo por seguridad; **ningún código lo lee o escribe**. No eliminar automáticamente.
+- Si `appSettings/public` no existe o su lectura falla, el sitio muestra el aviso visible "⚠ Los precios y config del sitio están desactualizados" (banner `ConfigErrorBanner`) en lugar de fallar silenciosamente a valores legacy.
 - `src/lib/defaultConfig.ts` es el fallback en código (última red).

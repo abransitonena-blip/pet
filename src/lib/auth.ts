@@ -49,3 +49,27 @@ export function classifyGoogleError(error: unknown): string {
   if (message) return message
   return 'No pudimos iniciar sesión con Google. Puedes reintentar o usar correo.'
 }
+
+export const LOGIN_ERROR_MESSAGES: Record<string, string> = {
+  'auth/invalid-email': 'Correo inválido',
+  'auth/user-not-found': 'No encontramos una cuenta con este correo',
+  'auth/wrong-password': 'Contraseña incorrecta',
+  'auth/invalid-credential': 'Contraseña incorrecta',
+  'auth/user-disabled': 'Esta cuenta fue desactivada',
+  'auth/too-many-requests': 'Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.',
+  'auth/network-request-failed': 'Error de red. Verifica tu conexión e intenta de nuevo.',
+  'auth/operation-not-allowed': 'El acceso por correo no está habilitado.',
+  'auth/admin-restricted-operation': 'El acceso por correo no está habilitado.',
+}
+
+export function classifyLoginError(error: unknown): string {
+  const code = error && typeof error === 'object' && 'code' in error
+    ? (error as { code: string }).code
+    : 'unknown'
+  const message = LOGIN_ERROR_MESSAGES[code]
+  if (message) return message
+  return 'Error al iniciar sesión. Inténtalo de nuevo.'
+}
+
+export const RESET_LINK_SENT_MESSAGE =
+  'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.'

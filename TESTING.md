@@ -62,8 +62,36 @@ Prerrequisitos: reglas de Firestore desplegadas (`npx firebase deploy --only fir
 
 - [ ] Introducir la palabra "Quebrada" en `src/` o `public/` hace fallar `npm run build` (prebuild)
 
+## 11. Config — única fuente + errores visibles
+
+- [ ] `ConfigContext` **solo** lee `appSettings/public` (sin fallback a `admin/config`)
+- [ ] Guardar config desde `/admin/config` actualiza `updatedAt` (serverTimestamp), `updatedBy` (uid) y `schemaVersion: 2`
+- [ ] Borrar `appSettings/public` en la consola de Firebase → aparece el banner "⚠ Los precios y config del sitio están desactualizados" en todo el sitio
+- [ ] Con reglas que bloqueen la lectura de `appSettings` → mismo banner visible (sin fallback silencioso)
+- [ ] Cliente (no admin) intentando escribir `appSettings` o `admin/config` desde DevTools → permisos denegados por reglas (`isAdmin()`)
+
+## 12. Acceso a rutas `/admin` (matriz de roles)
+
+| Rol | `/admin` | `/admin/*` | Resultado esperado |
+|-----|----------|------------|--------------------|
+| Visitante (no autenticado) | redirige a `/login` | redirige a `/login` | Admin layout: `onAuthStateChanged` sin user → `router.push('/login')` |
+| Cliente (`role=client`) | cierra sesión + redirige a `/login` | igual | Admin layout: `getDoc(users/{uid}).role !== 'admin'` → `signOut` + `/login` |
+| Paseador (`role=walker`) | cierra sesión + redirige a `/login` | igual | Ídem |
+| Admin (`role=admin`) | carga el panel | carga | Admin layout: `loading=false` |
+
+- [ ] Verificar los 4 casos de la matriz arriba en `npm run dev`
+
+## 13. Login — errores diferenciados + recuperación
+
+- [ ] Correo no registrado → "No encontramos una cuenta con este correo"
+- [ ] Contraseña incorrecta → "Contraseña incorrecta"
+- [ ] Cuenta desactivada → "Esta cuenta fue desactivada"
+- [ ] Demasiados intentos → "Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo."
+- [ ] "¿Olvidaste tu contraseña?" con correo registrado → llega el correo de reset (Firebase)
+- [ ] "¿Olvidaste tu contraseña?" con correo no registrado → mismo mensaje de éxito (no revela si existe) + sin error
+
 ## Suite automatizada
 
 - [ ] `npx tsc --noEmit` sin errores
-- [ ] `npx jest --passWithNoTests` → 46 tests / 5 suites pasando (incluye `utils.test.ts`)
+- [ ] `npx jest --passWithNoTests` → 59 tests / 6 suites pasando (incluye `auth.test.ts` con `classifyLoginError`)
 - [ ] `npm run build` correcto

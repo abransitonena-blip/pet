@@ -959,14 +959,14 @@ match /reservations/{resId} {
 
 # ANEXO — Estado de implementación (auditoría de producción 12 fases)
 
-> Última actualización: 3 de agosto de 2026 · Commit: `99055d3`
+> Última actualización: 4 de agosto de 2026 · Commit: `5840695` → (config hardening)
 
 ## Resumen de fase
 
 | Fase | Área | Estado | Detalle |
 |------|------|--------|---------|
 | F1 | Diagnóstico de los 5 bugs críticos | ✅ Hecho | Root cause documentado: "Quebrada" solo vive como dato stale en Firestore `admin/config` (eliminada del código en `7845a0f`/`ca0c8cc`); cotizador bloqueado por regla `zones` con `isAuthenticated()`; botón Google vacío por GIS que solo corría en `onLoad` (ref nulo en modo select); teléfono en 4 fuentes; landing con cotizador + reserva vieja coexistiendo |
-| F2 | Config single source of truth | ✅ Hecho | `ConfigContext` lee `appSettings/public` (schemaVersion 2) vía `onSnapshot`, fallback legacy `admin/config` solo durante migración, normaliza E.164/displayPhone. Seed: `scripts/seed-appsettings.json`. Guard: `scripts/check-forbidden.mjs` (prebuild) |
+| F2 | Config single source of truth | ✅ Hecho | `ConfigContext` lee **solo** `appSettings/public` (schemaVersion 2) vía `onSnapshot`; sin fallback legacy; normaliza E.164/displayPhone. Seed: `scripts/seed-appsettings.json`. Guard: `scripts/check-forbidden.mjs` (prebuild) |
 | F3 | Landing solo cotizador | ✅ Hecho | `page.tsx` sin `ReservationForm`; CTA pública → `#cotizar`; autenticados → `/mi-cuenta/nueva-reserva` |
 | F4 | Selector de zonas | ✅ Hecho | `firestore.rules`: `zones` lectura pública; `QuoteForm` con error/empty/retry + `aria-busy` |
 | F5 | Login Google | ✅ Hecho | `renderGoogleButton` re-ejecuta en modo familia, timeout 8s → mensaje exacto de auditoría; Script `onLoad` lo re-dispara |
@@ -976,7 +976,7 @@ match /reservations/{resId} {
 | F9 | Unificación de íconos | ✅ Hecho | 67 archivos migrados a `lucide-react`; dependencia `react-icons` eliminada |
 | F10 | IP / licencias | ✅ Hecho | `ASSET_LICENSES.md`, `public/assets-manifest.json`, `THIRD_PARTY_NOTICES.md`; logos Uber/DiDi eliminados |
 | F11 | Legales | ✅ Hecho | Términos corregidos (sin claims falsos), contenido compartido `src/lib/termsContent.ts`, página standalone `/terminos`, privacidad reescrita |
-| F12 | Tests | ✅ Hecho | 46 tests / 5 suites, guard de marca, `TESTING.md` (smoke E2E). `tsc`, `jest`, `build` en verde |
+| F12 | Tests | ✅ Hecho | 59 tests / 6 suites, guard de marca, `TESTING.md` (smoke E2E). `tsc`, `jest`, `build` en verde |
 
 ## Entregables generados
 
@@ -987,14 +987,24 @@ match /reservations/{resId} {
 - `scripts/seed-appsettings.json` — seed de Firestore
 - `scripts/check-forbidden.mjs` — guard de marca (prebuild)
 
+## Config hardening (ago-2026)
+
+| # | Ítem | Estado | Detalle |
+|---|------|--------|---------|
+| 1 | `appSettings/public` como única fuente | ✅ | `ConfigContext` sin fallback a `admin/config` (subscripción duplicada eliminada) |
+| 2 | Duplicado que pisaba el hero | ✅ | Eliminado el `getDoc(admin/config)` que corría en paralelo y sobre-escribía el hero |
+| 3 | Errores de config visibles | ✅ | `configError` + banner `ConfigErrorBanner` (⚠ "Los precios y config del sitio están desactualizados") en todo el sitio |
+| 4 | `updatedAt` / `updatedBy` / `schemaVersion` | ✅ | `updateConfig` escribe `updatedAt: serverTimestamp()`, `updatedBy: uid`, `schemaVersion: 2` |
+| 5 | Escrituras solo admin | ✅ | Regla `appSettings` `allow write: if isAdmin()` + gate de rol en admin layout |
+| 6 | "Olvidé mi contraseña" | ✅ | `sendPasswordResetEmail` en modos familia/equipo/paseador; mensaje único que no revela si el correo existe |
+| 7 | Errores de login diferenciados | ✅ | `classifyLoginError` (user-not-found / wrong-password / user-disabled / too-many-requests / red) |
+| 8 | Prueba de rutas admin | ✅ | Matriz de roles en `TESTING.md` §12 (visitante/client/walker/admin) |
+| 9 | No eliminar `admin/config` | ✅ | Se archiva manualmente; el código no la lee ni escribe (regla intacta) |
+
 ## Riesgos pendientes
 
-1. **Migración de datos Firestore (F2)** — depende de acción manual:
+1. **Datos Firestore (F2)**
    - Crear `appSettings/public` (seed o guardando config desde admin)
-   - Eliminar/archivar `admin/config` legacy
+   - `admin/config` legacy queda **archivada, no eliminada** (decisión: no borrarla automáticamente)
    - Desplegar `firestore.rules` (`npx firebase deploy --only firestore:rules`)
-3. **Galería** — fotos en `gallery-images` requieren consentimiento individual documentado; base64 en Firestore (C1) sigue pendiente de migrar a Firebase Storage.
-4. **Autenticación de clientes (C2)** — cancelación/visualización por teléfono sin verificación de identidad sigue pendiente.
-5. **Primary sobre canvas oscuro** — 4.03:1 (UI ok, texto normal no). Ver `CONTRAST.md`.
-6. **ESLint** — `next lint` no corre localmente por conflicto de versión `eslint@8` (no bloquea build en Next 14).
-7. **Verificación visual** — falta auditor visual con screenshots de ambos temas tras el cambio de `--text-muted`.
+2. **Verificación manual pendiente** — matriz de roles `/admin` (§12) y flujo de reset (§13) del `TESTING.md` en entorno dev.

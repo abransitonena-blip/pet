@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Script from 'next/script'
 import { motion } from 'framer-motion'
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithCredential } from 'firebase/auth'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithCredential } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { Dog, Mail, Lock, Loader2, User, Phone, PersonStanding, ExternalLink } from 'lucide-react'
@@ -12,9 +12,10 @@ import { brand } from '@/lib/brand'
 import { Events } from '@/lib/analytics'
 import {
   setSessionCookie,
-  clearSessionCookie,
   isWebView,
   classifyGoogleError,
+  classifyLoginError,
+  RESET_LINK_SENT_MESSAGE,
 } from '@/lib/auth'
 
 type Mode = 'select' | 'familia' | 'equipo' | 'paseador'
@@ -68,6 +69,7 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [showInternal, setShowInternal] = useState(false)
   const [gisReady, setGisReady] = useState(false)
   const [gisError, setGisError] = useState(false)
@@ -208,18 +210,27 @@ export default function LoginPage() {
         router.push('/mi-cuenta')
       }
     } catch (e: unknown) {
+      setError(classifyLoginError(e))
+    }
+    setLoading(false)
+  }
+
+  const handleForgotPassword = async () => {
+    setError('')
+    setInfo('')
+    if (!email.trim()) {
+      setError('Ingresa tu correo primero')
+      return
+    }
+    setLoading(true)
+    try {
+      await sendPasswordResetEmail(auth, email.trim())
+      setInfo(RESET_LINK_SENT_MESSAGE)
+    } catch (e: unknown) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
-      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-        setError('Correo o contraseña incorrectos')
-      } else if (code === 'auth/invalid-email') {
-        setError('Correo inválido')
-      } else if (code === 'auth/email-already-in-use') {
-        setError('Correo ya registrado')
-      } else if (code === 'auth/weak-password') {
-        setError('Mínimo 6 caracteres')
-      } else {
-        setError('Error al iniciar sesión')
-      }
+      if (code === 'auth/invalid-email') setError('Correo inválido')
+      else if (code === 'auth/network-request-failed') setError('Error de red. Verifica tu conexión e intenta de nuevo.')
+      else setInfo(RESET_LINK_SENT_MESSAGE)
     }
     setLoading(false)
   }
@@ -425,6 +436,7 @@ export default function LoginPage() {
               </div>
 
               {error && <p className="text-danger-400 text-xs" role="alert">{error}</p>}
+              {info && <p className="text-success-400 text-xs" role="status">{info}</p>}
 
               <button
                 onClick={familiaMode === 'login' ? () => handleEmailLogin('client') : handleRegister}
@@ -434,6 +446,17 @@ export default function LoginPage() {
                 {loading ? <Loader2 className="animate-spin" size={14} /> : null}
                 {familiaMode === 'login' ? 'Entrar' : 'Crear cuenta'}
               </button>
+
+              {familiaMode === 'login' && (
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={loading}
+                  className="text-xs block w-full text-center"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              )}
             </div>
 
             <div className="mt-4 pt-4 text-center space-y-2" style={{ borderTop: '1px solid var(--border)' }}>
@@ -486,6 +509,7 @@ export default function LoginPage() {
               </div>
 
               {error && <p className="text-danger-400 text-xs" role="alert">{error}</p>}
+              {info && <p className="text-success-400 text-xs" role="status">{info}</p>}
 
               <button
                 onClick={() => handleEmailLogin('admin')}
@@ -494,6 +518,15 @@ export default function LoginPage() {
               >
                 {loading ? <Loader2 className="animate-spin" size={14} /> : null}
                 Acceder al panel
+              </button>
+
+              <button
+                onClick={handleForgotPassword}
+                disabled={loading}
+                className="text-xs block w-full text-center"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                ¿Olvidaste tu contraseña?
               </button>
             </div>
 
@@ -540,6 +573,7 @@ export default function LoginPage() {
               </div>
 
               {error && <p className="text-danger-400 text-xs" role="alert">{error}</p>}
+              {info && <p className="text-success-400 text-xs" role="status">{info}</p>}
 
               <button
                 onClick={() => handleEmailLogin('walker')}
@@ -548,6 +582,15 @@ export default function LoginPage() {
               >
                 {loading ? <Loader2 className="animate-spin" size={14} /> : <PersonStanding size={14} />}
                 Entrar como paseador
+              </button>
+
+              <button
+                onClick={handleForgotPassword}
+                disabled={loading}
+                className="text-xs block w-full text-center"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                ¿Olvidaste tu contraseña?
               </button>
             </div>
 

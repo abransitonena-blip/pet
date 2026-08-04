@@ -1,21 +1,25 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { doc, onSnapshot, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, onSnapshot, setDoc, serverTimestamp, type DocumentSnapshot, type DocumentData } from 'firebase/firestore'
 import { db, auth } from '@/firebase/config'
 import { DEFAULT_CONFIG, type SiteConfig } from '@/lib/defaultConfig'
 import { brand } from '@/lib/brand'
+
+export const CONFIG_STALE_MESSAGE = 'Los precios y config del sitio están desactualizados'
 
 interface ConfigContextType {
   config: SiteConfig
   updateConfig: (partial: Partial<SiteConfig>) => Promise<void>
   saving: boolean
+  configError: string | null
 }
 
 const ConfigContext = createContext<ConfigContextType>({
   config: DEFAULT_CONFIG,
   updateConfig: async () => {},
   saving: false,
+  configError: null,
 })
 
 function normalizeConfig(raw: Partial<SiteConfig>): SiteConfig {
@@ -40,39 +44,30 @@ function normalizeConfig(raw: Partial<SiteConfig>): SiteConfig {
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<SiteConfig>(DEFAULT_CONFIG)
   const [saving, setSaving] = useState(false)
+  const [configError, setConfigError] = useState<string | null>(null)
 
   useEffect(() => {
     let unsub: () => void = () => {}
     let cancelled = false
 
-    const fallbackToLegacy = async () => {
-      try {
-        const legacy = await getDoc(doc(db, 'admin', 'config'))
-        if (!cancelled && legacy.exists()) {
-          setConfig(normalizeConfig(legacy.data() as Partial<SiteConfig>))
-        }
-      } catch {
-        // no legacy config available — keep defaults
+    const onSnap = (snap: DocumentSnapshot<DocumentData>) => {
+      if (cancelled) return
+      if (snap.exists()) {
+        setConfig(normalizeConfig(snap.data() as Partial<SiteConfig>))
+        setConfigError(null)
+      } else {
+        setConfigError(CONFIG_STALE_MESSAGE)
       }
     }
 
     try {
-      unsub = onSnapshot(
-        doc(db, 'appSettings', 'public'),
-        (snap) => {
-          if (snap.exists()) {
-            setConfig(normalizeConfig(snap.data() as Partial<SiteConfig>))
-          } else {
-            void fallbackToLegacy()
-          }
-        },
-        (err) => {
-          console.error('Error loading appSettings/public:', err)
-          void fallbackToLegacy()
-        }
-      )
-    } catch {
-      void fallbackToLegacy()
+      unsub = onSnapshot(doc(db, 'appSettings', 'public'), onSnap, (err) => {
+        console.error('Error loading appSettings/public:', err)
+        if (!cancelled) setConfigError(CONFIG_STALE_MESSAGE)
+      })
+    } catch (err) {
+      console.error('Error subscribing to appSettings/public:', err)
+      setConfigError(CONFIG_STALE_MESSAGE)
     }
 
     return () => {
@@ -92,6 +87,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
           updatedBy: auth.currentUser?.uid ?? null,
         })
         setConfig(next)
+        setConfigError(null)
       } catch (e) {
         console.error('Error updating config:', e)
       }
@@ -101,7 +97,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <ConfigContext.Provider value={{ config, updateConfig, saving }}>
+    <ConfigContext.Provider value={{ config, updateConfig, saving, configError }}>
       {children}
     </ConfigContext.Provider>
   )

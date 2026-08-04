@@ -2,6 +2,9 @@ import {
   isWebView,
   classifyGoogleError,
   GOOGLE_ERROR_MESSAGES,
+  classifyLoginError,
+  LOGIN_ERROR_MESSAGES,
+  RESET_LINK_SENT_MESSAGE,
 } from '../src/lib/auth'
 
 describe('isWebView', () => {
@@ -102,5 +105,51 @@ describe('classifyGoogleError', () => {
     expect(classifyGoogleError(undefined)).toBe(
       'No pudimos iniciar sesión con Google. Puedes reintentar o usar correo.'
     )
+  })
+})
+
+describe('classifyLoginError', () => {
+  it('differentiates known auth error codes', () => {
+    const tests: [string, string][] = [
+      ['auth/invalid-email', LOGIN_ERROR_MESSAGES['auth/invalid-email']],
+      ['auth/user-not-found', LOGIN_ERROR_MESSAGES['auth/user-not-found']],
+      ['auth/wrong-password', LOGIN_ERROR_MESSAGES['auth/wrong-password']],
+      ['auth/invalid-credential', LOGIN_ERROR_MESSAGES['auth/invalid-credential']],
+      ['auth/user-disabled', LOGIN_ERROR_MESSAGES['auth/user-disabled']],
+      ['auth/too-many-requests', LOGIN_ERROR_MESSAGES['auth/too-many-requests']],
+      ['auth/network-request-failed', LOGIN_ERROR_MESSAGES['auth/network-request-failed']],
+    ]
+    for (const [code, expected] of tests) {
+      expect(classifyLoginError({ code })).toBe(expected)
+    }
+  })
+
+  it('does not lump user-not-found and wrong-password together', () => {
+    expect(classifyLoginError({ code: 'auth/user-not-found' })).toBe(
+      'No encontramos una cuenta con este correo'
+    )
+    expect(classifyLoginError({ code: 'auth/wrong-password' })).toBe(
+      'Contraseña incorrecta'
+    )
+  })
+
+  it('returns fallback for unknown error code', () => {
+    expect(classifyLoginError({ code: 'auth/unknown-thing' })).toBe(
+      'Error al iniciar sesión. Inténtalo de nuevo.'
+    )
+  })
+
+  it('returns fallback for non-object error', () => {
+    expect(classifyLoginError(null)).toBe('Error al iniciar sesión. Inténtalo de nuevo.')
+    expect(classifyLoginError(undefined)).toBe('Error al iniciar sesión. Inténtalo de nuevo.')
+    expect(classifyLoginError('oops')).toBe('Error al iniciar sesión. Inténtalo de nuevo.')
+  })
+})
+
+describe('RESET_LINK_SENT_MESSAGE', () => {
+  it('never reveals whether the account exists', () => {
+    expect(RESET_LINK_SENT_MESSAGE).not.toContain('no existe')
+    expect(RESET_LINK_SENT_MESSAGE).not.toContain('no registrado')
+    expect(RESET_LINK_SENT_MESSAGE).toContain('Si el correo está registrado')
   })
 })
