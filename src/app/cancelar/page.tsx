@@ -51,6 +51,7 @@ export default function CancelarPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22 }}
         className="w-full max-w-md"
       >
         <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted hover:text-ink mb-6 transition-all">
@@ -88,6 +89,7 @@ export default function CancelarPage() {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              transition={{ duration: 0.22 }}
               className="text-red-700 text-xs mb-4" role="alert"
             >
               {error}
@@ -98,6 +100,7 @@ export default function CancelarPage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22 }}
               className="space-y-3 mt-2"
             >
               <p className="text-xs text-muted text-left">

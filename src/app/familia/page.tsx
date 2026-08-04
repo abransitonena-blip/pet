@@ -142,7 +142,7 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ duration: 0.22, delay: 0.1 }}
           className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
           onClick={() => router.push('/familia/nueva-reserva')}
@@ -157,7 +157,7 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ duration: 0.22, delay: 0.15 }}
           className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
           onClick={() => router.push('/familia/historial')}
@@ -172,7 +172,7 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ duration: 0.22, delay: 0.2 }}
           className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
           onClick={() => router.push('/familia/lealtad')}
@@ -200,7 +200,7 @@ export default function DashboardPage() {
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
+          transition={{ duration: 0.22, delay: 0.25 }}
           onClick={() => router.push('/familia/nueva-reserva')}
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-brand-500/30"
           style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.1), rgba(217,119,6,0.05))', border: '1px solid var(--border)' }}
@@ -215,7 +215,7 @@ export default function DashboardPage() {
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ duration: 0.22, delay: 0.3 }}
           onClick={() => router.push('/familia/perros')}
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-success-500/30"
           style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.1), rgba(5,150,105,0.05))', border: '1px solid var(--border)' }}
@@ -232,7 +232,7 @@ export default function DashboardPage() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
+        transition={{ duration: 0.22, delay: 0.35 }}
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Mis reservas</h2>
@@ -265,7 +265,7 @@ export default function DashboardPage() {
                 key={res.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + i * 0.05 }}
+                transition={{ duration: 0.22, delay: 0.4 + i * 0.05 }}
                 className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-ink/5"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >

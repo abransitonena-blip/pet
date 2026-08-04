@@ -100,7 +100,7 @@ export default function Header() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.14 }}
             className="absolute top-full left-0 right-0 md:hidden"
             style={{
               background: 'var(--bg-surface)',

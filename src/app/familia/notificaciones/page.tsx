@@ -129,7 +129,7 @@ export default function NotificacionesPage() {
                 key={n.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
+                transition={{ duration: 0.22, delay: i * 0.03 }}
                 onClick={() => { if (!n.read) markRead(n.id) }}
                 className="flex items-start gap-3 p-4 rounded-2xl transition-all cursor-pointer hover:bg-ink/5"
                 style={{

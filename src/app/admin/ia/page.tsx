@@ -266,7 +266,7 @@ export default function AdminIAPage() {
                   key={insight.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ duration: 0.22, delay: i * 0.05 }}
                   className="rounded-xl p-4 flex items-start gap-3"
                   style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
                 >
@@ -296,7 +296,7 @@ export default function AdminIAPage() {
 
       {/* Service Margin Analysis */}
       {serviceMargins.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.3 }}>
           <div className="flex items-center gap-2 mb-3">
             <Percent size={14} className="text-brand-600" />
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Análisis de margen por servicio</h3>

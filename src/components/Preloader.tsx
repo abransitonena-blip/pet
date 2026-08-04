@@ -21,7 +21,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.32 }}
           className="fixed inset-0 z-[var(--z-preloader)] flex items-center justify-center"
           style={{ background: 'var(--bg-primary)' }}
         >
@@ -39,7 +39,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: 200 }}
-              transition={{ duration: 1.5, ease: 'easeInOut' }}
+              transition={{ duration: 0.32, ease: "easeInOut" }}
               className="h-1 rounded-full mx-auto overflow-hidden"
               style={{
                 background: "var(--color-primary-glow)",
@@ -47,7 +47,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             >
               <motion.div
                 animate={{ x: ['-100%', '100%'] }}
-                transition={{ duration: 1, repeat: Infinity }}
+                transition={{ duration: 0.32, repeat: Infinity }}
                 className="h-full w-1/2 rounded-full"
                 style={{ background: 'var(--primary)' }}
               />

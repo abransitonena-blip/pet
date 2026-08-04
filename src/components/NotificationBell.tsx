@@ -106,7 +106,7 @@ export default function NotificationBell({ uid }: { uid: string }) {
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: 0.14 }}
               className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-hidden rounded-2xl z-50"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
             >

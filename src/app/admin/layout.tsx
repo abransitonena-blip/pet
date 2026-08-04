@@ -175,7 +175,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22 }}
             className="absolute inset-0 bg-black/60"
             onClick={() => setMobileOpen(false)}
           />

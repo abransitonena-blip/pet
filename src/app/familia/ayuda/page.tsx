@@ -167,7 +167,7 @@ export default function AyudaPage() {
                       <span className="text-sm font-medium pr-4" style={{ color: 'var(--text-primary)' }}>{item.q}</span>
                       <motion.div
                         animate={{ rotate: isOpen ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.22 }}
                         style={{ color: 'var(--text-muted)' }}
                       >
                         <ChevronDown size={12} />
@@ -179,7 +179,7 @@ export default function AyudaPage() {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
+                          transition={{ duration: 0.22 }}
                           className="overflow-hidden"
                         >
                           <div className="px-4 pb-3 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>

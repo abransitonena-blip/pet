@@ -26,7 +26,7 @@ export default function QuoteResult({ quote, onBack }: QuoteResultProps) {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.32 }}
           className="text-center mb-10"
         >
           <motion.div

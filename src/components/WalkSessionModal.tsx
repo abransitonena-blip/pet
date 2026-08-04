@@ -171,6 +171,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.22 }}
         className="rounded-2xl overflow-hidden w-full max-w-md"
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         onClick={(e) => e.stopPropagation()}

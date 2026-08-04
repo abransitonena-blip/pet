@@ -155,7 +155,7 @@ export default function AdminPetAhoraPage() {
               key={r.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.02 }}
+              transition={{ duration: 0.22, delay: i * 0.02 }}
               className="rounded-xl p-3 flex items-center gap-3"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >

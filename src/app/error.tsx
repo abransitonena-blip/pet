@@ -28,7 +28,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ duration: 0.22, delay: 0.2 }}
           className="text-xl font-bold mb-2"
           style={{ color: 'var(--text-primary)' }}
         >
@@ -37,7 +37,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ duration: 0.22, delay: 0.3 }}
           className="text-sm mb-6"
           style={{ color: 'var(--text-muted)' }}
         >
@@ -46,7 +46,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ duration: 0.22, delay: 0.4 }}
           className="flex gap-3 justify-center"
         >
           <button onClick={reset} className="btn-primary text-sm">

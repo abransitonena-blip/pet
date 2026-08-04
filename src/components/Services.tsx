@@ -24,7 +24,7 @@ export default function Services() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.32 }}
           className="text-center mb-12"
         >
           <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">

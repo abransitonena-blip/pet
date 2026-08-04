@@ -218,7 +218,7 @@ export default function WalkerProfilePage() {
       </motion.div>
 
       {/* Zones */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.1 }} className="card p-6">
         <div className="flex items-center gap-2 mb-4">
           <MapPin size={16} className="text-primary" />
           <h2 className="text-sm font-semibold text-ink">Zonas disponibles</h2>
@@ -241,7 +241,7 @@ export default function WalkerProfilePage() {
       </motion.div>
 
       {/* Schedule */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.2 }} className="card p-6">
         <div className="flex items-center gap-2 mb-4">
           <Clock size={16} className="text-primary" />
           <h2 className="text-sm font-semibold text-ink">Horario semanal</h2>
@@ -310,7 +310,7 @@ export default function WalkerProfilePage() {
       </div>
 
       {/* Change password */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.3 }} className="card p-6">
         <div className="flex items-center gap-2 mb-4">
           <Lock size={16} className="text-primary" />
           <h2 className="text-sm font-semibold text-ink">Cambiar contraseña</h2>

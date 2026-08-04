@@ -123,7 +123,7 @@ export default function HistorialPage() {
                 key={res.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
+                transition={{ duration: 0.22, delay: i * 0.03 }}
                 className="rounded-xl overflow-hidden"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
@@ -186,7 +186,7 @@ export default function HistorialPage() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.22 }}
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-4 space-y-3" style={{ borderTop: '1px solid var(--border)' }}>

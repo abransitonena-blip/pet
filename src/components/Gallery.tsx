@@ -78,7 +78,7 @@ export default function Gallery() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.32 }}
           className="text-center mb-16"
         >
           <motion.span
@@ -152,7 +152,7 @@ export default function Gallery() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22 }}
             className="fixed inset-0 z-[var(--z-overlay)] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
             onClick={close}
           >

@@ -53,7 +53,7 @@ export default function WhatsAppButton({ hidden }: { hidden?: boolean }) {
             <WhatsAppIcon className="text-white text-2xl" />
             <motion.span
               animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              transition={{ duration: 0.32, repeat: Infinity }}
               className="absolute inset-0 rounded-full border-2 border-green-400/40"
             />
           </motion.a>

@@ -20,7 +20,7 @@ export default function FAQ() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.32 }}
           className="text-center mb-16"
         >
           <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">
@@ -52,7 +52,7 @@ export default function FAQ() {
                 </span>
                 <motion.div
                   animate={{ rotate: openIndex === i ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.22 }}
                   className="shrink-0"
                 >
                   <ChevronDown style={{ color: 'var(--text-muted)' }} size={12} />
@@ -66,7 +66,7 @@ export default function FAQ() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.22 }}
                     className="overflow-hidden"
                   >
                     <div className="px-4 sm:px-5 pb-4 pt-2 text-sm leading-relaxed border-t mx-4 sm:mx-5" style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}>

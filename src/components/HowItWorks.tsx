@@ -18,7 +18,7 @@ export default function HowItWorks() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.32 }}
           className="text-center mb-12"
         >
           <span className="text-sm uppercase tracking-widest font-medium text-primary-hover">Cómo funciona</span>
@@ -41,7 +41,7 @@ export default function HowItWorks() {
               >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.22 }}
                   className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center bg-primary text-white"
                 >
                   <Icon size={20} />

@@ -25,7 +25,7 @@ export default function TrustBar() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.32 }}
           className="flex flex-wrap items-center justify-center gap-6 sm:gap-10"
         >
           {trustItems.map((item, i) => {

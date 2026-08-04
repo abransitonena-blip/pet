@@ -88,7 +88,7 @@ export default function LealtadPage() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ duration: 0.22, delay: 0.1 }}
       >
         <LoyaltyProgram />
       </motion.div>
@@ -98,7 +98,7 @@ export default function LealtadPage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ duration: 0.22, delay: 0.2 }}
           className="rounded-2xl p-5 text-center"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >

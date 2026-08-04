@@ -73,7 +73,7 @@ export default function Reviews() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.32 }}
           className="text-center mb-16"
         >
           <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">
@@ -116,7 +116,7 @@ export default function Reviews() {
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.32 }}
                   className="glass-card p-6 w-80 flex-shrink-0"
                 >
                   <Quote className="text-primary/20 text-xl mb-3" />

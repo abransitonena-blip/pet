@@ -101,7 +101,7 @@ export default function PublicFAQ() {
                           <span className="text-sm sm:text-base font-medium text-ink pr-4">{item.q}</span>
                           <motion.div
                             animate={{ rotate: isOpen ? 180 : 0 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: 0.22 }}
                             className="shrink-0 text-muted"
                           >
                             <ChevronDown size={12} />
@@ -115,7 +115,7 @@ export default function PublicFAQ() {
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
+                              transition={{ duration: 0.22 }}
                               className="overflow-hidden"
                             >
                               <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0 text-sm leading-relaxed text-muted border-t border-border">

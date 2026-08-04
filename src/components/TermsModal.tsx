@@ -17,7 +17,7 @@ export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClo
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.22 }}
           className="fixed inset-0 z-[var(--z-overlay)] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={onClose}
         >

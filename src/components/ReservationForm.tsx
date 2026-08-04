@@ -534,7 +534,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.32 }}
           className="text-center mb-12 sm:mb-16"
         >
           <span className="text-primary text-sm uppercase tracking-widest font-medium">Agenda su paseo</span>
@@ -566,7 +566,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
                         scale: step === s.num ? 1.1 : 1,
                         background: step > s.num ? 'linear-gradient(135deg, var(--color-success), #059669)' : step === s.num ? 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))' : 'var(--glass-bg)',
                       }}
-                      transition={{ duration: 0.3 }}
+                      transition={{ duration: 0.22 }}
                       className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border"
                       style={{
                         borderColor: step >= s.num ? 'transparent' : 'var(--border)',

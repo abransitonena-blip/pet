@@ -151,7 +151,7 @@ export default function AdminDashboard() {
               key={stat.label}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.05 }}
+              transition={{ duration: 0.22, delay: i * 0.05 }}
             >
               <StatCard
                 label={stat.label}
@@ -168,7 +168,7 @@ export default function AdminDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ duration: 0.22, delay: 0.2 }}
       >
         <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Accesos rápidos</h3>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -196,7 +196,7 @@ export default function AdminDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
+          transition={{ duration: 0.22, delay: 0.25 }}
           className="rounded-2xl p-5"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >

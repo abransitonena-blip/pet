@@ -333,7 +333,7 @@ export default function MisPerrosPage() {
               key={pet.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{ duration: 0.22, delay: i * 0.05 }}
               className="rounded-2xl p-4"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             >

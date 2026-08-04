@@ -30,7 +30,7 @@ export default function ContactSection() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.32 }}
           className="text-center mb-12"
         >
           <span className="text-primary-hover text-sm uppercase tracking-widest font-medium">Contáctanos</span>

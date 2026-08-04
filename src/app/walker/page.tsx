@@ -198,7 +198,7 @@ export default function PaseadorDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ duration: 0.22, delay: 0.1 }}
           className="rounded-2xl p-4"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
@@ -208,7 +208,7 @@ export default function PaseadorDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ duration: 0.22, delay: 0.15 }}
           className="rounded-2xl p-4"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
@@ -218,7 +218,7 @@ export default function PaseadorDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ duration: 0.22, delay: 0.2 }}
           className="rounded-2xl p-4"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
@@ -296,7 +296,7 @@ export default function PaseadorDashboard() {
 
       {/* Active Walks */}
       {active.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.25 }}>
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <span className="w-2 h-2 rounded-full bg-success-400 animate-pulse" />
             En paseo ahora
@@ -333,7 +333,7 @@ export default function PaseadorDashboard() {
       )}
 
       {/* Today's Walks */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.3 }}>
         <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
           Paseos de hoy
         </h2>

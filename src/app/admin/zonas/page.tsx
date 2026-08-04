@@ -176,7 +176,7 @@ export default function AdminZonasPage() {
               key={zone.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
+              transition={{ duration: 0.22, delay: i * 0.03 }}
               className="rounded-2xl p-4 transition-all hover:bg-ink/5"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', opacity: zone.active ? 1 : 0.6 }}
             >
