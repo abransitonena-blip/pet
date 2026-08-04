@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Dog, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 const navLinks = [
   { label: 'Inicio', href: '#hero' },
@@ -46,11 +47,8 @@ export default function Header() {
     >
       <nav className="section-container h-16 sm:h-18 flex items-center justify-between">
         <a href="/" className="flex items-center gap-2 group">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white"
-          >
-            <Dog size={16} />
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Logo size={36} />
           </motion.div>
           <span className="text-base font-bold hidden sm:block text-ink">
             PET <span className="text-primary">Ap</span>

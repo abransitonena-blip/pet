@@ -4,7 +4,7 @@
   "description": "Paseos personalizados con fotos y reporte de cada paseo. Precios accesibles, mucho amor y ejercicio para tu perro.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
+  "background_color": "#FFF8F1",
   "theme_color": "#C45100",
   "orientation": "portrait-primary",
   "icons": [

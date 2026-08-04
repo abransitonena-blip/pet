@@ -1,6 +1,6 @@
-import { Dog } from 'lucide-react'
 import Link from 'next/link'
 import { termsSections, TERMS_LAST_UPDATED } from '@/lib/termsContent'
+import { Logo } from '@/components/ui/Logo'
 
 export const metadata = {
   title: 'Términos y condiciones',
@@ -13,9 +13,7 @@ export default function TerminosPage() {
     <main className="min-h-screen">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center text-white">
-            <Dog size={24} />
-          </div>
+          <Logo size={48} rounded="rounded-2xl" />
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold text-ink">Términos y condiciones</h1>
             <p className="text-sm text-muted mt-1">Última actualización: {TERMS_LAST_UPDATED}</p>

@@ -7,9 +7,10 @@ import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithCredential, signInWithPopup } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { Dog, Mail, Lock, Loader2, User, Phone, PersonStanding, ExternalLink } from 'lucide-react'
+import { Mail, Lock, Loader2, User, Phone, PersonStanding, ExternalLink } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { Events } from '@/lib/analytics'
+import { Logo } from '@/components/ui/Logo'
 import {
   setSessionCookie,
   isWebView,
@@ -329,10 +330,8 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <button onClick={handleLogoClick} className="mx-auto" aria-label="Logo PET Ap">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-glow">
-              <Dog />
-            </div>
+          <button onClick={handleLogoClick} className="mx-auto block mb-4" aria-label="Logo PET Ap">
+            <Logo size={56} rounded="rounded-2xl" className="shadow-glow" />
           </button>
           <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
             {mode === 'select' && 'Bienvenido a ' + brand.name}

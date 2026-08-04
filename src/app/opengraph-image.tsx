@@ -10,7 +10,7 @@ export default function Image() {
     (
       <div
         style={{
-          background: '#F7F8F4',
+          background: '#FFF8F1',
           width: '100%',
           height: '100%',
           display: 'flex',
@@ -35,7 +35,7 @@ export default function Image() {
           style={{
             fontSize: 72,
             fontWeight: 900,
-            color: '#101828',
+            color: '#172033',
             letterSpacing: '-0.02em',
             lineHeight: 1.1,
           }}
@@ -45,7 +45,7 @@ export default function Image() {
         <div
           style={{
             fontSize: 32,
-            color: '#667085',
+            color: '#5D6778',
             marginTop: 16,
             lineHeight: 1.4,
           }}
@@ -69,7 +69,7 @@ export default function Image() {
               fontWeight: 600,
             }}
           >
-            Cotiza en línea
+            Entrar a Familia PET
           </div>
           <div
             style={{
@@ -81,7 +81,7 @@ export default function Image() {
               fontWeight: 600,
             }}
           >
-            WhatsApp
+            Conoce cómo funciona
           </div>
         </div>
         {/* Paw decoration */}

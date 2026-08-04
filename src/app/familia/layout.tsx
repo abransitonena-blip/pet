@@ -13,6 +13,7 @@ import {
   LogOut, Settings, Gift, Home, History, BookOpen, Bell,
 } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
+import { Logo } from '@/components/ui/Logo'
 
 const ACCOUNT_ITEMS = [
   { id: 'dashboard', label: 'Inicio', icon: Home, color: '#D97706', href: '/familia' },
@@ -77,9 +78,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
       <header className="border-b sticky top-0 z-10" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)' }}>
         <div className="section-container h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white">
-              <Dog size={16} />
-            </Link>
+            <Link href="/" aria-label="PET Ap"><Logo size={36} /></Link>
             <div>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Familia PET</p>
               <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{userName}</p>

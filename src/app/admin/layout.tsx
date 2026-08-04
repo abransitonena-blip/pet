@@ -15,6 +15,7 @@ import {
   TrendingUp, Settings, ClipboardList, Bot, LogOut,
   ChevronLeft, ChevronRight, Menu, MessageSquare, Image, Zap,
 } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: Gauge, href: '/admin' },
@@ -96,9 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white shrink-0">
-            <Dog size={16} />
-          </div>
+          <Logo size={36} />
           {!collapsed && (
             <motion.span
               initial={{ opacity: 0 }}
@@ -191,9 +190,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             aria-label="Menú de administración"
           >
             <div className="flex items-center gap-3 mb-6 px-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white">
-                <Dog size={16} />
-              </div>
+              <Logo size={36} />
               <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>PET Ap</span>
             </div>
             {NAV_ITEMS.map((item) => {

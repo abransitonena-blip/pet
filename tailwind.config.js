@@ -14,10 +14,12 @@ module.exports = {
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
-        canvas: '#F7F8F4',
+        canvas: '#FFF8F1',
         surface: '#FFFFFF',
-        ink: '#101828',
-        muted: '#667085',
+        ink: '#172033',
+        muted: '#5D6778',
+        border: '#808897',
+        'brand-soft': '#FFE1CC',
         primary: {
           DEFAULT: '#C45100',
           hover: '#9F3D00',
