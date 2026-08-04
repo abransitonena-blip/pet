@@ -344,3 +344,13 @@
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ── Responsive Typography ── */
+@media (max-width: 639px) {
+  :root {
+    --text-display: 1.75rem;
+    --text-h1: 1.5rem;
+    --text-h2: 1.25rem;
+    --text-h3: 1.1rem;
+  }
+}

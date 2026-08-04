@@ -123,12 +123,12 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+            <Link href="/" className="text-xs px-4 py-2 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
               Inicio
             </Link>
             <button
               onClick={handleLogout}
-              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400"
+              className="w-11 h-11 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400"
               style={{ color: 'var(--text-muted)' }}
               aria-label="Cerrar sesión"
             >

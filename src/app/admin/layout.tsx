@@ -119,7 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <a
                 key={item.id}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
                   active ? 'bg-brand-500/10 text-brand-600' : ''
                 }`}
                 style={{ color: active ? undefined : 'var(--text-secondary)' }}
@@ -136,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-danger-500/10 hover:text-danger-400"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-danger-500/10 hover:text-danger-400"
             style={{ color: 'var(--text-secondary)' }}
             aria-label="Cerrar sesión"
           >
@@ -158,7 +158,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-20 -right-3 w-6 h-6 rounded-full flex items-center justify-center text-xs border"
+          className="absolute top-20 -right-3 w-11 h-11 rounded-full flex items-center justify-center text-sm border"
           style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
           aria-label={collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
           aria-expanded={!collapsed}
@@ -184,7 +184,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             animate={{ x: 0 }}
             exit={{ x: -256 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute left-0 top-0 bottom-0 w-64 p-3 overflow-y-auto"
+            className="absolute left-0 top-0 bottom-0 w-56 p-3 overflow-y-auto"
             style={{ background: 'var(--bg-card)' }}
             role="navigation"
             aria-label="Menú de administración"
@@ -201,7 +201,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.id}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                     active ? 'bg-brand-500/10 text-brand-600' : ''
                   }`}
                   style={{ color: active ? undefined : 'var(--text-secondary)' }}
@@ -223,7 +223,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center"
+              className="lg:hidden w-11 h-11 rounded-lg flex items-center justify-center"
               style={{ color: 'var(--text-secondary)' }}
               aria-label="Abrir menú de navegación"
               aria-expanded={mobileOpen}
@@ -235,7 +235,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-xs px-3 py-1.5 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+            <Link href="/" className="text-xs px-4 py-2 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
               Inicio
             </Link>
           </div>

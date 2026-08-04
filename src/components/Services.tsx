@@ -47,22 +47,22 @@ export default function Services() {
                 whileHover={{ y: -4, transition: { duration: 0.3 } }}
                 className="card p-5"
               >
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
                   <Icon className="text-primary" size={18} />
                 </div>
 
                 <h3 className="text-sm font-semibold mb-1 text-ink">{cat.name}</h3>
 
-                <div className="flex items-center gap-2 mb-2 text-xs text-muted">
+                <div className="flex items-center gap-2 mb-2 text-sm text-muted">
                   <span className="flex items-center gap-1">
                     <Clock size={10} />
                     {cat.duration}
                   </span>
                 </div>
 
-                <p className="text-xs leading-relaxed text-muted mb-3 line-clamp-2">{cat.description}</p>
+                <p className="text-sm leading-relaxed text-muted mb-3 line-clamp-2">{cat.description}</p>
 
-                <Link href="/login?redirect=/familia/nueva-reserva" className="text-xs font-medium text-primary hover:text-primary-hover transition-colors inline-flex items-center gap-1">
+                <Link href="/login?redirect=/familia/nueva-reserva" className="text-sm font-medium text-primary hover:text-primary-hover transition-colors inline-flex items-center gap-1">
                   Ver detalles
                 </Link>
               </motion.div>

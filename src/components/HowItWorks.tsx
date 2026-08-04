@@ -47,7 +47,7 @@ export default function HowItWorks() {
                   <Icon size={20} />
                 </motion.div>
                 <h3 className="text-sm font-semibold mb-1.5 text-ink">{step.title}</h3>
-                <p className="text-xs leading-relaxed text-muted">
+                <p className="text-sm leading-relaxed text-muted">
                   {step.description}
                 </p>
               </motion.div>

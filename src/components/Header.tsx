@@ -86,7 +86,7 @@ export default function Header() {
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden relative w-8 h-8 flex items-center justify-center text-ink"
+            className="md:hidden relative w-11 h-11 flex items-center justify-center text-ink"
             aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
           >
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
@@ -113,7 +113,7 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   onClick={closeMobile}
-                  className="block px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:text-ink hover:bg-primary/5 transition-colors"
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-muted hover:text-ink hover:bg-primary/5 transition-colors"
                 >
                   {link.label}
                 </a>
@@ -122,7 +122,7 @@ export default function Header() {
                 <a
                   href="/login"
                   onClick={closeMobile}
-                  className="block px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:text-ink hover:bg-primary/5 transition-colors"
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-muted hover:text-ink hover:bg-primary/5 transition-colors"
                 >
                   Iniciar sesión
                 </a>
