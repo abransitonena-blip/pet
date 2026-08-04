@@ -336,8 +336,8 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
             {mode === 'select' && 'Bienvenido a ' + brand.name}
             {mode === 'familia' && 'Familia PET'}
-            {mode === 'equipo' && 'Acceso Equipo'}
-            {mode === 'paseador' && 'Acceso Paseador'}
+            {mode === 'equipo' && 'Administración PET'}
+            {mode === 'paseador' && 'Paseadores PET'}
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {mode === 'select' && 'Elige cómo quieres acceder'}
@@ -477,6 +477,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="correo@ejemplo.com"
+                    autoComplete="email"
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
@@ -492,6 +493,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
@@ -531,7 +533,7 @@ export default function LoginPage() {
                 {familiaMode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
               </button>
               <button onClick={() => { setMode('select'); setFamiliaMode('login'); setError(''); setEmail(''); setPassword(''); setName(''); setPhone('') }} className="text-xs block w-full" style={{ color: 'var(--text-muted)' }}>
-                ← Volver
+                ← Volver al sitio
               </button>
             </div>
           </div>
@@ -549,6 +551,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@petap.com"
+                    autoComplete="email"
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500/30"
                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
@@ -565,6 +568,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin('admin')}
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500/30"
                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
@@ -595,7 +599,7 @@ export default function LoginPage() {
 
             <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
               <button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                ← Volver
+                ← Volver al sitio
               </button>
             </div>
           </div>
@@ -613,6 +617,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="paseador@petap.com"
+                    autoComplete="email"
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-success-500/30"
                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
@@ -629,6 +634,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin('walker')}
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-success-500/30"
                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
@@ -659,7 +665,7 @@ export default function LoginPage() {
 
             <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
               <button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                ← Volver
+                ← Volver al sitio
               </button>
             </div>
           </div>
