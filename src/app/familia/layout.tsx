@@ -1,19 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { clearSessionCookie } from '@/lib/auth'
-import { motion } from 'framer-motion'
+import AppShell from '@/components/layout/AppShell'
+import NotificationBell from '@/components/NotificationBell'
 import {
   Dog, Calendar, PawPrint, Camera, Users, MapPin,
   LogOut, Settings, Gift, Home, History, BookOpen, Bell,
 } from 'lucide-react'
-import NotificationBell from '@/components/NotificationBell'
-import { Logo } from '@/components/ui/Logo'
 
 const ACCOUNT_ITEMS = [
   { id: 'dashboard', label: 'Inicio', icon: Home, color: '#D97706', href: '/familia' },
@@ -32,7 +30,6 @@ const ACCOUNT_ITEMS = [
 
 export default function MiCuentaLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
   const [uid, setUid] = useState('')
@@ -73,76 +70,27 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {/* Header */}
-      <header className="border-b sticky top-0 z-10" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)' }}>
-        <div className="section-container h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" aria-label="PET Ap"><Logo size={36} /></Link>
-            <div>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Familia PET</p>
-              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{userName}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/" className="text-xs px-4 py-2 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
-              Inicio
-            </Link>
-            {uid && <NotificationBell uid={uid} />}
-            <button
-              onClick={handleLogout}
-              className="w-11 h-11 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400"
-              style={{ color: 'var(--text-muted)' }}
-              aria-label="Cerrar sesión"
-            >
-              <LogOut size={14} />
-            </button>
-          </div>
+    <AppShell
+      navItems={ACCOUNT_ITEMS}
+      userName={userName}
+      userRole="Familia PET"
+      onLogout={handleLogout}
+      logoHref="/"
+    >
+      {children || (
+        <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <Dog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+            Bienvenido, {userName}
+          </h2>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+            Selecciona una opción del menú para comenzar.
+          </p>
+          <a href="/familia/nueva-reserva" className="btn-primary inline-flex">
+            Solicitar paseo
+          </a>
         </div>
-      </header>
-
-      <div className="section-container py-8">
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <nav className="space-y-1">
-{ACCOUNT_ITEMS.map((item) => {
-                  const Icon = item.icon
-                  const active = pathname === item.href
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-ink/5 ${active ? 'bg-brand-500/10 text-brand-600' : ''}`}
-                      style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                    >
-                      <Icon size={16} style={{ color: item.color }} />
-                      {item.label}
-                    </Link>
-                  )
-                })}
-            </nav>
-          </aside>
-
-          {/* Content */}
-          <div className="lg:col-span-3">
-            {children || (
-              <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <Dog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-                <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                  Bienvenido, {userName}
-                </h2>
-                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-                  Selecciona una opción del menú para comenzar.
-                </p>
-                <Link href="/familia/nueva-reserva" className="btn-primary inline-flex">
-                  Reservar un paseo
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+      )}
+    </AppShell>
   )
 }

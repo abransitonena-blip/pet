@@ -1,19 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { clearSessionCookie } from '@/lib/auth'
-import { motion } from 'framer-motion'
+import AppShell from '@/components/layout/AppShell'
 import WalkerHeartbeat from '@/components/WalkerHeartbeat'
 import { PetAhoraToastProvider } from '@/components/PetAhoraToast'
 import {
   Home, History, LogOut, Dog, AlertTriangle,
 } from 'lucide-react'
-import { Logo } from '@/components/ui/Logo'
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Mis paseos', icon: Home, color: '#059669', href: '/walker' },
@@ -23,7 +21,6 @@ const NAV_ITEMS = [
 
 export default function PaseadorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [walkerName, setWalkerName] = useState('')
   const [error, setError] = useState('')
@@ -33,7 +30,6 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) { router.push('/login'); return }
 
-      // Check users/{uid} for role
       const userSnap = await getDoc(doc(db, 'users', user.uid))
       if (!userSnap.exists() || userSnap.data().role !== 'walker') {
         setError('No tienes acceso de paseador')
@@ -44,7 +40,6 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
       const name = userSnap.data().name || user.displayName || 'Paseador'
       setWalkerName(name)
 
-      // Check walkerProfiles/{uid} for status
       try {
         const profileSnap = await getDoc(doc(db, 'walkerProfiles', user.uid))
         if (profileSnap.exists()) {
@@ -82,8 +77,10 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <Logo size={36} />
-          <p className="text-sm mt-3" style={{ color: 'var(--text-muted)' }}>Cargando panel...</p>
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white mx-auto mb-3">
+            <Dog size={20} />
+          </div>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Cargando panel...</p>
         </div>
       </div>
     )
@@ -93,8 +90,8 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
         <div className="rounded-2xl p-8 text-center max-w-sm" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <div className="w-16 h-16 rounded-2xl bg-danger-500/10 flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle size={24} className="text-danger-400" />
+          <div className="w-11 h-11 rounded-xl bg-danger-500/10 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={20} className="text-danger-400" />
           </div>
           <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Acceso restringido</h2>
           <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>{error}</p>
@@ -110,75 +107,17 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {/* Header */}
-      <header className="border-b sticky top-0 z-10" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)' }}>
-        <div className="section-container h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo size={36} />
-            <div>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Paseador</p>
-              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{walkerName}</p>
-              <div className="mt-1"><WalkerHeartbeat /></div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/" className="text-xs px-4 py-2 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
-              Inicio
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="w-11 h-11 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400"
-              style={{ color: 'var(--text-muted)' }}
-              aria-label="Cerrar sesión"
-            >
-              <LogOut size={14} />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {mustChangePassword && (
-        <div className="bg-brand-500/10 border-b border-brand-500/20 px-4 py-3">
-          <div className="section-container">
-            <p className="text-xs font-medium text-brand-600">
-              Debes cambiar tu contraseña temporal. Ve a tu perfil para actualizarla.
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className="section-container py-8">
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <nav className="space-y-1">
-{NAV_ITEMS.map((item) => {
-                  const Icon = item.icon
-                  const active = pathname === item.href
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-ink/5 ${active ? 'bg-brand-500/10 text-brand-600' : ''}`}
-                      style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                    >
-                      <Icon size={16} style={{ color: item.color }} />
-                      {item.label}
-                    </Link>
-                  )
-                })}
-            </nav>
-          </aside>
-
-          {/* Content */}
-          <div className="lg:col-span-3">
-            <PetAhoraToastProvider>
-              {children}
-            </PetAhoraToastProvider>
-          </div>
-        </div>
-      </div>
-    </div>
+    <AppShell
+      navItems={NAV_ITEMS}
+      userName={walkerName}
+      userRole="Paseador"
+      onLogout={handleLogout}
+      logoHref="/"
+      mustChangePassword={mustChangePassword}
+      toastProvider={<PetAhoraToastProvider />}
+      headerExtra={<WalkerHeartbeat />}
+    >
+      {children}
+    </AppShell>
   )
 }
