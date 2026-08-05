@@ -223,10 +223,10 @@ export default function AdminReservas() {
 
             // Continuity: prefer walker who previously served this client
             const prevWalkerA = reservations.some(
-              (r) => r.client?.uid === res.client?.uid && (r.assignment?.walkerId === uidA || r.assignedWalker === a.name) && r.status === 'completed',
+              (r) => r.customer?.uid === res.customer?.uid && (r.assignment?.walkerId === uidA || r.assignedWalker === a.name) && r.status === 'completed',
             ) ? 1 : 0
             const prevWalkerB = reservations.some(
-              (r) => r.client?.uid === res.client?.uid && (r.assignment?.walkerId === uidB || r.assignedWalker === b.name) && r.status === 'completed',
+              (r) => r.customer?.uid === res.customer?.uid && (r.assignment?.walkerId === uidB || r.assignedWalker === b.name) && r.status === 'completed',
             ) ? 1 : 0
             if (prevWalkerA !== prevWalkerB) return prevWalkerB - prevWalkerA
 
@@ -516,7 +516,7 @@ export default function AdminReservas() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{order.clientName}</span>
+                        <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{order.customerName}</span>
                         <Badge variant={order.status === 'active' ? 'success' : order.status === 'completed' ? 'default' : 'danger'}>
                           {order.status === 'active' ? 'Activo' : order.status === 'completed' ? 'Completado' : order.status}
                         </Badge>
@@ -527,7 +527,7 @@ export default function AdminReservas() {
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
                         <span>🐾 {order.dogName}</span>
                         <span>📋 {order.serviceName}</span>
-                        <span>📞 {order.clientPhone}</span>
+                        <span>📞 {order.customerPhone}</span>
                         {order.total > 0 && <span className="font-medium" style={{ color: 'var(--text-primary)' }}>${order.total.toLocaleString()} MXN</span>}
                       </div>
                     </div>

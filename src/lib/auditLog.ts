@@ -2,7 +2,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 
 export type AuditAction = 'create' | 'update' | 'delete' | 'assign' | 'cancel' | 'complete'
-export type AuditEntity = 'reservation' | 'serviceOrder' | 'walkSession' | 'coupon' | 'client' | 'walker'
+export type AuditEntity = 'reservation' | 'serviceOrder' | 'walkSession' | 'coupon' | 'customer' | 'walker'
 
 interface AuditLogParams {
   action: AuditAction

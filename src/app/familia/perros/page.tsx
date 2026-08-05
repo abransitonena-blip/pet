@@ -138,7 +138,7 @@ export default function MisPerrosPage() {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (unsubPets) { unsubPets(); unsubPets = undefined }
       if (!user) { router.push('/login'); return }
-      const q = query(collection(db, 'pets'), where('ownerId', '==', user.uid))
+      const q = query(collection(db, 'dogs'), where('ownerId', '==', user.uid))
       unsubPets = onSnapshot(q, (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Pet))
         docs.sort((a, b) => {
@@ -226,7 +226,7 @@ export default function MisPerrosPage() {
       if (editingPet) {
         await updateDoc(doc(db, 'pets', editingPet.id), data)
       } else {
-        await addDoc(collection(db, 'pets'), {
+        await addDoc(collection(db, 'dogs'), {
           ...data,
           ownerId: user.uid,
           createdAt: serverTimestamp(),

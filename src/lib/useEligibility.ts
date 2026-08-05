@@ -35,8 +35,8 @@ export function useEligibility(): EligibilityResult {
       let hasCompletedWalk = false
 
       try {
-        const petsSnap = await getDocs(query(collection(db, 'pets'), where('ownerId', '==', user.uid), limit(1)))
-        hasPet = !petsSnap.empty
+        const dogsSnap = await getDocs(query(collection(db, 'dogs'), where('ownerId', '==', user.uid), limit(1)))
+        hasPet = !dogsSnap.empty
         if (!hasPet) reasons.push('Registra un perro en tu cuenta')
       } catch { reasons.push('Error al verificar mascotas') }
 

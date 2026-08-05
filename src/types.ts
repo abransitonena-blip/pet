@@ -35,9 +35,9 @@ export interface Address {
 
 export interface ServiceOrder {
   id: string
-  clientId: string
-  clientName: string
-  clientPhone: string
+  customerId: string
+  customerName: string
+  customerPhone: string
   dogIds: string[]
   dogName: string
   petType: string
@@ -65,9 +65,9 @@ export interface ServiceOrder {
 export interface WalkSession {
   id: string
   orderId: string
-  clientId: string
-  clientName: string
-  clientPhone: string
+  customerId: string
+  customerName: string
+  customerPhone: string
   dogName: string
   petType: string
   serviceName: string
@@ -120,7 +120,7 @@ export interface Reservation {
   walkCheckOut?: WalkMedia
   walkNotes?: string
   uid?: string
-  client?: { uid: string; name: string; phone: string }
+  customer?: { uid: string; name: string; phone: string }
   assignment?: { walkerId: string; walkerName: string; assignedAt: any; assignedBy: string }
   walk?: {
     status: string
@@ -152,9 +152,9 @@ export interface Reservation {
 
 export interface Conversation {
   id: string
-  clientId: string
-  clientName: string
-  clientPhone?: string
+  customerId: string
+  customerName: string
+  customerPhone?: string
   lastMessage?: string
   lastTimestamp?: { seconds: number; nanoseconds: number }
   unreadAdmin: number
@@ -166,7 +166,7 @@ export interface ChatMessage {
   id?: string
   text: string
   senderId: string
-  senderRole: 'admin' | 'client' | 'walker'
+  senderRole: 'admin' | 'customer' | 'walker'
   timestamp?: { seconds: number; nanoseconds: number }
 }
 
@@ -301,9 +301,9 @@ export type PetAhoraRequestStatus = 'pending' | 'searching' | 'offer_sent' | 'ac
 
 export interface PetAhoraRequest {
   id: string
-  clientId: string
-  clientName: string
-  clientPhone: string
+  customerId: string
+  customerName: string
+  customerPhone: string
   petId: string
   petName: string
   petType: string
@@ -352,8 +352,8 @@ export interface PetAhoraLease {
   offerId: string
   walkerId: string
   walkerName: string
-  clientId: string
-  clientName: string
+  customerId: string
+  customerName: string
   petName: string
   zoneId: string
   status: 'active' | 'completed' | 'cancelled'

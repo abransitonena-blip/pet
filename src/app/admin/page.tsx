@@ -95,7 +95,7 @@ export default function AdminDashboard() {
     })
 
     // One-shot clients count (no real-time needed for a counter)
-    getDocs(query(collection(db, 'clients'))).then((snap) => {
+    getDocs(query(collection(db, 'customerProfiles'))).then((snap) => {
       setStats((prev) => ({ ...prev, totalClients: snap.size }))
     }).catch(() => {})
 

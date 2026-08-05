@@ -265,7 +265,7 @@ export default function ReservationForm({ onPhoneChange, onFocusChange }: {
     }).catch(() => {})
 
     // Load saved pets
-    const q = query(collection(db, 'pets'), where('ownerId', '==', user.uid), limit(5))
+    const q = query(collection(db, 'dogs'), where('ownerId', '==', user.uid), limit(5))
     const unsubPets = onSnapshot(q, (snap) => {
       setSavedPets(snap.docs.map((d) => ({
         id: d.id,

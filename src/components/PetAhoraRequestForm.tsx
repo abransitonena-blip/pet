@@ -32,7 +32,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
       setUser({ uid: u.uid, name: u.displayName || '', phone: u.phoneNumber || '' })
       try {
         const [petsSnap, addrSnap] = await Promise.all([
-          getDocs(query(collection(db, 'pets'), where('ownerId', '==', u.uid))),
+          getDocs(query(collection(db, 'dogs'), where('ownerId', '==', u.uid))),
           getDocs(query(collection(db, 'addresses'), where('ownerId', '==', u.uid))),
         ])
         setPets(petsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Pet)))

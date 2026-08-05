@@ -53,11 +53,11 @@ service cloud.firestore {
         && request.resource.data.assignment.walkerId == request.auth.uid;
     }
 
-    function isReservationClient() {
-      return isAuthenticated()
-        && resource.data.client != null
-        && resource.data.client.uid == request.auth.uid;
-    }
+function isReservationClient() {
+       return isAuthenticated()
+         && resource.data.customer != null
+         && resource.data.customer.uid == request.auth.uid;
+     }
 
     function isPetOwner() {
       return isAuthenticated()
@@ -76,10 +76,10 @@ service cloud.firestore {
 
 
     // Rate limiting: reservation fields validation
-    function isValidReservation() {
-      return request.resource.data.keys().hasAll(['name', 'phone', 'service', 'petName', 'date', 'time', 'client'])
-        && request.resource.data.keys().size() <= 30;
-    }
+function isValidReservation() {
+       return request.resource.data.keys().hasAll(['name', 'phone', 'service', 'petName', 'date', 'time', 'customer'])
+         && request.resource.data.keys().size() <= 30;
+     }
 
     // Rate limiting: review fields validation
     function isValidReview() {
@@ -100,10 +100,10 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════
-    // CLIENTS (profiles)
+    // CUSTOMERS (profiles)
     // ═══════════════════════════════════════════
 
-    match /clients/{uid} {
+    match /customerProfiles/{uid} {
       // Owner can read, admin can read all
       allow read: if isAuthenticated()
         && (request.auth.uid == uid || isAdmin());
@@ -114,15 +114,15 @@ service cloud.firestore {
       // Owner updates own profile, admin can update any
       allow update: if isAuthenticated()
         && (request.auth.uid == uid || isAdmin());
-      // Nobody deletes client profiles
+      // Nobody deletes customer profiles
       allow delete: if false;
     }
 
     // ═══════════════════════════════════════════
-    // PETS (dog profiles)
+    // DOGS (dog profiles)
     // ═══════════════════════════════════════════
 
-    match /pets/{petId} {
+    match /dogs/{petId} {
       // Owner reads own pets, admin reads all, walker reads assigned
       allow read: if isAuthenticated()
         && (isPetOwner() || isAdmin());
@@ -197,10 +197,10 @@ service cloud.firestore {
             || isAdmin()
             || isSupervisor());
 
-      // CREATE: client books for self, admin creates for any
-      allow create: if isAuthenticated()
-        && isValidReservation()
-        && (request.resource.data.client.uid == request.auth.uid || isAdmin());
+// CREATE: customer books for self, admin creates for any
+       allow create: if isAuthenticated()
+         && isValidReservation()
+         && (request.resource.data.customer.uid == request.auth.uid || isAdmin());
 
       // UPDATE: admin always, walker for status transitions on assigned (by uid or name), client can cancel own pending
       allow update: if isAuthenticated()
