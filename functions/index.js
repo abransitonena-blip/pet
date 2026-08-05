@@ -354,7 +354,7 @@ exports.onNewReview = functions.firestore
 
 exports.validateReservation = functions.firestore
   .document('reservations/{docId}')
-  .onCreate(async (snap, context) => {
+  .onCreate(async (snap, _context) => {
     const data = snap.data();
     const uid = data.customer?.uid;
 

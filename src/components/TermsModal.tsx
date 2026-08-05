@@ -3,12 +3,10 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Dog } from 'lucide-react'
 import { useEscapeKey } from '@/lib/useEscapeKey'
-import { useFocusTrap } from '@/lib/useFocusTrap'
 import { termsSections, TERMS_LAST_UPDATED } from '@/lib/termsContent'
 
 export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   useEscapeKey(onClose, isOpen)
-  const trapRef = useFocusTrap(isOpen)
   const sections = termsSections
   return (
     <AnimatePresence>

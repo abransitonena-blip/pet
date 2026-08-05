@@ -37,7 +37,7 @@ export default function ConfigPage() {
       await updateDoc(doc(db, 'clients', user.uid), { name, phone })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch {}
+    } catch { /* noop */ }
     setSaving(false)
   }
 

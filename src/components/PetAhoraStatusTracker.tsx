@@ -2,14 +2,14 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatEta } from '@/lib/eta'
-import { Zap, Dog, MapPin, CheckCircle2, Loader2, XCircle, PersonStanding } from 'lucide-react'
+import { Zap, Dog, MapPin, CheckCircle2, Loader2, XCircle, PersonStanding, type LucideIcon } from 'lucide-react'
 import type { PetAhoraRequest } from '@/types'
 
 interface Props {
   request: PetAhoraRequest
 }
 
-const STATUS_FLOW: Record<string, { label: string; icon: any; step: number }> = {
+const STATUS_FLOW: Record<string, { label: string; icon: LucideIcon; step: number }> = {
   pending: { label: 'Pendiente', icon: Loader2, step: 0 },
   searching: { label: 'Buscando paseador', icon: Zap, step: 1 },
   offer_sent: { label: 'Oferta enviada', icon: Zap, step: 2 },
@@ -87,7 +87,7 @@ export default function PetAhoraStatusTracker({ request }: Props) {
   )
 }
 
-export function PetAhoraActiveRequest({ requestId, request }: { requestId: string; request: PetAhoraRequest }) {
+export function PetAhoraActiveRequest({ requestId: _requestId, request }: { requestId: string; request: PetAhoraRequest }) {
   return (
     <AnimatePresence>
       <PetAhoraStatusTracker request={request} />

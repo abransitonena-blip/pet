@@ -8,7 +8,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import {
   CalendarDays, Dog, History, PawPrint, Gift,
-  ArrowRight, MapPin, Clock, CheckCircle2, AlertTriangle, Redo2,
+  ArrowRight, CheckCircle2, AlertTriangle, Redo2,
 } from 'lucide-react'
 import PetAhoraRequestForm from '@/components/PetAhoraRequestForm'
 import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'

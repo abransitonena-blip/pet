@@ -7,7 +7,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { usePetAhoraDispatch } from '@/lib/usePetAhoraDispatch'
 import { useConfig } from '@/context/ConfigContext'
-import { Zap, Loader2, Dog, MapPin, AlertTriangle } from 'lucide-react'
+import { Zap, Loader2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import type { Pet, Address } from '@/types'
 
@@ -39,7 +39,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
         setAddresses(addrSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Address)))
         if (petsSnap.docs.length > 0) setSelectedPet(petsSnap.docs[0].id)
         if (addrSnap.docs.length > 0) setSelectedAddress(addrSnap.docs[0].id)
-      } catch {} finally { setLoading(false) }
+      } catch { /* noop */ } finally { setLoading(false) }
     })
     return unsub
   }, [])

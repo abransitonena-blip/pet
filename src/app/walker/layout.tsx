@@ -9,7 +9,7 @@ import { clearSessionCookie } from '@/lib/auth'
 import AppShell from '@/components/layout/AppShell'
 import WalkerHeartbeat from '@/components/WalkerHeartbeat'
 import {
-  Home, History, LogOut, Dog, AlertTriangle,
+  Home, History, Dog, AlertTriangle,
 } from 'lucide-react'
 
 const NAV_ITEMS = [

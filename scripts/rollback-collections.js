@@ -34,16 +34,6 @@ function log(message, level = 'info') {
   fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2))
 }
 
-async function countDocuments(db, collectionName) {
-  try {
-    const colRef = collection(db, collectionName)
-    const snapshot = await getDocs(colRef)
-    return snapshot.size
-  } catch {
-    return 0
-  }
-}
-
 async function restoreCollection(db, targetName, sourceName, backupDir) {
   const backupFile = path.join(backupDir, `${sourceName}.json`)
   if (!fs.existsSync(backupFile)) {

@@ -1,4 +1,4 @@
-import type { Walker, Zone } from '@/types'
+import type { Walker } from '@/types'
 
 export interface DispatchCandidate {
   walker: Walker

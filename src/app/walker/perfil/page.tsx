@@ -73,7 +73,6 @@ export default function WalkerProfilePage() {
         }
       }
 
-      const zonesSnap = await getDoc(doc(db, 'zones', '_'))
       // Just read all zone docs
       const { getDocs, collection, query } = await import('firebase/firestore')
       const zonesQuery = query(collection(db, 'zones'))

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Check, X, Dog, CalendarCheck, Star, Gift } from 'lucide-react'
+import { Bell, Dog, CalendarCheck, Star, Gift } from 'lucide-react'
 import { db } from '@/firebase/config'
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, limit } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, limit } from 'firebase/firestore'
 
 interface Notification {
   id: string

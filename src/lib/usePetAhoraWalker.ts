@@ -11,7 +11,7 @@ export function usePetAhoraWalkerOffers(walkerId: string | undefined) {
   const [offers, setOffers] = useState<(PetAhoraOffer & { request?: PetAhoraRequest })[]>([])
   const [loading, setLoading] = useState(true)
   const prevCount = useRef(0)
-  const { acceptOffer, declineOffer } = usePetAhoraDispatch()
+  usePetAhoraDispatch()
 
   useEffect(() => {
     if (!walkerId) { setLoading(false); return }
@@ -31,9 +31,9 @@ export function usePetAhoraWalkerOffers(walkerId: string | undefined) {
         try {
           const reqSnap = await getDoc(doc(db, 'petAhoraRequests', data.requestId))
           if (reqSnap.exists()) {
-            ;(data as any).request = { id: reqSnap.id, ...reqSnap.data() } as PetAhoraRequest
+            ;(data as PetAhoraOffer & { request?: PetAhoraRequest }).request = { id: reqSnap.id, ...reqSnap.data() } as PetAhoraRequest
           }
-        } catch {}
+        } catch { /* noop */ }
         pendingOffers.push(data)
       }
 

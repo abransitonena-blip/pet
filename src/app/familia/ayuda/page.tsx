@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, ArrowLeft, ChevronDown, Mail,
+import { ArrowLeft, ChevronDown, Mail,
   CalendarDays, Dog, CreditCard, PawPrint, HelpCircle } from 'lucide-react'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, limit } from 'firebase/firestore'
+import { doc, collection, query, orderBy, onSnapshot, updateDoc, limit } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { ArrowLeft, Bell, Dog, CalendarCheck, Star, Gift } from 'lucide-react'
 

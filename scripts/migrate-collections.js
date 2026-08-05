@@ -4,8 +4,8 @@
 const fs = require('fs')
 const path = require('path')
 const { Command } = require('commander')
-const { getFirestore, collection, getDocs, writeBatch, doc, query, where, limit, getCountFromServer, DocumentSnapshot } = require('firebase/firestore')
-const { initializeApp, getApps, getApp } = require('firebase/app')
+const { getFirestore, collection, getDocs, writeBatch, doc, query, limit, getCountFromServer } = require('firebase/firestore')
+const { initializeApp, getApps } = require('firebase/app')
 
 const program = new Command()
 
@@ -29,7 +29,7 @@ const renames = JSON.parse(options.renames)
 const backupsDir = options.backupsDir
 const dryRun = options.dryRun
 const verifyOnly = options.verifyOnly
-const limit = parseInt(options.limit, 10) || 0
+const maxDocs = parseInt(options.limit, 10) || 0
 const resumeFrom = options.resumeFrom || null
 const projectId = options.project
 const autoConfirm = options.yes || false
@@ -135,8 +135,8 @@ async function detectDuplicateIds(db, sourceName, targetName) {
   const sourceRef = collection(db, sourceName)
   const targetRef = collection(db, targetName)
 
-  const sourceSnap = await getDocs(query(sourceRef, limit(limit || 1000)))
-  const targetSnap = await getDocs(query(targetRef, limit(limit || 1000)))
+  const sourceSnap = await getDocs(query(sourceRef, limit(maxDocs || 1000)))
+  const targetSnap = await getDocs(query(targetRef, limit(maxDocs || 1000)))
 
   const sourceIds = new Set(sourceSnap.docs.map(d => d.id))
   const targetIds = new Set(targetSnap.docs.map(d => d.id))
@@ -154,7 +154,7 @@ async function detectBrokenReferences(db, sourceName, targetName, renames) {
   renames.forEach(r => { renamesMap[r.from] = r.to })
 
   const sourceRef = collection(db, sourceName)
-  const snapshot = await getDocs(query(sourceRef, limit(limit || 500)))
+  const snapshot = await getDocs(query(sourceRef, limit(maxDocs || 500)))
 
   const brokenRefs = []
   snapshot.forEach(d => {
@@ -176,9 +176,9 @@ async function detectBrokenReferences(db, sourceName, targetName, renames) {
   return brokenRefs
 }
 
-async function detectIncompatibleFields(db, sourceName, targetName) {
+async function detectIncompatibleFields(db, sourceName, _targetName) {
   const sourceRef = collection(db, sourceName)
-  const snapshot = await getDocs(query(sourceRef, limit(limit || 100)))
+  const snapshot = await getDocs(query(sourceRef, limit(maxDocs || 100)))
 
   const incompatibleFields = []
   snapshot.forEach(d => {
@@ -335,7 +335,7 @@ async function migrateCollection(db, sourceName, targetName, backupDir) {
 
   log(`  Migrando: ${sourceName} → ${targetName}`)
 
-  const backup = await exportCollection(db, sourceName, backupDir, limit)
+  const backup = await exportCollection(db, sourceName, backupDir, maxDocs)
 
   const targetCount = await getDocumentCount(db, targetName)
   if (targetCount > 0) {
@@ -386,7 +386,7 @@ async function main() {
   log(`   Modo: ${dryRun ? 'DRY RUN' : verifyOnly ? 'VERIFY ONLY' : 'MIGRATE'}`)
   log(`   Renombres: ${renames.map(r => r.from + ' → ' + r.to).join(', ')}`)
   log(`   Backups: ${backupsDir}`)
-  log(`   Límite: ${limit || 'sin límite'}`)
+  log(`   Límite: ${maxDocs || 'sin límite'}`)
   log(`   Resume-from: ${resumeFrom || 'ninguno'}`)
   log(`   Dual-read: ${dualRead}`)
   log(`   Feature flag: ${featureFlag}`)
@@ -410,7 +410,7 @@ async function main() {
     db = getFirestore()
   }
 
-  const report = await generateImpactReport(db, renames)
+  await generateImpactReport(db, renames)
 
   if (verifyOnly) {
     log('\n🔍 Modo VERIFY ONLY — sin modificaciones')

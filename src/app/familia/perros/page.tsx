@@ -11,10 +11,9 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   PawPrint, Plus, Pencil, Trash2, ArrowLeft, X, Check, Loader2,
-  Heart, Brain, HeartPulse, SlidersHorizontal, Dog,
+  Brain, HeartPulse, SlidersHorizontal,
   Weight, Ruler, Venus, Mars,
-  Syringe, Phone, BriefcaseMedical, AlertTriangle,
-  Star,
+  Syringe, Phone, AlertTriangle,
 } from 'lucide-react'
 import { Pet } from '@/types'
 

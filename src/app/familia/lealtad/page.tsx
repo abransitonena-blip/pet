@@ -12,7 +12,7 @@ import LoyaltyProgram from '@/components/LoyaltyProgram'
 export default function LealtadPage() {
   const router = useRouter()
   const [phone, setPhone] = useState('')
-  const [userName, setUserName] = useState('')
+  const [, setUserName] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

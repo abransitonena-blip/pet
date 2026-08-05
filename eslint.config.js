@@ -9,6 +9,9 @@ const files = ['**/*.{js,jsx,ts,tsx,mjs,cjs}']
 
 export default tseslint.config(
   {
+    ignores: ['**/.next/**', '**/node_modules/**', '**/coverage/**'],
+  },
+  {
     files,
     languageOptions: {
       globals: globals.browser,
@@ -27,6 +30,10 @@ export default tseslint.config(
     files,
     rules: {
       'react/react-in-jsx-scope': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
     },
   },
   {
@@ -39,5 +46,23 @@ export default tseslint.config(
   {
     files,
     ...eslintPluginReactRefresh.configs.recommended,
+  },
+  {
+    files: ['scripts/**/*.js', 'scripts/**/*.mjs', 'functions/**/*.js', '**/*.config.js', '**/*.config.mjs'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+  {
+    files: ['public/*-sw.js', 'public/sw.js'],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        firebase: 'readonly',
+      },
+    },
   }
 )

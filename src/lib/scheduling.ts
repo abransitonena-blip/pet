@@ -58,7 +58,6 @@ export function isWalkerAvailable(
   excludeReservationId?: string,
 ): { available: boolean; reason?: string } {
   const slotStart = windowStartMinutes(slot)
-  const slotEnd = windowEndMinutes(slot)
   const walkDuration = WALK_DURATIONS[serviceName] || 45
   const sessionEnd = slotStart + walkDuration
 

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, CalendarDays, Dog, CreditCard, PawPrint } from 'lucide-react'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
-import { BRAND } from '@/lib/brand'
 
 const FAQ_ITEMS = [
   {

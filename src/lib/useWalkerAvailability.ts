@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { db } from '@/firebase/config'
-import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import type { Walker } from '@/types'
 
 export interface WalkerAvailabilityResult {

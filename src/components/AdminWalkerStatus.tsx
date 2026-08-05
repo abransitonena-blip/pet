@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, query, where, doc, getDoc } from 'firebase/firestore'
+import { collection, onSnapshot } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { Footprints, Wifi, WifiOff, MapPin, Clock } from 'lucide-react'

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import Link from 'next/link'
 import { termsSections, TERMS_LAST_UPDATED } from '@/lib/termsContent'
 import { Logo } from '@/components/ui/Logo'

@@ -93,13 +93,6 @@ module.exports = {
         'dark-canvas': '#0B1220',
         'dark-surface': '#141E2F',
         'dark-border': '#29364D',
-        surface: {
-          0: '#0F172A',
-          1: '#1E293B',
-          2: '#334155',
-          3: '#475569',
-          4: '#64748B',
-        },
         'surface-light': {
           0: '#F7F8F4',
           1: '#FFFFFF',

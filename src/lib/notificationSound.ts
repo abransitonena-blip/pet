@@ -1,7 +1,11 @@
 let audioCtx: AudioContext | null = null
 
 function getCtx(): AudioContext {
-  if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+  if (!audioCtx) {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AC) throw new Error('AudioContext no disponible')
+    audioCtx = new AC()
+  }
   return audioCtx
 }
 
@@ -25,7 +29,7 @@ export function playOfferChime() {
       osc.start(now + i * 0.1)
       osc.stop(now + i * 0.1 + 0.3)
     })
-  } catch {}
+  } catch { /* noop */ }
 }
 
 

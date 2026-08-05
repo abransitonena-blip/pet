@@ -4,7 +4,6 @@ import { db } from '@/firebase/config'
 
 // En cola de sync para walkers offline — fetch local buffer, sube en lote, limpia tras éxito
 export async function GET(request: NextRequest) {
-  const syncAll = request.nextUrl.searchParams.get('sync') === 'true'
   const from = request.nextUrl.searchParams.get('from') || undefined
   const to = request.nextUrl.searchParams.get('to') || undefined
 
@@ -13,8 +12,6 @@ export async function GET(request: NextRequest) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const token = authHeader.split(' ')[1]
 
     const userDoc = await import('firebase/firestore').then(({ doc, getDoc }) => getDoc(doc(db, 'users', 'dummy')))
     if (!userDoc.exists()) {

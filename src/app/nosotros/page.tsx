@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { Metadata } from 'next'
 import { BRAND } from '@/lib/brand'
 import { ShieldCheck, Heart, Leaf, Users } from 'lucide-react'

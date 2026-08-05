@@ -7,10 +7,9 @@ import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { clearSessionCookie } from '@/lib/auth'
 import AppShell from '@/components/layout/AppShell'
-import NotificationBell from '@/components/NotificationBell'
 import {
   Dog, Calendar, PawPrint, Camera, Users, MapPin,
-  LogOut, Settings, Gift, Home, History, BookOpen, Bell,
+  Settings, Gift, Home, History, BookOpen, Bell,
 } from 'lucide-react'
 
 const ACCOUNT_ITEMS = [
@@ -32,7 +31,7 @@ export default function MiCuentaLayout({ children }: { children: React.ReactNode
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
-  const [uid, setUid] = useState('')
+  const [, setUid] = useState('')
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {

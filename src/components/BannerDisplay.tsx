@@ -31,7 +31,7 @@ export default function BannerDisplay() {
   const dismiss = () => {
     setDismissed(true)
     if (banner?.message) {
-      try { localStorage.setItem(DISMISS_KEY, banner.message) } catch {}
+      try { localStorage.setItem(DISMISS_KEY, banner.message) } catch { /* noop */ }
     }
   }
 

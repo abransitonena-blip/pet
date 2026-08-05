@@ -15,5 +15,5 @@ export async function logChange(
       userId: userId || 'unknown',
       timestamp: serverTimestamp(),
     })
-  } catch {}
+  } catch { /* noop */ }
 }

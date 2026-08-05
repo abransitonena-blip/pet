@@ -29,12 +29,12 @@ export default function WalkerHeartbeat() {
             setWalkerInfo({ id: user.uid, name: profileSnap.data().name || 'Paseador' })
           }
         }
-      } catch {} finally { setLoaded(true) }
+      } catch { /* noop */ } finally { setLoaded(true) }
     })
     return unsub
   }, [])
 
-  const { setBusy, setOnline } = useWalkerPresence({
+  useWalkerPresence({
     walkerId: walkerInfo?.id ?? '',
     walkerName: walkerInfo?.name ?? '',
     enabled: !!walkerInfo,

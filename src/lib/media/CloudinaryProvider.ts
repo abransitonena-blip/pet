@@ -1,7 +1,6 @@
 import type { MediaProvider, MediaUploadResult, MediaAsset, MediaUploadOptions, MediaVariant, MediaListOptions } from './MediaProvider'
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ''
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ''
 const API_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}`
 
 export class CloudinaryProvider implements MediaProvider {
@@ -83,7 +82,7 @@ export class CloudinaryProvider implements MediaProvider {
     }
 
     const data = await response.json()
-    return (data.resources || []).map((r: any) => ({
+    return (data.resources || []).map((r: { public_id?: string; format?: string; width?: number; height?: number; created_at?: string }) => ({
       mediaId: r.public_id,
       provider: 'cloudinary',
       objectKey: r.public_id,
@@ -92,7 +91,7 @@ export class CloudinaryProvider implements MediaProvider {
       width: r.width,
       height: r.height,
       visibility: 'public' as const,
-      createdAt: new Date(r.created_at),
+      createdAt: new Date(r.created_at || ''),
     }))
   }
 

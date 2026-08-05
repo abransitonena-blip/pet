@@ -39,7 +39,7 @@ const ReviewForm = dynamic(() => import('@/components/ReviewForm'), {
 
 function HomeContent() {
   const [showTerms, setShowTerms] = useState(false)
-  const [loaded, setLoaded] = useState(false)
+  const [, setLoaded] = useState(false)
   const [user, setUser] = useState<{ uid: string; displayName: string | null } | null>(null)
 
   useEffect(() => {

@@ -137,13 +137,6 @@ export function calculateSavings(_serviceName: string, _currentPrice?: number): 
   return { regularPrice: 0, savings: 0 }
 }
 
-const CATEGORY_DURATION_MINUTES: Record<string, number> = {
-  cotidiano: 30,
-  energia: 60,
-  acompanamiento: 45,
-  rutina: 30,
-}
-
 const CATEGORY_BASE_MULTIPLIER: Record<string, number> = {
   cotidiano: 1,
   energia: 1.8,
@@ -174,7 +167,7 @@ async function getZoneData(zoneId: string): Promise<{ basePrice: number; fixedAd
         percentAdjustment: d.percentAdjustment ?? 0,
       }
     }
-  } catch {}
+  } catch { /* noop */ }
   return { basePrice: 150, fixedAdjustment: 0, percentAdjustment: 0 }
 }
 

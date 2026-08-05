@@ -111,7 +111,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
   const [showInternal, setShowInternal] = useState(false)
-  const [gisReady, setGisReady] = useState(false)
+  const [, setGisReady] = useState(false)
   const [gisError, setGisError] = useState(false)
   const [webView, setWebView] = useState(false)
   const googleButtonRef = useRef<HTMLDivElement | null>(null)

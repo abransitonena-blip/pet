@@ -1,13 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
-import { doc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { useRouter } from 'next/navigation'
 import type { PresenceStatus } from '@/types'
 
 const HEARTBEAT_INTERVAL_MS = 15000
-const STALE_THRESHOLD_MS = 60000
 
 interface UseWalkerPresenceOptions {
   walkerId: string
@@ -21,7 +19,6 @@ interface GeolocationPosition {
 }
 
 export function useWalkerPresence({ walkerId, walkerName, enabled = true }: UseWalkerPresenceOptions) {
-  const router = useRouter()
   const positionRef = useRef<GeolocationPosition | null>(null)
   const statusRef = useRef<PresenceStatus>('online')
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)

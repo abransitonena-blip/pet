@@ -4,7 +4,7 @@ import { useOnlineWalkers } from '@/lib/useOnlineWalkers'
 import { Circle } from 'lucide-react'
 
 export default function OnlineWalkerBadge() {
-  const { onlineWalkers, totalOnline, loading } = useOnlineWalkers()
+  const { totalOnline, loading } = useOnlineWalkers()
 
   if (loading) {
     return (

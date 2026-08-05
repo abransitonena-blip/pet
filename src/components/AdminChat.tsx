@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
 import { db } from '@/firebase/config'
 import {
   collection, query, orderBy, onSnapshot, doc,

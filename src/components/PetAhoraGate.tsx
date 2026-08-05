@@ -29,7 +29,7 @@ export default function PetAhoraGate({ children, fallback }: { children: ReactNo
   return <>{children}</>
 }
 
-function EligibilityBlocked({ reasons, result }: { reasons: string[]; result: EligibilityResult }) {
+function EligibilityBlocked({ reasons: _reasons, result }: { reasons: string[]; result: EligibilityResult }) {
   return (
     <div className="glass-card p-6 text-center">
       <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>

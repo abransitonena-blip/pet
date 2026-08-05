@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Gift, Star, Dog, CheckCircle, Award, Sparkles } from 'lucide-react'
-import { doc, onSnapshot, updateDoc, increment } from 'firebase/firestore'
+import { Gift, Star, Award, Sparkles } from 'lucide-react'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { db, auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
