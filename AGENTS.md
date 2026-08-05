@@ -16,7 +16,7 @@
 
 - **Fase 4** (30f290d): rediseño de logo — huella canina en gradiente primary:
   - `src/components/ui/Logo.tsx`: exporta `PawMark` + `Logo` (bg-gradient-to-br from-primary-500 to-primary-700, rounded-xl, PawMark size*0.58, fill #FFF8F1).
-  - Iconos PWA: `public/icons/icon-512.svg` y `icon-192.svg` (huella white sobre gradiente primary, círculo decorativo 6% opacidad, sin rx en el rect grande de 512).
+  - Iconos PWA: `public/icons/icon-512.svg` e `icon-192.svg` (huella white sobre gradiente primary, círculo decorativo 6% opacidad, sin rx en el rect grande de 512).
   - `public/manifest.json`: background_color → `#FFF8F1` (theme_color `#C45100`), name/short_name intactos.
   - OG image (`src/app/opengraph-image.tsx`): fondo `#FFF8F1`, barra accent `#C45100`, título `#172033`, subtítulo `#5D6778`, CTAs "Entrar a Familia PET" (primary) + "Conoce cómo funciona" (trust), paw (🐾) 120px bottom-right.
   - Tokens: `--color-primary-hover` → `#9f3d00` (AA en canvas), `canvas #fff8f1`, `ink #172033`, `muted #5D6778`, `border #808897`.
@@ -52,10 +52,20 @@
 - **sitemap.xml** (`src/app/sitemap.xml`):
   - 14 URLs con lastmod (update) y priority (0.9 admin/familia/walker, 0.8 resto)
 
+- **P1** (a3824f2): Eliminar sección RESERVA residual de landing page; cambiar CTA a "Solicitar paseo".
+- **P2** (a3824f2): Cambiar fuente de Inter a Manrope.
+- **P3-P9** (fc21af7, e0c4f3f, a3dd618): Touch targets ≥44px, admin sidebar w-56 on mobile, text-xs→text-sm, responsive typography, aria-live on toasts/banners, focus-visible on all interactive elements, reduced motion support.
+- **P10** (2040d65): Normalizar data model — remove `orderId` from reservations, rename `clients`→`customerProfiles`, `client` field→`customer`.
+- **P11** (4b09a0a): Fix walker search by name→UID — remove legacy `assignedWalker` name queries, use `assignment.walkerId` only.
+- **P12** (ddd7c96): Create AppShell shared layout — Familia and Walker now use shared AppShell component.
+- **P13** (475a90a): Create MediaProvider abstraction — Cloudinary provider with upload, delete, getUrl, list.
+- **P14** (f104e0c): Add supervisor role to middleware, admin layout, and login page.
+- **P15** (9ef6d52): Rename Firestore collections (`clients`→`customerProfiles`, `pets`→`dogs`) and fields (`client`→`customer`).
+
 ### Próximos pendientes
 
-1. **Fase 12**: scripts/ — `rename-collections.js` creado (con backups y rollback).
-2. **Fase 13**: Makefile.cd — objetivos para setup-eslint, setup-types, setup-tests, setup-build.
+1. **Fase 12**: scripts/ — `rename-collections.js` creado (con backups y rollback). **Ejecutar contra prod** para migrar datos.
+2. **Fase 13**: Makefile.cd — ya existe con objetivos setup-eslint, setup-types, setup-tests, setup-build.
 3. **Fase 14**: AGENTS.md — este archivo (resumen y continuar).
 4. **Fase 15+** (por definir):
    - Refactorizar `services.ts` → `walkServices.ts` (si lo necesitas).
@@ -64,7 +74,7 @@
 
 ## Continuar
 
-- Ejecutar `node scripts/rename-collections.js --backups-dir ./backups/renames/$(date +%F_%H-%M-%S) --renames '[{"from":"clients","to":"customerProfiles"},{"from":"pets","to":"dogs"},{"from":"client","to":"customer"}]'`
+- Ejecutar `node scripts/rename-collections.js --backups-dir ./backups/renames/$(date +%F_%H-%M-%S) --renames '[{"from":"clients","to":"customerProfiles"},{"from":"pets","to":"dogs"},{"from":"client","to":"customer"}]'` contra la base de datos prod (`pet-1cb0b`).
 - Ejecutar `make setup-all` o `make lint typecheck jest build` para asegurar el entorno.
 - Probar endpoints (`/api/presence-offline`, `/api/version`).
 - Incorporar `Makefile.cd` a CI si lo necesitas.
