@@ -13,7 +13,7 @@ import {
   Dog, Gauge, Calendar, Users, PawPrint, Footprints,
   MapPin, DollarSign, Tag, Star,
   TrendingUp, Settings, ClipboardList, Bot, LogOut,
-  ChevronLeft, ChevronRight, Menu, MessageSquare, Image, Zap,
+  ChevronLeft, ChevronRight, Menu, MessageSquare, Image, Zap, Shield,
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 
@@ -33,6 +33,7 @@ const NAV_ITEMS = [
   { id: 'analitica', label: 'Analítica', icon: TrendingUp, href: '/admin/analitica' },
   { id: 'galeria', label: 'Galería', icon: Image, href: '/admin/galeria' },
   { id: 'pet-ahora', label: 'PET Ahora', icon: Zap, href: '/admin/pet-ahora', color: '#f59e0b' },
+  { id: 'supervisores', label: 'Supervisores', icon: Shield, href: '/admin/supervisores', color: '#7c3aed' },
   { id: 'config', label: 'Configuración', icon: Settings, href: '/admin/config' },
   { id: 'logs', label: 'Logs', icon: ClipboardList, href: '/admin/logs' },
   { id: 'ia', label: 'Insights', icon: Bot, href: '/admin/ia' },
@@ -57,7 +58,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return
       }
       const userSnap = await getDoc(doc(db, 'users', user.uid))
-      const isAdmin = userSnap.exists() && userSnap.data()?.role === 'admin'
+      const role = userSnap.exists() ? userSnap.data()?.role : null
+      const isAdmin = role === 'admin' || role === 'supervisor'
       if (!isAdmin) {
         await signOut(auth)
         router.push('/login')

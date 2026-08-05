@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithCredential, signInWithPopup } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { Mail, Lock, Loader2, User, Phone, PersonStanding, ExternalLink } from 'lucide-react'
+import { Mail, Lock, Loader2, User, Phone, PersonStanding, ExternalLink, Shield } from 'lucide-react'
 import { brand } from '@/lib/brand'
 import { Events } from '@/lib/analytics'
 import { Logo } from '@/components/ui/Logo'
@@ -19,7 +19,7 @@ import {
   RESET_LINK_SENT_MESSAGE,
 } from '@/lib/auth'
 
-type Mode = 'select' | 'familia' | 'equipo' | 'paseador'
+type Mode = 'select' | 'familia' | 'equipo' | 'paseador' | 'supervisor'
 
 declare global {
   interface Window {
@@ -61,10 +61,11 @@ async function ensureCustomerProfile(user: { uid: string; displayName: string | 
 }
 
 const ROLE_HOME: Record<string, string> = {
-  admin: '/admin',
-  walker: '/walker',
-  client: '/familia',
-}
+   admin: '/admin',
+   walker: '/walker',
+   client: '/familia',
+   supervisor: '/admin',
+ }
 
 function getSafeRedirect(): string | null {
   if (typeof window === 'undefined') return null
@@ -73,18 +74,19 @@ function getSafeRedirect(): string | null {
   return r
 }
 
-function resolveDestination(role: 'client' | 'admin' | 'walker'): string {
-  const redirect = getSafeRedirect()
-  if (!redirect) return ROLE_HOME[role]
-  const prefix = redirect.split('/')[1] ?? ''
-  const allowed: Record<string, string[]> = {
-    admin: ['admin', 'familia', 'walker', 'mi-cuenta', 'paseador'],
-    walker: ['walker', 'paseador'],
-    client: ['familia', 'mi-cuenta'],
-  }
-  if (allowed[role].includes(prefix)) return redirect
-  return ROLE_HOME[role]
-}
+function resolveDestination(role: 'client' | 'admin' | 'walker' | 'supervisor'): string {
+   const redirect = getSafeRedirect()
+   if (!redirect) return ROLE_HOME[role]
+   const prefix = redirect.split('/')[1] ?? ''
+   const allowed: Record<string, string[]> = {
+     admin: ['admin', 'familia', 'walker', 'mi-cuenta', 'paseador'],
+     walker: ['walker', 'paseador'],
+     client: ['familia', 'mi-cuenta'],
+     supervisor: ['admin'],
+   }
+   if (allowed[role].includes(prefix)) return redirect
+   return ROLE_HOME[role]
+ }
 
 function GoogleMark({ size = 16 }: { size?: number }) {
   return (
@@ -134,24 +136,24 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const urlMode = params.get('mode') as Mode | null
-    if (urlMode && ['familia', 'equipo', 'paseador'].includes(urlMode)) {
+    if (urlMode && ['familia', 'equipo', 'paseador', 'supervisor'].includes(urlMode)) {
       setMode(urlMode)
       setShowInternal(true)
     }
   }, [])
 
-  const finalizeGoogle = useCallback(async (user: { uid: string; displayName: string | null; email: string | null }) => {
-    await ensureCustomerProfile(user)
-    const userSnap = await getDoc(doc(db, 'users', user.uid))
-    const role = userSnap.exists() ? userSnap.data()?.role : null
-    if (role === 'admin' || role === 'walker') {
-      setSessionCookie(role)
-      router.replace(resolveDestination(role))
-    } else {
-      setSessionCookie('client')
-      router.replace(resolveDestination('client'))
-    }
-  }, [router])
+const finalizeGoogle = useCallback(async (user: { uid: string; displayName: string | null; email: string | null }) => {
+     await ensureCustomerProfile(user)
+     const userSnap = await getDoc(doc(db, 'users', user.uid))
+     const role = userSnap.exists() ? userSnap.data()?.role : null
+     if (role === 'admin' || role === 'walker' || role === 'supervisor') {
+       setSessionCookie(role)
+       router.replace(resolveDestination(role))
+     } else {
+       setSessionCookie('client')
+       router.replace(resolveDestination('client'))
+     }
+   }, [router])
 
   const handleGoogleCredential = useCallback(async (response: { credential: string }) => {
     if (!response.credential) {
@@ -238,37 +240,42 @@ export default function LoginPage() {
     return () => clearTimeout(t)
   }, [mode, webView])
 
-  const handleEmailLogin = async (role: 'client' | 'admin' | 'walker') => {
-    setLoading(true)
-    setError('')
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, password)
-      Events.loginMethod('email')
-      if (role === 'admin' || role === 'walker') {
-        const userSnap = await getDoc(doc(db, 'users', cred.user.uid))
-        const userRole = userSnap.exists() ? userSnap.data()?.role : null
-        if (role === 'admin' && userRole !== 'admin') {
-          setError('Parece que no tienes acceso al panel de equipo')
-          await auth.signOut()
-          return
-        }
-        if (role === 'walker' && userRole !== 'walker') {
-          setError('Parece que no tienes acceso de paseador')
-          await auth.signOut()
-          return
-        }
-        setSessionCookie(role)
-        router.push(resolveDestination(role))
-      } else {
-        await ensureCustomerProfile(cred.user)
-        setSessionCookie('client')
-        router.push(resolveDestination('client'))
-      }
-    } catch (e: unknown) {
-      setError(classifyLoginError(e))
-    }
-    setLoading(false)
-  }
+const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'supervisor') => {
+     setLoading(true)
+     setError('')
+     try {
+       const cred = await signInWithEmailAndPassword(auth, email, password)
+       Events.loginMethod('email')
+       if (role === 'admin' || role === 'walker' || role === 'supervisor') {
+         const userSnap = await getDoc(doc(db, 'users', cred.user.uid))
+         const userRole = userSnap.exists() ? userSnap.data()?.role : null
+         if (role === 'admin' && userRole !== 'admin') {
+           setError('Parece que no tienes acceso al panel de equipo')
+           await auth.signOut()
+           return
+         }
+         if (role === 'walker' && userRole !== 'walker') {
+           setError('Parece que no tienes acceso de paseador')
+           await auth.signOut()
+           return
+         }
+         if (role === 'supervisor' && userRole !== 'supervisor') {
+           setError('Parece que no tienes acceso de supervisor')
+           await auth.signOut()
+           return
+         }
+         setSessionCookie(role)
+         router.push(resolveDestination(role))
+       } else {
+         await ensureCustomerProfile(cred.user)
+         setSessionCookie('client')
+         router.push(resolveDestination('client'))
+       }
+     } catch (e: unknown) {
+       setError(classifyLoginError(e))
+     }
+     setLoading(false)
+   }
 
   const handleForgotPassword = async () => {
     setError('')
@@ -338,12 +345,14 @@ export default function LoginPage() {
             {mode === 'familia' && 'Familia PET'}
             {mode === 'equipo' && 'Administración PET'}
             {mode === 'paseador' && 'Paseadores PET'}
+            {mode === 'supervisor' && 'Supervisores PET'}
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {mode === 'select' && 'Elige cómo quieres acceder'}
             {mode === 'familia' && 'Accede para ver tus reservas, fotos y más'}
             {mode === 'equipo' && 'Panel de administración'}
             {mode === 'paseador' && 'Panel de paseos asignados'}
+            {mode === 'supervisor' && 'Panel de supervisión'}
           </p>
         </div>
 
@@ -389,6 +398,13 @@ export default function LoginPage() {
                   style={{ color: 'var(--text-muted)' }}
                 >
                   Acceso paseador →
+                </button>
+                <button
+                  onClick={() => setMode('supervisor')}
+                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-primary"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Acceso supervisor →
                 </button>
               </>
             )}
@@ -664,14 +680,80 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
-              <button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                ← Volver al sitio
-              </button>
-            </div>
-          </div>
-        )}
+<button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                 ← Volver al sitio
+               </button>
+             </div>
+           </div>
+         )}
 
-        <div className="text-center mt-6">
+         {mode === 'supervisor' && (
+           <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+             <div className="space-y-3">
+               <div>
+                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo de supervisor</label>
+                 <div className="relative">
+                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                   <input
+                     type="email"
+                     value={email}
+                     onChange={(e) => setEmail(e.target.value)}
+                     placeholder="supervisor@petap.com"
+                     autoComplete="email"
+                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                   />
+                 </div>
+               </div>
+
+               <div>
+                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
+                 <div className="relative">
+                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
+                   <input
+                     type="password"
+                     value={password}
+                     onChange={(e) => setPassword(e.target.value)}
+                     onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin('supervisor')}
+                     placeholder="••••••••"
+                     autoComplete="current-password"
+                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                   />
+                 </div>
+               </div>
+
+               {error && <p className="text-red-700 text-xs" role="alert">{error}</p>}
+               {info && <p className="text-success-600 text-xs" role="status">{info}</p>}
+
+               <button
+                 onClick={() => handleEmailLogin('supervisor')}
+                 disabled={loading || !email.trim() || !password.trim()}
+                 className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+               >
+                 {loading ? <Loader2 className="animate-spin" size={14} /> : <Shield size={14} />}
+                 Entrar como supervisor
+               </button>
+
+               <button
+                 onClick={handleForgotPassword}
+                 disabled={loading}
+                 className="text-xs block w-full text-center"
+                 style={{ color: 'var(--text-muted)' }}
+               >
+                 ¿Olvidaste tu contraseña?
+               </button>
+             </div>
+
+             <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
+               <button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                 ← Volver al sitio
+               </button>
+             </div>
+           </div>
+         )}
+
+         <div className="text-center mt-6">
           <a href="/" className="text-xs transition-colors hover:text-brand-600" style={{ color: 'var(--text-muted)' }}>
             ← Volver al sitio
           </a>

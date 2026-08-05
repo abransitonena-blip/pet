@@ -6,17 +6,17 @@ const ROLE_COOKIE = '__role'
 
 // SECURITY MODEL:
 // - __session: boolean flag ("has logged in").
-// - __role: role string ('admin' | 'walker' | 'client') set during login.
+// - __role: role string ('admin' | 'walker' | 'client' | 'supervisor') set during login.
 // - Middleware checks __role server-side for route access.
 // - Real auth verification: Firebase Auth (onAuthStateChanged) + Firestore Rules (request.auth.uid).
 
 const ROLE_ROUTES: Record<string, string[]> = {
-  '/admin': ['admin'],
-  '/familia': ['client', 'admin', 'walker'],
-  '/walker': ['walker'],
+  '/admin': ['admin', 'supervisor'],
+  '/familia': ['client', 'admin', 'walker', 'supervisor'],
+  '/walker': ['walker', 'supervisor'],
   // legacy aliases (next.config redirects /mi-cuenta → /familia, /paseador → /walker)
-  '/mi-cuenta': ['client', 'admin', 'walker'],
-  '/paseador': ['walker'],
+  '/mi-cuenta': ['client', 'admin', 'walker', 'supervisor'],
+  '/paseador': ['walker', 'supervisor'],
 }
 
 function matchRoute(pathname: string): string | null {
@@ -42,8 +42,8 @@ export function middleware(request: NextRequest) {
   const allowedRoles = ROLE_ROUTES[routePrefix]
 
   if (!role || !allowedRoles.includes(role)) {
-    // Admins going to /walker or /familia → OK. Everyone else → redirect to home.
-    if (role === 'admin') return NextResponse.next()
+    // Admins/supervisors going to /walker or /familia → OK. Everyone else → redirect to home.
+    if (role === 'admin' || role === 'supervisor') return NextResponse.next()
     return NextResponse.redirect(new URL('/', request.url))
   }
 
