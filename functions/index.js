@@ -26,7 +26,7 @@ async function sendPushToAdmins(title, body) {
 }
 
 async function sendPushToUser(uid, title, body) {
-  const userSnap = await db.collection('clients').doc(uid).get();
+  const userSnap = await db.collection('customerProfiles').doc(uid).get();
   const tokens = userSnap.data()?.fcmTokens || [];
   if (tokens.length === 0) return;
   await messaging.sendEachForMulticast({
@@ -167,7 +167,7 @@ exports.onReservationCreate = functions.firestore
 
     // Log audit
     await logAudit(
-      { uid: data.client?.uid || 'system', role: 'client', name: data.name },
+      { uid: data.customer?.uid || 'system', role: 'client', name: data.name },
       'create',
       'reservation',
       snap.id,
@@ -187,7 +187,7 @@ exports.onReservationUpdate = functions.firestore
     if (before.status === after.status) return;
 
     // — Notifications —
-    if (after.client?.uid) {
+    if (after.customer?.uid) {
       const statusMessages = {
         assigned: `Tu paseo fue asignado a ${after.assignment?.walkerName || 'un paseador'}`,
         en_camino: `${after.assignment?.walkerName || 'Tu paseador'} va en camino`,
@@ -198,7 +198,7 @@ exports.onReservationUpdate = functions.firestore
 
       const message = statusMessages[after.status];
       if (message) {
-        await createNotification(after.client.uid, {
+        await createNotification(after.customer.uid, {
           title: 'Actualización de reserva',
           message,
           type: 'walk_update',
@@ -253,7 +253,7 @@ exports.onReservationUpdate = functions.firestore
     const historyEntry = {
       status: after.status,
       timestamp: new Date().toISOString(),
-      changedBy: after.assignment?.walkerId || after.client?.uid || 'system',
+      changedBy: after.assignment?.walkerId || after.customer?.uid || 'system',
     };
 
     await change.after.ref.update({
@@ -262,8 +262,8 @@ exports.onReservationUpdate = functions.firestore
     });
 
     // — Loyalty (on completed) —
-    if (after.status === 'completed' && after.client?.uid) {
-      const uid = after.client.uid;
+    if (after.status === 'completed' && after.customer?.uid) {
+      const uid = after.customer.uid;
       const loyaltyRef = db.collection('loyalty').doc(uid);
 
       let newPoints;
@@ -356,13 +356,13 @@ exports.validateReservation = functions.firestore
   .document('reservations/{docId}')
   .onCreate(async (snap, context) => {
     const data = snap.data();
-    const uid = data.client?.uid;
+    const uid = data.customer?.uid;
 
     if (!uid) return;
 
-    // Check for duplicate reservations (same client, same date, same time)
+    // Check for duplicate reservations (same customer, same date, same time)
     const dupSnap = await db.collection('reservations')
-      .where('client.uid', '==', uid)
+      .where('customer.uid', '==', uid)
       .where('date', '==', data.date)
       .where('time', '==', data.time)
       .where('status', 'in', ['pending', 'assigned', 'en_camino', 'paseando'])
@@ -421,8 +421,8 @@ exports.registerFCMToken = functions.https.onCall(async (data, context) => {
       fcmTokens: admin.firestore.FieldValue.arrayUnion(token),
     });
   } else {
-    // Client/walker tokens go to their client doc
-    await db.collection('clients').doc(context.auth.uid).update({
+    // Customer/walker tokens go to their customerProfile doc
+    await db.collection('customerProfiles').doc(context.auth.uid).update({
       fcmTokens: admin.firestore.FieldValue.arrayUnion(token),
     });
   }
