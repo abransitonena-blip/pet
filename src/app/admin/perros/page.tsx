@@ -3,6 +3,9 @@
 import { useState, useMemo } from 'react'
 import { useReservations } from '@/context/ReservationsContext'
 import { Search, PawPrint, Dog } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
+import EmptyState from '@/components/ui/EmptyState'
 import type { Reservation } from '@/types'
 
 interface PetProfile {
@@ -69,12 +72,10 @@ export default function AdminPerrosPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Gestión de Perros</h2>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-          {stats.totalPets} perros registrados · {stats.totalReservations} reservas totales · Promedio {stats.avgVisits} visitas/perro
-        </p>
-      </div>
+      <PageHeader
+        title="Gestión de Perros"
+        description={`${stats.totalPets} perros registrados · ${stats.totalReservations} reservas totales · Promedio ${stats.avgVisits} visitas/perro`}
+      />
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
@@ -88,16 +89,12 @@ export default function AdminPerrosPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-20 rounded-xl" />)}
-        </div>
+        <LoadingState rows={4} height="h-20" />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <PawPrint className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {searchQuery ? 'Sin resultados' : 'No hay perros registrados aún'}
-          </p>
-        </div>
+        <EmptyState
+          icon={<PawPrint size={24} />}
+          title={searchQuery ? 'Sin resultados' : 'No hay perros registrados aún'}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filtered.map((p) => (

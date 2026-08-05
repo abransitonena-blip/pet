@@ -1,7 +1,5 @@
 'use client'
 
-import { Dog } from 'lucide-react'
-
 export default function AdminLoading() {
   return (
     <div className="space-y-4 animate-pulse">

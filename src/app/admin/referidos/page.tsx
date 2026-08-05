@@ -5,6 +5,8 @@ import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc, serverT
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { UserPlus, Plus, Trash2, Copy, Check, Loader2 } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
 import { brand } from '@/lib/brand'
 import { useToast } from '@/context/ToastContext'
 
@@ -101,15 +103,15 @@ export default function AdminReferidosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Referidos</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Programa de referidos y recompensas</p>
-        </div>
-        <button onClick={() => setShowAdd(!showAdd)} className="btn-primary text-xs flex items-center gap-2">
-          <Plus size={10} /> Nuevo referido
-        </button>
-      </div>
+      <PageHeader
+        title="Referidos"
+        description="Programa de referidos y recompensas"
+        actions={
+          <button onClick={() => setShowAdd(!showAdd)} className="btn-primary text-xs flex items-center gap-2">
+            <Plus size={10} /> Nuevo referido
+          </button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -170,7 +172,7 @@ export default function AdminReferidosPage() {
 
       {/* Referrals list */}
       {loading ? (
-        <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="skeleton h-16 rounded-xl" />)}</div>
+        <LoadingState rows={3} height="h-16" />
       ) : referrals.length === 0 ? (
         <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <UserPlus className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />

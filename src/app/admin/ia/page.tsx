@@ -3,15 +3,16 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Bot, CalendarDays, Dog, Users, ChartLine, Clock,
+  Bot, CalendarDays, Dog, Users, Clock,
   Lightbulb, ArrowUp, ArrowDown, AlertTriangle,
   Zap, Star, PersonStanding, Banknote, ArrowRight, Percent,
 } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useConfig } from '@/context/ConfigContext'
-import type { Reservation } from '@/types'
 
 interface Insight {
   id: string
@@ -91,10 +92,6 @@ export default function AdminIAPage() {
       return { name: w.name, today: assigned.length, pending: assigned.filter((r) => r.status === 'pending').length }
     })
     const overloaded = walkerLoads.filter((w) => w.today > 6)
-
-    // Avg daily
-    const uniqueDays = new Set(periodRes.map((r) => r.date)).size
-    const avgDaily = uniqueDays > 0 ? (periodRes.length / uniqueDays).toFixed(1) : '0'
 
     // Cancellation rate
     const cancelled = periodRes.filter((r) => r.status === 'cancelled').length
@@ -203,24 +200,16 @@ export default function AdminIAPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <Bot size={20} className="text-brand-600" />
-            Centro de Insights
-          </h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            Análisis inteligente basado en tus datos
-          </p>
-        </div>
-        <div className="flex gap-1.5">
-          {(['7d', '30d', '90d'] as const).map((p) => (
-            <button key={p} onClick={() => setSelectedPeriod(p)} className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${selectedPeriod === p ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted hover:text-primary'}`}>
-              {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
-            </button>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title="Centro de Insights"
+        description="Análisis inteligente basado en tus datos"
+        icon={<Bot size={20} className="text-brand-600" />}
+        actions={(['7d', '30d', '90d'] as const).map((p) => (
+          <button key={p} onClick={() => setSelectedPeriod(p)} className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${selectedPeriod === p ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted hover:text-primary'}`}>
+            {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
+          </button>
+        ))}
+      />
 
       {/* Quick Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -249,9 +238,7 @@ export default function AdminIAPage() {
         </div>
 
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-xl" />)}
-          </div>
+          <LoadingState rows={3} height="h-20" />
         ) : insights.length === 0 ? (
           <div className="rounded-xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <Bot className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />

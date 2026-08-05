@@ -5,6 +5,7 @@ import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc, serverTime
 import { db } from '@/firebase/config'
 import Image from 'next/image'
 import { Image as ImageIcon, Loader2, Trash2, Upload, Dog, Tag } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'ktyauicg'
 const UPLOAD_PRESET = 'pet_gallery'
@@ -117,12 +118,7 @@ export default function AdminGalleryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Galería</h2>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-          Administra las imágenes de la galería pública
-        </p>
-      </div>
+      <PageHeader title="Galería" description="Administra las imágenes de la galería pública" />
 
       <div className="rounded-xl p-5 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">

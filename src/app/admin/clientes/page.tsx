@@ -8,6 +8,9 @@ import { Search, Users, Dog, CalendarDays,
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import Badge from '@/components/ui/Badge'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
+import EmptyState from '@/components/ui/EmptyState'
 import type { Reservation } from '@/types'
 
 interface Client {
@@ -62,8 +65,6 @@ export default function AdminClientesPage() {
   const clients = useMemo(() => {
     const map = new Map<string, Client>()
     const today = new Date().toISOString().split('T')[0]
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-    const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString().split('T')[0]
 
     reservations.forEach((r) => {
       const key = r.phone
@@ -165,14 +166,10 @@ export default function AdminClientesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>CRM de Clientes</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            {stats.totalClients} clientes · {stats.vipClients} VIP · {stats.atRiskClients} en riesgo
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="CRM de Clientes"
+        description={`${stats.totalClients} clientes · ${stats.vipClients} VIP · ${stats.atRiskClients} en riesgo`}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -219,16 +216,12 @@ export default function AdminClientesPage() {
 
       {/* Client list */}
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-20 rounded-xl" />)}
-        </div>
+        <LoadingState rows={4} height="h-20" />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <Users className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {searchQuery || segmentFilter !== 'all' ? 'Sin resultados' : 'No hay clientes aún'}
-          </p>
-        </div>
+        <EmptyState
+          icon={<Users size={24} />}
+          title={searchQuery || segmentFilter !== 'all' ? 'Sin resultados' : 'No hay clientes aún'}
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((c) => {

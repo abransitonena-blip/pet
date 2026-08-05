@@ -4,6 +4,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
 import { Star, Trash2, Download, Loader2, Search } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
+import EmptyState from '@/components/ui/EmptyState'
 import { logChange } from '@/lib/audit'
 import { useToast } from '@/context/ToastContext'
 
@@ -79,17 +82,15 @@ export default function AdminResenasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Reseñas</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            {stats.total} reseñas · Calificación promedio: {stats.avg} ★
-          </p>
-        </div>
-        <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-          <Download size={12} /> Exportar CSV
-        </button>
-      </div>
+      <PageHeader
+        title="Reseñas"
+        description={`${stats.total} reseñas · Calificación promedio: ${stats.avg} ★`}
+        actions={
+          <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
+            <Download size={12} /> Exportar CSV
+          </button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -132,16 +133,9 @@ export default function AdminResenasPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="skeleton h-24 rounded-xl" />)}
-        </div>
+        <LoadingState rows={3} height="h-24" />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <Star className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {searchQuery ? 'Sin resultados' : 'No hay reseñas aún'}
-          </p>
-        </div>
+        <EmptyState icon={<Star size={24} />} title={searchQuery ? 'Sin resultados' : 'No hay reseñas aún'} />
       ) : (
         <div className="space-y-2">
           {filtered.map((rev) => (

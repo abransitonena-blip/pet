@@ -4,6 +4,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, limit, getDocs, startAfter as firestoreStartAfter, DocumentSnapshot, QueryConstraint } from 'firebase/firestore'
 import { ClipboardList, Search } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
+import EmptyState from '@/components/ui/EmptyState'
 
 interface AuditLog {
   id: string
@@ -96,12 +99,7 @@ export default function AdminLogsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Logs de Auditoría</h2>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-          Historial de acciones realizadas en el sistema
-        </p>
-      </div>
+      <PageHeader title="Logs de Auditoría" description="Historial de acciones realizadas en el sistema" />
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -127,16 +125,12 @@ export default function AdminLogsPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-16 rounded-xl" />)}
-        </div>
+        <LoadingState rows={4} height="h-16" />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <ClipboardList className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {searchQuery || actionFilter !== 'all' ? 'Sin resultados' : 'No hay logs de auditoría'}
-          </p>
-        </div>
+        <EmptyState
+          icon={<ClipboardList size={24} />}
+          title={searchQuery || actionFilter !== 'all' ? 'Sin resultados' : 'No hay logs de auditoría'}
+        />
       ) : (
         <div className="space-y-1.5">
           {filtered.map((log) => (

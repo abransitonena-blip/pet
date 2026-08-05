@@ -10,6 +10,8 @@ import {
   MapPinned, Plus, Pencil, Trash2, X, Check, Loader2,
   Eye, EyeOff, Search,
 } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import EmptyState from '@/components/ui/EmptyState'
 import { Zone } from '@/types'
 
 interface ZoneForm {
@@ -133,17 +135,15 @@ export default function AdminZonasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Zonas</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            {zones.length} zona{zones.length !== 1 ? 's' : ''} · {zones.filter((z) => z.active).length} activa{zones.filter((z) => z.active).length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
-          <Plus size={12} /> Agregar zona
-        </button>
-      </div>
+      <PageHeader
+        title="Zonas"
+        description={`${zones.length} zona${zones.length !== 1 ? 's' : ''} · ${zones.filter((z) => z.active).length} activa${zones.filter((z) => z.active).length !== 1 ? 's' : ''}`}
+        actions={
+          <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
+            <Plus size={12} /> Agregar zona
+          </button>
+        }
+      />
 
       {/* Search */}
       <div className="relative">
@@ -158,17 +158,15 @@ export default function AdminZonasPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <MapPinned className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {search ? 'Sin resultados' : 'No hay zonas configuradas'}
-          </p>
-          {!search && (
-            <button onClick={openCreate} className="btn-primary !text-xs mt-4 inline-flex gap-2">
+        <EmptyState
+          icon={<MapPinned size={24} />}
+          title={search ? 'Sin resultados' : 'No hay zonas configuradas'}
+          action={!search ? (
+            <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
               <Plus size={12} /> Crear primera zona
             </button>
-          )}
-        </div>
+          ) : undefined}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((zone, i) => (

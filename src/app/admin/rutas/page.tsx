@@ -5,6 +5,9 @@ import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestor
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { MapPinned, Dog, User, Navigation, Camera, Filter, Check } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
+import EmptyState from '@/components/ui/EmptyState'
 import type { Reservation, WalkMedia } from '@/types'
 
 function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -70,24 +73,24 @@ export default function AdminRutasPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Mapa de Rutas</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Rutas de paseo con datos GPS</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Filter size={12} style={{ color: 'var(--text-muted)' }} />
-          <select
-            value={filterWalker}
-            onChange={(e) => setFilterWalker(e.target.value)}
-            className="text-xs px-3 py-1.5 rounded-lg"
-            style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-          >
-            <option value="all">Todos los paseadores</option>
-            {walkers.map((w) => <option key={w} value={w}>{w}</option>)}
-          </select>
-        </div>
-      </div>
+      <PageHeader
+        title="Mapa de Rutas"
+        description="Rutas de paseo con datos GPS"
+        actions={
+          <div className="flex items-center gap-2">
+            <Filter size={12} style={{ color: 'var(--text-muted)' }} />
+            <select
+              value={filterWalker}
+              onChange={(e) => setFilterWalker(e.target.value)}
+              className="text-xs px-3 py-1.5 rounded-lg"
+              style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+            >
+              <option value="all">Todos los paseadores</option>
+              {walkers.map((w) => <option key={w} value={w}>{w}</option>)}
+            </select>
+          </div>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -110,13 +113,13 @@ export default function AdminRutasPage() {
 
       {/* Routes list */}
       {loading ? (
-        <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-xl" />)}</div>
+        <LoadingState rows={3} height="h-20" />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <MapPinned className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin rutas registradas</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Las rutas aparecen cuando un paseador registra check-in con GPS</p>
-        </div>
+        <EmptyState
+          icon={<MapPinned size={24} />}
+          title="Sin rutas registradas"
+          description="Las rutas aparecen cuando un paseador registra check-in con GPS"
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((route) => {

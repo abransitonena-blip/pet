@@ -3,17 +3,20 @@
 import { useState, useMemo, useEffect } from 'react'
 import { db } from '@/firebase/config'
 import {
-  doc, updateDoc, collection, query, onSnapshot, where,
+  collection, query, onSnapshot, where,
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/firebase/config'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PersonStanding, User, Phone, Dog, Loader2, Plus, X,
-  CalendarDays, Clock, MapPinned, ChartBar, Pencil, Check, Mail, Key } from 'lucide-react'
+import { PersonStanding, Phone, Loader2, Plus, X,
+  CalendarDays, MapPinned, ChartBar, Pencil, Check, Mail, Key } from 'lucide-react'
 import { useConfig } from '@/context/ConfigContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
-import type { Reservation, Zone } from '@/types'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
+import EmptyState from '@/components/ui/EmptyState'
+import type { Zone } from '@/types'
 
 const DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
 const DAY_LABELS: Record<string, string> = {
@@ -235,30 +238,28 @@ export default function AdminPaseadoresPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Gestión de Paseadores</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            {(config.walkers || []).length} paseadores · {unassignedToday} sin asignar hoy · {todayTotal} reservas hoy
-          </p>
-        </div>
-        <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
-          <Plus size={12} /> Agregar paseador
-        </button>
-      </div>
+      <PageHeader
+        title="Gestión de Paseadores"
+        description={`${(config.walkers || []).length} paseadores · ${unassignedToday} sin asignar hoy · ${todayTotal} reservas hoy`}
+        actions={
+          <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
+            <Plus size={12} /> Agregar paseador
+          </button>
+        }
+      />
 
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="skeleton h-32 rounded-xl" />)}
-        </div>
+        <LoadingState rows={3} height="h-32" />
       ) : walkerStats.length === 0 ? (
-        <div className="text-center py-16">
-          <PersonStanding className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay paseadores registrados</p>
-          <button onClick={openCreate} className="btn-primary !text-xs mt-4 inline-flex gap-2">
-            <Plus size={12} /> Agregar primer paseador
-          </button>
-        </div>
+        <EmptyState
+          icon={<PersonStanding size={24} />}
+          title="No hay paseadores registrados"
+          action={
+            <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
+              <Plus size={12} /> Agregar primer paseador
+            </button>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {walkerStats.map((w, i) => {

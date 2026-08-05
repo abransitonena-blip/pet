@@ -7,12 +7,13 @@ import { ChevronLeft } from 'lucide-react'
 interface PageHeaderProps {
   title: string
   description?: string
+  icon?: ReactNode
   actions?: ReactNode
   backHref?: string
   backLabel?: string
 }
 
-export default function PageHeader({ title, description, actions, backHref, backLabel }: PageHeaderProps) {
+export default function PageHeader({ title, description, icon, actions, backHref, backLabel }: PageHeaderProps) {
   return (
     <div className="mb-6">
       {backHref && (
@@ -27,7 +28,10 @@ export default function PageHeader({ title, description, actions, backHref, back
       )}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+          <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            {icon && <span style={{ color: 'var(--color-primary)' }}>{icon}</span>}
+            {title}
+          </h2>
           {description && (
             <p className="text-sm mt-1 max-w-2xl" style={{ color: 'var(--text-muted)' }}>{description}</p>
           )}

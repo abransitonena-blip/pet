@@ -1,30 +1,30 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db } from '@/firebase/config'
 import {
   doc, updateDoc,
   deleteDoc, serverTimestamp, where, getDocs, collection, query as fsQuery, orderBy as fsOrderBy,
-  getDoc,
 } from 'firebase/firestore'
 import { Search, Dog, Pencil, Trash2,
   Camera, Download, Loader2, X,
   ArrowRight, Undo2, PersonStanding, Sparkles, Package, ChevronDown, ChevronRight } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { SessionStatus } from '@/types'
-import { getServicePrice } from '@/lib/services'
-import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
 import { useConfig } from '@/context/ConfigContext'
 import { isWalkerAvailable } from '@/lib/scheduling'
 import Badge from '@/components/ui/Badge'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
+import EmptyState from '@/components/ui/EmptyState'
 import EditReservationModal from '@/components/EditReservationModal'
 import WalkSessionModal from '@/components/WalkSessionModal'
 import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
-import { useServiceOrders, type ServiceOrderWithSessions } from '@/lib/useServiceOrders'
+import { useServiceOrders } from '@/lib/useServiceOrders'
 
 type StatusFilter = 'all' | 'pending' | 'assigned' | 'on_the_way' | 'in_progress' | 'completed' | 'cancelled'
 
@@ -44,7 +44,6 @@ export default function AdminReservas() {
   const [autoAssigning, setAutoAssigning] = useState(false)
   const [viewTab, setViewTab] = useState<'reservations' | 'orders'>('reservations')
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
-  const { prices } = usePrices()
   const { toast } = useToast()
   const { config } = useConfig()
   const { orders } = useServiceOrders()
@@ -85,13 +84,6 @@ export default function AdminReservas() {
       completed: reservations.filter((r) => r.status === 'completed').length,
     }
   }, [reservations])
-
-  const handleComplete = async (id: string) => {
-    try {
-      await updateDoc(doc(db, 'reservations', id), { status: 'completed', completedAt: serverTimestamp() })
-      toast('Reserva completada')
-    } catch { toast('Error al completar reserva', 'error') }
-  }
 
   const handlePaymentToggle = async (id: string, current: 'pending' | 'paid' | undefined) => {
     const newStatus = current === 'paid' ? 'pending' : 'paid'
@@ -279,23 +271,21 @@ export default function AdminReservas() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Gestión de Reservas</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            {stats.total} reservas · {stats.pending} pendientes · {stats.today} hoy
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={autoAssign} disabled={autoAssigning || stats.pending === 0} className="btn-secondary !text-xs flex items-center gap-1.5 disabled:opacity-40">
-            {autoAssigning ? <Loader2 className="animate-spin" size={12} /> : <Sparkles size={12} />}
-            Auto-asignar
-          </button>
-          <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-            <Download size={12} /> Exportar
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Gestión de Reservas"
+        description={`${stats.total} reservas · ${stats.pending} pendientes · ${stats.today} hoy`}
+        actions={
+          <>
+            <button onClick={autoAssign} disabled={autoAssigning || stats.pending === 0} className="btn-secondary !text-xs flex items-center gap-1.5 disabled:opacity-40">
+              {autoAssigning ? <Loader2 className="animate-spin" size={12} /> : <Sparkles size={12} />}
+              Auto-asignar
+            </button>
+            <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
+              <Download size={12} /> Exportar
+            </button>
+          </>
+        }
+      />
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -397,18 +387,12 @@ export default function AdminReservas() {
 
       {/* Reservation list */}
       {viewTab === 'reservations' && (loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="skeleton h-24 rounded-xl" />
-          ))}
-        </div>
+        <LoadingState rows={5} height="h-24" />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <Dog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {searchQuery || statusFilter !== 'all' ? 'Sin resultados' : 'No hay reservas aún'}
-          </p>
-        </div>
+        <EmptyState
+          icon={<Dog size={24} />}
+          title={searchQuery || statusFilter !== 'all' ? 'Sin resultados' : 'No hay reservas aún'}
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((res) => (
@@ -494,10 +478,7 @@ export default function AdminReservas() {
       {viewTab === 'orders' && (
         <div className="space-y-3">
           {orders.length === 0 ? (
-            <div className="text-center py-16">
-              <Package className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay paquetes semanales activos</p>
-            </div>
+            <EmptyState icon={<Package size={24} />} title="No hay paquetes semanales activos" />
           ) : (
             orders.map((order) => {
               const isExpanded = expandedOrder === order.id

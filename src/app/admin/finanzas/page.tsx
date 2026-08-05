@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { DollarSign, ChartBar, Download, Filter } from 'lucide-react'
+import { Download } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
+import DataCard from '@/components/ui/DataCard'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
-import type { Reservation } from '@/types'
 
 export default function AdminFinanzasPage() {
   const { reservations, loading } = useReservations()
@@ -119,17 +121,15 @@ export default function AdminFinanzasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Finanzas</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            Ingresos, pagos y rendimiento financiero
-          </p>
-        </div>
-        <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-          <Download size={12} /> Exportar
-        </button>
-      </div>
+      <PageHeader
+        title="Finanzas"
+        description="Ingresos, pagos y rendimiento financiero"
+        actions={
+          <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
+            <Download size={12} /> Exportar
+          </button>
+        }
+      />
 
       {/* Date filters */}
       <div className="flex flex-wrap gap-2">
@@ -160,9 +160,7 @@ export default function AdminFinanzasPage() {
       )}
 
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => <div key={i} className="skeleton h-32 rounded-xl" />)}
-        </div>
+        <LoadingState rows={3} height="h-32" />
       ) : (
         <>
           {/* KPI cards */}
@@ -183,8 +181,7 @@ export default function AdminFinanzasPage() {
           </div>
 
           {/* Revenue chart (bar chart) */}
-          <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Ingresos diarios (últimos 14 días)</p>
+          <DataCard title="Ingresos diarios (últimos 14 días)">
             <div className="flex items-end gap-1 h-32">
               {dailyRevenue.map((d) => (
                 <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
@@ -197,12 +194,11 @@ export default function AdminFinanzasPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </DataCard>
 
           {/* Service breakdown */}
           {serviceBreakdown.length > 0 && (
-            <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Ingresos por servicio</p>
+            <DataCard title="Ingresos por servicio">
               <div className="space-y-2">
                 {serviceBreakdown.map((s) => {
                   const maxRev = serviceBreakdown[0]?.revenue || 1
@@ -222,7 +218,7 @@ export default function AdminFinanzasPage() {
                   )
                 })}
               </div>
-            </div>
+            </DataCard>
           )}
         </>
       )}

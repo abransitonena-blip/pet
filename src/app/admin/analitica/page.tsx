@@ -4,11 +4,12 @@ import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
 import { CalendarDays, Users, Star, PersonStanding, Banknote } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
+import LoadingState from '@/components/ui/LoadingState'
 import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useConfig } from '@/context/ConfigContext'
-import type { Reservation } from '@/types'
 
 interface Review {
   id: string
@@ -33,7 +34,6 @@ export default function AdminAnaliticaPage() {
 
   const analytics = useMemo(() => {
     const today = new Date()
-    const todayStr = today.toISOString().split('T')[0]
     const monthAgo = new Date(today.getTime() - 30 * 86400000).toISOString().split('T')[0]
     const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split('T')[0]
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0]
@@ -151,17 +151,10 @@ export default function AdminAnaliticaPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Analítica</h2>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-          Métricas clave y tendencias del negocio
-        </p>
-      </div>
+      <PageHeader title="Analítica" description="Métricas clave y tendencias del negocio" />
 
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => <div key={i} className="skeleton h-32 rounded-xl" />)}
-        </div>
+        <LoadingState rows={3} height="h-32" />
       ) : (
         <>
           {/* KPIs */}
