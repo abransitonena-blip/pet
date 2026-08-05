@@ -94,9 +94,9 @@ export default function AdminChat() {
               <User size={14} style={{ color: 'var(--text-secondary)' }} />
             </div>
             <div>
-              <p className="text-sm font-medium">{selectedConv.clientName || 'Cliente'}</p>
-              {selectedConv.clientPhone && (
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{selectedConv.clientPhone}</p>
+              <p className="text-sm font-medium">{selectedConv.customerName || 'Cliente'}</p>
+              {selectedConv.customerPhone && (
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{selectedConv.customerPhone}</p>
               )}
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function AdminChat() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium truncate">{conv.clientName || 'Cliente'}</span>
+                    <span className="text-sm font-medium truncate">{conv.customerName || 'Cliente'}</span>
                     <span className="text-2xs shrink-0" style={{ color: 'var(--text-muted)' }}>
                       {formatTime(conv.lastTimestamp)}
                     </span>

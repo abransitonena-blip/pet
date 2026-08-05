@@ -8,7 +8,6 @@ import { auth, db } from '@/firebase/config'
 import { clearSessionCookie } from '@/lib/auth'
 import AppShell from '@/components/layout/AppShell'
 import WalkerHeartbeat from '@/components/WalkerHeartbeat'
-import { PetAhoraToastProvider } from '@/components/PetAhoraToast'
 import {
   Home, History, LogOut, Dog, AlertTriangle,
 } from 'lucide-react'
@@ -114,7 +113,6 @@ export default function PaseadorLayout({ children }: { children: React.ReactNode
       onLogout={handleLogout}
       logoHref="/"
       mustChangePassword={mustChangePassword}
-      toastProvider={<PetAhoraToastProvider />}
       headerExtra={<WalkerHeartbeat />}
     >
       {children}

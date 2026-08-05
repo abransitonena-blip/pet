@@ -1,4 +1,4 @@
-import type { MediaProvider, MediaUploadResult, MediaAsset, MediaUploadOptions, MediaVariant } from './MediaProvider'
+import type { MediaProvider, MediaUploadResult, MediaAsset, MediaUploadOptions, MediaVariant, MediaListOptions } from './MediaProvider'
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ''
 const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ''
@@ -68,7 +68,7 @@ export class CloudinaryProvider implements MediaProvider {
     return `https://res.cloudinary.com/${this.cloudName}/image/upload/v1/${mediaId}`
   }
 
-  async list(ownerId: string, options?: MediaUploadOptions): Promise<MediaAsset[]> {
+  async list(ownerId: string, options?: MediaListOptions): Promise<MediaAsset[]> {
     const response = await fetch(
       `${API_URL}/resources/image/upload?prefix=${ownerId}&max_results=${options?.limit || 50}`,
       {

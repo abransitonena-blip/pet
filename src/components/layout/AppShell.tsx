@@ -10,7 +10,7 @@ interface NavItem {
   id: string
   label: string
   href: string
-  icon?: React.ComponentType<{ size?: number }>
+  icon?: React.ComponentType<{ size?: number | string; }>
 }
 
 interface AppShellProps {
