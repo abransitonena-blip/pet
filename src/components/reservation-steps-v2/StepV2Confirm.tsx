@@ -1,6 +1,6 @@
 'use client'
 
-import { Dog, MapPin, Clock, PawPrint, User, Calendar, AlertTriangle, CheckCircle2, Loader2, ArrowRight } from 'lucide-react'
+import { MapPin, Clock, PawPrint, User, Calendar, AlertTriangle, CheckCircle2, Loader2, ArrowRight } from 'lucide-react'
 
 interface StepV2ConfirmProps {
   form: {
@@ -8,7 +8,7 @@ interface StepV2ConfirmProps {
     petType: string
     address: string
     addressNote: string
-    whenType: string
+    whenType: 'asap' | 'scheduled'
     date: string
     time: string
     windowStart: string
@@ -24,7 +24,7 @@ interface StepV2ConfirmProps {
     petType: string
     address: string
     addressNote: string
-    whenType: string
+    whenType: 'asap' | 'scheduled'
     date: string
     time: string
     windowStart: string
@@ -42,7 +42,7 @@ interface StepV2ConfirmProps {
   success: string
 }
 
-export default function StepV2Confirm({ form, updateForm, onSubmit, onBack, loading, error, success }: StepV2ConfirmProps) {
+export default function StepV2Confirm({ form, onSubmit, onBack, loading, error, success }: StepV2ConfirmProps) {
   return (
     <div className="space-y-4">
       <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>

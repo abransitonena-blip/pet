@@ -5,6 +5,7 @@ import { PricesProvider } from '@/context/PricesContext'
 import { ConfigProvider } from '@/context/ConfigContext'
 import { ToastProvider } from '@/context/ToastContext'
 import { ConsentProvider } from '@/components/analytics/ConsentProvider'
+import { BrandProvider } from '@/context/BrandContext'
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -25,13 +26,15 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <ConfigProvider>
-      <PricesProvider>
-        <ToastProvider>
-          <ConsentProvider>
-            {children}
-          </ConsentProvider>
-        </ToastProvider>
-      </PricesProvider>
+      <BrandProvider>
+        <PricesProvider>
+          <ToastProvider>
+            <ConsentProvider>
+              {children}
+            </ConsentProvider>
+          </ToastProvider>
+        </PricesProvider>
+      </BrandProvider>
     </ConfigProvider>
   )
 }

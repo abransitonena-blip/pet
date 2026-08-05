@@ -1,6 +1,7 @@
 'use client'
 
-import { MapPin, Plus, CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
+import { MapPin, Plus, CheckCircle2, ArrowRight } from 'lucide-react'
 
 interface StepV2AddressProps {
   form: { addressId: string; address: string; addressNote: string }
@@ -13,8 +14,6 @@ interface StepV2AddressProps {
 export default function StepV2Address({ form, updateForm, userAddresses, onNext, onBack }: StepV2AddressProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [newAddress, setNewAddress] = useState('')
-
-  const selectedAddress = userAddresses.find(a => a.id === form.addressId)
 
   const handleAddAddress = () => {
     if (!newAddress.trim()) return

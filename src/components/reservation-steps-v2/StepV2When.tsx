@@ -1,12 +1,11 @@
 'use client'
 
-import { Clock, Calendar, Repeat } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { Clock, Calendar, Repeat, ArrowRight } from 'lucide-react'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
 
 interface StepV2WhenProps {
-  form: { whenType: string; date: string; time: string; windowStart: string; windowEnd: string; recurring: boolean; recurringDays: Record<string, string> }
-  updateForm: (updates: Partial<{ whenType: string; date: string; time: string; windowStart: string; windowEnd: string; recurring: boolean; recurringDays: Record<string, string> }>) => void
+  form: { whenType: 'asap' | 'scheduled'; date: string; time: string; windowStart: string; windowEnd: string; recurring: boolean; recurringDays: Record<string, string> }
+  updateForm: (updates: Partial<{ whenType: 'asap' | 'scheduled'; date: string; time: string; windowStart: string; windowEnd: string; recurring: boolean; recurringDays: Record<string, string> }>) => void
   onNext: () => void
   onBack: () => void
 }

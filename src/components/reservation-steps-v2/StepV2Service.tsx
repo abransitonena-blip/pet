@@ -1,6 +1,6 @@
 'use client'
 
-import { PawPrint, Clock, ArrowRight } from 'lucide-react'
+import { PawPrint, ArrowRight } from 'lucide-react'
 import { getServicePrice, getServiceMeta, SERVICE_NAMES } from '@/lib/services'
 
 interface StepV2ServiceProps {
@@ -45,7 +45,7 @@ export default function StepV2Service({ form, updateForm, onNext, onBack }: Step
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{svc}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{meta?.description || ''}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{meta?.mainBenefit || ''}</p>
               </div>
               <div className="text-right shrink-0">
                 <p className="text-sm font-bold" style={{ color: 'var(--brand)' }}>${price.toLocaleString()}</p>

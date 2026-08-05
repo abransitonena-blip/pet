@@ -1,16 +1,15 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, User, CheckCircle2, Loader2 } from 'lucide-react'
-import { collection, query, where, getDocs } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { User, CheckCircle2, Loader2, ArrowRight } from 'lucide-react'
+import { collection, query, where, getDocs, limit } from 'firebase/firestore'
+import { db, auth } from '@/firebase/config'
 
 interface Walker {
   id: string
   name: string
   rating: number
   completedWalks: number
-  zones: string[]
 }
 
 interface StepV2WalkerProps {
@@ -28,7 +27,7 @@ interface StepV2WalkerProps {
 
 export default function StepV2Walker({
   form, updateForm, availableWalkers, setAvailableWalkers,
-  searchingWalkers, setSearchingWalkers, searchResult, setSearchResult,
+  setSearchingWalkers, searchResult, setSearchResult,
   onNext, onBack,
 }: StepV2WalkerProps) {
   const [searching, setSearching] = useState(false)
@@ -50,7 +49,6 @@ export default function StepV2Walker({
         name: d.data().name || 'Paseador',
         rating: d.data().rating || 0,
         completedWalks: d.data().completedWalks || 0,
-        zones: d.data().zones || [],
       }))
 
       setAvailableWalkers(walkers)

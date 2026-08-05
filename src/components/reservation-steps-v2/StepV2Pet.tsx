@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Dog, Plus, Trash2 } from 'lucide-react'
-import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { Dog, Plus, CheckCircle2, ArrowRight } from 'lucide-react'
+import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db, auth } from '@/firebase/config'
 
 interface StepV2PetProps {

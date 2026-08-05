@@ -20,9 +20,10 @@ import {
 } from 'lucide-react'
 import { BUSINESS_HOURS, generateTimeSlots } from '@/lib/defaultConfig'
 
-type Section = 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'features' | 'maintenance'
+type Section = 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'features' | 'maintenance' | 'brand'
 
 const SECTIONS: { id: Section; label: string; icon: string }[] = [
+  { id: 'brand', label: 'Diseño y marca', icon: '🎨' },
   { id: 'hero', label: 'Textos del sitio', icon: '📝' },
   { id: 'social', label: 'Redes sociales', icon: '📱' },
   { id: 'hours', label: 'Horarios disponibles', icon: '🕐' },
@@ -84,6 +85,8 @@ function SectionContent({
   saving: boolean
 }) {
   switch (section) {
+    case 'brand':
+      return <BrandEditor />
     case 'hero':
       return <HeroEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'social':
@@ -113,6 +116,12 @@ function validateHeroSubtitle(value: string): string | null {
   if (reserved.includes(value.trim())) return 'El subtítulo no puede ser igual a un nombre de sección.'
   return null
 }
+
+function BrandEditor() {
+  return <AdminBrandConfig />
+}
+
+import AdminBrandConfig from '@/components/AdminBrandConfig'
 
 function HeroEditor({ config, updateConfig, saving }: EditorProps) {
   const [heroTitle, setHeroTitle] = useState(config.heroTitle)

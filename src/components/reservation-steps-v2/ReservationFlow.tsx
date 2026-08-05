@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { db, auth } from '@/firebase/config'
-import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/firestore'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { collection, query, where, limit, getDocs } from 'firebase/firestore'
+import { useSearchParams } from 'next/navigation'
 import { submitReservation } from '@/lib/submitReservation'
-import { getServicePrice, getServiceMeta, SERVICE_NAMES } from '@/lib/services'
-import { useConfig } from '@/context/ConfigContext'
 import { usePrices } from '@/context/PricesContext'
 import StepV2Pet from './StepV2Pet'
 import StepV2Address from './StepV2Address'
@@ -14,7 +12,7 @@ import StepV2When from './StepV2When'
 import StepV2Service from './StepV2Service'
 import StepV2Walker from './StepV2Walker'
 import StepV2Confirm from './StepV2Confirm'
-import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 
 const STEPS = [
   { id: 'pet', label: 'Compañero', icon: '🐾' },
@@ -68,9 +66,7 @@ const DEFAULT_FORM: FormData = {
 }
 
 export default function ReservationFlow() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const { config } = useConfig()
   const { prices } = usePrices()
   const repeatService = searchParams.get('repeat') || ''
 
@@ -145,31 +141,12 @@ export default function ReservationFlow() {
       })
       setSuccess('¡Paseo solicitado! Nos contactaremos contigo pronto.')
       clearDraft()
-    } catch (e) {
+    } catch {
       setError('No se pudo solicitar el paseo. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }
   }
-
-  const handleQuickRebook = useCallback((reservation: {
-    petName: string
-    petType: string
-    address: string
-    service: string
-    date: string
-    time: string
-  }) => {
-    updateForm({
-      petName: reservation.petName,
-      petType: reservation.petType,
-      address: reservation.address,
-      service: reservation.service,
-      date: reservation.date,
-      time: reservation.time,
-    })
-    setStep(2)
-  }, [updateForm])
 
   const renderStep = () => {
     switch (STEPS[step].id) {
@@ -264,5 +241,5 @@ export default function ReservationFlow() {
 }
 
 function clearDraft() {
-  try { localStorage.removeItem('pq_reservation_draft') } catch {}
+  try { localStorage.removeItem('pq_reservation_draft') } catch { /* noop */ }
 }

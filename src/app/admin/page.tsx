@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { collection, query, where, onSnapshot, orderBy, limit, getDocs } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import { CalendarDays, Users,
+import { CalendarDays,
   Dog, Clock, PersonStanding,
   ChartLine, Tag, Settings, UserPlus,
   DollarSign } from 'lucide-react'
 import StatCard from '@/components/ui/StatCard'
-import Badge from '@/components/ui/Badge'
 import AdminWalkerStatus from '@/components/AdminWalkerStatus'
+import DataCard from '@/components/ui/DataCard'
+import StatusBadge from '@/components/ui/StatusBadge'
+import EmptyState from '@/components/ui/EmptyState'
+import LoadingState from '@/components/ui/LoadingState'
 import type { Reservation } from '@/types'
 
 interface Stats {
@@ -21,13 +24,6 @@ interface Stats {
   totalRevenue: number
   totalClients: number
   completedToday: number
-}
-
-interface WalkerPerf {
-  name: string
-  assigned: number
-  completed: number
-  inProgress: number
 }
 
 export default function AdminDashboard() {
@@ -40,7 +36,6 @@ export default function AdminDashboard() {
     completedToday: 0,
   })
   const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([])
-  const [walkerStats, setWalkerStats] = useState<WalkerPerf[]>([])
   const [loading, setLoading] = useState(true)
 
   const greeting = (() => {
@@ -78,19 +73,6 @@ export default function AdminDashboard() {
         completedToday: completed,
       }))
       setUpcomingReservations(pendingDocs.slice(0, 10))
-
-      // Walker performance from today
-      const walkerMap = new Map<string, WalkerPerf>()
-      todayDocs.forEach((d) => {
-        const walker = d.assignedWalker
-        if (!walker) return
-        if (!walkerMap.has(walker)) walkerMap.set(walker, { name: walker, assigned: 0, completed: 0, inProgress: 0 })
-        const w = walkerMap.get(walker)!
-        w.assigned++
-        if (d.status === 'completed') w.completed++
-        if (d.status === 'in_progress' || d.status === 'on_the_way') w.inProgress++
-      })
-      setWalkerStats(Array.from(walkerMap.values()))
       setLoading(false)
     })
 
@@ -197,67 +179,62 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.25 }}
-          className="rounded-2xl p-5"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Próximos paseos
-            </h3>
-            <Link href="/admin/reservas" className="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors">
-              Ver todos →
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="skeleton h-14 rounded-xl" />
-              ))}
-            </div>
-          ) : upcomingReservations.length === 0 ? (
-            <div className="text-center py-6">
-              <Dog className="text-2xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No hay paseos pendientes</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {upcomingReservations.slice(0, 5).map((res) => (
-                <div
-                  key={res.id}
-                  className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-ink/5"
-                  style={{ border: '1px solid var(--border)' }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand-500/10">
-                      <Dog size={14} className="text-brand-400" />
+          <DataCard
+            title="Próximos paseos"
+            action={
+              <Link href="/admin/reservas" className="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors">
+                Ver todos →
+              </Link>
+            }
+          >
+            {loading ? (
+              <LoadingState rows={3} height="h-14" />
+            ) : upcomingReservations.length === 0 ? (
+              <EmptyState
+                icon={<Dog size={22} />}
+                title="No hay paseos pendientes"
+                description="Cuando un cliente solicite un paseo aparecerá aquí."
+              />
+            ) : (
+              <div className="space-y-2">
+                {upcomingReservations.slice(0, 5).map((res) => (
+                  <div
+                    key={res.id}
+                    className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-ink/5"
+                    style={{ border: '1px solid var(--border)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand-500/10">
+                        <Dog size={14} className="text-brand-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {res.petName || 'Sin nombre'}
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {res.service} · {res.time || '—'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                        {res.petName || 'Sin nombre'}
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {res.service} · {res.time || '—'}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={res.status} />
+                      {res.phone && (
+                        <a
+                          href={`https://wa.me/521${res.phone}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-success-400 hover:bg-success-500/10 transition-colors"
+                        >
+                          <WhatsAppIcon width={12} height={12} />
+                        </a>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="brand" className="normal-case tracking-normal">Pendiente</Badge>
-                    {res.phone && (
-                      <a
-                        href={`https://wa.me/521${res.phone}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-success-400 hover:bg-success-500/10 transition-colors"
-                      >
-                        <WhatsAppIcon width={12} height={12} />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </DataCard>
         </motion.div>
 
         {/* Walker Live Status */}
