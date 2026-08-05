@@ -63,7 +63,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
 
       onDone()
       onClose()
-    } catch (e) {
+    } catch {
       setError('Error al guardar foto')
     }
     setSaving(false)
@@ -89,8 +89,8 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
           <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
             {mode === 'check_in' ? 'Iniciar paseo' : 'Completar paseo'}
           </h3>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
-            <X size={11} style={{ color: 'var(--text-muted)' }} />
+          <button onClick={onClose} className="w-11 h-11 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <X size={16} style={{ color: 'var(--text-muted)' }} />
           </button>
         </div>
 

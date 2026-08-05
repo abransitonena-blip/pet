@@ -180,7 +180,7 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
           <span className="text-sm font-bold">
             {mode === 'check_in' ? '📸 Iniciar paseo' : '✅ Terminar paseo'}
           </span>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center"
+          <button onClick={onClose} className="w-11 h-11 rounded-full flex items-center justify-center"
             style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}
             aria-label="Cerrar"
           >

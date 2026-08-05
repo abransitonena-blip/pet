@@ -103,8 +103,8 @@ export default function EditReservationModal({
           >
             <div className="flex items-center justify-between p-5 border-b border-ink/10">
               <h3 className="text-lg font-bold text-ink">Editar reserva</h3>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center text-muted hover:text-ink hover:bg-ink/10 transition-all">
-                <X size={12} />
+              <button onClick={onClose} className="w-11 h-11 rounded-full bg-ink/5 flex items-center justify-center text-muted hover:text-ink hover:bg-ink/10 transition-all">
+                <X size={16} />
               </button>
             </div>
 

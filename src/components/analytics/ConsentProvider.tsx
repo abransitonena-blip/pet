@@ -1,7 +1,10 @@
 'use client'
 
+/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useConfig } from '@/context/ConfigContext'
 import { isAuthPath } from '@/lib/consentPaths'
 
@@ -122,25 +125,37 @@ function ConsentBanner() {
     <div
       role="dialog"
       aria-label="Preferencias de cookies y analítica"
-      className="fixed bottom-0 inset-x-0 z-[var(--z-overlay)] p-4"
+      className="fixed bottom-0 inset-x-0 z-[var(--z-overlay)] p-3"
     >
-      <div className="card max-w-2xl mx-auto p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-ink">Tu privacidad importa</p>
-          <p className="text-xs text-muted mt-0.5">
-            Usamos analítica (Google) únicamente para entender cómo mejorar el sitio. Puedes aceptar o rechazarla. No vendemos tus datos.
-          </p>
-        </div>
-        <div className="flex gap-2 shrink-0">
+      <div
+        className="max-w-3xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4"
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-panel)',
+          boxShadow: 'var(--shadow-xl)',
+        }}
+      >
+        <p className="flex-1 min-w-0 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          Usamos Google Analytics para entender cómo mejorar el sitio. No vendemos tus datos.{' '}
+          <Link
+            href="/privacidad"
+            className="font-semibold underline underline-offset-2"
+            style={{ color: 'var(--color-primary)' }}
+          >
+            Más información
+          </Link>
+        </p>
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setConsent('denied')}
-            className="btn-secondary text-sm px-4 py-2"
+            className="btn btn-secondary text-sm px-4"
           >
             Rechazar
           </button>
           <button
             onClick={() => setConsent('granted')}
-            className="btn-primary text-sm px-4 py-2"
+            className="btn btn-primary text-sm px-4"
           >
             Aceptar
           </button>

@@ -109,7 +109,11 @@ module.exports = {
         },
       },
       borderRadius: {
-        '4xl': '2rem',
+        lg: 'var(--radius-button)',
+        xl: 'var(--radius-card)',
+        '2xl': 'var(--radius-panel)',
+        '3xl': 'var(--radius-sheet)',
+        '4xl': 'var(--radius-sheet)',
       },
       boxShadow: {
         'glow': '0 0 20px rgb(var(--brand-500) / 0.15)',
