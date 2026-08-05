@@ -147,7 +147,6 @@ export interface Reservation {
   address?: Address
   zoneId?: string
   zoneName?: string
-  orderId?: string
 }
 
 export interface Conversation {

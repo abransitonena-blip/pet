@@ -163,14 +163,13 @@ export async function submitReservation({
       const window = parseTimeWindow(time)
       await addDoc(collection(db, 'reservations'), {
         uid: auth.currentUser?.uid || '',
-        client: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
+        customer: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
         name: form.name, phone: form.phone, petName: form.petName, petType: form.petType,
         service: '[Paquete] ' + form.service, date, time,
         arrivalWindowStart: window.start, arrivalWindowEnd: window.end,
         notes: form.notes,
         status: 'pending' as const,
         assignedWalker: walkerPreference || '',
-        orderId: orderIdRef.id,
         createdAt: serverTimestamp(),
       })
     }
@@ -222,22 +221,21 @@ export async function submitReservation({
 
     await addDoc(collection(db, 'reservations'), {
       uid: auth.currentUser?.uid || '',
-      client: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
+      customer: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
       name: form.name, phone: form.phone, petName: form.petName, petType: form.petType,
       service: form.service, date: form.date, time: form.time,
       arrivalWindowStart: window.start, arrivalWindowEnd: window.end,
       notes: form.notes,
       status: 'pending' as const,
       assignedWalker: walkerPreference || '',
-      orderId: orderIdRef.id,
       createdAt: serverTimestamp(),
     })
     showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
   }
 
-  // Save/update client profile
+  // Save/update customer profile
   if (auth.currentUser) {
-    await setDoc(doc(db, 'clients', auth.currentUser.uid), {
+    await setDoc(doc(db, 'customerProfiles', auth.currentUser.uid), {
       name: form.name,
       phone: form.phone,
       email: auth.currentUser.email || '',
@@ -260,7 +258,7 @@ export async function submitReservation({
     action: 'create',
     entity: 'reservation',
     entityId: orderIdRef.id,
-    after: { service: form.service, date: form.date, time: form.time, client: form.name, pet: form.petName },
+    after: { service: form.service, date: form.date, time: form.time, customer: form.name, pet: form.petName },
   })
 
   // Referral tracking

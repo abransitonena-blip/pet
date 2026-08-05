@@ -429,11 +429,6 @@ export default function AdminReservas() {
                         🦮 {res.assignedWalker}
                       </span>
                     )}
-                    {res.orderId && (
-                      <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600">
-                        📦 Paquete
-                      </span>
-                    )}
                   </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
                     <span>🐾 {res.petName}</span>
