@@ -49,9 +49,9 @@ declare global {
 }
 
 async function ensureCustomerProfile(user: { uid: string; displayName: string | null; email: string | null }) {
-  const snap = await getDoc(doc(db, 'clients', user.uid))
+  const snap = await getDoc(doc(db, 'customerProfiles', user.uid))
   if (!snap.exists()) {
-    await setDoc(doc(db, 'clients', user.uid), {
+    await setDoc(doc(db, 'customerProfiles', user.uid), {
       name: user.displayName || '',
       email: user.email || '',
       phone: '',
@@ -548,9 +548,6 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
               >
                 {familiaMode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
               </button>
-              <button onClick={() => { setMode('select'); setFamiliaMode('login'); setError(''); setEmail(''); setPassword(''); setName(''); setPhone('') }} className="text-xs block w-full" style={{ color: 'var(--text-muted)' }}>
-                ← Volver al sitio
-              </button>
             </div>
           </div>
         )}
@@ -610,12 +607,6 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
                 style={{ color: 'var(--text-muted)' }}
               >
                 ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-
-            <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
-              <button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                ← Volver al sitio
               </button>
             </div>
           </div>
@@ -678,14 +669,8 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
                 ¿Olvidaste tu contraseña?
               </button>
             </div>
-
-            <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
-<button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                 ← Volver al sitio
-               </button>
-             </div>
-           </div>
-         )}
+          </div>
+        )}
 
          {mode === 'supervisor' && (
            <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
@@ -744,16 +729,10 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
                  ¿Olvidaste tu contraseña?
                </button>
              </div>
-
-             <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
-               <button onClick={() => { setMode('select'); setError(''); setEmail(''); setPassword('') }} className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                 ← Volver al sitio
-               </button>
-             </div>
            </div>
          )}
 
-         <div className="text-center mt-6">
+        <div className="text-center mt-6">
           <a href="/" className="text-xs transition-colors hover:text-brand-600" style={{ color: 'var(--text-muted)' }}>
             ← Volver al sitio
           </a>
