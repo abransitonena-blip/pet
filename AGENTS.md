@@ -61,23 +61,31 @@
 - **P13** (475a90a): Create MediaProvider abstraction — Cloudinary provider with upload, delete, getUrl, list.
 - **P14** (f104e0c): Add supervisor role to middleware, admin layout, and login page.
 - **P15** (9ef6d52): Rename Firestore collections (`clients`→`customerProfiles`, `pets`→`dogs`) and fields (`client`→`customer`).
+- **P16.1** (ccff40d): Fix RESERVA hero bug; Cloud Functions actualizados (clients→customerProfiles, client→customer); script de migración con dry-run/verify/resume/idempotencia.
+- **P16.2** (f2e45cf): Google Auth — duplicados de "Volver" eliminados, `ensureCustomerProfile` → `customerProfiles`, fallback GIS.
+- **P16.3** (2c05d21): `scripts/migrate-collections.js` con dry-run, verify, backup, rollback y migración gradual (sin ejecutar contra prod).
+- **P16.4** (ce06deb): Rediseño de reservas Familia — flujo 6 pasos `reservation-steps-v2/` (compañero → dirección → momento → servicio → paseador → confirmar) con auto-search, rebooking rápido (`?repeat=`) y draft local.
+- **P16.5** (e78c8c1): Shell admin compartido + librería de UI:
+  - `src/components/layout/AdminShell.tsx` (sidebar colapsable, drawer móvil, logout, footer de versión); `src/app/admin/layout.tsx` refactorizado.
+  - Librería `src/components/ui/`: PageHeader (title/description/icon/actions), SectionHeader, DataCard, StatusBadge (normaliza vía `STATUS_LABELS`/`LEGACY_STATUS_MAP` de `sessionMachine.ts`), EmptyState, LoadingState, ErrorState, FormField, ConfirmDialog, BottomSheet, Money, DateTime, EntityAvatar.
+  - Brand config admin (`Diseño y marca`): `src/lib/brandPresets.ts` (presets primary/font/radius/motion, `derivePalette` hex→canales 50-900, `applyBrandPreset` setea CSS vars), `src/context/BrandContext.tsx` (draft/preview/publish/revert en `appSettings/public.brand`), `src/components/AdminBrandConfig.tsx`.
+  - Tailwind: escalas `primary`/`brand` ahora `rgb(var(--brand-xxx) / <alpha-value>)`; tokens `--brand-50..900`, `--radius-control/button/card/panel/sheet/pill`.
+  - `eslint.config.js` reparado (flat config con typescript-eslint/react/react-hooks/react-refresh; `react-hooks/set-state-in-effect` off).
+- **P16.5c** (78601a1): Migración de páginas admin restantes a componentes compartidos (PageHeader/LoadingState/EmptyState/DataCard) + limpieza de imports muertos en admin.
+- **P16.6** (400fe75): Radius tokens conectados a Tailwind (`rounded-lg/xl/2xl/3xl/4xl` → `--radius-button/card/panel/sheet`); consent banner compacto (`ConsentProvider.tsx` con link a /privacidad); touch targets 44px en botones de cierre de modales (WalkSessionModal, EditReservationModal, PetAhoraPhotoModal).
 
 ### Próximos pendientes
 
-1. **Fase 12**: scripts/ — `rename-collections.js` creado (con backups y rollback). **Ejecutar contra prod** para migrar datos.
-2. **Fase 13**: Makefile.cd — ya existe con objetivos setup-eslint, setup-types, setup-tests, setup-build.
-3. **Fase 14**: AGENTS.md — este archivo (resumen y continuar).
-4. **Fase 15+** (por definir):
-   - Refactorizar `services.ts` → `walkServices.ts` (si lo necesitas).
-   - Actualizar reglas de seguridad / índices de Firestore tras reanames.
-   - Validar scripts de CI (eslint, tsc, jest, build) y actualizar los scripts.
+1. **Migración prod**: ejecutar `node scripts/migrate-collections.js` contra `pet-1cb0b` (requiere confirmación explícita del usuario). Backups + rollback disponibles.
+2. **Deuda de lint repo-wide**: ~111 errores pre-existentes en código no tocado (mayormente `no-explicit-any` y unused vars). `src/app/admin` y `src/components/ui` quedaron limpios.
+3. **CI**: `npm run lint` (`next lint`) está roto en Next 16 ("Unknown options: useEslintrc...") → usar `npx eslint <files>` o `npx eslint src` (cuenta de errores pre-existentes). `npm run typecheck` (tsc --noEmit), `npm run test` (jest, 59/59) y `npm run build` pasan.
+4. **Fase 15+**: actualizar reglas de seguridad / índices de Firestore tras renames; refactorizar `services.ts` → `walkServices.ts` si aplica.
 
 ## Continuar
 
-- Ejecutar `node scripts/rename-collections.js --backups-dir ./backups/renames/$(date +%F_%H-%M-%S) --renames '[{"from":"clients","to":"customerProfiles"},{"from":"pets","to":"dogs"},{"from":"client","to":"customer"}]'` contra la base de datos prod (`pet-1cb0b`).
-- Ejecutar `make setup-all` o `make lint typecheck jest build` para asegurar el entorno.
-- Probar endpoints (`/api/presence-offline`, `/api/version`).
-- Incorporar `Makefile.cd` a CI si lo necesitas.
+- Ejecutar migración prod con `node scripts/migrate-collections.js --backups-dir ./backups/renames/$(date +%F_%H-%M-%S) --renames '[{"from":"clients","to":"customerProfiles"},{"from":"pets","to":"dogs"},{"from":"client","to":"customer"}]'` (pedir confirmación).
+- Limpiar deuda de lint (111 errores) o añadir excepción de CI.
+- Probar `/api/presence-offline`, `/api/version`.
 - Mantener AGENTS.md actualizado tras cada fase.
 
 ## Plantilla para siguientes fases
@@ -105,4 +113,4 @@
 
 ---
 
-Notar: -- Ejemplo de `scripts/check-forbidden.mjs` bloquea tokens legacy "Quebrada". -- Comandos de CI actuales: `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`. -- Main Si hay que cambiar a usar `git -C pet-reservations` para componentes clientes.
+Notar: -- Ejemplo de `scripts/check-forbidden.mjs` bloquea tokens legacy "Quebrada". -- `npm run lint` roto en Next 16 → usar `npx eslint <files>`. -- Comandos de CI que pasan: `npm run typecheck`, `npm run test`, `npm run build`.
