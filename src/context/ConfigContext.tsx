@@ -27,6 +27,15 @@ function normalizeConfig(raw: Partial<SiteConfig>): SiteConfig {
   const whatsapp = String(merged.whatsapp || merged.whatsappE164 || brand.whatsapp).replace(/\D/g, '')
   const whatsappE164 = whatsapp.length === 12 ? whatsapp : brand.whatsapp
   const displayPhone = merged.displayPhone || `55 ${whatsappE164.slice(5, 9)} ${whatsappE164.slice(9)}`
+
+  const reservedSubtitles = ['RESERVA', 'reserva', 'RESERVAS', 'Reserva', 'Paseos', 'Servicios', 'FAQ', 'Contacto']
+  if (reservedSubtitles.includes(merged.heroSubtitle?.trim() || '')) {
+    merged.heroSubtitle = DEFAULT_CONFIG.heroSubtitle
+  }
+  if ((merged.heroSubtitle?.length ?? 0) < 10) {
+    merged.heroSubtitle = DEFAULT_CONFIG.heroSubtitle
+  }
+
   return {
     ...merged,
     whatsapp: whatsappE164,

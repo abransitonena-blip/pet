@@ -107,16 +107,30 @@ function SectionContent({
   }
 }
 
+function validateHeroSubtitle(value: string): string | null {
+  if (!value || value.trim().length < 10) return 'El subtítulo debe tener al menos 10 caracteres.'
+  const reserved = ['RESERVA', 'reserva', 'RESERVAS', 'Reserva', 'Paseos', 'Servicios', 'FAQ', 'Contacto']
+  if (reserved.includes(value.trim())) return 'El subtítulo no puede ser igual a un nombre de sección.'
+  return null
+}
+
 function HeroEditor({ config, updateConfig, saving }: EditorProps) {
   const [heroTitle, setHeroTitle] = useState(config.heroTitle)
   const [heroSubtitle, setHeroSubtitle] = useState(config.heroSubtitle)
   const [desc, setDesc] = useState(config.sectionDescriptions)
+  const [subtitleError, setSubtitleError] = useState<string | null>(null)
 
   useEffect(() => { setHeroTitle(config.heroTitle) }, [config.heroTitle])
   useEffect(() => { setHeroSubtitle(config.heroSubtitle) }, [config.heroSubtitle])
   useEffect(() => { setDesc(config.sectionDescriptions) }, [config.sectionDescriptions])
 
   const save = () => {
+    const error = validateHeroSubtitle(heroSubtitle)
+    if (error) {
+      setSubtitleError(error)
+      return
+    }
+    setSubtitleError(null)
     updateConfig({ heroTitle, heroSubtitle, sectionDescriptions: desc })
   }
 
@@ -124,6 +138,7 @@ function HeroEditor({ config, updateConfig, saving }: EditorProps) {
     <div className="space-y-3">
       <InputField label="Título del Hero" value={heroTitle} onChange={setHeroTitle} />
       <InputField label="Subtítulo del Hero" value={heroSubtitle} onChange={setHeroSubtitle} multiline />
+      {subtitleError && <p className="text-xs text-danger-400" role="alert">{subtitleError}</p>}
       <InputField label="Descripción de Servicios" value={desc.services} onChange={(v) => setDesc({ ...desc, services: v })} multiline />
       <InputField label="Descripción de Cómo funciona" value={desc.howItWorks} onChange={(v) => setDesc({ ...desc, howItWorks: v })} multiline />
       <InputField label="Descripción de FAQ" value={desc.faq} onChange={(v) => setDesc({ ...desc, faq: v })} multiline />
