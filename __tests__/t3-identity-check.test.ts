@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 describe('T3 identity check: fail-closed plumbing with zero financial mutation', () => {
   const route = readFileSync('src/app/api/admin/finance/t3-identity-check/route.ts', 'utf8')
   const serverFirestore = readFileSync('src/lib/finance/serverFirestore.ts', 'utf8')
+  const serverIdentity = readFileSync('src/lib/finance/serverIdentity.ts', 'utf8')
 
   test('requires a Bearer token and the Admin claim before anything else', () => {
     expect(route).toContain("export const runtime = 'nodejs'")
@@ -34,9 +35,12 @@ describe('T3 identity check: fail-closed plumbing with zero financial mutation',
   })
 
   test('the privileged Firestore client uses short-lived OIDC exchange, never a stored service-account key', () => {
-    expect(serverFirestore).toContain('ExternalAccountClient')
-    expect(serverFirestore).toContain('getVercelOidcToken')
+    expect(serverFirestore).toContain('getPrivilegedAuthClient')
+    expect(serverIdentity).toContain('ExternalAccountClient')
+    expect(serverIdentity).toContain('getVercelOidcToken')
     expect(serverFirestore).not.toContain('FIREBASE_SERVICE_ACCOUNT_JSON')
+    expect(serverIdentity).not.toContain('FIREBASE_SERVICE_ACCOUNT_JSON')
     expect(serverFirestore).not.toMatch(/private_key/i)
+    expect(serverIdentity).not.toMatch(/private_key/i)
   })
 })
