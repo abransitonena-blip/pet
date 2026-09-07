@@ -18,6 +18,7 @@ import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
 import CanonicalFamilyRequests from '@/components/family/CanonicalFamilyRequests'
+import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 
 interface UserProfile {
   name: string
@@ -33,6 +34,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [activePetAhoraId, setActivePetAhoraId] = useState<string | null>(null)
   const [petAhoraRequested, setPetAhoraRequested] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
   const { request: petAhoraRequest } = usePetAhoraClientRequest(activePetAhoraId)
 
   useEffect(() => {
@@ -48,6 +51,7 @@ export default function DashboardPage() {
         setProfile(profile as UserProfile)
       }
 
+      setLoadError('')
       const q = query(collection(db, 'reservations'), where('uid', '==', user.uid), limit(50))
       unsubRes = onSnapshot(q, (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
@@ -60,10 +64,15 @@ export default function DashboardPage() {
         })
         setReservations(docs)
         setLoading(false)
-      }, () => setLoading(false))
+      }, (cause) => {
+        setLoadError(cause.code.includes('permission-denied')
+          ? 'Tu sesión no tiene permiso para consultar tus reservas.'
+          : 'No pudimos consultar tus reservas. Revisa tu conexión.')
+        setLoading(false)
+      })
     })
     return () => { unsubRes?.(); unsubAuth() }
-  }, [router])
+  }, [router, retryKey])
 
   const upcoming = reservations.filter((r) => r.status === 'pending' || r.status === 'assigned')
   const completed = reservations.filter((r) => r.status === 'completed')
@@ -92,8 +101,7 @@ export default function DashboardPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-6 relative overflow-hidden"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        className="rounded-xl border border-ink/10 bg-surface p-6 relative overflow-hidden shadow-sm"
       >
         <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative">
@@ -129,8 +137,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.1 }}
-          className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02]"
           onClick={() => router.push('/familia/nueva-reserva')}
         >
           <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center mb-3">
@@ -144,8 +151,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.15 }}
-          className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02]"
           onClick={() => router.push('/familia/historial')}
         >
           <div className="w-10 h-10 rounded-xl bg-success-500/10 flex items-center justify-center mb-3">
@@ -159,8 +165,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.2 }}
-          className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02]"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02]"
           onClick={() => router.push('/familia/lealtad')}
         >
           <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center mb-3">
@@ -233,17 +238,17 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {reservations.length === 0 ? (
-          <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <CalendarDays className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-            <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>No tienes reservas aún</p>
-            <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-              Tu primer paseo está a un clic de distancia
-            </p>
-            <button onClick={() => router.push('/familia/nueva-reserva')} className="btn-primary inline-flex text-xs">
-              Reservar ahora
-            </button>
-          </div>
+        {loadError ? (
+          <ErrorState description={loadError} onRetry={() => setRetryKey((value) => value + 1)} />
+        ) : reservations.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={<CalendarDays size={28} />}
+              title="No tienes reservas aún"
+              description="Tu primer paseo está a un clic de distancia"
+              action={<Button size="sm" onClick={() => router.push('/familia/nueva-reserva')}>Reservar ahora</Button>}
+            />
+          </Card>
         ) : (
           <div className="space-y-2">
             {reservations.slice(0, 5).map((res, i) => (
@@ -252,8 +257,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.22, delay: 0.4 + i * 0.05 }}
-                className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-ink/5"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                className="rounded-xl border border-ink/10 bg-surface p-3 shadow-sm flex items-center gap-3 transition-all hover:bg-ink/5"
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-ink/5'}`}>
                   {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :

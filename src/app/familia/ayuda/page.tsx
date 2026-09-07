@@ -7,6 +7,8 @@ import { ArrowLeft, ChevronDown, Mail,
   CalendarDays, Dog, CreditCard, PawPrint, HelpCircle } from 'lucide-react'
 import { confirmWhatsAppShare, WHATSAPP_NUMBER } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
+import { Button, Card } from '@/components/ui'
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'
 
 const FAQ_ITEMS = [
   {
@@ -104,13 +106,9 @@ export default function AyudaPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.push('/familia')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
-          style={{ color: 'var(--text-muted)' }}
-        >
+        <Button variant="icon" onClick={() => router.push('/familia')} aria-label="Volver al inicio de Familia PET">
           <ArrowLeft size={14} />
-        </button>
+        </Button>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Centro de ayuda</h1>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Encuentra respuestas a tus preguntas</p>
@@ -154,10 +152,9 @@ export default function AyudaPage() {
                 const key = `${section.category}-${item.q}`
                 const isOpen = openIndex === key
                 return (
-                  <div
+                  <Card
                     key={key}
-                    className="rounded-xl overflow-hidden transition-colors"
-                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                    className="overflow-hidden transition-colors"
                   >
                     <button
                       onClick={() => toggle(key)}
@@ -187,7 +184,7 @@ export default function AyudaPage() {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
+                  </Card>
                 )
               })}
             </div>
@@ -196,20 +193,18 @@ export default function AyudaPage() {
       })}
 
       {/* Still need help */}
-      <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+      <Card className="p-6 text-center">
         <HelpCircle className="text-2xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
         <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>¿No encontraste lo que buscabas?</p>
         <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Estamos aquí para ayudarte</p>
-        <button
-          type="button"
+        <Button
+          size="sm"
           onClick={() => confirmWhatsAppShare(WHATSAPP_NUMBER, 'Hola, tengo una pregunta que no encontré en el centro de ayuda.')}
-          className="btn-primary inline-flex text-xs gap-2"
+          leftIcon={<WhatsAppIcon width={14} height={14} />}
         >
-          <WhatsAppIcon width={14} height={14} /> Escribirnos por WhatsApp
-        </button>
-      </div>
+          Escribirnos por WhatsApp
+        </Button>
+      </Card>
     </div>
   )
 }
-
-import { WhatsAppIcon } from '@/components/ui/SocialIcons'
