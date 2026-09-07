@@ -8,6 +8,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Gift, Star, CheckCircle2, Dog } from 'lucide-react'
 import LoyaltyProgram from '@/components/LoyaltyProgram'
+import { Button } from '@/components/ui'
 
 export default function LealtadPage() {
   const router = useRouter()
@@ -40,13 +41,13 @@ export default function LealtadPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <button
+        <Button
+          variant="icon"
           onClick={() => router.push('/familia')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
-          style={{ color: 'var(--text-muted)' }}
+          aria-label="Volver al inicio de Familia PET"
         >
           <ArrowLeft size={14} />
-        </button>
+        </Button>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Mi lealtad</h1>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Programa de recompensas</p>
@@ -99,19 +100,14 @@ export default function LealtadPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.2 }}
-          className="rounded-2xl p-5 text-center"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          className="rounded-xl border border-ink/10 bg-surface p-5 text-center shadow-sm"
         >
           <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
             Registra tu WhatsApp en tu perfil para ver tu progreso de lealtad
           </p>
-          <button
-            onClick={() => router.push('/familia/config')}
-            className="text-xs px-4 py-2 rounded-lg transition-colors hover:bg-ink/5"
-            style={{ color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
-          >
+          <Button size="sm" variant="secondary" onClick={() => router.push('/familia/config')}>
             Ir a configuración
-          </button>
+          </Button>
         </motion.div>
       )}
     </div>
