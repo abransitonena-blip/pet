@@ -488,7 +488,7 @@ export default function AdminReservas() {
                     <Pencil size={12} />
                   </button>
                   {(res.status === 'pending' || res.status === 'assigned') && (
-                    <button onClick={async () => { if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) { toast('El historial legacy es de solo lectura.', 'error'); return } try { await updateDoc(doc(db, 'reservations', res.id), { status: 'on_the_way' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
+                    <button onClick={async () => { if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) { toast('El historial legacy es de solo lectura.', 'error'); return } try { await updateDoc(doc(db, 'reservations', res.id), { status: 'on_the_way' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} disabled={!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? 'En camino' : 'Legacy de solo lectura'}>
                       <ArrowRight size={12} />
                     </button>
                   )}
@@ -503,7 +503,7 @@ export default function AdminReservas() {
                     </button>
                   )}
                   {res.status === 'completed' && (
-                    <button onClick={async () => { if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) { toast('El historial legacy es de solo lectura.', 'error'); return } try { await updateDoc(doc(db, 'reservations', res.id), { status: 'pending' }); toast('Estado restaurado') } catch { toast('Error al restaurar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Restaurar">
+                    <button onClick={async () => { if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) { toast('El historial legacy es de solo lectura.', 'error'); return } try { await updateDoc(doc(db, 'reservations', res.id), { status: 'pending' }); toast('Estado restaurado') } catch { toast('Error al restaurar estado', 'error') } }} disabled={!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? 'Restaurar' : 'Legacy de solo lectura'}>
                       <Undo2 size={11} />
                     </button>
                   )}

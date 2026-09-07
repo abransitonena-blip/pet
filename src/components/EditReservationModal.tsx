@@ -217,8 +217,9 @@ export default function EditReservationModal({
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving || !form.date || !form.time || !form.service}
+                disabled={saving || !form.date || !form.time || !form.service || !FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-50"
+                title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? undefined : 'Esta reserva pertenece al historial legacy y es de solo lectura'}
               >
                 {saving ? 'Guardando...' : 'Guardar cambios'}
               </button>

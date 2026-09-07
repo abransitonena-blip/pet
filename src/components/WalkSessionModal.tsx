@@ -296,7 +296,8 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
           </button>
           <button
             onClick={handleSave}
-            disabled={!photo || !location || saving}
+            disabled={!photo || !location || saving || !FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED}
+            title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? undefined : 'Esta reserva legacy es de solo lectura'}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-30 transition-all flex items-center justify-center gap-2"
             style={{
               background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',

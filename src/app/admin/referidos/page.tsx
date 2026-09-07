@@ -176,7 +176,7 @@ export default function AdminReferidosPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowAdd(false)} className="btn-secondary text-xs">Cancelar</button>
-            <button onClick={handleAdd} disabled={saving} className="btn-primary text-xs flex items-center gap-2">
+            <button onClick={handleAdd} disabled={saving || !FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED} className="btn-primary text-xs flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED ? undefined : 'La automatización de referidos está desactivada'}>
               {saving ? <Loader2 className="animate-spin" size={10} /> : <Plus size={10} />}
               Guardar
             </button>
@@ -211,7 +211,7 @@ export default function AdminReferidosPage() {
               </div>
               <div className="flex items-center gap-1">
                 {r.status === 'pending' && (
-                  <button onClick={() => handleStatus(r.id, 'completed')} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-success-500/10 text-success-400" title="Marcar completado">
+                  <button onClick={() => handleStatus(r.id, 'completed')} disabled={!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-success-500/10 text-success-400 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED ? 'Marcar completado' : 'Las recompensas automáticas están desactivadas'}>
                     <Check size={10} />
                   </button>
                 )}
@@ -221,7 +221,7 @@ export default function AdminReferidosPage() {
                 <button onClick={() => shareWhatsApp(r.referrerName, r.referrerPhone)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-green-500/10 text-green-400" title="Compartir WhatsApp">
                   <WhatsAppIcon width={10} height={10} />
                 </button>
-                <button onClick={() => handleDelete(r.id)} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-danger-500/10 text-danger-400" title="Eliminar">
+                <button onClick={() => handleDelete(r.id)} disabled={!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-danger-500/10 text-danger-400 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED ? 'Eliminar' : 'Las mutaciones automáticas de referidos están desactivadas'}>
                   <Trash2 size={10} />
                 </button>
               </div>

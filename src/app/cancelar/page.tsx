@@ -165,8 +165,9 @@ export default function CancelarPage() {
                       </div>
                       <button
                         onClick={() => cancelReservation(r.id)}
-                        disabled={cancelling === r.id}
+                        disabled={cancelling === r.id || !FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED}
                         className="mt-3 w-full py-2 rounded-lg text-xs font-medium bg-red-500/15 text-red-700 hover:bg-red-500/25 transition-all disabled:opacity-30 flex items-center justify-center gap-1"
+                        title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? undefined : 'Esta reserva legacy es de solo lectura'}
                       >
                         {cancelling === r.id ? <Loader2 className="animate-spin" size={12} /> : <X size={10} />}
                         Cancelar reserva
