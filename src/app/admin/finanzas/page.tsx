@@ -5,6 +5,7 @@ import { Download } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import DataCard from '@/components/ui/DataCard'
+import Button from '@/components/ui/Button'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 
@@ -124,9 +125,9 @@ export default function AdminFinanzasPage() {
         title="Finanzas"
         description="Ingresos, pagos y rendimiento financiero"
         actions={
-          <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-            <Download size={12} /> Exportar
-          </button>
+          <Button size="sm" variant="secondary" onClick={exportCSV} leftIcon={<Download size={12} />}>
+            Exportar
+          </Button>
         }
       />
       {hasIncompletePricing && <p role="alert" className="rounded-xl bg-warning/10 p-3 text-sm text-amber-900">Cálculo parcial: hay servicios sin precio configurado y se excluyeron de los importes.</p>}
@@ -173,7 +174,7 @@ export default function AdminFinanzasPage() {
               { label: 'Completadas', value: stats.completedReservations, color: '#7C3AED' },
               { label: 'Pendientes', value: stats.totalReservations - stats.completedReservations, color: '#f59e0b' },
             ].map((s) => (
-              <div key={s.label} className="rounded-xl p-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div key={s.label} className="rounded-xl border border-ink/10 bg-surface p-3 shadow-sm">
                 <p className="text-lg font-bold" style={{ color: s.color }}>{s.value}</p>
                 <p className="text-2xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
               </div>

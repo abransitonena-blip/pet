@@ -7,6 +7,7 @@ import { ClipboardList, Search } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
+import Button from '@/components/ui/Button'
 
 interface AuditLog {
   id: string
@@ -136,8 +137,7 @@ export default function AdminLogsPage() {
           {filtered.map((log) => (
             <div
               key={log.id}
-              className="rounded-xl p-3 flex items-center gap-3 transition-all hover:bg-ink/5"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="rounded-xl border border-ink/10 bg-surface p-3 shadow-sm flex items-center gap-3 transition-all hover:bg-ink/5"
             >
               <span className={`text-2xs px-2 py-0.5 rounded-full font-medium shrink-0 ${ACTION_COLORS[log.action] || 'bg-ink/10 text-muted'}`}>
                 {ACTION_LABELS[log.action] || log.action}
@@ -158,14 +158,9 @@ export default function AdminLogsPage() {
             </div>
           ))}
           {hasMore && !searchQuery && actionFilter === 'all' && (
-            <button
-              onClick={loadMore}
-              disabled={loadingMore}
-              className="w-full py-2.5 text-xs font-medium rounded-xl transition-all"
-              style={{ background: 'var(--glass-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-            >
-              {loadingMore ? 'Cargando...' : 'Cargar más'}
-            </button>
+            <Button variant="secondary" className="w-full" onClick={loadMore} isLoading={loadingMore}>
+              Cargar más
+            </Button>
           )}
         </div>
       )}

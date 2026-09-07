@@ -100,8 +100,7 @@ export default function AdminPerrosPage() {
           {filtered.map((p) => (
             <div
               key={`${p.ownerPhone}__${p.name}`}
-              className="rounded-xl p-4 transition-all hover:bg-ink/5 cursor-pointer"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm transition-all hover:bg-ink/5 cursor-pointer"
               onClick={() => setSelectedPet(selectedPet?.name === p.name && selectedPet?.ownerPhone === p.ownerPhone ? null : p)}
             >
               <div className="flex items-start gap-3">
@@ -133,7 +132,7 @@ export default function AdminPerrosPage() {
               </div>
 
               {selectedPet?.name === p.name && selectedPet?.ownerPhone === p.ownerPhone && (
-                <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                <div className="mt-3 border-t border-ink/10 pt-3">
                   <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Historial de paseos</p>
                   <div className="space-y-1.5 max-h-40 overflow-y-auto">
                     {p.reservations.map((r) => (

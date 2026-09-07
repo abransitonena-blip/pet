@@ -3,10 +3,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, limit } from 'firebase/firestore'
-import { Star, Trash2, Download, Loader2, Search } from 'lucide-react'
+import { Star, Trash2, Download, Search } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
+import Button from '@/components/ui/Button'
 import { logChange } from '@/lib/audit'
 import { useToast } from '@/context/ToastContext'
 
@@ -86,15 +87,15 @@ export default function AdminResenasPage() {
         title="Reseñas"
         description={`${stats.total} reseñas · Calificación promedio: ${stats.avg} ★`}
         actions={
-          <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-            <Download size={12} /> Exportar CSV
-          </button>
+          <Button size="sm" variant="secondary" onClick={exportCSV} leftIcon={<Download size={12} />}>
+            Exportar CSV
+          </Button>
         }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="rounded-xl p-4 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <div className="rounded-xl border border-ink/10 bg-surface p-4 text-center shadow-sm">
           <p className="text-3xl font-bold" style={{ color: '#D97706' }}>{stats.avg}</p>
           <div className="flex items-center justify-center gap-0.5 mt-1">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -103,7 +104,7 @@ export default function AdminResenasPage() {
           </div>
           <p className="text-2xs mt-1" style={{ color: 'var(--text-muted)' }}>Promedio</p>
         </div>
-        <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <div className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
           <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Distribución</p>
           {[5, 4, 3, 2, 1].map((stars) => (
             <div key={stars} className="flex items-center gap-2 text-2xs mb-0.5">
@@ -141,8 +142,7 @@ export default function AdminResenasPage() {
           {filtered.map((rev) => (
             <div
               key={rev.id}
-              className="rounded-xl p-4 transition-all hover:bg-ink/5"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm transition-all hover:bg-ink/5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
@@ -163,14 +163,15 @@ export default function AdminResenasPage() {
                     <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>🐾 {rev.petName}</p>
                   )}
                 </div>
-                <button
+                <Button
+                  variant="icon"
                   onClick={() => handleDelete(rev.id)}
-                  disabled={deleting === rev.id}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400 shrink-0"
-                  title="Eliminar"
+                  isLoading={deleting === rev.id}
+                  className="shrink-0 hover:bg-danger-500/10 hover:text-danger-400"
+                  aria-label="Eliminar reseña"
                 >
-                  {deleting === rev.id ? <Loader2 className="animate-spin" size={11} /> : <Trash2 size={11} />}
-                </button>
+                  <Trash2 size={11} />
+                </Button>
               </div>
             </div>
           ))}
