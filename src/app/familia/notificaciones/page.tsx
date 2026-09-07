@@ -7,6 +7,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { doc, collection, query, orderBy, onSnapshot, updateDoc, limit } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { ArrowLeft, Bell, Dog, CalendarCheck, Star, Gift } from 'lucide-react'
+import { Button, EmptyState, ErrorState } from '@/components/ui'
 
 interface Notification {
   id: string
@@ -36,6 +37,8 @@ export default function NotificacionesPage() {
   const [uid, setUid] = useState('')
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -48,6 +51,7 @@ export default function NotificacionesPage() {
 
   useEffect(() => {
     if (!uid) return
+    setLoadError('')
     const q = query(
       collection(db, 'notifications', uid, 'items'),
       orderBy('createdAt', 'desc'),
@@ -59,8 +63,12 @@ export default function NotificacionesPage() {
         items.push({ id: d.id, ...d.data() } as Notification)
       })
       setNotifications(items)
+    }, (cause) => {
+      setLoadError(cause.code.includes('permission-denied')
+        ? 'Tu sesión no tiene permiso para consultar tus notificaciones.'
+        : 'No pudimos consultar tus notificaciones. Revisa tu conexión.')
     })
-  }, [uid])
+  }, [uid, retryKey])
 
   const markRead = async (id: string) => {
     await updateDoc(doc(db, 'notifications', uid, 'items', id), { read: true }).catch(() => {})
@@ -95,30 +103,23 @@ export default function NotificacionesPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.push('/familia')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
-          style={{ color: 'var(--text-muted)' }}
-        >
+        <Button variant="icon" onClick={() => router.push('/familia')} aria-label="Volver al inicio de Familia PET">
           <ArrowLeft size={14} />
-        </button>
+        </Button>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Notificaciones</h1>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{notifications.filter((n) => !n.read).length} sin leer</p>
         </div>
       </div>
 
-      {notifications.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-8 text-center"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-        >
-          <Bell size={32} className="mx-auto mb-3 opacity-20" style={{ color: 'var(--text-muted)' }} />
-          <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Sin notificaciones</h2>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Tus actualizaciones aparecerán aquí</p>
-        </motion.div>
+      {loadError ? (
+        <ErrorState description={loadError} onRetry={() => setRetryKey((value) => value + 1)} />
+      ) : notifications.length === 0 ? (
+        <EmptyState
+          icon={<Bell size={28} />}
+          title="Sin notificaciones"
+          description="Tus actualizaciones aparecerán aquí"
+        />
       ) : (
         <div className="space-y-2">
           {notifications.map((n, i) => {
@@ -131,11 +132,7 @@ export default function NotificacionesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, delay: i * 0.03 }}
                 onClick={() => { if (!n.read) markRead(n.id) }}
-                className="flex items-start gap-3 p-4 rounded-2xl transition-all cursor-pointer hover:bg-ink/5"
-                style={{
-                  background: n.read ? 'var(--bg-card)' : 'rgba(217,119,6,0.04)',
-                  border: '1px solid var(--border)',
-                }}
+                className={`flex items-start gap-3 rounded-xl border border-ink/10 p-4 shadow-sm transition-all cursor-pointer hover:bg-ink/5 ${n.read ? 'bg-surface' : 'bg-brand-500/[0.04]'}`}
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"

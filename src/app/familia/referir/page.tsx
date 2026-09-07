@@ -10,6 +10,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, UserPlus, Users, CheckCircle2, Clock, Gift } from 'lucide-react'
 import ReferralSection from '@/components/ReferralSection'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { Button, Card } from '@/components/ui'
 
 export default function ReferirPage() {
   const router = useRouter()
@@ -57,13 +58,9 @@ export default function ReferirPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.push('/familia')}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
-          style={{ color: 'var(--text-muted)' }}
-        >
+        <Button variant="icon" onClick={() => router.push('/familia')} aria-label="Volver al inicio de Familia PET">
           <ArrowLeft size={14} />
-        </button>
+        </Button>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Recomendar</h1>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Comparte una invitación; las recompensas requieren revisión</p>
@@ -102,9 +99,9 @@ export default function ReferirPage() {
       </motion.div>
 
       {!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED && (
-        <div className="rounded-2xl p-4 text-xs text-muted" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <Card className="p-4 text-xs text-muted">
           Las recompensas automáticas están desactivadas. Administración revisará manualmente elegibilidad, límite mensual, vigencia y margen antes de registrar cualquier Crédito PET.
-        </div>
+        </Card>
       )}
 
       {/* Referral stats */}
@@ -119,20 +116,13 @@ export default function ReferirPage() {
           { label: 'Enviados', value: stats.total, icon: Users, color: 'var(--color-primary)' },
           { label: 'Completados', value: stats.completed, icon: CheckCircle2, color: 'var(--color-success)' },
           { label: 'Pendientes', value: stats.pending, icon: Clock, color: 'var(--color-warning)' },
-        ].map((stat, i) => {
-          const Icon = stat.icon
-          return (
-            <div
-              key={i}
-              className="rounded-2xl p-4 text-center"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-            >
-              <Icon size={16} className="mx-auto mb-2 opacity-60" style={{ color: stat.color }} />
-              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{stat.value}</p>
-              <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>{stat.label}</p>
-            </div>
-          )
-        })}
+        ].map((stat, i) => (
+          <Card key={i} className="p-4 text-center">
+            <stat.icon size={16} className="mx-auto mb-2 opacity-60" style={{ color: stat.color }} />
+            <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{stat.value}</p>
+            <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>{stat.label}</p>
+          </Card>
+        ))}
       </motion.div>
       )}
 
@@ -151,19 +141,14 @@ export default function ReferirPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.2 }}
-          className="rounded-2xl p-5 text-center"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          className="rounded-xl border border-ink/10 bg-surface p-5 text-center shadow-sm"
         >
           <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
             Registra tu WhatsApp en tu perfil para obtener tu link de referido
           </p>
-          <button
-            onClick={() => router.push('/familia/config')}
-            className="text-xs px-4 py-2 rounded-lg transition-colors hover:bg-ink/5"
-            style={{ color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
-          >
+          <Button size="sm" variant="secondary" onClick={() => router.push('/familia/config')}>
             Ir a configuración
-          </button>
+          </Button>
         </motion.div>
       )}
     </div>

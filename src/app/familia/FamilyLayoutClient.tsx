@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/firebase/config'
 import { clearSessionCookie, loginPathWithRedirect } from '@/lib/auth'
@@ -11,6 +10,7 @@ import { getFamilyOnboardingStep, loadFamilyOnboardingSnapshot } from '@/lib/fam
 import { useSessionRole } from '@/lib/useSessionRole'
 import { ROLES, ROLE_HOME } from '@/lib/roles'
 import AppShell from '@/components/layout/AppShell'
+import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 import {
   Dog, Calendar, PawPrint, Camera, Users, MapPin,
   Settings, Gift, Home, History, BookOpen, Bell, ShieldCheck,
@@ -100,7 +100,13 @@ export default function FamilyLayoutClient({ children }: { children: React.React
   }
 
   if (accessError) {
-    return <div className="min-h-screen flex items-center justify-center p-4"><div className="card max-w-sm p-6 text-center"><p className="text-sm text-danger" role="alert">{accessError}</p><button onClick={() => void session.refresh()} className="btn-primary mt-4">Reintentar</button></div></div>
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-sm p-6">
+          <ErrorState description={accessError} onRetry={() => void session.refresh()} />
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -114,18 +120,14 @@ export default function FamilyLayoutClient({ children }: { children: React.React
       showLogoutLabel
     >
       {children || (
-        <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <Dog className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-            Bienvenido, {userName}
-          </h2>
-          <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-            Selecciona una opción del menú para comenzar.
-          </p>
-          <Link href="/familia/nueva-reserva" className="btn-primary inline-flex">
-            Solicitar paseo
-          </Link>
-        </div>
+        <Card className="p-8">
+          <EmptyState
+            icon={<Dog size={28} />}
+            title={`Bienvenido, ${userName}`}
+            description="Selecciona una opción del menú para comenzar."
+            action={<Button onClick={() => router.push('/familia/nueva-reserva')}>Solicitar paseo</Button>}
+          />
+        </Card>
       )}
     </AppShell>
   )
