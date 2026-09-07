@@ -1,13 +1,10 @@
-/* eslint-disable react-refresh/only-export-components */
 import Link from 'next/link'
 import { termsSections, TERMS_LAST_UPDATED } from '@/lib/termsContent'
 import { Logo } from '@/components/ui/Logo'
+import type { Metadata } from 'next'
+import { publicPageMetadata } from '@/lib/seoMetadata'
 
-export const metadata = {
-  title: 'Términos y condiciones',
-  description:
-    'Términos y condiciones de PET Ap: reservas, cancelaciones, salud y seguridad, responsabilidad, privacidad y precios.',
-}
+export const metadata: Metadata = publicPageMetadata({ path: '/terminos', title: 'Términos y condiciones', description: 'Borrador operativo de términos para solicitudes, cancelaciones, privacidad y prestación de paseos.' })
 
 export default function TerminosPage() {
   return (
@@ -19,6 +16,10 @@ export default function TerminosPage() {
             <h1 className="text-3xl sm:text-4xl font-bold text-ink">Términos y condiciones</h1>
             <p className="text-sm text-muted mt-1">Última actualización: {TERMS_LAST_UPDATED}</p>
           </div>
+        </div>
+
+        <div className="mb-8 rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm text-muted" role="note">
+          Este documento es un borrador operativo y requiere revisión jurídica profesional antes del lanzamiento comercial.
         </div>
 
         <div className="space-y-6">

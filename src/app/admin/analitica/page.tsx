@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore'
 import { CalendarDays, Users, Star, PersonStanding, Banknote } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
-import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useConfig } from '@/context/ConfigContext'
@@ -20,17 +19,17 @@ interface Review {
 export default function AdminAnaliticaPage() {
   const { reservations, loading } = useReservations()
   const [reviews, setReviews] = useState<Review[]>([])
-  const { prices } = usePrices()
+  const { prices, hasIncompletePricing } = usePrices()
   const { config } = useConfig()
 
   useEffect(() => {
-    const q = query(collection(db, 'reviews'), orderBy('date', 'desc'))
+    const q = query(collection(db, 'reviews'), orderBy('date', 'desc'), limit(50))
     return onSnapshot(q, (snap) => {
       setReviews(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Review)))
     })
   }, [])
 
-  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? getServicePrice(serviceName)
+  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? 0
 
   const analytics = useMemo(() => {
     const today = new Date()
@@ -152,6 +151,7 @@ export default function AdminAnaliticaPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Analítica" description="Métricas clave y tendencias del negocio" />
+      {hasIncompletePricing && <p role="alert" className="rounded-xl bg-warning/10 p-3 text-sm text-amber-900">Cálculo parcial: hay servicios sin precio configurado y se excluyeron de los importes.</p>}
 
       {loading ? (
         <LoadingState rows={3} height="h-32" />

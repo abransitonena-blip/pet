@@ -1,6 +1,6 @@
 # Avisos de terceros (THIRD_PARTY_NOTICES)
 
-Última actualización: 30 de julio de 2026
+Última actualización: 8 de agosto de 2026
 
 PET Ap (pet-reservations) usa el siguiente software y servicios de terceros. Los avisos de licencia de las dependencias directas se reproducen a continuación de forma resumida; el texto completo de cada licencia está disponible en el repositorio de cada proyecto.
 
@@ -24,18 +24,18 @@ Licencia ISC (lucide-react) — texto resumido:
 |----------|-----------|------------------|--------------------------------|
 | Firebase Authentication | Google | Correo, nombre, foto de perfil | Sí |
 | Firestore | Google | Reservas, config, galería | Sí |
-| Firebase Cloud Messaging | Google | Push notifications | Sí |
+| Firebase Cloud Messaging | Google | Desactivado; el service worker legacy no registra handlers | Debe reflejarse como desactivado |
 | Google Analytics 4 (`G-HQTMCZX66M`) | Google | Analytics; **solo tras consentimiento** | Sí (gated por consentimiento) |
 | Vercel | Vercel Inc. | Hosting, edge functions | Sí |
-| Cloudinary | Cloudinary Ltd. | Almacenamiento de imágenes de galería | Sí |
+| Cloudinary | Cloudinary Ltd. | URLs públicas legacy; uploads privados y unsigned desactivados | Sí |
 | WhatsApp / Meta | Meta Platforms | Chat de contacto | Sí |
 
 ## Fuentes
 
 | Fuente | Licencia | Uso |
 |--------|----------|-----|
-| Inter | SIL OFL 1.1 | Tipografía UI (Google Fonts) |
-| JetBrains Mono | SIL OFL 1.1 | Código / datos técnicos (Google Fonts) |
+| Manrope | SIL OFL 1.1 | Tipografía principal, integrada con `next/font` |
+| Inter | SIL OFL 1.1 | Alternativa de marca, integrada con `next/font` |
 
 OFL permite uso libre, comercial y sin restricciones de atribución adicionales a las del propio texto de licencia.
 

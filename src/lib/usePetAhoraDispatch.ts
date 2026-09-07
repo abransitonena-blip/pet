@@ -4,7 +4,8 @@ import { useState, useCallback } from 'react'
 import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { selectBestWalker } from './dispatch'
-import type { Walker, PetAhoraRequest } from '@/types'
+import type { Walker, PetAhoraRequest, Address } from '@/types'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 const OFFER_TIMEOUT_SECONDS = 30
 const REQUEST_TIMEOUT_SECONDS = 120
@@ -23,6 +24,7 @@ async function sendOffer(
   walkerId: string,
   walkerName: string,
 ): Promise<boolean> {
+  if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
   try {
     const now = Timestamp.now()
     await addDoc(collection(db, 'petAhoraOffers'), {
@@ -56,11 +58,15 @@ export function usePetAhoraDispatch() {
     petName: string
     petType: string
     addressId: string
-    address: any
+    address: Address
     zoneId: string
     zoneName: string
     price: number
   }): Promise<string | null> => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) {
+      setError('PET Ahora está temporalmente en preparación')
+      return null
+    }
     setDispatching(true)
     setError(null)
 
@@ -97,6 +103,7 @@ export function usePetAhoraDispatch() {
   }, [])
 
   const retryDispatch = useCallback(async (requestId: string): Promise<boolean> => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
     try {
       const reqSnap = await getDoc(doc(db, 'petAhoraRequests', requestId))
       if (!reqSnap.exists()) return false
@@ -119,6 +126,7 @@ export function usePetAhoraDispatch() {
   }, [])
 
   const acceptOffer = useCallback(async (offerId: string, requestId: string, walkerId: string): Promise<boolean> => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
     try {
       const now = Timestamp.now()
 
@@ -148,6 +156,7 @@ export function usePetAhoraDispatch() {
   }, [])
 
   const declineOffer = useCallback(async (offerId: string, requestId: string): Promise<boolean> => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
     try {
       const now = Timestamp.now()
       await updateDoc(doc(db, 'petAhoraOffers', offerId), { status: 'declined', respondedAt: now })
@@ -158,7 +167,8 @@ export function usePetAhoraDispatch() {
     }
   }, [retryDispatch])
 
-  const updateRequestStatus = useCallback(async (requestId: string, status: string, extra?: Record<string, any>): Promise<boolean> => {
+  const updateRequestStatus = useCallback(async (requestId: string, status: string, extra?: Record<string, unknown>): Promise<boolean> => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
     try {
       await updateDoc(doc(db, 'petAhoraRequests', requestId), { status, ...extra })
       return true

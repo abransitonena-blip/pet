@@ -6,8 +6,9 @@ import { Dog, MessageCircle, XCircle, Mail, Music } from 'lucide-react'
 import { FacebookIcon, InstagramIcon } from '@/components/ui/SocialIcons'
 import { useConfig } from '@/context/ConfigContext'
 import { formatBusinessHours } from '@/lib/defaultConfig'
-import { formatDisplayPhone } from '@/lib/utils'
+import { confirmWhatsAppShare, formatDisplayPhone } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
+import { Logo } from '@/components/ui/Logo'
 
 export default function Footer({ onTerms }: { onTerms: () => void }) {
   const { config } = useConfig()
@@ -17,16 +18,13 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
-                <Dog size={18} />
-              </div>
+              <Logo size={40} />
               <span className="text-lg font-bold text-ink">
                 PET <span className="text-primary">Ap</span>
               </span>
             </div>
             <p className="text-sm leading-relaxed text-muted">
-              Paseos personalizados con fotos y reporte de cada paseo.
-              Precios accesibles, mucho amor y ejercicio para tu perro.
+              Solicitudes y seguimiento de paseos caninos programados desde Familia PET.
             </p>
           </motion.div>
 
@@ -56,22 +54,26 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 text-ink">Contacto</h3>
             <div className="space-y-3 text-sm text-muted">
               <a
-                href={`https://wa.me/${config.whatsapp}`}
+                href={BRAND.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:text-primary transition-colors"
+                className="flex min-h-11 items-center gap-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                onClick={(event) => {
+                  event.preventDefault()
+                  confirmWhatsAppShare(BRAND.whatsapp, 'Hola, solicito información sobre los paseos de PET Ap.')
+                }}
               >
                 <MessageCircle size={14} />
-                {formatDisplayPhone(config.whatsapp)}
+                {formatDisplayPhone(BRAND.whatsapp)}
               </a>
               <a
                 href={`mailto:${config.contactEmail || BRAND.email}`}
-                className="flex items-center gap-2 hover:text-primary transition-colors"
+                className="flex min-h-11 items-center gap-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Mail size={14} />
                 {config.contactEmail || BRAND.email}
               </a>
-              <Link href="/cancelar" className="flex items-center gap-2 hover:text-error transition-colors text-sm text-muted">
+              <Link href="/cancelar" className="flex min-h-11 items-center gap-2 text-sm text-muted transition-colors hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 <XCircle size={14} />
                 Cancelar reserva
               </Link>
@@ -87,7 +89,7 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 text-ink">Síguenos</h3>
             <div className="flex gap-3">
               {[
-                { icon: MessageCircle, href: `https://wa.me/${config.whatsapp}`, label: 'WhatsApp' },
+                { icon: MessageCircle, href: BRAND.whatsappUrl, label: 'WhatsApp' },
                 ...(config.instagram ? [                { icon: InstagramIcon, href: config.instagram, label: 'Instagram' }] : []),
                 ...(config.facebook ? [{ icon: FacebookIcon, href: config.facebook, label: 'Facebook' }] : []),
                 ...(config.tiktok ? [{ icon: Music, href: config.tiktok, label: 'TikTok' }] : []),
@@ -98,7 +100,12 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`${label} (abre en nueva ventana)`}
-                  className="w-10 h-10 rounded-full card flex items-center justify-center transition-all duration-300 hover:scale-110 text-muted hover:text-primary"
+                  className="card flex h-11 w-11 items-center justify-center rounded-full text-muted transition-all duration-200 hover:scale-105 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transform-none motion-reduce:transition-none"
+                  onClick={(event) => {
+                    if (label !== 'WhatsApp') return
+                    event.preventDefault()
+                    confirmWhatsAppShare(BRAND.whatsapp, 'Hola, solicito información sobre los paseos de PET Ap.')
+                  }}
                 >
                   <Icon size={18} />
                 </a>
@@ -117,19 +124,19 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             &copy; {new Date().getFullYear()} PET Ap. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
-            <Link href="/nosotros" className="text-xs text-muted hover:text-ink transition-colors">
+            <Link href="/nosotros" className="inline-flex min-h-11 items-center text-xs text-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               Nosotros
             </Link>
-            <Link href="/preguntas-frecuentes" className="text-xs text-muted hover:text-ink transition-colors">
+            <Link href="/preguntas-frecuentes" className="inline-flex min-h-11 items-center text-xs text-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               FAQ
             </Link>
-            <button onClick={onTerms} className="text-xs text-muted hover:text-ink transition-colors">
+            <button onClick={onTerms} className="inline-flex min-h-11 items-center text-xs text-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               Términos
             </button>
-            <Link href="/terminos" className="text-xs text-muted hover:text-ink transition-colors">
+            <Link href="/terminos" className="inline-flex min-h-11 items-center text-xs text-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               Términos completos
             </Link>
-            <Link href="/privacidad" className="text-xs text-muted hover:text-ink transition-colors">
+            <Link href="/privacidad" className="inline-flex min-h-11 items-center text-xs text-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               Privacidad
             </Link>
             <p className="text-xs text-muted">

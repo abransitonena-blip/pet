@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, limit } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,10 +13,12 @@ import {
 } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
+import CanonicalFamilyHistory from '@/components/family/CanonicalFamilyHistory'
 
 export default function HistorialPage() {
   const router = useRouter()
   const [reservations, setReservations] = useState<Reservation[]>([])
+  const [customerId, setCustomerId] = useState('')
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled'>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -26,9 +28,10 @@ export default function HistorialPage() {
 
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (unsubRes) { unsubRes(); unsubRes = undefined }
-      if (!user) { router.push('/login'); return }
+      if (!user) { setCustomerId(''); router.push('/login'); return }
+      setCustomerId(user.uid)
 
-      const q = query(collection(db, 'reservations'), where('uid', '==', user.uid))
+      const q = query(collection(db, 'reservations'), where('uid', '==', user.uid), limit(50))
       unsubRes = onSnapshot(q, (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
         docs.sort((a, b) => {
@@ -64,18 +67,31 @@ export default function HistorialPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/familia')}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5"
+            className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             style={{ color: 'var(--text-muted)' }}
+            aria-label="Volver al inicio de Familia PET"
           >
             <ArrowLeft size={14} />
           </button>
           <div>
-            <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Mi historial</h1>
+            <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Historial anterior</h1>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              {completedCount} paseo{completedCount !== 1 ? 's' : ''} completado{completedCount !== 1 ? 's' : ''}
+              Solo lectura · {completedCount} paseo{completedCount !== 1 ? 's' : ''} completado{completedCount !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
+      </div>
+
+      <section aria-labelledby="canonical-history-title" className="space-y-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Historial canónico</p>
+          <h2 id="canonical-history-title" className="mt-1 text-base font-bold text-ink">Solicitudes y paseos actuales</h2>
+        </div>
+        {customerId && <CanonicalFamilyHistory customerId={customerId} />}
+      </section>
+
+      <div className="border-t border-ink/10 pt-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Reservas anteriores · solo lectura</p>
       </div>
 
       {/* Filters */}
@@ -88,7 +104,7 @@ export default function HistorialPage() {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+            className="min-h-11 rounded-xl px-3 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             style={{
               background: filter === f.value ? 'var(--color-primary-light)' : 'transparent',
               color: filter === f.value ? 'var(--color-primary)' : 'var(--text-muted)',
@@ -204,7 +220,6 @@ export default function HistorialPage() {
                                   alt="Check-in"
                                   width={400}
                                   height={160}
-                                  unoptimized
                                   className="w-full h-40 object-cover"
                                 />
                               </div>
@@ -232,7 +247,6 @@ export default function HistorialPage() {
                                   alt="Check-out"
                                   width={400}
                                   height={160}
-                                  unoptimized
                                   className="w-full h-40 object-cover"
                                 />
                               </div>

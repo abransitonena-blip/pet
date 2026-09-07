@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { getCustomerProfile, updateCustomerProfile } from '@/lib/customerProfile'
+import { auth } from '@/firebase/config'
 import { Settings, Loader2, Check } from 'lucide-react'
+import Link from 'next/link'
 
 export default function ConfigPage() {
   const router = useRouter()
@@ -18,11 +19,10 @@ export default function ConfigPage() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) { router.push('/login'); return }
-      const snap = await getDoc(doc(db, 'clients', user.uid))
-      if (snap.exists()) {
-        const data = snap.data()
-        setName(data.name || '')
-        setPhone(data.phone || '')
+      const profile = await getCustomerProfile(user.uid)
+      if (profile) {
+        setName(profile.name || '')
+        setPhone(profile.phone || '')
       }
       setLoading(false)
     })
@@ -34,7 +34,7 @@ export default function ConfigPage() {
     if (!user) return
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'clients', user.uid), { name, phone })
+      await updateCustomerProfile(user.uid, { name, phone })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch { /* noop */ }
@@ -54,9 +54,10 @@ export default function ConfigPage() {
       <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Configuración</h2>
       <div className="space-y-4 max-w-sm">
         <div>
-          <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
+          <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Nombre <span aria-hidden="true">*</span></label>
           <input
             type="text"
+            maxLength={100}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -64,9 +65,10 @@ export default function ConfigPage() {
           />
         </div>
         <div>
-          <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>WhatsApp</label>
+          <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>WhatsApp <span className="text-muted">(opcional hasta solicitar contacto)</span></label>
           <input
             type="tel"
+            maxLength={20}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -81,6 +83,7 @@ export default function ConfigPage() {
           {saving ? <Loader2 className="animate-spin" size={14} /> : saved ? <Check size={14} /> : null}
           {saved ? 'Guardado' : 'Guardar'}
         </button>
+        <p className="text-xs text-muted">Estos datos se usan para cuenta y contacto operativo. No implican marketing ni publicación de fotografías. Gestiona solicitudes en <Link href="/familia/privacidad" className="underline">Privacidad y ARCO</Link>.</p>
       </div>
     </div>
   )

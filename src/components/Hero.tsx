@@ -1,14 +1,10 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
-import { db } from '@/firebase/config'
-import { Star, PawPrint } from 'lucide-react'
+import { PawPrint } from 'lucide-react'
 import { usePublicStats } from '@/lib/usePublicStats'
 import { useConfig } from '@/context/ConfigContext'
 import Link from 'next/link'
-import Avatar from '@/components/ui/Avatar'
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -23,21 +19,9 @@ const item = {
 export default function Hero() {
   const { config } = useConfig()
   const { avgRating, happyDogs, loading: statsLoading } = usePublicStats()
-  const [topReview, setTopReview] = useState<{ name: string; text: string; rating: number } | null>(null)
-
-  useEffect(() => {
-    const q = query(collection(db, 'reviews'), orderBy('rating', 'desc'), limit(5))
-    getDocs(q)
-      .then((snap) => {
-        const data = snap.docs.map((d) => d.data() as { name: string; text: string; rating: number })
-        const best = data.find((r) => r.text?.length > 15)
-        if (best) setTopReview(best)
-      })
-      .catch(() => {})
-  }, [])
 
   return (
-    <section aria-label="Hero" id="hero" className="relative min-h-[60vh] flex items-center justify-center overflow-hidden pt-16 pb-12">
+    <section aria-label="Hero" id="hero" className="relative flex min-h-[34rem] items-center justify-center overflow-hidden pb-12 pt-20 sm:min-h-[38rem]">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/4 -right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
         <div className="absolute -bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-trust/10 rounded-full blur-[80px]" />
@@ -67,50 +51,34 @@ export default function Hero() {
         <motion.div variants={item} className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/login?redirect=/familia/nueva-reserva"
-            className="btn-primary inline-flex items-center gap-2"
+            className="btn btn-primary"
           >
             Entrar a Familia PET
           </Link>
           <motion.a
-            href="#como-funciona"
+            href="/#como-funciona"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="btn-secondary"
+            className="btn btn-secondary"
           >
             Cómo funciona
           </motion.a>
         </motion.div>
 
-        <motion.div variants={item} className="flex items-center justify-center gap-6 sm:gap-10 mt-10">
+        {!statsLoading && (happyDogs > 0 || avgRating > 0) && (
+          <motion.div variants={item} className="flex items-center justify-center gap-6 sm:gap-10 mt-10">
           {[
             { value: statsLoading ? undefined : happyDogs > 0 ? `${happyDogs}+` : undefined, label: 'Perros felices' },
             { value: statsLoading ? undefined : avgRating > 0 ? `${avgRating}` : undefined, label: 'Calificación' },
-          ].map((stat) => (
+          ].filter((stat) => stat.value).map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="text-lg sm:text-xl font-bold text-primary">{stat.value ?? '—'}</div>
+              <div className="text-lg sm:text-xl font-bold text-primary">{stat.value}</div>
               <div className="text-xs mt-0.5 text-muted">{stat.label}</div>
             </div>
           ))}
-        </motion.div>
-
-        {topReview && (
-          <motion.div variants={item} className="max-w-sm mx-auto mt-8">
-            <div className="card p-4 sm:p-5 text-center">
-              <div className="flex items-center justify-center gap-0.5 mb-2">
-                {Array.from({ length: topReview.rating }).map((_, j) => (
-                  <Star key={j} className="text-primary" size={12} fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-sm mb-3 leading-relaxed italic text-muted">
-                &ldquo;{topReview.text}&rdquo;
-              </p>
-              <div className="flex items-center justify-center gap-2">
-                <Avatar name={topReview.name} size="sm" />
-                <span className="text-xs font-medium text-muted">{topReview.name}</span>
-              </div>
-            </div>
           </motion.div>
         )}
+
       </motion.div>
     </section>
   )

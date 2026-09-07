@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/firebase/config'
-import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, deleteDoc, doc, limit } from 'firebase/firestore'
 import { Star, Trash2, Download, Loader2, Search } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
@@ -27,7 +27,7 @@ export default function AdminResenasPage() {
   const { toast } = useToast()
 
   useEffect(() => {
-    const q = query(collection(db, 'reviews'), orderBy('date', 'desc'))
+    const q = query(collection(db, 'reviews'), orderBy('date', 'desc'), limit(50))
     const unsub = onSnapshot(q, (snap) => {
       setReviews(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminReview)))
       setLoading(false)

@@ -1,19 +1,23 @@
 'use client'
 
-import { PawPrint, ArrowRight } from 'lucide-react'
-import { getServicePrice, getServiceMeta, SERVICE_NAMES } from '@/lib/services'
+import { PawPrint, ArrowRight, AlertCircle } from 'lucide-react'
+import { getReservationServiceOptions, type ReservationPackageType } from '@/lib/walkServices'
+import { formatAmountCents, type PriceDocumentStatus, type PublicServicePrice } from '@/lib/servicePricing'
+import Button from '@/components/ui/Button'
+import Card from '@/components/ui/Card'
 
 interface StepV2ServiceProps {
-  form: { service: string }
-  updateForm: (updates: Partial<{ service: string }>) => void
+  form: { serviceId: string; serviceName: string; servicePackageType: ReservationPackageType | ''; serviceAmountCents: number | null; serviceVersion: number | null; serviceComplimentary: boolean; serviceDurationMinutes: number | null }
+  updateForm: (updates: Partial<{ serviceId: string; serviceName: string; servicePackageType: ReservationPackageType | ''; serviceAmountCents: number | null; serviceVersion: number | null; serviceComplimentary: boolean; serviceDurationMinutes: number | null }>) => void
+  prices: Record<string, PublicServicePrice>
+  priceStatus: PriceDocumentStatus
   onNext: () => void
-  onBack: () => void
+  onBack?: () => void
 }
 
-const MAIN_SERVICES = ['Paseo 30 min', 'Paseo 60 min', 'Paseo 90 min', 'Paquete Semanal']
-
-export default function StepV2Service({ form, updateForm, onNext, onBack }: StepV2ServiceProps) {
-  const mainServices = MAIN_SERVICES.filter(s => SERVICE_NAMES.includes(s))
+export default function StepV2Service({ form, updateForm, prices, priceStatus, onNext, onBack }: StepV2ServiceProps) {
+  const services = getReservationServiceOptions(prices)
+  const selectedOption = services.find((service) => service.id === form.serviceId)
 
   return (
     <div className="space-y-4">
@@ -21,57 +25,84 @@ export default function StepV2Service({ form, updateForm, onNext, onBack }: Step
         ¿Qué servicio necesitas?
       </p>
 
-      <div className="space-y-2">
-        {mainServices.map(svc => {
-          const meta = getServiceMeta(svc)
-          const price = getServicePrice(svc)
-          const isSelected = form.service === svc
+      {priceStatus === 'loading' && <p className="rounded-xl bg-ink/5 px-3 py-3 text-sm text-muted" role="status">Consultando servicios y precios…</p>}
+      {(priceStatus === 'permission-denied' || priceStatus === 'network-error' || priceStatus === 'invalid') && (
+        <p className="flex items-start gap-2 rounded-xl bg-danger-500/10 px-3 py-3 text-sm text-red-700" role="alert">
+          <AlertCircle className="mt-0.5 shrink-0" size={16} />
+          {priceStatus === 'permission-denied'
+            ? 'Tu sesión no tiene permiso para consultar la configuración de servicios.'
+            : priceStatus === 'invalid'
+              ? 'La configuración de servicios no es válida. Ninguna opción fue habilitada.'
+            : 'No pudimos consultar la configuración de servicios. Revisa tu conexión.'}
+        </p>
+      )}
+
+      <div className="space-y-2" role="radiogroup" aria-label="Seleccionar servicio">
+        {services.map((service) => {
+          const isSelected = form.serviceId === service.id
 
           return (
             <button
-              key={svc}
-              onClick={() => updateForm({ service: svc })}
-              className={`w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all ${
-                isSelected
-                  ? 'bg-brand-500/10 border-brand-500/30'
-                  : 'bg-white/50 border-transparent hover:bg-ink/5'
-              }`}
-              style={{ border: isSelected ? '1px solid var(--brand)' : '1px solid var(--border)' }}
+              type="button"
+              key={service.id}
+              role="radio"
+              aria-checked={isSelected}
+              disabled={!service.isRequestable || priceStatus !== 'ready'}
+              onClick={() => updateForm({
+                serviceId: service.id,
+                serviceName: service.name,
+                servicePackageType: service.packageType,
+                serviceAmountCents: service.amountCents,
+                serviceVersion: service.version,
+                serviceComplimentary: service.complimentary,
+                serviceDurationMinutes: service.durationMinutes,
+              })}
+              className="w-full rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed motion-reduce:transition-none"
             >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: isSelected ? 'var(--brand)' : 'var(--glass-bg)' }}
+              <Card
+                className={`flex min-h-11 w-full items-center gap-3 p-3 shadow-none transition-colors motion-reduce:transition-none ${isSelected
+                  ? 'border-primary bg-primary/10'
+                  : service.isRequestable && priceStatus === 'ready'
+                    ? 'hover:border-primary/40 hover:bg-primary/[0.04]'
+                    : 'bg-ink/[0.025] opacity-70'}`}
               >
-                <PawPrint size={18} className="text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{svc}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{meta?.mainBenefit || ''}</p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-sm font-bold" style={{ color: 'var(--brand)' }}>${price.toLocaleString()}</p>
-                <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>MXN</p>
-              </div>
-              {isSelected && <ArrowRight size={16} className="ml-2" style={{ color: 'var(--brand)' }} />}
+                <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-ink/5 text-muted'}`}>
+                  <PawPrint size={17} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-ink">{service.name}</p>
+                  <p className="mt-0.5 text-xs text-muted">{service.duration} · {service.mainBenefit}</p>
+                  {service.unavailableReason && <p className="mt-1 text-xs font-medium text-amber-800">{service.unavailableReason}</p>}
+                </div>
+                <div className="text-right shrink-0">
+                  {service.amountCents === null ? (
+                    <p className="max-w-28 text-xs font-semibold text-muted">Precio no configurado</p>
+                  ) : (
+                    <><p className="text-sm font-bold text-primary">{formatAmountCents(service.amountCents, service.complimentary)}</p><p className="text-2xs text-muted">MXN · v{service.version}</p></>
+                  )}
+                </div>
+                {isSelected && <ArrowRight size={16} className="ml-1 text-primary" />}
+              </Card>
             </button>
           )
         })}
       </div>
 
-      <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-        Más servicios disponibles al confirmar
+      <p className="text-xs text-muted">
+        Las opciones sin tarifa válida no pueden solicitarse. El equipo PET debe configurar el precio antes de habilitarlas.
       </p>
 
       <div className="flex justify-between pt-2">
-        <button onClick={onBack} className="px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
-          ← Atrás
-        </button>
-        <button
+        {onBack ? <Button variant="secondary" className="min-h-11 rounded-xl" onClick={onBack}>← Atrás</Button> : <span />}
+        <Button
+          variant="primary"
+          className="min-h-11 rounded-xl"
           onClick={onNext}
-          disabled={!form.service}
-          className="btn-primary inline-flex items-center gap-2"
+          disabled={!selectedOption?.isRequestable || priceStatus !== 'ready'}
+          leftIcon={<ArrowRight size={14} />}
         >
-          Siguiente <ArrowRight size={14} />
-        </button>
+          Siguiente
+        </Button>
       </div>
     </div>
   )

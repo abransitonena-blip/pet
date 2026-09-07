@@ -19,14 +19,18 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { BUSINESS_HOURS, generateTimeSlots } from '@/lib/defaultConfig'
+import AdminServicePricing from '@/components/AdminServicePricing'
+import AdminBookingSchedule from '@/components/AdminBookingSchedule'
+import { BRAND } from '@/lib/brand'
 
-type Section = 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'features' | 'maintenance' | 'brand'
+type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'features' | 'maintenance' | 'brand'
 
 const SECTIONS: { id: Section; label: string; icon: string }[] = [
+  { id: 'prices', label: 'Precios de servicios', icon: 'MXN' },
+  { id: 'booking', label: 'Horario de solicitudes', icon: '🕐' },
   { id: 'brand', label: 'Diseño y marca', icon: '🎨' },
   { id: 'hero', label: 'Textos del sitio', icon: '📝' },
   { id: 'social', label: 'Redes sociales', icon: '📱' },
-  { id: 'hours', label: 'Horarios disponibles', icon: '🕐' },
   { id: 'tips', label: 'Walk Tips', icon: '💡' },
   { id: 'faq', label: 'FAQ', icon: '❓' },
   { id: 'terms', label: 'Términos', icon: '📄' },
@@ -85,6 +89,10 @@ function SectionContent({
   saving: boolean
 }) {
   switch (section) {
+    case 'prices':
+      return <AdminServicePricing />
+    case 'booking':
+      return <AdminBookingSchedule />
     case 'brand':
       return <BrandEditor />
     case 'hero':
@@ -157,26 +165,25 @@ function HeroEditor({ config, updateConfig, saving }: EditorProps) {
 }
 
 function SocialEditor({ config, updateConfig, saving }: EditorProps) {
-  const [whatsapp, setWhatsapp] = useState(config.whatsapp)
-  const [displayPhone, setDisplayPhone] = useState(config.displayPhone || '')
   const [contactEmail, setContactEmail] = useState(config.contactEmail || '')
   const [instagram, setInstagram] = useState(config.instagram)
   const [facebook, setFacebook] = useState(config.facebook)
   const [tiktok, setTiktok] = useState(config.tiktok)
 
-  useEffect(() => { setWhatsapp(config.whatsapp) }, [config.whatsapp])
-  useEffect(() => { setDisplayPhone(config.displayPhone || '') }, [config.displayPhone])
   useEffect(() => { setContactEmail(config.contactEmail || '') }, [config.contactEmail])
   useEffect(() => { setInstagram(config.instagram) }, [config.instagram])
   useEffect(() => { setFacebook(config.facebook) }, [config.facebook])
   useEffect(() => { setTiktok(config.tiktok) }, [config.tiktok])
 
-  const save = () => updateConfig({ whatsapp, displayPhone, contactEmail, instagram, facebook, tiktok })
+  const save = () => updateConfig({ contactEmail, instagram, facebook, tiktok })
 
   return (
     <div className="space-y-3">
-      <InputField label="WhatsApp (solo números, con código de país ej. 5215523053772)" value={whatsapp} onChange={setWhatsapp} />
-      <InputField label="Teléfono para mostrar (ej. 55 2305 3772)" value={displayPhone} onChange={setDisplayPhone} />
+      <div className="rounded-xl border border-ink/10 bg-ink/[0.025] p-3">
+        <p className="text-xs font-semibold text-ink">Contacto central de PET Ap</p>
+        <p className="mt-1 text-sm text-muted">{BRAND.displayPhone} · WhatsApp y llamadas</p>
+        <p className="mt-1 text-xs text-muted">Se administra como identidad de marca para evitar que una configuración antigua reactive otro número.</p>
+      </div>
       <InputField label="Correo de contacto" value={contactEmail} onChange={setContactEmail} />
       <InputField label="Instagram (URL completa)" value={instagram} onChange={setInstagram} />
       <InputField label="Facebook (URL completa)" value={facebook} onChange={setFacebook} />
@@ -361,10 +368,10 @@ function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
 
 function FeaturesEditor({ config, updateConfig, saving }: EditorProps) {
   const [petAhora, setPetAhora] = useState(config.features?.petAhoraEnabled ?? false)
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(config.analyticsEnabled !== false)
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(config.analyticsEnabled === true)
 
   useEffect(() => { setPetAhora(config.features?.petAhoraEnabled ?? false) }, [config.features?.petAhoraEnabled])
-  useEffect(() => { setAnalyticsEnabled(config.analyticsEnabled !== false) }, [config.analyticsEnabled])
+  useEffect(() => { setAnalyticsEnabled(config.analyticsEnabled === true) }, [config.analyticsEnabled])
 
   const save = () => updateConfig({ features: { petAhoraEnabled: petAhora }, analyticsEnabled })
 

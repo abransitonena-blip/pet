@@ -9,6 +9,8 @@ import { Camera, MapPin, X, Check, Square, Loader2, Image as ImageIcon } from 'l
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import { useFocusTrap } from '@/lib/useFocusTrap'
 import { canTransition } from '@/lib/sessionMachine'
+import { uploadToCloudinary } from '@/lib/cloudinary'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { Reservation, SessionStatus } from '@/types'
 
 interface Props {
@@ -104,27 +106,9 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
     setPhoto(URL.createObjectURL(file))
   }
 
-  const uploadToCloudinary = async (file: File, path: string): Promise<string> => {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('upload_preset', 'pet_gallery')
-    formData.append('folder', path)
-
-    const res = await fetch(`https://api.cloudinary.com/v1_1/ktyauicg/image/upload`, {
-      method: 'POST',
-      body: formData,
-    })
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.error?.message || `Error ${res.status} al subir a Cloudinary`)
-    }
-
-    const data = await res.json()
-    return data.secure_url as string
-  }
-
   const handleSave = async () => {
+    if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) return
+    if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) return
     if (!photoFile || !location) return
     setSaving(true)
     try {
@@ -157,6 +141,18 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
   }
 
   if (!isOpen) return null
+
+  if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
+    return (
+      <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }} role="dialog" aria-modal="true">
+        <div className="card max-w-sm p-6 text-center">
+          <h3 className="font-semibold text-ink">Fotos operativas temporalmente desactivadas</h3>
+          <p className="text-sm text-muted mt-2 mb-4">No subiremos fotos mientras no exista almacenamiento privado seguro.</p>
+          <button onClick={onClose} className="btn-secondary">Cerrar</button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4"

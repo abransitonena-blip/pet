@@ -1,44 +1,16 @@
 import type { MetadataRoute } from 'next'
+import { absoluteUrl, SITE_URL } from '@/lib/siteUrl'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-euhz.vercel.app'
+const PUBLIC_PATHS = ['/', '/nosotros', '/preguntas-frecuentes', '/privacidad', '/terminos'] as const
+
+export function createSitemap(siteUrl = SITE_URL): MetadataRoute.Sitemap {
+  return PUBLIC_PATHS.map((path) => ({
+    url: absoluteUrl(path, siteUrl),
+    changeFrequency: path === '/' ? 'weekly' : 'monthly',
+    priority: path === '/' ? 1 : path === '/privacidad' || path === '/terminos' ? 0.4 : 0.7,
+  }))
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: siteUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1,
-    },
-    {
-      url: `${siteUrl}/nosotros`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${siteUrl}/preguntas-frecuentes`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${siteUrl}/privacidad`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${siteUrl}/cancelar`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.3,
-    },
-    {
-      url: `${siteUrl}/login`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.4,
-    },
-  ]
+  return createSitemap()
 }

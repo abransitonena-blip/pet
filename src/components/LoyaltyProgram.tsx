@@ -2,20 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Gift, Star, Award, Sparkles } from 'lucide-react'
+import { Gift, Star, Award } from 'lucide-react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db, auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { getFunctions, httpsCallable } from 'firebase/functions'
-
-const FREE_AFTER = 10
+import Link from 'next/link'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 export default function LoyaltyProgram() {
   const [uid, setUid] = useState<string | null>(null)
   const [loyalty, setLoyalty] = useState<{ points: number; totalWalks: number; freeWalksEarned: number; freeWalksUsed: number } | null>(null)
   const [loading, setLoading] = useState(true)
-  const [redeeming, setRedeeming] = useState(false)
-  const [redeemMsg, setRedeemMsg] = useState('')
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -27,34 +25,19 @@ export default function LoyaltyProgram() {
   useEffect(() => {
     if (!uid) return
     const unsub = onSnapshot(doc(db, 'loyalty', uid), (snap) => {
-      if (snap.exists()) {
-        setLoyalty(snap.data() as typeof loyalty)
-      }
+      setLoyalty(snap.exists() ? snap.data() as typeof loyalty : null)
+      setLoadError(false)
+      setLoading(false)
+    }, () => {
+      setLoadError(true)
       setLoading(false)
     })
     return unsub
   }, [uid])
 
   const totalWalks = loyalty?.totalWalks ?? 0
-  const cycle = totalWalks % FREE_AFTER
   const freeAvailable = (loyalty?.freeWalksEarned ?? 0) - (loyalty?.freeWalksUsed ?? 0)
   const canRedeem = freeAvailable > 0
-
-  const handleRedeem = async () => {
-    if (!canRedeem || !uid) return
-    setRedeeming(true)
-    setRedeemMsg('')
-    try {
-      const functions = getFunctions()
-      const redeemFn = httpsCallable(functions, 'redeemFreeWalk')
-      await redeemFn({ uid })
-      setRedeemMsg('✅ Paseo gratis canjeado! Te contactaremos para agendarlo.')
-    } catch {
-      setRedeemMsg('Error al canjear. Intenta de nuevo.')
-    } finally {
-      setRedeeming(false)
-    }
-  }
 
   return (
     <div className="card p-5 sm:p-6">
@@ -68,6 +51,8 @@ export default function LoyaltyProgram() {
           <div className="skeleton h-4 w-48" />
           <div className="skeleton h-2 rounded-full" />
         </div>
+      ) : loadError ? (
+        <p className="text-xs text-danger text-center py-4" role="alert">No pudimos consultar tu progreso. Intenta nuevamente más tarde.</p>
       ) : !uid ? (
         <p className="text-xs text-muted text-center py-4">Inicia sesión para ver tu progreso</p>
       ) : totalWalks === 0 ? (
@@ -77,28 +62,8 @@ export default function LoyaltyProgram() {
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted">
-              {totalWalks} paseo{totalWalks !== 1 ? 's' : ''} completado{totalWalks !== 1 ? 's' : ''}
-            </span>
-            <span className="text-primary font-semibold">
-              {cycle}/{FREE_AFTER}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {Array.from({ length: FREE_AFTER }).map((_, i) => (
-              <div key={i} className="flex-1">
-                <div className={`h-2 rounded-full transition-all ${i < cycle ? 'bg-primary' : 'bg-border'}`} />
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted">
-              {cycle === 0 ? '¡Siguiente paseo = gratis!' : `Faltan ${FREE_AFTER - cycle} para tu paseo gratis`}
-            </span>
-          </div>
+          <p className="text-xs text-muted">Paseos pagados y completados registrados: <strong>{totalWalks}</strong></p>
+          <p className="text-xs text-muted">Puntos promocionales registrados: <strong>{loyalty?.points ?? 0}</strong></p>
 
           {canRedeem && (
             <motion.div
@@ -109,38 +74,21 @@ export default function LoyaltyProgram() {
               <div className="flex items-start gap-2 mb-2">
                 <Award className="text-success shrink-0 mt-0.5" size={16} />
                 <div>
-                  <p className="text-sm font-semibold text-success">Paseo{freeAvailable > 1 ? 's' : ''} gratis disponible{freeAvailable > 1 ? 's' : ''}</p>
-                  <p className="text-xs text-muted">Tienes {freeAvailable} paseo{freeAvailable !== 1 ? 's' : ''} gratis para canjear. Sin costo, sin compromiso.</p>
+                  <p className="text-sm font-semibold text-success">Beneficio registrado pendiente de verificación</p>
+                  <p className="text-xs text-muted">Administración verificará manualmente la elegibilidad y las condiciones antes de confirmar cualquier canje.</p>
                 </div>
               </div>
-              <button
-                onClick={handleRedeem}
-                disabled={redeeming}
-                className="btn-trust w-full mt-2 inline-flex items-center justify-center gap-2 !py-2 !text-xs"
-              >
-                {redeeming ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 border-2 border-ink/20 border-t-ink rounded-full animate-spin" />
-                    Canjeando...
-                  </span>
-                ) : (
-                  <>
-                    <Sparkles size={12} />
-                    Canjear paseo gratis
-                  </>
-                )}
-              </button>
-              {redeemMsg && (
-                <p className="text-xs mt-2 text-center text-muted">{redeemMsg}</p>
+              {!FEATURE_FLAGS.LOYALTY_REDEMPTION_ENABLED && (
+                <Link href="/familia/ayuda" className="btn-trust w-full mt-2 inline-flex items-center justify-center !py-2 !text-xs">
+                  Solicitar revisión manual
+                </Link>
               )}
             </motion.div>
           )}
         </div>
       )}
 
-      <p className="text-2xs text-muted text-center mt-4">
-        {FREE_AFTER} paseos completados = 1 paseo individual gratis
-      </p>
+      <p className="text-2xs text-muted text-center mt-4">Los puntos son promocionales y el canje permanece manual durante el MVP.</p>
     </div>
   )
 }

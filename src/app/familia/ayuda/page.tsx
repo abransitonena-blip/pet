@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ChevronDown, Mail,
   CalendarDays, Dog, CreditCard, PawPrint, HelpCircle } from 'lucide-react'
-import { WHATSAPP_NUMBER } from '@/lib/utils'
+import { confirmWhatsAppShare, WHATSAPP_NUMBER } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
 
 const FAQ_ITEMS = [
@@ -39,7 +39,7 @@ const FAQ_ITEMS = [
     questions: [
       {
         q: '¿Qué incluye cada paseo?',
-        a: 'Todos nuestros paseos incluyen: paseador certificado, agua fresca, bolsas para desechos, foto del paseo y reporte de actividad. Los paquetes premium incluyen sesión de fotos y ruta personalizada.',
+        a: 'La duración, alcance e instrucciones operativas se muestran antes de solicitar el paseo. El equipo confirma disponibilidad y detalles antes de prestar el servicio.',
       },
       {
         q: '¿Cuánto dura cada paseo?',
@@ -119,17 +119,16 @@ export default function AyudaPage() {
 
       {/* Quick Contact */}
       <div className="grid grid-cols-2 gap-3">
-        <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, necesito ayuda con mi cuenta de PET Ap')}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => confirmWhatsAppShare(WHATSAPP_NUMBER, 'Hola, necesito ayuda con mi cuenta de PET Ap.')}
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
           style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.1), rgba(5,150,105,0.05))', border: '1px solid var(--border)' }}
         >
           <WhatsAppIcon width={20} height={20} className="text-success-400 mb-2" />
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>WhatsApp</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Respuesta en minutos</p>
-        </a>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Contacto sujeto a disponibilidad</p>
+        </button>
         <a
           href={`mailto:${BRAND.email}?subject=Ayuda%20PET%20Ap`}
           className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
@@ -201,14 +200,13 @@ export default function AyudaPage() {
         <HelpCircle className="text-2xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
         <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>¿No encontraste lo que buscabas?</p>
         <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Estamos aquí para ayudarte</p>
-        <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, tengo una pregunta que no encontré en el centro de ayuda')}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => confirmWhatsAppShare(WHATSAPP_NUMBER, 'Hola, tengo una pregunta que no encontré en el centro de ayuda.')}
           className="btn-primary inline-flex text-xs gap-2"
         >
           <WhatsAppIcon width={14} height={14} /> Escribirnos por WhatsApp
-        </a>
+        </button>
       </div>
     </div>
   )

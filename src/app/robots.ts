@@ -1,13 +1,23 @@
 import type { MetadataRoute } from 'next'
+import { absoluteUrl, SITE_URL } from '@/lib/siteUrl'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-euhz.vercel.app'
-
-export default function robots(): MetadataRoute.Robots {
+export function createRobots(siteUrl = SITE_URL): MetadataRoute.Robots {
   return {
-    rules: {
+    rules: [{
       userAgent: '*',
       allow: '/',
-    },
-    sitemap: `${siteUrl}/sitemap.xml`,
+      disallow: [
+        '/admin', '/admin/', '/familia', '/familia/', '/walker', '/walker/',
+        '/supervisor', '/supervisor/', '/equipo', '/login', '/cancelar',
+        '/api/', '/mi-cuenta', '/mi-cuenta/', '/paseador', '/paseador/',
+        '/__/auth/', '/auth/',
+      ],
+    }],
+    sitemap: absoluteUrl('/sitemap.xml', siteUrl),
+    host: siteUrl,
   }
+}
+
+export default function robots(): MetadataRoute.Robots {
+  return createRobots()
 }

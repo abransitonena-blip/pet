@@ -1,16 +1,9 @@
-/* eslint-disable react-refresh/only-export-components */
 import type { Metadata } from 'next'
 import { BRAND } from '@/lib/brand'
 import { ShieldCheck, Heart, Leaf, Users } from 'lucide-react'
+import { publicPageMetadata } from '@/lib/seoMetadata'
 
-export const metadata: Metadata = {
-  title: 'Nosotros',
-  description: 'Conoce a PET Ap, la plataforma de bienestar canino que combina tecnología y amor por los perros para ofrecer paseos personalizados.',
-  openGraph: {
-    title: 'Nosotros | PET Ap',
-    description: 'Conoce nuestra historia y compromiso con el bienestar canino.',
-  },
-}
+export const metadata: Metadata = publicPageMetadata({ path: '/nosotros', title: 'Cómo trabajamos', description: 'Conoce el enfoque operativo y de bienestar canino de PET Ap.' })
 
 const values = [
   {
@@ -21,7 +14,7 @@ const values = [
   {
     icon: ShieldCheck,
     title: 'Confianza y seguridad',
-    desc: 'Todos nuestros paseadores son certificados, evaluados y cuentan con seguro de responsabilidad civil.',
+    desc: 'La asignación y el seguimiento operativo se revisan según la información disponible para cada servicio.',
   },
   {
     icon: Leaf,
@@ -67,7 +60,7 @@ export default function NosotrosPage() {
               </p>
               <p>
                 Lo que empezó como un servicio local de paseos se convirtió en una plataforma 
-                tecnológica que conecta a dueños responsables con paseadores certificados. 
+                tecnológica que conecta a familias responsables con personas dedicadas al paseo canino.
                 Hoy, cientos de perros disfrutan de paseos personalizados mientras sus familias 
                 reciben fotos, reportes y la certeza de que están en buenas manos.
                 La tecnología está al servicio del bienestar animal.

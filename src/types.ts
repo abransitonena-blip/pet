@@ -1,12 +1,18 @@
 import type { SessionStatus, AssignmentStatus } from './lib/sessionMachine'
+import type { PaymentStatus, ServiceOrderStatus } from './lib/domainStates'
 
 export type { SessionStatus, AssignmentStatus }
+
+export interface FirestoreTimestamp {
+  seconds: number
+  nanoseconds: number
+}
 
 export interface WalkMedia {
   photo: string
   lat: number
   lng: number
-  timestamp: { seconds: number; nanoseconds: number }
+  timestamp: FirestoreTimestamp
 }
 
 export interface Address {
@@ -54,8 +60,8 @@ export interface ServiceOrder {
   discount: number
   referralDiscount: number
   total: number
-  paymentStatus: 'pending' | 'paid'
-  status: 'active' | 'completed' | 'cancelled' | 'paused'
+  paymentStatus: PaymentStatus
+  status: ServiceOrderStatus
   notes: string
   referralCode?: string
   appliedCoupon?: string
@@ -66,11 +72,16 @@ export interface WalkSession {
   id: string
   orderId: string
   customerId: string
+  dogIds?: string[]
   customerName: string
   customerPhone: string
   dogName: string
   petType: string
   serviceName: string
+  serviceId?: string
+  scheduledDate?: string
+  scheduledStart?: string
+  status?: SessionStatus
   date: string
   startTime: string
   arrivalWindowStart?: string
@@ -108,7 +119,7 @@ export interface Reservation {
   time: string
   arrivalWindowStart?: string
   arrivalWindowEnd?: string
-  status: SessionStatus
+  status: SessionStatus | 'pending' | 'walker_confirmed'
   notes: string
   internalNotes: string
   assignedWalker: string
@@ -121,7 +132,7 @@ export interface Reservation {
   walkNotes?: string
   uid?: string
   customer?: { uid: string; name: string; phone: string }
-  assignment?: { walkerId: string; walkerName: string; assignedAt: any; assignedBy: string }
+  assignment?: { walkerId: string; walkerName: string; assignedAt?: FirestoreTimestamp; assignedBy: string }
   walk?: {
     status: string
     checkIn?: WalkMedia
@@ -268,9 +279,9 @@ export interface Client {
   metrics: {
     ltv: number
     avgFrequency: number
-    lastWalkDate?: any
+    lastWalkDate?: FirestoreTimestamp
     totalSpent: number
-    joinDate: any
+    joinDate?: FirestoreTimestamp
   }
 }
 
@@ -279,7 +290,7 @@ export interface Loyalty {
   totalWalks: number
   freeWalksEarned: number
   freeWalksUsed: number
-  lastWalkAt?: any
+  lastWalkAt?: FirestoreTimestamp
 }
 
 export type PresenceStatus = 'online' | 'offline' | 'busy'

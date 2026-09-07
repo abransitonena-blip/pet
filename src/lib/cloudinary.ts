@@ -1,21 +1,14 @@
+import 'client-only'
+
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+
 export async function uploadToCloudinary(file: File, folder: string): Promise<string> {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('upload_preset', 'pet_gallery')
-  formData.append('folder', folder)
-
-  const res = await fetch('https://api.cloudinary.com/v1_1/ktyauicg/image/upload', {
-    method: 'POST',
-    body: formData,
-  })
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.error?.message || `Error ${res.status} al subir a Cloudinary`)
+  void file
+  void folder
+  if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
+    throw new Error('PRIVATE_MEDIA_UPLOADS_UNAVAILABLE')
   }
-
-  const data = await res.json()
-  return data.secure_url as string
+  throw new Error('SIGNED_MEDIA_BACKEND_REQUIRED')
 }
 
 export async function getCurrentPosition(): Promise<{ lat: number; lng: number }> {

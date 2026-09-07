@@ -3,10 +3,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { db } from '@/firebase/config'
 import {
-  collection, query, onSnapshot, where,
+  collection, query, onSnapshot, where, limit,
 } from 'firebase/firestore'
-import { httpsCallable } from 'firebase/functions'
-import { functions } from '@/firebase/config'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PersonStanding, Phone, Loader2, Plus, X,
   CalendarDays, MapPinned, ChartBar, Pencil, Check, Mail, Key } from 'lucide-react'
@@ -17,6 +15,8 @@ import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
 import type { Zone } from '@/types'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { confirmWhatsAppShare } from '@/lib/utils'
 
 const DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
 const DAY_LABELS: Record<string, string> = {
@@ -36,6 +36,8 @@ interface WalkerConfig {
 }
 
 interface WalkerStats {
+  uid?: string
+  status: 'active' | 'inactive' | 'suspended' | 'legacy-invited'
   name: string
   phone: string
   totalAssigned: number
@@ -64,16 +66,32 @@ export default function AdminPaseadoresPage() {
   const [editing, setEditing] = useState<number | null>(null)
   const [form, setForm] = useState<WalkerConfig>(EMPTY_WALKER)
   const [zones, setZones] = useState<Zone[]>([])
+  const [walkerProfiles, setWalkerProfiles] = useState<Array<{ uid: string; name: string; email: string; phone: string; status: string }>>([])
+  const [profileError, setProfileError] = useState('')
   const [expandedWalker, setExpandedWalker] = useState<string | null>(null)
   const [creatingAccount, setCreatingAccount] = useState<number | null>(null)
   const [tempPassword, setTempPassword] = useState<{ index: number; password: string } | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
-    const q = query(collection(db, 'zones'), where('active', '==', true))
+    const q = query(collection(db, 'zones'), where('active', '==', true), limit(100))
     return onSnapshot(q, (snap) => {
       setZones(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Zone)))
     })
+  }, [])
+
+  useEffect(() => {
+    const profilesQuery = query(collection(db, 'walkerProfiles'), limit(100))
+    return onSnapshot(profilesQuery, (snapshot) => {
+      setWalkerProfiles(snapshot.docs.map((item) => ({
+        uid: item.id,
+        name: String(item.data().name || 'Paseador'),
+        email: String(item.data().email || ''),
+        phone: String(item.data().phone || ''),
+        status: String(item.data().status || 'inactive'),
+      })))
+      setProfileError('')
+    }, () => setProfileError('No pudimos consultar los perfiles canónicos de paseadores.'))
   }, [])
 
   const today = new Date().toISOString().split('T')[0]
@@ -82,14 +100,19 @@ export default function AdminPaseadoresPage() {
   const walkerStats: WalkerStats[] = useMemo(() => {
     const walkers = (config.walkers || []) as WalkerConfig[]
     return walkers.map((w) => {
-      // Match by name (legacy) OR by uid (new auto-assign)
+      // Email matching is only a read-only bridge to locate the canonical UID;
+      // authorization and assignments continue to use the walker profile document ID.
+      const canonical = walkerProfiles.find((profile) => profile.uid === w.uid)
+        || walkerProfiles.find((profile) => profile.email && profile.email === w.email)
+      const canonicalUid = canonical?.uid || w.uid
       const assigned = reservations.filter((r) => 
-        r.assignedWalker === w.name || 
-        r.assignment?.walkerId === w.uid
+        r.assignment?.walkerId === canonicalUid
       )
       return {
-        name: w.name,
-        phone: w.phone,
+        uid: canonicalUid,
+        status: canonical ? (canonical.status as WalkerStats['status']) : 'legacy-invited',
+        name: canonical?.name || w.name,
+        phone: canonical?.phone || w.phone,
         totalAssigned: assigned.length,
         completed: assigned.filter((r) => r.status === 'completed').length,
         inProgress: assigned.filter((r) => r.status === 'on_the_way' || r.status === 'in_progress' || r.status === 'assigned').length,
@@ -99,7 +122,7 @@ export default function AdminPaseadoresPage() {
         lastAssignment: assigned[0]?.date || 'Nunca',
       }
     })
-  }, [reservations, config.walkers])
+  }, [reservations, config.walkers, walkerProfiles])
 
   const openCreate = () => {
     setEditing(null)
@@ -153,40 +176,14 @@ export default function AdminPaseadoresPage() {
   }
 
   const handleCreateAccount = async (index: number) => {
+    if (!FEATURE_FLAGS.CLOUD_FUNCTIONS_ENABLED) {
+      toast('La creación automática de cuentas está desactivada. Usa el proceso administrativo manual seguro.', 'error')
+      return
+    }
     const walker = (config.walkers || [])[index] as WalkerConfig | undefined
     if (!walker?.email) {
       toast('El paseador necesita un correo electrónico', 'error')
       return
-    }
-    setCreatingAccount(index)
-    try {
-      const createAccount = httpsCallable(functions, 'createWalkerAccount')
-      const result = await createAccount({
-        email: walker.email,
-        name: walker.name,
-        phone: walker.phone,
-        zones: walker.zones,
-        maxDaily: walker.maxDaily,
-        maxWeekly: walker.maxWeekly,
-        schedule: walker.schedule,
-      })
-
-      const { uid, tempPassword } = result.data as { uid: string; tempPassword: string }
-
-      // Update walker config with uid and status
-      const walkers = [...(config.walkers || [])] as WalkerConfig[]
-      walkers[index] = { ...walkers[index], uid, status: 'active' }
-      await updateConfig({ walkers })
-
-      setTempPassword({ index, password: tempPassword })
-      toast('Cuenta creada exitosamente')
-    } catch (e: unknown) {
-      const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: string }).message) : ''
-      if (msg.includes('already-exists')) {
-        toast('Este correo ya está registrado', 'error')
-      } else {
-        toast('Error al crear cuenta: ' + (msg || 'Error desconocido'), 'error')
-      }
     }
     setCreatingAccount(null)
   }
@@ -225,7 +222,7 @@ export default function AdminPaseadoresPage() {
 
   const openWhatsApp = (phone: string) => {
     const cleaned = phone.replace(/\D/g, '')
-    window.open(`https://wa.me/52${cleaned}?text=Hola, soy de PET Ap 🐾`, '_blank')
+    confirmWhatsAppShare(`52${cleaned}`, 'Hola, soy de PET Ap. Solicito ponerme en contacto contigo.')
   }
 
   const unassignedToday = useMemo(() => {
@@ -247,6 +244,8 @@ export default function AdminPaseadoresPage() {
           </button>
         }
       />
+
+      {profileError && <p className="rounded-xl bg-danger/10 p-3 text-sm text-danger" role="alert">{profileError}</p>}
 
       {loading ? (
         <LoadingState rows={3} height="h-32" />
@@ -274,7 +273,7 @@ export default function AdminPaseadoresPage() {
 
             return (
               <div
-                key={w.name}
+                key={w.uid || `legacy-${w.name}`}
                 className="rounded-xl overflow-hidden transition-all"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
@@ -288,10 +287,14 @@ export default function AdminPaseadoresPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{w.name}</span>
-                          {walkerConfig?.uid ? (
+                          {w.status === 'active' ? (
                             <span className="text-2xs px-2 py-0.5 rounded-full bg-success-500/15 text-success-600 font-medium">Activo</span>
+                          ) : w.status === 'suspended' ? (
+                            <span className="text-2xs px-2 py-0.5 rounded-full bg-danger-500/15 text-red-700 font-medium">Suspendido</span>
+                          ) : w.status === 'inactive' ? (
+                            <span className="text-2xs px-2 py-0.5 rounded-full bg-ink/10 text-muted font-medium">Inactivo</span>
                           ) : (
-                            <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-medium">Invitado</span>
+                            <span className="text-2xs px-2 py-0.5 rounded-full bg-warning/10 text-amber-800 font-medium">Registro legacy sin vincular</span>
                           )}
                           {w.inProgress > 0 && (
                             <span className="text-2xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-medium">
@@ -322,26 +325,26 @@ export default function AdminPaseadoresPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {!walkerConfig?.uid && walkerConfig?.email && (
+                      {!walkerConfig?.uid && walkerConfig?.email && FEATURE_FLAGS.CLOUD_FUNCTIONS_ENABLED && (
                         <button
                           onClick={() => handleCreateAccount(i)}
                           disabled={creatingAccount === i}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-600"
+                          className="flex h-11 w-11 items-center justify-center rounded-xl text-brand-600 transition-colors hover:bg-brand-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                           title="Crear cuenta de acceso"
                         >
                           {creatingAccount === i ? <Loader2 className="animate-spin" size={12} /> : <Key size={12} />}
                         </button>
                       )}
-                      <button onClick={() => setExpandedWalker(isExpanded ? null : w.name)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }} title="Detalles">
+                      <button onClick={() => setExpandedWalker(isExpanded ? null : w.name)} className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" style={{ color: 'var(--text-muted)' }} title="Detalles" aria-label={`Ver detalles de ${w.name}`}>
                         <ChartBar size={13} />
                       </button>
-                      <button onClick={() => openEdit(i)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }} title="Editar">
+                      <button onClick={() => openEdit(i)} className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" style={{ color: 'var(--text-muted)' }} title="Editar" aria-label={`Editar ${w.name}`}>
                         <Pencil size={12} />
                       </button>
-                      <button onClick={() => openWhatsApp(w.phone)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="WhatsApp">
+                      <button onClick={() => openWhatsApp(w.phone)} className="flex h-11 w-11 items-center justify-center rounded-xl text-success-400 transition-colors hover:bg-success-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" title="WhatsApp" aria-label={`Contactar a ${w.name} por WhatsApp`}>
                         <WhatsAppIcon width={13} height={13} />
                       </button>
-                      <button onClick={() => handleRemove(i)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400" title="Eliminar">
+                      <button onClick={() => handleRemove(i)} className="flex h-11 w-11 items-center justify-center rounded-xl text-danger-400 transition-colors hover:bg-danger-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500" title="Eliminar" aria-label={`Retirar registro legacy de ${w.name}`}>
                         <X size={12} />
                       </button>
                     </div>

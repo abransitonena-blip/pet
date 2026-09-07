@@ -9,8 +9,10 @@ import {
   orderBy,
   limit,
   getDocs,
+  where,
 } from 'firebase/firestore'
 import { Star, Quote, PawPrint } from 'lucide-react'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 interface Review {
   id: string
@@ -28,10 +30,13 @@ export default function Reviews() {
   const ref = useRef(null)
 
   useEffect(() => {
+    if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) { setLoading(false); return }
     async function fetchReviews() {
       try {
         const q = query(
           collection(db, 'reviews'),
+          where('moderationStatus', '==', 'published'),
+          where('verified', '==', true),
           orderBy('date', 'desc'),
           limit(20)
         )
@@ -51,6 +56,8 @@ export default function Reviews() {
     }
     fetchReviews()
   }, [])
+
+  if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) return null
 
   useEffect(() => {
     if (reviews.length === 0) return

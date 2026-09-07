@@ -1,9 +1,9 @@
 import { initializeApp, getApps } from 'firebase/app'
 import { initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore'
-import { getAuth } from 'firebase/auth'
+import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth'
 import { getStorage } from 'firebase/storage'
-import { getFunctions } from 'firebase/functions'
 import { requiredEnv } from '@/lib/env'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 const firebaseConfig = {
   apiKey: requiredEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, 'NEXT_PUBLIC_FIREBASE_API_KEY'),
@@ -20,14 +20,14 @@ const db = initializeFirestore(app, {
   cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 })
 const auth = getAuth(app)
+const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
 const storage = getStorage(app)
-const functions = getFunctions(app, 'us-central1')
-
 import type { Messaging } from 'firebase/messaging'
 
 let _messaging: Messaging | null = null
 
 export async function getMessagingInstance() {
+  if (!FEATURE_FLAGS.FCM_ENABLED) return null
   if (typeof window !== 'undefined' && !_messaging) {
     const { getMessaging } = await import('firebase/messaging')
     _messaging = getMessaging(app)
@@ -35,4 +35,4 @@ export async function getMessagingInstance() {
   return _messaging
 }
 
-export { db, auth, storage, functions }
+export { db, auth, authPersistenceReady, storage }

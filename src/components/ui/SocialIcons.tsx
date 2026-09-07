@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+
 import { SVGProps } from 'react'
 
 export function FacebookIcon(props: SVGProps<SVGSVGElement>) {
@@ -25,3 +27,11 @@ export function WhatsAppIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+export const SocialIcons = {
+  FacebookIcon,
+  InstagramIcon,
+  WhatsAppIcon,
+}
+
+export default { FacebookIcon, InstagramIcon, WhatsAppIcon }

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, CalendarDays, Dog, CreditCard, PawPrint } from 'lucide-react'
-import { WHATSAPP_NUMBER } from '@/lib/utils'
+import { confirmWhatsAppShare, WHATSAPP_NUMBER } from '@/lib/utils'
 
 const FAQ_ITEMS = [
   {
@@ -20,7 +20,7 @@ const FAQ_ITEMS = [
     category: 'Servicios',
     icon: Dog,
     questions: [
-      { q: '¿Qué incluye cada paseo?', a: 'Todos nuestros paseos incluyen: paseador certificado, agua fresca, bolsas para desechos y reporte de actividad. Los paquetes premium incluyen fotos y ruta personalizada.' },
+      { q: '¿Qué incluye cada paseo?', a: 'La duración, alcance e instrucciones operativas se muestran antes de solicitar el paseo. El equipo confirma disponibilidad y detalles antes de prestar el servicio.' },
       { q: '¿Cuánto dura cada paseo?', a: 'Ofrecemos paseos de 30 min (Cotidiano), 45 min (Energía) y 60 min (Acompañamiento). También hay planes de rutina semanal.' },
       { q: '¿Atienden a todos los tipos de perros?', a: 'Atendemos perros de todos los tamaños y razas. Agrupamos por tamaño y temperamento para la seguridad de todos.' },
       { q: '¿Puedo llevar a más de un perro?', a: 'El servicio Cotidiano incluye hasta 4 perros del mismo hogar. Para necesidades especiales, contáctanos por WhatsApp.' },
@@ -143,14 +143,13 @@ export default function PublicFAQ() {
             <p className="text-sm text-muted mb-5">
               Estamos aquí para ayudarte
             </p>
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, tengo una pregunta sobre los paseos')}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => confirmWhatsAppShare(WHATSAPP_NUMBER, 'Hola, tengo una pregunta sobre los paseos.')}
               className="btn-primary inline-flex items-center gap-2"
             >
               <WhatsAppIcon width={16} height={16} /> Escríbenos por WhatsApp
-            </a>
+            </button>
           </div>
         </div>
       </section>

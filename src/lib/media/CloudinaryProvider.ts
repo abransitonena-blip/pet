@@ -1,3 +1,6 @@
+import 'client-only'
+
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { MediaProvider, MediaUploadResult, MediaAsset, MediaUploadOptions, MediaVariant, MediaListOptions } from './MediaProvider'
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ''
@@ -13,51 +16,19 @@ export class CloudinaryProvider implements MediaProvider {
   }
 
   async upload(file: File, path: string, options?: MediaUploadOptions): Promise<MediaUploadResult> {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('upload_preset', this.uploadPreset)
-    formData.append('folder', path)
-
-    if (options?.maxWidth) formData.append('width', String(options.maxWidth))
-    if (options?.maxHeight) formData.append('height', String(options.maxHeight))
-    if (options?.quality) formData.append('quality', String(options.quality))
-
-    const response = await fetch(`${API_URL}/image/upload`, {
-      method: 'POST',
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(`Cloudinary upload failed: ${error.error?.message || response.statusText}`)
+    void file
+    void path
+    void options
+    void this.uploadPreset
+    if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
+      throw new Error('PRIVATE_MEDIA_UPLOADS_UNAVAILABLE')
     }
-
-    const data = await response.json()
-
-    const variants: MediaVariant[] = options?.variants?.map((v) => ({
-      ...v,
-      url: this.getVariantUrl(data.public_id, v),
-    })) || []
-
-    return {
-      mediaId: data.public_id,
-      url: data.secure_url,
-      variants,
-    }
+    throw new Error('SIGNED_MEDIA_BACKEND_REQUIRED')
   }
 
   async delete(mediaId: string): Promise<void> {
-    const response = await fetch(`${API_URL}/image/destroy/${mediaId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ invalidate: true }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Cloudinary delete failed: ${response.statusText}`)
-    }
+    void mediaId
+    throw new Error('TRUSTED_MEDIA_DELETE_BACKEND_REQUIRED')
   }
 
   async getUrl(mediaId: string, variant?: string): Promise<string> {
@@ -68,31 +39,9 @@ export class CloudinaryProvider implements MediaProvider {
   }
 
   async list(ownerId: string, options?: MediaListOptions): Promise<MediaAsset[]> {
-    const response = await fetch(
-      `${API_URL}/resources/image/upload?prefix=${ownerId}&max_results=${options?.limit || 50}`,
-      {
-        headers: {
-          Authorization: `Basic ${btoa(`${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}`)}`,
-        },
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error(`Cloudinary list failed: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    return (data.resources || []).map((r: { public_id?: string; format?: string; width?: number; height?: number; created_at?: string }) => ({
-      mediaId: r.public_id,
-      provider: 'cloudinary',
-      objectKey: r.public_id,
-      ownerId,
-      mimeType: r.format === 'jpg' ? 'image/jpeg' : `image/${r.format}`,
-      width: r.width,
-      height: r.height,
-      visibility: 'public' as const,
-      createdAt: new Date(r.created_at || ''),
-    }))
+    void ownerId
+    void options
+    throw new Error('Cloudinary asset listing is only available from a trusted server module')
   }
 
   private getVariantUrl(publicId: string, variant: MediaVariant): string {

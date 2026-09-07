@@ -2,17 +2,18 @@
 
 import { motion } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
-import { MessageCircle, Mail, Clock, Music } from 'lucide-react'
+import { MessageCircle, Mail, Clock, Music, Phone } from 'lucide-react'
 import { FacebookIcon, InstagramIcon } from '@/components/ui/SocialIcons'
 import { formatBusinessHours } from '@/lib/defaultConfig'
-import { formatDisplayPhone } from '@/lib/utils'
+import { confirmWhatsAppShare, formatDisplayPhone } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
 
 export default function ContactSection() {
   const { config } = useConfig()
 
   const contacts = [
-    { icon: MessageCircle, label: 'WhatsApp', value: formatDisplayPhone(config.whatsapp), href: 'https://wa.me/' + config.whatsapp },
+    { icon: MessageCircle, label: 'WhatsApp', value: formatDisplayPhone(BRAND.whatsapp), href: BRAND.whatsappUrl },
+    { icon: Phone, label: 'Llamar', value: BRAND.displayPhone, href: BRAND.telUrl },
     { icon: Mail, label: 'Correo electrónico', value: config.contactEmail || BRAND.email, href: `mailto:${config.contactEmail || BRAND.email}` },
     { icon: Clock, label: 'Horario', value: formatBusinessHours().map((h) => `${h.weekday} ${h.hours}`).join(' · '), href: null },
   ]
@@ -57,12 +58,16 @@ export default function ContactSection() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-muted">{c.label}</p>
-                  <p className="text-sm font-medium text-ink truncate">{c.value}</p>
+                  <p className="break-words text-sm font-medium leading-relaxed text-ink">{c.value}</p>
                 </div>
               </div>
             )
             return c.href ? (
-              <a key={i} href={c.href} target={c.href.startsWith('mailto') ? undefined : '_blank'} rel="noopener noreferrer" aria-label={`${c.label} (abre en nueva ventana)`}>
+              <a key={i} href={c.href} target={c.href.startsWith('https://') ? '_blank' : undefined} rel={c.href.startsWith('https://') ? 'noopener noreferrer' : undefined} aria-label={c.href.startsWith('https://') ? `${c.label} (abre en nueva ventana)` : c.label} onClick={(event) => {
+                if (c.label !== 'WhatsApp') return
+                event.preventDefault()
+                confirmWhatsAppShare(BRAND.whatsapp, 'Hola, solicito información sobre los paseos de PET Ap.')
+              }}>
                 {content}
               </a>
             ) : (
@@ -81,7 +86,7 @@ export default function ContactSection() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${s.label} (abre en nueva ventana)`}
-                    className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-muted hover:text-primary hover:bg-primary/10 transition-all"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/5 text-muted transition-all hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <Icon size={16} />
                   </a>

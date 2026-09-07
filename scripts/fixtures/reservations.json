@@ -1,0 +1,4 @@
+[
+  { "id": "res-1", "client": { "uid": "client-1" }, "dogs": ["dog-1"], "date": "2025-01-15", "status": "confirmed" },
+  { "id": "res-2", "client": { "uid": "client-2" }, "date": "2025-02-20", "status": "pending" }
+]

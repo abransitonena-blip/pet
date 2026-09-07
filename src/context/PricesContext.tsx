@@ -1,49 +1,82 @@
 /* eslint-disable react-refresh/only-export-components */
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { doc, onSnapshot, setDoc } from 'firebase/firestore'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { SERVICES, normalizeServiceName } from '@/lib/services'
+import { getReservationServiceDefinitions, normalizeServiceName, RESERVATION_SERVICE_IDS } from '@/lib/walkServices'
+import {
+  createEmptyServicePrices,
+  parsePublicServicePricesDocument,
+  type PriceDocumentStatus,
+  type PublicServicePrice,
+} from '@/lib/servicePricing'
 
-const DEFAULT_PRICES = Object.fromEntries(SERVICES.map((s) => [s.name, s.price]))
+const SERVICE_DEFINITIONS = getReservationServiceDefinitions()
+const EMPTY_SERVICE_PRICES = createEmptyServicePrices(SERVICE_DEFINITIONS)
 
 interface PricesContextType {
+  services: Record<string, PublicServicePrice>
+  /** Legacy read-only projection. Missing prices are excluded from totals and flagged separately. */
   prices: Record<string, number>
-  savePrices: (newPrices: Record<string, number>) => Promise<void>
+  hasIncompletePricing: boolean
+  version: number
+  status: PriceDocumentStatus
+  findByLegacyName: (serviceName: string) => PublicServicePrice | null
 }
 
 const PricesContext = createContext<PricesContextType>({
-  prices: DEFAULT_PRICES,
-  savePrices: async () => {},
+  services: EMPTY_SERVICE_PRICES,
+  prices: {},
+  hasIncompletePricing: true,
+  version: 0,
+  status: 'loading',
+  findByLegacyName: () => null,
 })
 
 export function PricesProvider({ children }: { children: ReactNode }) {
-  const [prices, setPrices] = useState<Record<string, number>>(DEFAULT_PRICES)
+  const [services, setServices] = useState<Record<string, PublicServicePrice>>(EMPTY_SERVICE_PRICES)
+  const [version, setVersion] = useState(0)
+  const [status, setStatus] = useState<PriceDocumentStatus>('loading')
 
   useEffect(() => {
-    try {
-      const unsub = onSnapshot(doc(db, 'admin', 'prices'), (snap) => {
-        if (snap.exists()) {
-          const raw = snap.data() as Record<string, number>
-          const data: Record<string, number> = {}
-          for (const [key, val] of Object.entries(raw)) {
-            data[normalizeServiceName(key)] = val
-          }
-          setPrices((prev) => ({ ...prev, ...data }))
-        }
-      })
-      return unsub
-    } catch { return () => {} }
+    const unsubscribe = onSnapshot(doc(db, 'appSettings', 'servicePrices'), (snapshot) => {
+      if (!snapshot.exists()) {
+        setServices(EMPTY_SERVICE_PRICES)
+        setVersion(0)
+        setStatus('empty')
+        return
+      }
+      const parsed = parsePublicServicePricesDocument(snapshot.data(), SERVICE_DEFINITIONS)
+      if (!parsed) {
+        setServices(EMPTY_SERVICE_PRICES)
+        setVersion(0)
+        setStatus('invalid')
+        return
+      }
+      setServices(parsed.services)
+      setVersion(parsed.version)
+      setStatus(Object.values(parsed.services).some((service) => service.active) ? 'ready' : 'empty')
+    }, (cause) => {
+      const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
+      setStatus(code.includes('permission-denied') ? 'permission-denied' : 'network-error')
+    })
+    return unsubscribe
   }, [])
 
-  const savePrices = async (newPrices: Record<string, number>) => {
-    await setDoc(doc(db, 'admin', 'prices'), newPrices)
-    setPrices(newPrices)
+  const findByLegacyName = (serviceName: string): PublicServicePrice | null => {
+    const normalizedName = normalizeServiceName(serviceName)
+    const serviceId = RESERVATION_SERVICE_IDS[normalizedName]?.id
+    return serviceId ? services[serviceId] ?? null : null
   }
+  const prices = Object.fromEntries(Object.entries(RESERVATION_SERVICE_IDS).map(([legacyName, definition]) => {
+    const amountCents = services[definition.id]?.amountCents
+    return [legacyName, amountCents === null || amountCents === undefined ? 0 : amountCents / 100]
+  }))
+  const hasIncompletePricing = Object.values(services).some((service) => service.amountCents === null)
 
   return (
-    <PricesContext.Provider value={{ prices, savePrices }}>
+    <PricesContext.Provider value={{ services, prices, hasIncompletePricing, version, status, findByLegacyName }}>
       {children}
     </PricesContext.Provider>
   )
@@ -53,4 +86,4 @@ export function usePrices() {
   return useContext(PricesContext)
 }
 
-export { DEFAULT_PRICES }
+export { EMPTY_SERVICE_PRICES }

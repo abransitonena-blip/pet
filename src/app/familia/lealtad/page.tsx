@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { doc, getDoc } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { getCustomerProfile } from '@/lib/customerProfile'
+import { auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Gift, Star, CheckCircle2, Dog } from 'lucide-react'
@@ -18,10 +18,10 @@ export default function LealtadPage() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) { router.push('/login'); return }
-      const snap = await getDoc(doc(db, 'clients', user.uid))
-      if (snap.exists()) {
-        setPhone(snap.data().phone || '')
-        setUserName(snap.data().name || 'Familia')
+      const profile = await getCustomerProfile(user.uid)
+      if (profile) {
+        setPhone(profile.phone || '')
+        setUserName(profile.name || 'Familia')
       }
       setLoading(false)
     })
@@ -67,8 +67,8 @@ export default function LealtadPage() {
         <div className="grid grid-cols-3 gap-3">
           {[
             { icon: Dog, label: 'Pasea', desc: 'Disfruta tus paseos' },
-            { icon: CheckCircle2, label: 'Acumula', desc: '10 paseos = 1 gratis' },
-            { icon: Star, label: 'Canjea', desc: 'Paseo individual gratis' },
+            { icon: CheckCircle2, label: 'Registra', desc: 'Solo paseos pagados y completados' },
+            { icon: Star, label: 'Solicita', desc: 'Administración revisa el beneficio' },
           ].map((step, i) => {
             const Icon = step.icon
             return (

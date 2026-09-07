@@ -1,32 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { db } from '@/firebase/config'
-import { collection, query, where, getDocs } from 'firebase/firestore'
-import { Check, X } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { generateTimeSlots, getDayOfWeek } from '@/lib/defaultConfig'
 
 export default function AvailabilityCalendar({ date, onSelect }: { date?: string; onSelect?: (time: string) => void }) {
-  const [bookedSlots, setBookedSlots] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
-
   const timeSlots = date ? generateTimeSlots(getDayOfWeek(date)) : []
-
-  useEffect(() => {
-    if (!date) return
-    setLoading(true)
-    const q = query(collection(db, 'reservations'), where('date', '==', date), where('status', '==', 'pending'))
-    getDocs(q)
-      .then((snap) => {
-        const times = snap.docs.map((d) => d.data().time).filter(Boolean)
-        setBookedSlots(times)
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [date])
-
-  const availableSlots = timeSlots.filter((t) => !bookedSlots.includes(t))
 
   if (!date) {
     return (
@@ -46,33 +25,21 @@ export default function AvailabilityCalendar({ date, onSelect }: { date?: string
 
   return (
     <div>
-      {loading ? (
-        <div className="text-xs text-muted text-center py-6">Cargando disponibilidad...</div>
-      ) : (
-        <div className="grid grid-cols-3 gap-1.5">
-          {timeSlots.map((slot) => {
-            const isBooked = bookedSlots.includes(slot)
-            return (
-              <motion.button
-                key={slot}
-                whileTap={{ scale: 0.95 }}
-                disabled={isBooked}
-                onClick={() => onSelect?.(slot)}
-                className={`flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg transition-all ${
-                  isBooked
-                    ? 'bg-red-500/10 text-red-700/50 cursor-not-allowed line-through'
-                    : 'bg-ink/5 text-muted hover:bg-primary/20 hover:text-primary'
-                }`}
-              >
-                {isBooked ? <X size={9} /> : <Check size={9} className="opacity-0" />}
-                {slot}
-              </motion.button>
-            )
-          })}
-        </div>
-      )}
+      <div className="grid grid-cols-3 gap-1.5">
+        {timeSlots.map((slot) => (
+          <motion.button
+            key={slot}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onSelect?.(slot)}
+            className="flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg transition-all bg-ink/5 text-muted hover:bg-primary/20 hover:text-primary"
+          >
+            <Check size={9} className="opacity-0" />
+            {slot}
+          </motion.button>
+        ))}
+      </div>
       <p className="text-2xs text-muted mt-2 text-center">
-        {availableSlots.length} de {timeSlots.length} horarios disponibles
+        Horarios solicitables. La disponibilidad se confirma al revisar tu solicitud.
       </p>
     </div>
   )

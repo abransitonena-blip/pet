@@ -1,452 +1,177 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
-import { onAuthStateChanged } from 'firebase/auth'
-import { motion } from 'framer-motion'
-import { Dog, CalendarDays, Clock, CheckCircle2,
-  PersonStanding, Loader2, Package } from 'lucide-react'
-import WalkSessionModal from '@/components/WalkSessionModal'
-import PetAhoraPhotoModal from '@/components/PetAhoraPhotoModal'
-import { useWalkerSessions } from '@/lib/useServiceOrders'
-import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
-import { logAudit } from '@/lib/auditLog'
-import { usePetAhoraWalkerOffers } from '@/lib/usePetAhoraWalker'
-import { PetAhoraOffersList } from '@/components/PetAhoraOfferCard'
-import { usePetAhoraActiveWalks, updatePetAhoraWalkStatus } from '@/lib/usePetAhoraActiveWalks'
-import type { Reservation, SessionStatus } from '@/types'
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { CalendarDays, CheckCircle2, Clock3, History, Route } from 'lucide-react'
+import { Card, EmptyState, ErrorState, LoadingState } from '@/components/ui'
+import WalkerSessionCard from '@/components/walker/WalkerSessionCard'
+import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
+import { advanceWalkerSession, useWalkerSessions } from '@/lib/useServiceOrders'
+import {
+  sortWalkerSessions,
+  walkerReadErrorMessage,
+  walkerSessionDate,
+  walkerSessionStatus,
+} from '@/lib/walkerPanel'
+import type { WalkSession } from '@/types'
 
-export default function PaseadorDashboard() {
-  const router = useRouter()
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [walkerName, setWalkerName] = useState('')
-  const [walkerUid, setWalkerUid] = useState<string | undefined>()
-  const [loading, setLoading] = useState(true)
-  const [walkModal, setWalkModal] = useState<{ reservation: Reservation; mode: 'check_in' | 'check_out' } | null>(null)
+function todayKey(): string {
+  return new Date().toLocaleDateString('en-CA')
+}
+
+export default function WalkerDashboard() {
+  const { uid, profile } = useWalkerPanel()
+  const { sessions, loading, error, retry } = useWalkerSessions(uid)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  const { offers: petAhoraOffers } = usePetAhoraWalkerOffers(walkerUid)
-  const { walks: petAhoraWalks } = usePetAhoraActiveWalks(walkerUid)
-  const [updatingPetAhoraId, setUpdatingPetAhoraId] = useState<string | null>(null)
-  const [petAhoraPhoto, setPetAhoraPhoto] = useState<{ requestId: string; mode: 'check_in' | 'check_out' } | null>(null)
+  const [actionError, setActionError] = useState('')
+  const [actionSuccess, setActionSuccess] = useState('')
+  const today = todayKey()
 
-  useEffect(() => {
-    let unsubRes: (() => void) | undefined
-    let unsubResUid: (() => void) | undefined
-    let seenIds = new Set<string>()
-    let allReservations: Reservation[] = []
+  const sorted = useMemo(() => sortWalkerSessions(sessions), [sessions])
+  const todaySessions = sorted.filter((session) => walkerSessionDate(session) === today)
+  const pendingToday = todaySessions.filter((session) => ['assigned', 'confirmed', 'on_the_way', 'arrived'].includes(walkerSessionStatus(session)))
+  const activeToday = todaySessions.filter((session) => walkerSessionStatus(session) === 'in_progress')
+  const completedToday = todaySessions.filter((session) => walkerSessionStatus(session) === 'completed')
+  const upcoming = sorted.filter((session) => {
+    const status = walkerSessionStatus(session)
+    return walkerSessionDate(session) > today && status !== 'completed' && status !== 'cancelled' && status !== 'no_show'
+  }).slice(0, 3)
+  const recentCompleted = sorted
+    .filter((session) => walkerSessionDate(session) < today && walkerSessionStatus(session) === 'completed')
+    .reverse()
+    .slice(0, 3)
 
-    const emitUpdate = () => {
-      const merged = [...allReservations]
-      merged.sort((a, b) => {
-        const ca = a.createdAt as string | { seconds?: number } | undefined
-        const cb = b.createdAt as string | { seconds?: number } | undefined
-        const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
-        const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
-        return tb - ta
-      })
-      setReservations(merged)
-      setLoading(false)
-    }
-
-    const unsubAuth = onAuthStateChanged(auth, async (user) => {
-      if (unsubRes) { unsubRes(); unsubRes = undefined }
-      if (unsubResUid) { unsubResUid(); unsubResUid = undefined }
-      seenIds = new Set<string>()
-      allReservations = []
-      if (!user) { router.push('/login'); return }
-
-      setWalkerUid(user.uid)
-      const userSnap = await import('firebase/firestore').then(({ getDoc }) =>
-        getDoc(doc(db, 'users', user.uid))
-      )
-      const name = userSnap.exists() ? userSnap.data().name || user.displayName || '' : ''
-      setWalkerName(name)
-
-      if (!name) { setLoading(false); return }
-
-// Query by assignment.walkerId (uid) — auto-assign
-      const qUid = query(collection(db, 'reservations'), where('assignment.walkerId', '==', user.uid))
-      unsubResUid = onSnapshot(qUid, (snap) => {
-        snap.docChanges().forEach((change) => {
-          const docData = { id: change.doc.id, ...change.doc.data() } as Reservation
-          if (change.type === 'added' || change.type === 'modified') {
-            if (!seenIds.has(docData.id)) {
-              seenIds.add(docData.id)
-              allReservations.push(docData)
-            }
-          } else if (change.type === 'removed') {
-            if (seenIds.has(docData.id)) {
-              seenIds.delete(docData.id)
-              allReservations = allReservations.filter((r) => r.id !== docData.id)
-            }
-          }
-        })
-        emitUpdate()
-      }, (err) => {
-        console.error('Walker uid query error:', err)
-        setLoading(false)
-      })
-    })
-    return () => { unsubRes?.(); unsubResUid?.(); unsubAuth() }
-  }, [router])
-
-  const today = new Date().toISOString().split('T')[0]
-  const todayWalks = reservations.filter((r) => r.date === today)
-  const pending = todayWalks.filter((r) => r.status === 'assigned' || r.status === 'pending')
-  const active = todayWalks.filter((r) => r.status === 'in_progress')
-  const completedToday = todayWalks.filter((r) => r.status === 'completed')
-  const totalCompleted = reservations.filter((r) => r.status === 'completed').length
-
-  // Service order sessions (weekly packages)
-  const { sessions: walkerSessions } = useWalkerSessions(
-    auth.currentUser?.uid || '',
-    walkerName,
-  )
-  const todaySessions = walkerSessions.filter(
-    (s) => s.date === today && s.sessionStatus !== 'completed' && s.sessionStatus !== 'cancelled',
-  )
-
-  const handlePetAhoraStatus = async (id: string, status: string) => {
-    setUpdatingPetAhoraId(id)
-    const ok = await updatePetAhoraWalkStatus(id, status)
-    if (!ok) console.error('Failed to update PET Ahora status')
-    setUpdatingPetAhoraId(null)
-  }
-
-  const handleStatusUpdate = async (id: string, status: string) => {
-    setUpdatingId(id)
+  const advance = async (session: WalkSession) => {
+    if (updatingId) return
+    setUpdatingId(session.id)
+    setActionError('')
+    setActionSuccess('')
     try {
-      await updateDoc(doc(db, 'reservations', id), { status, updatedAt: serverTimestamp() })
-      logAudit({
-        action: status === 'completed' ? 'complete' : 'update',
-        entity: 'walkSession',
-        entityId: id,
-        after: { status },
-      })
-    } catch (e) {
-      console.error('Error updating status:', e)
+      await advanceWalkerSession(session)
+      setActionSuccess('Estado actualizado correctamente.')
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : ''
+      const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
+      setActionError(message === 'walker-transition-conflict'
+        ? 'El paseo cambió en otra sesión. La vista se actualizará antes de permitir otra acción.'
+        : code.includes('permission-denied')
+          ? 'No tienes permiso para realizar esta transición. Actualiza tu sesión o contacta a administración.'
+          : 'No pudimos actualizar el paseo. Verifica tu conexión e inténtalo nuevamente.')
+    } finally {
+      setUpdatingId(null)
     }
-    setUpdatingId(null)
-  }
-
-  const openWhatsApp = (phone: string) => {
-    window.open(`https://wa.me/52${phone.replace(/\D/g, '')}?text=Hola, soy tu paseador de PET Ap 🐾`, '_blank')
   }
 
   if (loading) {
+    return <LoadingState message="Consultando tus paseos asignados…" rows={4} height="h-20" />
+  }
+
+  if (error) {
     return (
-      <div className="space-y-4">
-        <div className="skeleton h-28 rounded-2xl" />
-        <div className="grid grid-cols-3 gap-3">
-          {[1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-xl" />)}
-        </div>
-        <div className="skeleton h-40 rounded-2xl" />
-      </div>
+      <Card className="p-4 shadow-none">
+        <ErrorState description={walkerReadErrorMessage(error)} onRetry={retry} />
+      </Card>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-6 relative overflow-hidden"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-      >
-        <div className="absolute top-0 right-0 w-48 h-48 bg-success-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="relative">
-          <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>Bienvenido</p>
-          <h1 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-            {walkerName} 🦮
-          </h1>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            {todayWalks.length === 0
-              ? 'No tienes paseos asignados hoy'
-              : `${todayWalks.length} paseo${todayWalks.length !== 1 ? 's' : ''} hoy · ${completedToday.length} completado${completedToday.length !== 1 ? 's' : ''}`
-            }
-          </p>
+    <div className="space-y-5">
+      <section aria-labelledby="walker-greeting" className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Mi jornada</p>
+          <h1 id="walker-greeting" className="mt-1 text-2xl font-bold tracking-tight text-ink">Hola, {profile.name}</h1>
+          <p className="mt-1 text-sm text-muted">Aquí aparecen únicamente los paseos asignados a tu UID.</p>
         </div>
-      </motion.div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, delay: 0.1 }}
-          className="rounded-2xl p-4"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        <Link
+          href="/walker/historial"
+          className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none"
         >
-          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{pending.length}</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Pendientes</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, delay: 0.15 }}
-          className="rounded-2xl p-4"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-        >
-          <p className="text-2xl font-bold text-success-600">{active.length + completedToday.length}</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>En progreso</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, delay: 0.2 }}
-          className="rounded-2xl p-4"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-        >
-          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{totalCompleted}</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Total completados</p>
-        </motion.div>
-      </div>
+          <History size={16} aria-hidden="true" /> Ver historial
+        </Link>
+      </section>
 
-      {/* PET Ahora Offers */}
-      <PetAhoraOffersList offers={petAhoraOffers} onDone={() => {}} />
+      <section aria-label="Resumen de hoy" className="grid grid-cols-3 gap-2 sm:gap-3">
+        {[
+          { label: 'Pendientes', value: pendingToday.length, icon: Clock3, tone: 'text-primary bg-primary/10' },
+          { label: 'En paseo', value: activeToday.length, icon: Route, tone: 'text-blue-700 bg-blue-500/10' },
+          { label: 'Completados', value: completedToday.length, icon: CheckCircle2, tone: 'text-success-700 bg-success/10' },
+        ].map(({ label, value, icon: Icon, tone }) => (
+          <Card key={label} className="min-h-20 p-3 shadow-none sm:p-4">
+            <div className={`mb-2 flex h-7 w-7 items-center justify-center rounded-lg ${tone}`}><Icon size={15} aria-hidden="true" /></div>
+            <p className="text-xl font-bold leading-none text-ink">{value}</p>
+            <p className="mt-1 truncate text-[11px] font-medium text-muted sm:text-xs">{label}</p>
+          </Card>
+        ))}
+      </section>
 
-      {/* Active PET Ahora Walks */}
-      {petAhoraWalks.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <span className="w-2 h-2 rounded-full bg-success-500 animate-pulse" />
-            PET Ahora activos
-          </h2>
-          <div className="space-y-2">
-            {petAhoraWalks.map((walk) => (
-              <div
-                key={walk.id}
-                className="rounded-xl p-4"
-                style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08), rgba(251,191,36,0.03))', border: '1px solid rgba(251,191,36,0.15)' }}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.15)' }}>
-                      <Dog size={14} className="text-secondary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{walk.petName}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {walk.status === 'accepted' ? 'Aceptado' : walk.status === 'en_camino' ? 'En camino' : 'Paseando'}
-                        {walk.address && ` · ${walk.address.street}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {walk.status === 'accepted' && (
-                      <button
-                        onClick={() => handlePetAhoraStatus(walk.id, 'en_camino')}
-                        disabled={updatingPetAhoraId === walk.id}
-                        className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
-                        style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}
-                      >
-                        {updatingPetAhoraId === walk.id ? <Loader2 className="animate-spin" size={12} /> : 'En camino'}
-                      </button>
-                    )}
-                    {walk.status === 'en_camino' && (
-                      <button
-                        onClick={() => setPetAhoraPhoto({ requestId: walk.id, mode: 'check_in' })}
-                        className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
-                        style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}
-                      >
-                        Iniciar paseo
-                      </button>
-                    )}
-                    {walk.status === 'paseando' && (
-                      <button
-                        onClick={() => setPetAhoraPhoto({ requestId: walk.id, mode: 'check_out' })}
-                        className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
-                        style={{ background: 'rgba(5,150,105,0.15)', color: '#059669' }}
-                      >
-                        Completar
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+      {actionError && (
+        <p className="rounded-xl bg-danger-500/10 px-4 py-3 text-sm text-red-700" role="alert">{actionError}</p>
+      )}
+      {actionSuccess && (
+        <p className="rounded-xl bg-success/10 px-4 py-3 text-sm font-medium text-success-700" role="status">{actionSuccess}</p>
       )}
 
-      {/* Active Walks */}
-      {active.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.25 }}>
-          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <span className="w-2 h-2 rounded-full bg-success-400 animate-pulse" />
-            En paseo ahora
-          </h2>
-          <div className="space-y-2">
-            {active.map((res) => (
-              <div
-                key={res.id}
-                className="rounded-xl p-4"
-                style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.1), rgba(5,150,105,0.05))', border: '1px solid rgba(5,150,105,0.2)' }}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-success-500/20 flex items-center justify-center">
-                      <PersonStanding size={16} className="text-success-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.petName}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{res.service} · {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setWalkModal({ reservation: res, mode: 'check_out' })}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-ink/10 font-medium transition-all hover:bg-ink/20"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    Terminar
-                  </button>
-                </div>
-              </div>
-            ))}
+      <section aria-labelledby="today-walks-title">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h2 id="today-walks-title" className="text-base font-bold text-ink">Paseos de hoy</h2>
+            <p className="text-xs text-muted">Los cambios se guardan antes de actualizar el estado visible.</p>
           </div>
-        </motion.div>
-      )}
+          <span className="rounded-full bg-ink/5 px-2.5 py-1 text-xs font-semibold text-muted">{todaySessions.length}</span>
+        </div>
 
-      {/* Today's Walks */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.3 }}>
-        <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-          Paseos de hoy
-        </h2>
-        {todayWalks.length === 0 ? (
-          <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <CalendarDays className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-            <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>Sin paseos hoy</p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Disfruta tu día libre</p>
-          </div>
+        {todaySessions.length === 0 ? (
+          <Card className="shadow-none">
+            <EmptyState
+              icon={<CalendarDays size={21} />}
+              title="No tienes paseos asignados hoy"
+              description="Puedes revisar tu disponibilidad o consultar las próximas asignaciones."
+              action={(
+                <Link href="/walker/perfil" className="inline-flex min-h-11 items-center rounded-xl bg-primary/10 px-4 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  Revisar mi disponibilidad
+                </Link>
+              )}
+            />
+          </Card>
         ) : (
           <div className="space-y-2">
-            {todayWalks.map((res, i) => (
-              <motion.div
-                key={res.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.35 + i * 0.05 }}
-                className="rounded-xl p-4"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${STATUS_COLORS[res.status]?.bg || 'bg-brand-500/10'}`}>
-                      {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :
-                       res.status === 'in_progress' ? <PersonStanding size={14} className="text-success-400" /> :
-                       <Dog size={14} className={STATUS_COLORS[res.status]?.text || 'text-brand-400'} />}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{res.petName}</p>
-                      <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-                        <span>{res.service}</span>
-                        <span>·</span>
-                        <span className="flex items-center gap-1"><Clock size={9} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {res.status === 'assigned' && (
-                      <button
-                        onClick={() => handleStatusUpdate(res.id, 'on_the_way')}
-                        disabled={updatingId === res.id}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-700 font-medium transition-all hover:bg-blue-500/20"
-                      >
-                        {updatingId === res.id ? <Loader2 className="animate-spin" size={12} /> : 'En camino'}
-                      </button>
-                    )}
-                    {res.status === 'pending' && (
-                      <button
-                        onClick={() => handleStatusUpdate(res.id, 'on_the_way')}
-                        disabled={updatingId === res.id}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-700 font-medium transition-all hover:bg-blue-500/20"
-                      >
-                        {updatingId === res.id ? <Loader2 className="animate-spin" size={12} /> : 'En camino'}
-                      </button>
-                    )}
-                    {res.status === 'on_the_way' && (
-                      <button
-                        onClick={() => setWalkModal({ reservation: res, mode: 'check_in' })}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-600 font-medium transition-all hover:bg-brand-500/20"
-                      >
-                        Llegué
-                      </button>
-                    )}
-                    {res.phone && (
-                      <button
-                        onClick={() => openWhatsApp(res.phone)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400"
-                        title="WhatsApp"
-                      >
-                        <WhatsAppIcon width={13} height={13} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
+            {todaySessions.map((session) => (
+              <WalkerSessionCard
+                key={session.id}
+                session={session}
+                onAdvance={(selected) => void advance(selected)}
+                updating={updatingId === session.id}
+              />
             ))}
           </div>
         )}
-      </motion.div>
+      </section>
 
-      {/* Service Order Sessions (Weekly Packages) */}
-      {todaySessions.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <Package size={12} className="text-brand-400" />
-            Sesiones de paquete ({todaySessions.length})
-          </h2>
+      {upcoming.length > 0 && (
+        <section aria-labelledby="upcoming-walks-title">
+          <h2 id="upcoming-walks-title" className="mb-3 text-base font-bold text-ink">Próximos paseos</h2>
           <div className="space-y-2">
-            {todaySessions.map((session) => (
-              <div
-                key={session.id}
-                className="rounded-xl p-3 flex items-center gap-3"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-              >
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                  STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-brand-500/10'
-                }`}>
-                  {session.sessionStatus === 'in_progress' ? <PersonStanding size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-brand-400'} /> :
-                   <Dog size={14} className={STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-brand-400'} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{session.dogName}</p>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {session.serviceName} · {session.arrivalWindowStart ? `${session.arrivalWindowStart}${session.arrivalWindowEnd ? `-${session.arrivalWindowEnd}` : ''}` : session.startTime}
-                  </p>
-                </div>
-                <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${
-                  STATUS_COLORS[session.sessionStatus as SessionStatus]?.bg || 'bg-ink/10'
-                } ${STATUS_COLORS[session.sessionStatus as SessionStatus]?.text || 'text-[var(--text-muted)]'}`}>
-                  {STATUS_LABELS[session.sessionStatus as SessionStatus] || session.sessionStatus}
-                </span>
-              </div>
-            ))}
+            {upcoming.map((session) => <WalkerSessionCard key={session.id} session={session} compact />)}
           </div>
-        </motion.div>
+        </section>
       )}
 
-      {/* Walk Session Modal */}
-      <WalkSessionModal
-        isOpen={!!walkModal}
-        onClose={() => setWalkModal(null)}
-        reservation={walkModal?.reservation || ({} as Reservation)}
-        mode={walkModal?.mode || 'check_in'}
-      />
-
-      {/* PET Ahora Photo Modal */}
-      <PetAhoraPhotoModal
-        isOpen={!!petAhoraPhoto}
-        onClose={() => setPetAhoraPhoto(null)}
-        requestId={petAhoraPhoto?.requestId || ''}
-        mode={petAhoraPhoto?.mode || 'check_in'}
-        onDone={() => setPetAhoraPhoto(null)}
-      />
+      {recentCompleted.length > 0 && (
+        <section aria-labelledby="recent-completed-title">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 id="recent-completed-title" className="text-base font-bold text-ink">Reportes pendientes de cierre</h2>
+              <p className="text-xs text-muted">Paseos completados recientemente. Abre cada sesión para guardar o enviar su reporte.</p>
+            </div>
+            <Link href="/walker/historial" className="inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              Ver completados
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {recentCompleted.map((session) => <WalkerSessionCard key={session.id} session={session} compact />)}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
-
-import { WhatsAppIcon } from '@/components/ui/SocialIcons'

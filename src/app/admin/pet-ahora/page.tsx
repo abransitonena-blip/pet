@@ -6,6 +6,8 @@ import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { Zap, Ban, CheckCircle2, Loader2, Dog, Search } from 'lucide-react'
 import type { PetAhoraRequest } from '@/types'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import Link from 'next/link'
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente',
@@ -51,6 +53,7 @@ export default function AdminPetAhoraPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) { setLoading(false); return }
     const q = query(collection(db, 'petAhoraRequests'), orderBy('requestedAt', 'desc'), limit(200))
     const unsub = onSnapshot(q, (snap) => {
       setRequests(snap.docs.map((d) => ({ id: d.id, ...d.data() } as PetAhoraRequest)))
@@ -60,12 +63,14 @@ export default function AdminPetAhoraPage() {
   }, [])
 
   const handleCancel = async (id: string) => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return
     setActionLoading(id)
     await updateDoc(doc(db, 'petAhoraRequests', id), { status: 'cancelled', cancelledAt: Timestamp.now(), cancellationReason: 'admin' })
     setActionLoading(null)
   }
 
   const handleForceComplete = async (id: string) => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return
     setActionLoading(id)
     await updateDoc(doc(db, 'petAhoraRequests', id), { status: 'completed', completedAt: Timestamp.now() })
     setActionLoading(null)
@@ -86,6 +91,17 @@ export default function AdminPetAhoraPage() {
     active: requests.filter((r) => ['accepted', 'en_camino', 'paseando'].includes(r.status)).length,
     completed: requests.filter((r) => r.status === 'completed').length,
     cancelled: requests.filter((r) => r.status === 'cancelled' || r.status === 'expired').length,
+  }
+
+  if (!FEATURE_FLAGS.PET_AHORA_ENABLED) {
+    return (
+      <div className="rounded-2xl p-8 text-center" data-testid="admin-pet-ahora-unavailable" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <Zap className="mx-auto mb-3 text-secondary" size={28} />
+        <h1 className="text-xl font-bold">PET Ahora está temporalmente en preparación</h1>
+        <p className="text-sm text-muted mt-2 mb-4">No se crearán solicitudes, ofertas, leases ni asignaciones mientras el backend seguro no esté disponible.</p>
+        <Link href="/admin/reservas" className="btn-primary inline-flex">Ver paseos programados</Link>
+      </div>
+    )
   }
 
   return (

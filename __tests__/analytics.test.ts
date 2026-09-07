@@ -2,10 +2,11 @@ import { trackEvent, trackConversion, Events } from '../src/lib/analytics'
 
 type Gtag = (...args: unknown[]) => void
 
-const gtagWindow = () => window as unknown as { gtag?: Gtag }
+const gtagWindow = () => window as unknown as { gtag?: Gtag; __petAnalyticsEnabled?: boolean }
 
 beforeEach(() => {
   delete gtagWindow().gtag
+  gtagWindow().__petAnalyticsEnabled = false
 })
 
 describe('trackEvent', () => {
@@ -16,6 +17,7 @@ describe('trackEvent', () => {
   it('calls gtag with correct params when available', () => {
     const gtag = jest.fn()
     ;gtagWindow().gtag = gtag
+    gtagWindow().__petAnalyticsEnabled = true
 
     trackEvent({ action: 'test_action', category: 'test_cat', label: 'test_label', value: 42 })
 
@@ -29,6 +31,7 @@ describe('trackEvent', () => {
   it('works without label and value', () => {
     const gtag = jest.fn()
     ;gtagWindow().gtag = gtag
+    gtagWindow().__petAnalyticsEnabled = true
 
     trackEvent({ action: 'minimal', category: 'test' })
 
@@ -38,12 +41,22 @@ describe('trackEvent', () => {
       value: undefined,
     })
   })
+
+  it('does not send events when analytics consent is not active', () => {
+    const gtag = jest.fn()
+    ;gtagWindow().gtag = gtag
+
+    trackEvent({ action: 'blocked', category: 'test' })
+
+    expect(gtag).not.toHaveBeenCalled()
+  })
 })
 
 describe('trackConversion', () => {
   it('delegates to trackEvent with conversion category', () => {
     const gtag = jest.fn()
     ;gtagWindow().gtag = gtag
+    gtagWindow().__petAnalyticsEnabled = true
 
     trackConversion('signup', 100)
 
@@ -58,6 +71,7 @@ describe('trackConversion', () => {
 describe('Events', () => {
   beforeEach(() => {
     ;gtagWindow().gtag = jest.fn()
+    gtagWindow().__petAnalyticsEnabled = true
   })
 
   it('quoteRequested tracks category', () => {

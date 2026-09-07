@@ -80,21 +80,21 @@ export const DEFAULT_CONFIG: SiteConfig = {
   schemaVersion: 2,
   brandName: brand.name,
   heroTitle: 'Bienestar para tu perro. Tranquilidad para ti.',
-  heroSubtitle: 'Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.',
+  heroSubtitle: 'Solicita paseos programados y consulta su estado desde Familia PET.',
   sectionDescriptions: {
-    services: 'Todos nuestros paseos son supervisados, seguros y pensados para la felicidad de tu perro.',
+    services: 'Consulta las opciones disponibles y solicita el paseo que se adapte a las necesidades de tu perro.',
     howItWorks: 'Reserva en 3 simples pasos y nosotros nos encargamos del resto.',
     faq: 'Respuestas a las preguntas más frecuentes sobre nuestros servicios.',
   },
   whatsapp: brand.whatsapp,
   whatsappE164: brand.whatsapp,
-  displayPhone: '55 2305 3772',
+  displayPhone: brand.displayPhone,
   contactEmail: brand.email,
   instagram: 'https://www.instagram.com/pet___ap',
   instagramUrl: 'https://www.instagram.com/pet___ap',
   facebook: '',
   tiktok: '',
-  analyticsEnabled: true,
+  analyticsEnabled: false,
   availableSlots: {
     lunes:     generateTimeSlots('lunes'),
     martes:    generateTimeSlots('martes'),
@@ -134,7 +134,7 @@ PET Ap se compromete a cuidar de tu perro durante el paseo. No nos hacemos respo
 5. PAGOS
 Los pagos se realizan en efectivo o transferencia el día del paseo.`,
   walkers: [
-    { name: 'Efrain', phone: '5523053772' },
+    { name: 'Efrain', phone: '5538231235' },
   ],
   maintenance: false,
   features: {

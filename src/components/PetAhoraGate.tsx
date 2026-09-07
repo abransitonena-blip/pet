@@ -42,7 +42,7 @@ function EligibilityBlocked({ reasons: _reasons, result }: { reasons: string[]; 
       <div className="space-y-2 text-left max-w-xs mx-auto mb-4">
         <Requirement met={result.hasPet} label="Registrar un perro" href="/familia/perros" icon={<Dog size={12} />} />
         <Requirement met={result.hasAddress} label="Agregar dirección" href="/familia/direcciones" icon={<MapPin size={12} />} />
-        <Requirement met={result.hasCompletedWalk} label="Completar primer paseo" href="/#reservar" icon={<PersonStanding size={12} />} />
+        <Requirement met={result.hasCompletedWalk} label="Completar primer paseo" href="/login?redirect=/familia/nueva-reserva" icon={<PersonStanding size={12} />} />
       </div>
       <div className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--text-muted)', border: '1px solid rgba(245,158,11,0.2)' }}>
         <AlertTriangle size={10} className="inline mr-1 text-amber-500" />

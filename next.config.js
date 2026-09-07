@@ -1,35 +1,38 @@
 /** @type {import('next').NextConfig} */
+const { GLOBAL_SECURITY_HEADERS } = require('./security-headers')
+
+const isProduction = process.env.NODE_ENV === 'production'
+const privateHeaders = [
+  { key: 'Cache-Control', value: 'private, no-store, max-age=0' },
+  { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+]
+
 const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
-      { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
-      { protocol: 'https', hostname: '*.firebaseapp.com' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
   poweredByHeader: false,
   reactStrictMode: true,
 
   async headers() {
+    const hsts = isProduction
+      ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' }]
+      : []
+
     return [
       {
         source: '/(.*)',
-        headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-          { key: 'Permissions-Policy', value: 'camera=(self), geolocation=(self), microphone=()' },
-          { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://apis.google.com https://accounts.google.com https://www.gstatic.com https://*.firebaseapp.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://*.cloudfunctions.net https://www.google-analytics.com https://analytics.google.com https://www.google.com https://accounts.google.com https://apis.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.cloudinary.com wss://*.firebaseio.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; worker-src 'self' blob:;" },
-        ],
+        headers: [...GLOBAL_SECURITY_HEADERS, ...hsts],
       },
+      ...[
+        '/admin/:path*', '/familia/:path*', '/walker/:path*', '/supervisor/:path*',
+        '/login', '/equipo', '/cancelar', '/api/:path*', '/mi-cuenta/:path*', '/paseador/:path*',
+      ].map((source) => ({ source, headers: privateHeaders })),
       {
         source: '/sw.js',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
-      },
-      {
-        source: '/firebase-messaging-sw.js',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
       },
       {

@@ -2,7 +2,7 @@ import { Dog, CalendarDays, X, Heart, ShieldCheck, Lock, Star } from 'lucide-rea
 import { formatBusinessHours } from './defaultConfig'
 import { WhatsAppIcon as WhatsBrand } from '@/components/ui/SocialIcons'
 
-export const TERMS_LAST_UPDATED = '3 de agosto de 2026'
+export const TERMS_LAST_UPDATED = '8 de agosto de 2026'
 
 export const termsSections = [
   {
@@ -39,7 +39,7 @@ export const termsSections = [
     icon: Lock,
     title: 'Tu privacidad importa',
     content:
-      'Tus datos personales (nombre, teléfono, dirección) los usamos únicamente para coordinar los paseos, enviarte confirmaciones y recordatorios, y mejorar nuestro servicio. Para operar utilizamos proveedores tecnológicos como Google (inicio de sesión y analítica), Firebase (almacenamiento de datos), Vercel (hospedaje) y WhatsApp (comunicación). No enviamos spam ni vendemos tus datos. Las fotos y videos que tomamos durante los paseos los usamos para la galería solo si tú nos das tu autorización previa; de lo contrario quedan solo en tu reporte privado.',
+      'Los datos necesarios para cuenta, reserva y paseo se tratan por separado de finalidades opcionales. Analytics, marketing, testimonios, publicación en galería y redes requieren decisiones independientes. Autorizar una fotografía para un reporte privado no autoriza su publicación. Google/Firebase y Vercel soportan la operación; WhatsApp solo recibe el mensaje cuando decides abrirlo. Cloudinary conserva únicamente referencias legacy mientras los uploads privados están desactivados.',
   },
   {
     icon: Star,

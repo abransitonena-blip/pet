@@ -1,0 +1,10 @@
+// Candidate helper replacement only. Do not deploy this file by itself.
+// Missing role claims are customer-compatible; elevated roles still require an
+// explicit exact claim and cannot be written by browser code.
+function getClaimRole() {
+  return isAuthenticated()
+    && request.auth.token != null
+    && request.auth.token.keys().hasAny(['role'])
+    ? request.auth.token.role
+    : 'customer';
+}

@@ -1,0 +1,43 @@
+{
+  "project": "pet-1cb0b",
+  "mode": "execute",
+  "backupsDir": "/Users/cheeeperez/Documents/pet/pet-reservations/backups/renames/2026-08-07_13-00-57",
+  "renames": [
+    "clients→customerProfiles",
+    "pets→dogs"
+  ],
+  "fieldRenames": [
+    "reservations.client→customer"
+  ],
+  "results": [
+    {
+      "phase": "clients→customerProfiles",
+      "status": "migrated",
+      "migrated": 0,
+      "skipped": 0,
+      "conflicts": 2
+    },
+    {
+      "phase": "pets→dogs",
+      "status": "migrated",
+      "migrated": 2,
+      "skipped": 0,
+      "conflicts": 0
+    },
+    {
+      "phase": "reservations.client→customer",
+      "status": "migrated",
+      "migrated": 2,
+      "conflicts": 0
+    }
+  ],
+  "conflicts": [
+    "0PVIUCNtxGZdYXX8I8F7OfTFhT62",
+    "oDFV4i7DiIgAcXg0FMY6EFUoNXx1"
+  ],
+  "completed": [
+    "clients→customerProfiles",
+    "pets→dogs",
+    "reservations.client→customer"
+  ]
+}

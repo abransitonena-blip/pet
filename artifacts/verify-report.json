@@ -1,0 +1,43 @@
+{
+  "mode": "verify-only",
+  "readyForNewSchemaOnly": false,
+  "collections": {
+    "clients → customerProfiles": {
+      "sourceCount": 2,
+      "targetCount": 1,
+      "status": "conflict"
+    },
+    "pets → dogs": {
+      "sourceCount": 2,
+      "targetCount": 1,
+      "status": "conflict"
+    }
+  },
+  "collisions": [
+    {
+      "from": "clients",
+      "to": "customerProfiles",
+      "sourceCount": 2,
+      "targetCount": 1
+    },
+    {
+      "from": "pets",
+      "to": "dogs",
+      "sourceCount": 2,
+      "targetCount": 1
+    }
+  ],
+  "orphanReferences": [],
+  "legacyDocuments": [],
+  "invalidDocuments": [],
+  "summary": {
+    "totalRenames": 2,
+    "totalSourceDocs": 4,
+    "totalTargetDocs": 2,
+    "alreadyMigrated": 0,
+    "conflicts": 2,
+    "ready": 0,
+    "verifyOnly": true,
+    "fixtureBased": true
+  }
+}

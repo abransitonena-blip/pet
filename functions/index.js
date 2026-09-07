@@ -43,7 +43,7 @@ async function createNotification(uid, notification) {
   });
 }
 
-async function logAudit(actor, action, entity, entityId, before = null, after = null) {
+async function logAudit(actor, action, entity, entityId, before = null, after = null, reason = null, result = 'ok') {
   await db.collection('audit-logs').add({
     actor,
     action,
@@ -51,8 +51,32 @@ async function logAudit(actor, action, entity, entityId, before = null, after = 
     entityId,
     before,
     after,
+    reason,
+    result,
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   });
+}
+
+// ═══════════════════════════════════════════
+// ROLE HELPERS (P0.8)
+// Source of authority: custom claims (context.auth.token.role). Firestore
+// users/{uid}.role is only a profile mirror and is never trusted for access.
+// ═══════════════════════════════════════════
+
+const VALID_ROLES = ['customer', 'walker', 'supervisor', 'admin'];
+
+function normalizeRole(role) {
+  if (role === 'client') return 'customer'; // legacy value
+  return VALID_ROLES.includes(role) ? role : null;
+}
+
+function callerRole(context) {
+  if (!context.auth || !context.auth.token) return null;
+  return normalizeRole(context.auth.token.role);
+}
+
+function isCaller(context, role) {
+  return callerRole(context) === role;
 }
 
 // ═══════════════════════════════════════════
@@ -62,35 +86,39 @@ async function logAudit(actor, action, entity, entityId, before = null, after = 
 // Callable: setUserRole({ uid, role })
 // Only admins can call this
 exports.setUserRole = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
-
-  const callerSnap = await db.collection('users').doc(context.auth.uid).get();
-  if (callerSnap.data()?.role !== 'admin') {
+  if (!isCaller(context, 'admin')) {
     throw new functions.https.HttpsError('permission-denied', 'Admin only');
   }
 
-  const { uid, role } = data;
-  if (!uid || !['admin', 'walker', 'client', 'supervisor'].includes(role)) {
+  const { uid, role, reason = null } = data;
+  const normalizedRole = normalizeRole(role);
+  if (!uid || !normalizedRole) {
     throw new functions.https.HttpsError('invalid-argument', 'Invalid role');
   }
 
-  // Set role in Firestore
-  await db.collection('users').doc(uid).set({ role, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  // Record previous role (profile mirror) for the audit trail.
+  const beforeSnap = await db.collection('users').doc(uid).get();
+  const beforeRole = beforeSnap.exists() ? (beforeSnap.data().role || null) : null;
 
-  // Set custom claims on Firebase Auth token
-  await auth.setCustomUserClaims(uid, { role });
+  // Set role in Firestore (profile/state mirror only)
+  await db.collection('users').doc(uid).set({ role: normalizedRole, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
 
-  // Log the change
+  // Set custom claims on Firebase Auth token (source of authority)
+  await auth.setCustomUserClaims(uid, { role: normalizedRole });
+
+  // Log the change (no secrets)
   await logAudit(
     { uid: context.auth.uid, role: 'admin', name: 'Admin' },
     'assign_role',
     'user',
     uid,
-    null,
-    { role }
+    beforeRole ? { role: beforeRole } : null,
+    { role: normalizedRole },
+    reason || 'manual',
+    'ok'
   );
 
-  return { success: true, role };
+  return { success: true, role: normalizedRole };
 });
 
 // Callable: getUserRole({ uid })
@@ -108,6 +136,10 @@ exports.getUserRole = functions.https.onCall(async (data, context) => {
     }
   }
 
+  const record = await auth.getUser(targetUid);
+  const role = normalizeRole(record.customClaims && record.customClaims.role);
+  if (role) return { role };
+  // Legacy fallback: users doc mirror.
   const snap = await db.collection('users').doc(targetUid).get();
   return { role: snap.data()?.role || null };
 });
@@ -123,8 +155,7 @@ exports.verifySession = functions.https.onCall(async (data, context) => {
     return { valid: false, role: null };
   }
 
-  const snap = await db.collection('users').doc(context.auth.uid).get();
-  const role = snap.data()?.role || 'client';
+  const role = callerRole(context) || 'customer';
 
   return {
     valid: true,
@@ -167,7 +198,7 @@ exports.onReservationCreate = functions.firestore
 
     // Log audit
     await logAudit(
-      { uid: data.customer?.uid || 'system', role: 'client', name: data.name },
+      { uid: data.customer?.uid || 'system', role: 'customer', name: data.name },
       'create',
       'reservation',
       snap.id,
@@ -382,7 +413,7 @@ exports.validateReservation = functions.firestore
 
     // Check daily limit (max 3 active reservations per client per day)
     const dailySnap = await db.collection('reservations')
-      .where('client.uid', '==', uid)
+      .where('customer.uid', '==', uid)
       .where('date', '==', data.date)
       .where('status', 'in', ['pending', 'assigned', 'en_camino', 'paseando'])
       .limit(5)
@@ -412,8 +443,7 @@ exports.registerFCMToken = functions.https.onCall(async (data, context) => {
   if (!token) throw new functions.https.HttpsError('invalid-argument', 'Token required');
 
   // Store in user's token document
-  const userSnap = await db.collection('users').doc(context.auth.uid).get();
-  const role = userSnap.data()?.role || 'client';
+  const role = callerRole(context) || 'customer';
 
   if (role === 'admin') {
     // Admin tokens go to admin/tokens
@@ -440,8 +470,7 @@ exports.registerFCMToken = functions.https.onCall(async (data, context) => {
 exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
 
-  const callerSnap = await db.collection('users').doc(context.auth.uid).get();
-  if (callerSnap.data()?.role !== 'admin') {
+  if (!isCaller(context, 'admin')) {
     throw new functions.https.HttpsError('permission-denied', 'Admin only');
   }
 
@@ -661,8 +690,7 @@ exports.getWalletTransactions = functions.https.onCall(async (data, context) => 
 exports.adminTopUpWallet = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Login required');
 
-  const callerSnap = await db.collection('users').doc(context.auth.uid).get();
-  if (callerSnap.data()?.role !== 'admin') {
+  if (!isCaller(context, 'admin')) {
     throw new functions.https.HttpsError('permission-denied', 'Admin only');
   }
 

@@ -49,8 +49,8 @@ export const FONT_PRESETS: Record<BrandFont, { label: string; body: string; disp
   },
   inter: {
     label: 'Inter',
-    body: "'Inter', system-ui, sans-serif",
-    display: "'Inter', system-ui, sans-serif",
+    body: 'var(--font-inter), system-ui, sans-serif',
+    display: 'var(--font-inter), system-ui, sans-serif',
   },
   system: {
     label: 'Sistema',

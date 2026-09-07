@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 import { Share2, Check, Copy, Users, Loader2 } from 'lucide-react'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { confirmWhatsAppShare } from '@/lib/utils'
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
@@ -23,6 +25,12 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
 
   useEffect(() => {
     if (!phone || !uid) return
+
+    if (!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED) {
+      setReferralLink(`${window.location.origin}/`)
+      setReferralMessage('🐾 Te recomiendo PET Ap. Conoce sus paseos programados aquí: ' + window.location.origin)
+      return
+    }
 
     const loadOrCreateCode = async () => {
       // Check if user already has a referral code
@@ -57,7 +65,7 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
     if (!referralCode) return
     const link = `${window.location.origin}?ref=${referralCode}`
     setReferralLink(link)
-    setReferralMessage(`🐾 ¡Te recomiendo PET Ap! Paseos personalizados con fotos y reporte. Agenda aquí: ${link}`)
+    setReferralMessage(`🐾 Te recomiendo PET Ap para solicitar paseos caninos programados. Conoce el servicio aquí: ${link}`)
   }, [referralCode])
 
   const copyLink = () => {
@@ -69,7 +77,7 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
 
   const shareWhatsApp = () => {
     if (!referralMessage) return
-    window.open(`https://wa.me/?text=${encodeURIComponent(referralMessage)}`, '_blank')
+    confirmWhatsAppShare('', referralMessage)
   }
 
   return (
@@ -90,7 +98,7 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
       ) : (
         <>
           <p className="text-xs text-muted mb-4 leading-relaxed">
-            Invita a tus amigos y por cada persona que agende un paseo con tu link, ambos reciben <span className="text-primary font-medium">$20 de descuento</span> 🐾
+            Puedes compartir PET Ap. Cualquier crédito promocional está sujeto a revisión: cliente realmente nuevo, primer paseo pagado y completado, máximo 10 recompensas mensuales, vigencia de 15 días y margen mínimo. No es efectivo ni transferible.
           </p>
 
           <div className="flex items-center gap-2 bg-ink/5 rounded-xl px-3 py-2.5 mb-3">
@@ -103,10 +111,10 @@ export default function ReferralSection({ phone, uid }: { phone?: string; uid?: 
             </button>
           </div>
 
-          <div className="flex items-center justify-center gap-1 mb-3">
+          {referralCode && <div className="flex items-center justify-center gap-1 mb-3">
             <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>Código:</span>
             <span className="text-xs font-mono font-bold text-primary">{referralCode}</span>
-          </div>
+          </div>}
 
           <button
             onClick={shareWhatsApp}

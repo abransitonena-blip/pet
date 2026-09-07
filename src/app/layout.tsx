@@ -1,10 +1,10 @@
-/* eslint-disable react-refresh/only-export-components */
-import type { Metadata } from 'next'
-import { Manrope } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Inter, Manrope } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ConfigErrorBanner from '@/components/ConfigErrorBanner'
-import { BUSINESS_HOURS } from '@/lib/defaultConfig'
+import PWARegister from '@/components/PWARegister'
+import { SITE_URL } from '@/lib/siteUrl'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -12,56 +12,22 @@ const manrope = Manrope({
   display: 'swap',
 })
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://pet-euhz.vercel.app'
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
 const siteName = 'PET Ap'
-const siteDescription = 'Reserva paseos personalizados, administra horarios y recibe fotos y reporte de cada paseo desde PET Ap.'
+const siteDescription = 'Solicita paseos caninos programados y consulta su estado desde Familia PET.'
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'WebSite',
-      '@id': `${siteUrl}/#website`,
-      url: siteUrl,
-      name: siteName,
-      description: siteDescription,
-      inLanguage: 'es-MX',
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${siteUrl}/?s={search_term_string}`,
-        },
-        'query-input': 'required name=search_term_string',
-      },
-    },
-    {
-      '@type': 'LocalBusiness',
-      '@id': `${siteUrl}/#business`,
-      name: 'PET Ap',
-      description: siteDescription,
-      url: siteUrl,
-      telephone: '+525523053772',
-      email: 'ap9871888@gmail.com',
-      image: `${siteUrl}/og-image.png`,
-      openingHoursSpecification: [
-        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: BUSINESS_HOURS.lunes!.open, closes: BUSINESS_HOURS.lunes!.close },
-        { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: BUSINESS_HOURS.sabado!.open, closes: BUSINESS_HOURS.sabado!.close },
-        { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Sunday', opens: '00:00', closes: '00:00', description: 'Cerrado' },
-      ],
-      priceRange: '$$',
-      sameAs: ['https://www.instagram.com/pet___ap'],
-      hasOfferCatalog: {
-        '@type': 'OfferCatalog',
-        name: 'Servicios de paseo canino',
-        itemListElement: [
-          { '@type': 'Offer', name: 'Paseo Cotidiano', description: 'Paseo diario de 30 min' },
-          { '@type': 'Offer', name: 'Paseo Energía', description: 'Paseo activo de 45 min' },
-          { '@type': 'Offer', name: 'Paseo Acompañamiento', description: 'Paseo extendido de 60 min' },
-          { '@type': 'Offer', name: 'Rutina Semanal', description: 'Plan semanal personalizado' },
-        ],
-      },
-    },
-  ],
+  '@type': 'WebSite',
+  '@id': `${SITE_URL}/#website`,
+  url: SITE_URL,
+  name: siteName,
+  description: siteDescription,
+  inLanguage: 'es-MX',
 }
 
 export const metadata: Metadata = {
@@ -80,20 +46,18 @@ export const metadata: Metadata = {
     'paseo canino',
   ],
   authors: [{ name: 'PET Ap' }],
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
-    title: 'PET Ap | Tu perro merece más que un paseo',
-    description: 'Paseos personalizados con fotos y reporte de cada paseo.',
-    url: siteUrl,
+    title: 'Paseos caninos programados',
+    description: siteDescription,
     siteName: 'PET Ap',
     locale: 'es_MX',
     type: 'website',
-    images: [{ url: `${siteUrl}/og-image.png`, width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PET Ap | Tu perro merece más que un paseo',
-    description: 'Paseos personalizados con fotos y reporte de cada paseo.',
+    title: 'Paseos caninos programados',
+    description: siteDescription,
   },
   robots: {
     index: true,
@@ -102,17 +66,23 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#FFF8F1',
+  colorScheme: 'light',
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={manrope.variable}>
+    <html lang="es-MX" className={`${manrope.variable} ${inter.variable}`}>
       <head>
-        <link rel="canonical" href={siteUrl} />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
+        <link rel="icon" type="image/png" href="/brand/pet-ap-dog-logo.png" />
         <meta name="theme-color" content="#FFF8F1" />
         <meta name="color-scheme" content="light only" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -128,6 +98,7 @@ export default function RootLayout({
         </a>
         <Providers>
           <ConfigErrorBanner />
+          <PWARegister />
           <main id="main-content">{children}</main>
         </Providers>
       </body>

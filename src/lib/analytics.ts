@@ -5,9 +5,14 @@ type GTagEvent = {
   value?: number
 }
 
+type GtagWindow = { gtag?: (...args: unknown[]) => void; __petAnalyticsEnabled?: boolean }
+
 function safeGtag(...args: unknown[]) {
-  if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
-    ;(window as any).gtag(...args)
+  if (typeof window === 'undefined') return
+  const analyticsWindow = window as unknown as GtagWindow
+  const gtag = analyticsWindow.gtag
+  if (analyticsWindow.__petAnalyticsEnabled === true && typeof gtag === 'function') {
+    gtag(...args)
   }
 }
 

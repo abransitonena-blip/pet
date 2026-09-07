@@ -2,84 +2,482 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ═══════════════════════════════════════════
-    // HELPERS
-    // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════
+    // HELPERS (P0.8)
+    // Source of authority: custom claims (request.auth.token.role),
+    // set ONLY by Firebase Admin SDK. users/{uid}.role is a profile
+    // mirror and is never read here for authorization.
+    // ════════════════════════════════════════════════════════��══
 
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isAdmin() {
+    // Claims role, normalized: missing claims or legacy 'client' → 'customer'
+    function getClaimRole() {
       return isAuthenticated()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        && request.auth.token != null
+        && request.auth.token.keys().hasAny(['role'])
+        ? request.auth.token.role
+        : 'customer';
+    }
+
+    function hasRole(role) {
+      let r = getClaimRole();
+      return r == role || (role == 'customer' && r == 'client');
+    }
+
+    function hasExplicitClaimRole(role) {
+      return isAuthenticated()
+        && request.auth.token != null
+        && request.auth.token.keys().hasAny(['role'])
+        && request.auth.token.role == role;
+    }
+
+    function hasNoExplicitClaimRole() {
+      return isAuthenticated()
+        && (request.auth.token == null
+          || !request.auth.token.keys().hasAny(['role']));
+    }
+
+    function hasCustomerCompatibleClaim() {
+      return hasNoExplicitClaimRole()
+        || hasExplicitClaimRole('customer')
+        || hasExplicitClaimRole('client');
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
     }
 
     function isWalker() {
-      return isAuthenticated()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'walker';
+      return hasRole('walker');
     }
 
     function isSupervisor() {
-      return isAuthenticated()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'supervisor';
+      return hasRole('supervisor');
     }
 
-    function getRole() {
-      return isAuthenticated()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-        : null;
+    function isCustomer() {
+      return hasRole('customer');
     }
 
-    function isWalkerAssignedToReservation() {
+    function isStaff() {
+      return isAdmin() || isSupervisor();
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Walker assigned to the resource being read/updated (by uid, never by name)
+    function isAssignedWalker(walkerId) {
       return isWalker()
         && resource.data.assignment != null
-        && resource.data.assignment.walkerId == request.auth.uid;
+        && walkerId == request.auth.uid;
     }
 
-    function isWalkerByNameOnReservation() {
-      return isWalker()
-        && resource.data.assignedWalker != null
-        && resource.data.assignedWalker == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name;
-    }
-
-    function isWalkerAssignedInUpdate() {
+    function isAssignedWalkerInUpdate() {
       return isWalker()
         && request.resource.data.assignment != null
         && request.resource.data.assignment.walkerId == request.auth.uid;
     }
 
-function isReservationClient() {
-       return isAuthenticated()
-         && resource.data.customer != null
-         && resource.data.customer.uid == request.auth.uid;
-     }
-
-    function isPetOwner() {
+    // Account lifecycle: customers are active by default; walkers/supervisors
+    // must have an active walkerProfiles doc.
+    function isActiveAccount() {
       return isAuthenticated()
-        && resource.data.ownerId == request.auth.uid;
+        && (!exists(/databases/$(database)/documents/walkerProfiles/$(request.auth.uid))
+            || get(/databases/$(database)/documents/walkerProfiles/$(request.auth.uid)).data.status == null
+            || get(/databases/$(database)/documents/walkerProfiles/$(request.auth.uid)).data.status == 'active');
     }
 
-    function isConversationParticipant() {
-      return isAuthenticated()
-        && request.auth.uid in resource.data.participants;
+    function isActiveWalker() {
+      return isWalker()
+        && exists(/databases/$(database)/documents/walkerProfiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/walkerProfiles/$(request.auth.uid)).data.status == 'active';
     }
 
-    function isNotificationOwner() {
-      return isAuthenticated()
-        && request.auth.uid == resource.data.uid;
+    function onlyAllowedFieldsChanged(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
 
+    function validListLimit(maximum) {
+      return request.query.limit != null && request.query.limit <= maximum;
+    }
+
+    function isActiveZone(zoneId) {
+      return zoneId is string
+        && exists(/databases/$(database)/documents/zones/$(zoneId))
+        && get(/databases/$(database)/documents/zones/$(zoneId)).data.active == true;
+    }
+
+    function ownsSavedAddress(addressId) {
+      return addressId is string
+        && exists(/databases/$(database)/documents/addresses/$(addressId))
+        && get(/databases/$(database)/documents/addresses/$(addressId)).data.ownerId == request.auth.uid
+        && isActiveZone(get(/databases/$(database)/documents/addresses/$(addressId)).data.zoneId);
+    }
+
+    function ownsSingleDog(dogIds) {
+      return dogIds is list
+        && dogIds.size() == 1
+        && dogIds[0] is string
+        && exists(/databases/$(database)/documents/dogs/$(dogIds[0]))
+        && get(/databases/$(database)/documents/dogs/$(dogIds[0])).data.ownerId == request.auth.uid;
+    }
+
+    function validConfiguredService(data) {
+      let pricingPath = /databases/$(database)/documents/appSettings/servicePrices;
+      return exists(pricingPath)
+        && get(pricingPath).data.services is map
+        && get(pricingPath).data.services.keys().hasAny([data.serviceId])
+        && get(pricingPath).data.services[data.serviceId].id == data.serviceId
+        && get(pricingPath).data.services[data.serviceId].name == data.serviceName
+        && get(pricingPath).data.services[data.serviceId].version == data.serviceVersion
+        && get(pricingPath).data.services[data.serviceId].currency == 'MXN'
+        && get(pricingPath).data.services[data.serviceId].active == true
+        && ((get(pricingPath).data.services[data.serviceId].amountCents is int
+              && get(pricingPath).data.services[data.serviceId].amountCents > 0
+              && get(pricingPath).data.services[data.serviceId].complimentary == false)
+          || (get(pricingPath).data.services[data.serviceId].amountCents == 0
+              && get(pricingPath).data.services[data.serviceId].complimentary == true));
+    }
+
+    function requestedSessionMatchesOrder(data) {
+      let order = getAfter(/databases/$(database)/documents/serviceOrders/$(data.orderId)).data;
+      let schedule = {
+        'date': data.scheduledDate,
+        'time': data.scheduledStart + '-' + data.arrivalWindowEnd
+      };
+      return order.customerId == data.customerId
+        && order.dogIds == data.dogIds
+        && order.addressId == data.addressId
+        && order.serviceId == data.serviceId
+        && order.serviceVersion == data.serviceVersion
+        && order.requestedSchedule is list
+        && order.requestedSchedule.hasAny([schedule]);
+    }
+
+    function validCustomerServiceOrder(data) {
+      return data.customerId == request.auth.uid
+        && data.status == 'pending_confirmation'
+        && data.dogIds is list
+        && ownsSingleDog(data.dogIds)
+        && ownsSavedAddress(data.addressId)
+        && validConfiguredService(data)
+        && data.numberOfSessions is int
+        && data.numberOfSessions > 0
+        && data.requestedSchedule is list
+        && data.requestedSchedule.size() == data.numberOfSessions
+        && data.createdAt is timestamp
+        && data.serviceVersion is int
+        && data.serviceVersion > 0
+        && data.paymentStatus == 'pending'
+        && data.keys().hasAll([
+          'customerId', 'dogIds', 'serviceId', 'serviceName', 'packageType',
+          'numberOfSessions', 'addressId', 'notes', 'status', 'paymentStatus',
+          'requestedSchedule', 'serviceVersion', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'customerId', 'dogIds', 'serviceId', 'serviceName', 'packageType',
+          'numberOfSessions', 'addressId', 'notes', 'status', 'paymentStatus',
+          'requestedSchedule', 'serviceVersion', 'createdAt'
+        ]);
+    }
+
+    function validCustomerWalkSession(data) {
+      return data.customerId == request.auth.uid
+        && data.status == 'requested'
+        && data.dogIds is list
+        && ownsSingleDog(data.dogIds)
+        && ownsSavedAddress(data.addressId)
+        && data.scheduledDate is string
+        && data.scheduledStart is string
+        && data.arrivalWindowStart is string
+        && data.arrivalWindowEnd is string
+        && data.createdAt is timestamp
+        && data.serviceVersion is int
+        && data.serviceVersion > 0
+        && data.keys().hasAll([
+          'orderId', 'customerId', 'dogIds', 'addressId', 'serviceId',
+          'scheduledDate', 'scheduledStart', 'arrivalWindowStart',
+          'arrivalWindowEnd', 'status', 'serviceVersion', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'orderId', 'customerId', 'dogIds', 'addressId', 'serviceId',
+          'scheduledDate', 'scheduledStart', 'arrivalWindowStart',
+          'arrivalWindowEnd', 'notes', 'status', 'serviceVersion', 'createdAt'
+        ])
+        && existsAfter(/databases/$(database)/documents/serviceOrders/$(data.orderId))
+        && requestedSessionMatchesOrder(data);
+    }
+
+    function sameSessionIdentity() {
+      return request.resource.data.orderId == resource.data.orderId
+        && request.resource.data.customerId == resource.data.customerId
+        && request.resource.data.dogIds == resource.data.dogIds
+        && request.resource.data.addressId == resource.data.addressId
+        && request.resource.data.serviceId == resource.data.serviceId
+        && request.resource.data.serviceVersion == resource.data.serviceVersion;
+    }
+
+    function validStaffAssignment() {
+      return resource.data.status == 'requested'
+        && request.resource.data.status == 'assigned'
+        && request.resource.data.walkerId is string
+        && request.resource.data.walkerId.size() > 0
+        && request.resource.data.assignedBy == request.auth.uid
+        && request.resource.data.assignedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && exists(/databases/$(database)/documents/walkerProfiles/$(request.resource.data.walkerId))
+        && get(/databases/$(database)/documents/walkerProfiles/$(request.resource.data.walkerId)).data.status == 'active'
+        && onlyAllowedFieldsChanged(['status', 'walkerId', 'assignedBy', 'assignedAt', 'updatedAt']);
+    }
+
+    function validStaffReprogram() {
+      return request.resource.data.status == resource.data.status
+        && request.resource.data.get('walkerId', null) == resource.data.get('walkerId', null)
+        && request.resource.data.updatedAt is timestamp
+        && onlyAllowedFieldsChanged([
+          'scheduledDate', 'scheduledStart', 'arrivalWindowStart',
+          'arrivalWindowEnd', 'updatedAt'
+        ]);
+    }
+
+    function validWalkerTransition(from, to) {
+      return (from == 'assigned' && to == 'confirmed')
+        || (from == 'confirmed' && to == 'on_the_way')
+        || (from == 'on_the_way' && to == 'arrived')
+        || (from == 'arrived' && to == 'in_progress')
+        || (from == 'in_progress' && to == 'completed');
+    }
+
+    function validWalkerTransitionFields(from, to) {
+      return (from == 'assigned' && to == 'confirmed'
+          && request.resource.data.confirmedAt is timestamp
+          && onlyAllowedFieldsChanged(['status', 'confirmedAt', 'updatedAt']))
+        || (from == 'confirmed' && to == 'on_the_way'
+          && request.resource.data.onTheWayAt is timestamp
+          && onlyAllowedFieldsChanged(['status', 'onTheWayAt', 'updatedAt']))
+        || (from == 'on_the_way' && to == 'arrived'
+          && request.resource.data.arrivedAt is timestamp
+          && onlyAllowedFieldsChanged(['status', 'arrivedAt', 'updatedAt']))
+        || (from == 'arrived' && to == 'in_progress'
+          && request.resource.data.startedAt is timestamp
+          && onlyAllowedFieldsChanged(['status', 'startedAt', 'updatedAt']))
+        || (from == 'in_progress' && to == 'completed'
+          && request.resource.data.completedAt is timestamp
+          && onlyAllowedFieldsChanged(['status', 'completedAt', 'updatedAt']));
+    }
+
+    function validPublicServicePrice(price, id, name, expectedDuration) {
+      return price is map
+        && price.keys().hasOnly(['id', 'name', 'duration', 'amountCents', 'currency', 'active', 'complimentary', 'version'])
+        && price.id == id && price.name == name && price.duration == expectedDuration
+        && price.currency == 'MXN' && price.active is bool && price.complimentary is bool
+        && price.version is int && price.version > 0
+        && (price.amountCents == null
+          ? price.active == false && price.complimentary == false
+          : price.amountCents is int && price.amountCents >= 0 && price.amountCents <= 100000000
+            && ((price.amountCents == 0 && price.complimentary == true)
+              || (price.amountCents > 0 && price.complimentary == false)));
+    }
+
+    function validServicePrices(data) {
+      return data.keys().hasOnly(['schemaVersion', 'version', 'services', 'updatedAt'])
+        && data.schemaVersion == 1 && data.version is int && data.version > 0
+        && data.updatedAt == request.time && data.services is map
+        && data.services.keys().hasOnly(['paseo-individual', 'paseo-extendido', 'paseo-grupal', 'paseo-adiestramiento', 'paseo-esencial', 'paseo-seguimiento', 'paquete-semanal'])
+        && data.services.keys().hasAll(['paseo-individual', 'paseo-extendido', 'paseo-grupal', 'paseo-adiestramiento', 'paseo-esencial', 'paseo-seguimiento', 'paquete-semanal'])
+        && validPublicServicePrice(data.services['paseo-individual'], 'paseo-individual', 'Paseo Individual', '30 min')
+        && validPublicServicePrice(data.services['paseo-extendido'], 'paseo-extendido', 'Paseo Extendido', '1 hora')
+        && validPublicServicePrice(data.services['paseo-grupal'], 'paseo-grupal', 'Paseo Grupal', '45 min')
+        && validPublicServicePrice(data.services['paseo-adiestramiento'], 'paseo-adiestramiento', 'Paseo + Adiestramiento', '1 hora')
+        && validPublicServicePrice(data.services['paseo-esencial'], 'paseo-esencial', 'Paseo Esencial', '20 min')
+        && validPublicServicePrice(data.services['paseo-seguimiento'], 'paseo-seguimiento', 'Paseo + Seguimiento', '45 min')
+        && validPublicServicePrice(data.services['paquete-semanal'], 'paquete-semanal', 'Paquete Semanal', '6 paseos');
+    }
+
+    function validAdminServicePrice(price, id, name, expectedDuration) {
+      return price.keys().hasOnly(['id', 'name', 'duration', 'amountCents', 'currency', 'active', 'complimentary', 'version', 'updatedAt', 'updatedBy'])
+        && price.id == id && price.name == name && price.duration == expectedDuration
+        && price.currency == 'MXN' && price.active is bool && price.complimentary is bool
+        && price.version is int && price.version > 0 && price.updatedAt == request.time
+        && price.updatedBy == request.auth.uid
+        && (price.amountCents == null
+          ? price.active == false && price.complimentary == false
+          : price.amountCents is int && price.amountCents >= 0 && price.amountCents <= 100000000
+            && ((price.amountCents == 0 && price.complimentary == true)
+              || (price.amountCents > 0 && price.complimentary == false)));
+    }
+
+    function validAdminServicePrices(data) {
+      return data.keys().hasOnly(['schemaVersion', 'version', 'services', 'updatedAt', 'updatedBy'])
+        && data.schemaVersion == 1 && data.version is int && data.version > 0
+        && data.updatedAt == request.time && data.updatedBy == request.auth.uid && data.services is map
+        && data.services.keys().hasOnly(['paseo-individual', 'paseo-extendido', 'paseo-grupal', 'paseo-adiestramiento', 'paseo-esencial', 'paseo-seguimiento', 'paquete-semanal'])
+        && data.services.keys().hasAll(['paseo-individual', 'paseo-extendido', 'paseo-grupal', 'paseo-adiestramiento', 'paseo-esencial', 'paseo-seguimiento', 'paquete-semanal'])
+        && validAdminServicePrice(data.services['paseo-individual'], 'paseo-individual', 'Paseo Individual', '30 min')
+        && validAdminServicePrice(data.services['paseo-extendido'], 'paseo-extendido', 'Paseo Extendido', '1 hora')
+        && validAdminServicePrice(data.services['paseo-grupal'], 'paseo-grupal', 'Paseo Grupal', '45 min')
+        && validAdminServicePrice(data.services['paseo-adiestramiento'], 'paseo-adiestramiento', 'Paseo + Adiestramiento', '1 hora')
+        && validAdminServicePrice(data.services['paseo-esencial'], 'paseo-esencial', 'Paseo Esencial', '20 min')
+        && validAdminServicePrice(data.services['paseo-seguimiento'], 'paseo-seguimiento', 'Paseo + Seguimiento', '45 min')
+        && validAdminServicePrice(data.services['paquete-semanal'], 'paquete-semanal', 'Paquete Semanal', '6 paseos');
+    }
+
+    function validBookingDay(day) {
+      return day is map
+        && day.keys().hasOnly(['enabled', 'open', 'close'])
+        && day.keys().hasAll(['enabled', 'open', 'close'])
+        && day.enabled is bool
+        && day.open is string
+        && day.close is string
+        && ((day.enabled == false && day.open == '' && day.close == '')
+          || (day.enabled == true
+            && day.open.matches('^(?:[01][0-9]|2[0-3]):[0-5][0-9]$')
+            && day.close.matches('^(?:[01][0-9]|2[0-3]):[0-5][0-9]$')
+            && day.open < day.close));
+    }
+
+    function validBookingSchedule(data) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'timezone', 'slotIntervalMinutes', 'minimumLeadMinutes',
+          'weeklyHours', 'closedDates', 'active', 'version', 'updatedAt', 'updatedBy'
+        ])
+        && data.keys().hasAll([
+          'schemaVersion', 'timezone', 'slotIntervalMinutes', 'minimumLeadMinutes',
+          'weeklyHours', 'closedDates', 'active', 'version', 'updatedAt', 'updatedBy'
+        ])
+        && data.schemaVersion == 1
+        && data.timezone == 'America/Mexico_City'
+        && data.slotIntervalMinutes in [15, 30, 60]
+        && data.minimumLeadMinutes is int
+        && data.minimumLeadMinutes >= 0
+        && data.minimumLeadMinutes <= 10080
+        && data.weeklyHours is map
+        && data.weeklyHours.keys().hasOnly(['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'])
+        && data.weeklyHours.keys().hasAll(['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'])
+        && validBookingDay(data.weeklyHours.domingo)
+        && validBookingDay(data.weeklyHours.lunes)
+        && validBookingDay(data.weeklyHours.martes)
+        && validBookingDay(data.weeklyHours.miercoles)
+        && validBookingDay(data.weeklyHours.jueves)
+        && validBookingDay(data.weeklyHours.viernes)
+        && validBookingDay(data.weeklyHours.sabado)
+        && data.closedDates is list
+        && data.closedDates.size() <= 366
+        && data.active is bool
+        && data.version is int
+        && data.version > 0
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid;
+    }
+
+    function validGalleryAsset(data) {
+      return data.assetPublicId is string
+        && data.assetPublicId.matches('^pet-ap-public/[a-f0-9-]{36}$')
+        && data.url is string
+        && data.url.matches('^https://res[.]cloudinary[.]com/[A-Za-z0-9_-]+/image/upload/[^?#]+$')
+        && data.width is int && data.width > 0 && data.width <= 20000
+        && data.height is int && data.height > 0 && data.height <= 20000
+        && data.format in ['jpg', 'jpeg', 'png', 'webp'];
+    }
+
+    function validGalleryMetadata(data) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'publicationStatus', 'consentRecorded', 'consentVerified',
+          'publicGalleryAllowed', 'usageRights', 'assetPublicId', 'url', 'width',
+          'height', 'format', 'altText', 'assetDate', 'revokedAt', 'pendingDeletion',
+          'createdBy', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'schemaVersion', 'publicationStatus', 'consentRecorded', 'consentVerified',
+          'publicGalleryAllowed', 'usageRights', 'assetPublicId', 'url', 'width',
+          'height', 'format', 'altText', 'assetDate', 'revokedAt', 'pendingDeletion',
+          'createdBy', 'createdAt', 'updatedAt'
+        ])
+        && data.schemaVersion == 1
+        && data.publicationStatus in ['draft', 'published', 'withdrawn']
+        && data.consentRecorded is bool
+        && data.consentVerified is bool
+        && data.publicGalleryAllowed is bool
+        && data.usageRights in ['pending', 'public-gallery']
+        && validGalleryAsset(data)
+        && data.altText is string && data.altText.size() > 0 && data.altText.size() <= 240
+        && data.assetDate is timestamp
+        && data.revokedAt == null
+        && data.pendingDeletion == false
+        && data.createdBy is string && data.createdBy.size() > 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (data.publicationStatus != 'published'
+          || (data.consentRecorded == true
+            && data.consentVerified == true
+            && data.publicGalleryAllowed == true
+            && data.usageRights == 'public-gallery'))
+        && (data.publicationStatus == 'published' || data.publicGalleryAllowed == false);
+    }
+
+    function isPublicGalleryRecord(data) {
+      return validGalleryMetadata(data)
+        && data.publicationStatus == 'published'
+        && data.consentRecorded == true
+        && data.consentVerified == true
+        && data.publicGalleryAllowed == true
+        && data.usageRights == 'public-gallery'
+        && data.revokedAt == null
+        && data.pendingDeletion == false;
+    }
+
+    function validPublicGalleryProjection(data) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'assetPublicId', 'url', 'width', 'height',
+          'format', 'altText', 'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'schemaVersion', 'assetPublicId', 'url', 'width', 'height',
+          'format', 'altText', 'updatedAt'
+        ])
+        && data.schemaVersion == 1
+        && validGalleryAsset(data)
+        && data.altText is string
+        && data.altText.size() > 0
+        && data.altText.size() <= 240
+        && data.updatedAt is timestamp;
+    }
+
+    function publicGalleryMatchesPrivate(publicData, privateData) {
+      return publicData.assetPublicId == privateData.assetPublicId
+        && publicData.url == privateData.url
+        && publicData.width == privateData.width
+        && publicData.height == privateData.height
+        && publicData.format == privateData.format
+        && publicData.altText == privateData.altText;
+    }
+
+    function galleryPublicationCoherent(docId, privateData) {
+      return privateData.publicationStatus == 'published'
+        ? existsAfter(/databases/$(database)/documents/gallery-public/$(docId))
+          && validPublicGalleryProjection(getAfter(/databases/$(database)/documents/gallery-public/$(docId)).data)
+          && publicGalleryMatchesPrivate(
+            getAfter(/databases/$(database)/documents/gallery-public/$(docId)).data,
+            privateData
+          )
+        : !existsAfter(/databases/$(database)/documents/gallery-public/$(docId));
+    }
+
+    // Clients must never be able to write privilege fields.
+    function noRoleField() {
+      return !request.resource.data.keys().hasAny(['role', 'claims', 'customClaims']);
+    }
 
     // Rate limiting: reservation fields validation
-function isValidReservation() {
-       return request.resource.data.keys().hasAll(['name', 'phone', 'service', 'petName', 'date', 'time', 'customer'])
-         && request.resource.data.keys().size() <= 30;
-     }
+    function isValidReservation() {
+      return request.resource.data.keys().hasAll(['name', 'phone', 'service', 'petName', 'date', 'time', 'customer'])
+        && request.resource.data.keys().size() <= 30;
+    }
 
     // Rate limiting: review fields validation
     function isValidReview() {
@@ -89,13 +487,13 @@ function isValidReservation() {
     }
 
     // ═══════════════════════════════════════════
-    // USERS (role documents — immutable from client)
+    // USERS (profile/state mirror — role only via Admin SDK)
     // ═══════════════════════════════════════════
 
     match /users/{uid} {
       // Users can only read their own role doc
       allow read: if isAuthenticated() && request.auth.uid == uid;
-      // Only Cloud Functions (admin SDK) can write roles
+      // Only Cloud Functions (Admin SDK) can write — no client can set its own role
       allow write: if false;
     }
 
@@ -104,17 +502,55 @@ function isValidReservation() {
     // ═══════════════════════════════════════════
 
     match /customerProfiles/{uid} {
-      // Owner can read, admin can read all
+      function validProfileTextFields(data) {
+        return data.name is string
+          && data.name.size() <= 120
+          && data.phone is string
+          && data.phone.size() <= 30;
+      }
+
+      function protectedProfileFieldsUnchanged() {
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'role', 'claims', 'customClaims', 'credits', 'wallet', 'walletBalance',
+          'loyaltyPoints', 'referralRewards', 'financialBalance', 'paymentStatus',
+          'permissions', 'adminStatus', 'status', 'suspended', 'audit',
+          'internalNotes', 'statistics', 'flags'
+        ]);
+      }
+
       allow read: if isAuthenticated()
         && (request.auth.uid == uid || isAdmin());
-      // Owner creates own profile on first login
-      allow create: if isAuthenticated()
+
+      allow create: if isActiveAccount()
+        && isCustomer()
         && request.auth.uid == uid
-        && request.resource.data.keys().hasAll(['name', 'email', 'phone', 'createdAt']);
-      // Owner updates own profile, admin can update any
+        && noRoleField()
+        && request.auth.token.keys().hasAny(['email'])
+        && request.auth.token.email is string
+        && request.resource.data.email is string
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.email.size() >= 3
+        && request.resource.data.email.size() <= 254
+        && validProfileTextFields(request.resource.data)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasAll(['name', 'email', 'phone', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'createdAt']);
+
       allow update: if isAuthenticated()
-        && (request.auth.uid == uid || isAdmin());
-      // Nobody deletes customer profiles
+        && noRoleField()
+        && protectedProfileFieldsUnchanged()
+        && request.resource.data.email is string
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.createdAt == resource.data.createdAt
+        && validProfileTextFields(request.resource.data)
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'phone', 'updatedAt'
+        ])
+        && ((isCustomer() && request.auth.uid == uid) || isAdmin());
+
       allow delete: if false;
     }
 
@@ -123,18 +559,20 @@ function isValidReservation() {
     // ═══════════════════════════════════════════
 
     match /dogs/{petId} {
-      // Owner reads own pets, admin reads all, walker reads assigned
+      // Owner reads own pets, admin reads all
       allow read: if isAuthenticated()
-        && (isPetOwner() || isAdmin());
+        && (isOwner(resource.data.ownerId) || isAdmin());
       // Owner creates own pet
-      allow create: if isAuthenticated()
-        && request.resource.data.ownerId == request.auth.uid;
+      allow create: if isActiveAccount()
+        && request.resource.data.ownerId == request.auth.uid
+        && noRoleField();
       // Owner updates own pet, admin can update any
       allow update: if isAuthenticated()
-        && (isPetOwner() || isAdmin());
+        && noRoleField()
+        && (isOwner(resource.data.ownerId) || isAdmin());
       // Owner deletes own pet, admin can delete any
       allow delete: if isAuthenticated()
-        && (isPetOwner() || isAdmin());
+        && (isOwner(resource.data.ownerId) || isAdmin());
     }
 
     // ═══════════════════════════════════════════
@@ -143,13 +581,19 @@ function isValidReservation() {
 
     match /addresses/{addressId} {
       allow read: if isAuthenticated()
-        && (resource.data.ownerId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated()
-        && request.resource.data.ownerId == request.auth.uid;
+        && (isOwner(resource.data.ownerId) || isAdmin());
+      allow create: if isActiveAccount()
+        && isCustomer()
+        && request.resource.data.ownerId == request.auth.uid
+        && isActiveZone(request.resource.data.zoneId)
+        && noRoleField();
       allow update: if isAuthenticated()
-        && (resource.data.ownerId == request.auth.uid || isAdmin());
+        && noRoleField()
+        && request.resource.data.ownerId == resource.data.ownerId
+        && isActiveZone(request.resource.data.zoneId)
+        && (isOwner(resource.data.ownerId) || isAdmin());
       allow delete: if isAuthenticated()
-        && (resource.data.ownerId == request.auth.uid || isAdmin());
+        && (isOwner(resource.data.ownerId) || isAdmin());
     }
 
     // ═══════════════════════════════════════════
@@ -157,30 +601,362 @@ function isValidReservation() {
     // ═══════════════════════════════════════════
 
     match /serviceOrders/{orderId} {
-      allow read: if isAuthenticated()
-        && (resource.data.clientId == request.auth.uid || isAdmin() || isSupervisor());
-      allow create: if isAuthenticated()
-        && (request.resource.data.clientId == request.auth.uid || isAdmin());
-      allow update: if isAuthenticated()
-        && (resource.data.clientId == request.auth.uid || isAdmin() || isSupervisor());
-      allow delete: if isAdmin();
+      allow get: if isAuthenticated()
+        && (resource.data.customerId == request.auth.uid || isStaff());
+      allow list: if isAuthenticated()
+        && (resource.data.customerId == request.auth.uid || isStaff())
+        && validListLimit(100);
+      allow create: if isActiveAccount()
+        && isCustomer()
+        && noRoleField()
+        && validCustomerServiceOrder(request.resource.data);
+      allow update, delete: if false;
 
       match /sessions/{sessionId} {
         allow read: if isAuthenticated()
-          && (resource.data.clientId == request.auth.uid
+          && (isOwner(resource.data.clientId)
               || resource.data.walkerId == request.auth.uid
               || isAdmin()
               || isSupervisor());
-        allow create: if isAuthenticated()
+        allow create: if isActiveAccount()
+          && noRoleField()
           && (request.resource.data.clientId == request.auth.uid
               || request.resource.data.walkerId == request.auth.uid
               || isAdmin());
         allow update: if isAuthenticated()
-          && (resource.data.clientId == request.auth.uid
+          && noRoleField()
+          && (isOwner(resource.data.clientId)
               || resource.data.walkerId == request.auth.uid
               || isAdmin()
               || isSupervisor());
         allow delete: if isAdmin();
+      }
+    }
+
+    // Canonical vertical slice: customer request → staff assignment → Walker execution.
+    match /walkSessions/{sessionId} {
+      allow get: if isAuthenticated()
+        && (resource.data.customerId == request.auth.uid
+          || (isActiveWalker() && resource.data.walkerId == request.auth.uid)
+          || isStaff());
+      allow list: if isAuthenticated()
+        && (resource.data.customerId == request.auth.uid
+          || (isActiveWalker() && resource.data.walkerId == request.auth.uid)
+          || isStaff())
+        && validListLimit(100);
+      allow create: if isActiveAccount()
+        && isCustomer()
+        && validCustomerWalkSession(request.resource.data);
+      allow update: if sameSessionIdentity()
+        && ((isStaff() && (validStaffAssignment() || validStaffReprogram()))
+          || (isActiveWalker()
+            && resource.data.walkerId == request.auth.uid
+            && request.resource.data.walkerId == resource.data.walkerId
+            && validWalkerTransition(resource.data.status, request.resource.data.status)
+            && validWalkerTransitionFields(resource.data.status, request.resource.data.status)));
+      allow delete: if false;
+    }
+
+    function validReportText(data) {
+      return data.summary is string && data.summary.size() <= 1200
+        && data.behaviorNotes is string && data.behaviorNotes.size() <= 800
+        && data.bathroomNotes is string && data.bathroomNotes.size() <= 500
+        && data.waterProvided is bool
+        && data.incidentsSummary is string && data.incidentsSummary.size() <= 800
+        && data.mediaReferences is list && data.mediaReferences.size() == 0;
+    }
+
+    function reportSession(sessionId) {
+      return get(/databases/$(database)/documents/walkSessions/$(sessionId)).data;
+    }
+
+    function validReportIdentity(data, sessionId) {
+      let session = reportSession(sessionId);
+      return data.walkSessionId == sessionId
+        && data.orderId == session.orderId
+        && data.customerId == session.customerId
+        && data.walkerId == session.walkerId
+        && data.dogIds == session.dogIds
+        && data.createdBy == request.auth.uid
+        && data.schemaVersion == 1;
+    }
+
+    function validReportStatus(data, sessionId) {
+      return (data.status == 'draft' && data.submittedAt == null)
+        || (data.status == 'submitted'
+          && reportSession(sessionId).status == 'completed'
+          && data.summary.size() > 0
+          && data.submittedAt == request.time);
+    }
+
+    function validSubmittedReportContract(data) {
+      return data.keys().hasOnly([
+          'walkSessionId', 'orderId', 'customerId', 'walkerId', 'dogIds',
+          'status', 'summary', 'behaviorNotes', 'bathroomNotes', 'waterProvided',
+          'incidentsSummary', 'mediaReferences', 'createdBy', 'createdAt',
+          'updatedAt', 'submittedAt', 'schemaVersion'
+        ])
+        && validReportText(data)
+        && data.status == 'submitted'
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && data.submittedAt is timestamp
+        && data.createdBy is string
+        && data.createdBy == data.walkerId
+        && data.schemaVersion == 1;
+    }
+
+    function customerCanReadSubmittedReport(data, sessionId) {
+      return hasCustomerCompatibleClaim()
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && validSubmittedReportContract(data)
+        && data.walkSessionId == sessionId
+        && data.customerId == request.auth.uid
+        && reportSession(sessionId).customerId == request.auth.uid
+        && data.orderId == reportSession(sessionId).orderId
+        && data.customerId == reportSession(sessionId).customerId
+        && data.walkerId == reportSession(sessionId).walkerId
+        && data.dogIds == reportSession(sessionId).dogIds;
+    }
+
+    function customerCanAccessEmptyReportPath(sessionId) {
+      return hasCustomerCompatibleClaim()
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && reportSession(sessionId).customerId == request.auth.uid;
+    }
+
+    function assignedWalkerCanAccessEmptyReportPath(sessionId) {
+      return isActiveWalker()
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && reportSession(sessionId).walkerId == request.auth.uid;
+    }
+
+    function assignedWalkerCanReadReport(data, sessionId) {
+      return isActiveWalker()
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && data.walkSessionId == sessionId
+        && data.walkerId == request.auth.uid
+        && reportSession(sessionId).walkerId == request.auth.uid
+        && data.walkerId == reportSession(sessionId).walkerId;
+    }
+
+    function ticketSession(sessionId) {
+      return get(/databases/$(database)/documents/walkSessions/$(sessionId)).data;
+    }
+
+    function ticketReport(sessionId) {
+      return get(/databases/$(database)/documents/walkReports/$(sessionId)).data;
+    }
+
+    function validTicketDogNames(data) {
+      return data.dogIds is list
+        && data.dogIds.size() >= 1
+        && data.dogIds.size() <= 4
+        && data.dogNames is map
+        && data.dogNames.keys().hasOnly(data.dogIds)
+        && data.dogNames.keys().hasAll(data.dogIds)
+        && data.dogNames[data.dogIds[0]] is string
+        && data.dogNames[data.dogIds[0]].size() > 0
+        && data.dogNames[data.dogIds[0]].size() <= 120
+        && (data.dogIds.size() < 2
+          || (data.dogNames[data.dogIds[1]] is string
+            && data.dogNames[data.dogIds[1]].size() > 0
+            && data.dogNames[data.dogIds[1]].size() <= 120))
+        && (data.dogIds.size() < 3
+          || (data.dogNames[data.dogIds[2]] is string
+            && data.dogNames[data.dogIds[2]].size() > 0
+            && data.dogNames[data.dogIds[2]].size() <= 120))
+        && (data.dogIds.size() < 4
+          || (data.dogNames[data.dogIds[3]] is string
+            && data.dogNames[data.dogIds[3]].size() > 0
+            && data.dogNames[data.dogIds[3]].size() <= 120));
+    }
+
+    function validPersistentTicket(data, sessionId) {
+      return exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && exists(/databases/$(database)/documents/walkReports/$(sessionId))
+        && ticketSession(sessionId).status == 'completed'
+        && ticketReport(sessionId).status == 'submitted'
+        && ticketReport(sessionId).walkSessionId == sessionId
+        && data.keys().hasOnly([
+          'schemaVersion', 'documentType', 'isCfdi', 'currency', 'folio',
+          'serviceFolio', 'walkSessionId', 'walkReportId', 'customerId',
+          'walkerId', 'dogIds', 'customerName', 'dogNames', 'walkerName',
+          'serviceId', 'serviceName', 'durationMinutes', 'serviceDate',
+          'startTime', 'endTime', 'reportUrl', 'verificationCode',
+          'paymentStatus', 'subtotalCents', 'discountCents', 'tipCents',
+          'totalCents', 'amountPaidCents', 'balanceDueCents', 'paymentMethod',
+          'createdAt', 'createdBy', 'status'
+        ])
+        && data.keys().hasAll([
+          'schemaVersion', 'documentType', 'isCfdi', 'currency', 'folio',
+          'serviceFolio', 'walkSessionId', 'walkReportId', 'customerId',
+          'walkerId', 'dogIds', 'customerName', 'dogNames', 'walkerName',
+          'serviceId', 'serviceName', 'durationMinutes', 'serviceDate',
+          'startTime', 'endTime', 'reportUrl', 'verificationCode',
+          'paymentStatus', 'subtotalCents', 'discountCents', 'tipCents',
+          'totalCents', 'amountPaidCents', 'balanceDueCents', 'paymentMethod',
+          'createdAt', 'createdBy', 'status'
+        ])
+        && data.schemaVersion == 1
+        && data.documentType == 'internal-receipt'
+        && data.isCfdi == false
+        && data.currency == 'MXN'
+        && data.folio == 'TKT-' + sessionId
+        && data.serviceFolio == 'PET-' + sessionId
+        && data.walkSessionId == sessionId
+        && data.walkReportId == sessionId
+        && data.customerId == ticketSession(sessionId).customerId
+        && data.customerId == ticketReport(sessionId).customerId
+        && data.walkerId == ticketSession(sessionId).walkerId
+        && data.walkerId == ticketReport(sessionId).walkerId
+        && data.dogIds == ticketSession(sessionId).dogIds
+        && data.dogIds == ticketReport(sessionId).dogIds
+        && validTicketDogNames(data)
+        && data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 120
+        && data.walkerName is string && data.walkerName.size() > 0 && data.walkerName.size() <= 120
+        && data.serviceId == ticketSession(sessionId).serviceId
+        && data.serviceName is string && data.serviceName.size() > 0 && data.serviceName.size() <= 120
+        && (data.durationMinutes == null || (data.durationMinutes is int && data.durationMinutes > 0 && data.durationMinutes <= 1440))
+        && data.serviceDate == ticketSession(sessionId).scheduledDate
+        && data.startTime == ticketSession(sessionId).scheduledStart
+        && data.endTime == ticketSession(sessionId).arrivalWindowEnd
+        && data.reportUrl == 'https://pet-euhz.vercel.app/familia/reportes/' + sessionId
+        && data.verificationCode is string && data.verificationCode.size() == 6
+        && data.paymentStatus == 'not_recorded'
+        && data.subtotalCents == null
+        && data.discountCents == null
+        && data.tipCents == null
+        && data.totalCents == null
+        && data.amountPaidCents == null
+        && data.balanceDueCents == null
+        && data.paymentMethod == null
+        && data.createdAt == request.time
+        && data.createdBy == request.auth.uid
+        && data.status == 'active';
+    }
+
+    function customerCanReadTicket(data, sessionId) {
+      return hasCustomerCompatibleClaim()
+        && data.customerId == request.auth.uid
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && ticketSession(sessionId).customerId == request.auth.uid;
+    }
+
+    function assignedWalkerCanReadTicket(data, sessionId) {
+      return isActiveWalker()
+        && data.walkerId == request.auth.uid
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && ticketSession(sessionId).walkerId == request.auth.uid;
+    }
+
+    function customerCanAccessEmptyTicketPath(sessionId) {
+      return hasCustomerCompatibleClaim()
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && ticketSession(sessionId).customerId == request.auth.uid;
+    }
+
+    function assignedWalkerCanAccessEmptyTicketPath(sessionId) {
+      return isActiveWalker()
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && ticketSession(sessionId).walkerId == request.auth.uid;
+    }
+
+    function validPrintEvent(data, ticketId) {
+      return data.keys().hasOnly([
+          'ticketId', 'actorUid', 'mode', 'transport', 'status',
+          'payloadHash', 'byteLength', 'createdAt', 'errorCode'
+        ])
+        && data.keys().hasAll([
+          'ticketId', 'actorUid', 'mode', 'transport', 'status',
+          'payloadHash', 'byteLength', 'createdAt'
+        ])
+        && exists(/databases/$(database)/documents/tickets/$(ticketId))
+        && data.ticketId == ticketId
+        && data.actorUid == request.auth.uid
+        && (data.mode == 'original' || data.mode == 'reprint')
+        && (data.transport == 'manual_hex' || data.transport == 'mock')
+        && (data.status == 'payload_exported' || data.status == 'operator_confirmed' || data.status == 'failed')
+        && data.payloadHash is string && data.payloadHash.matches('^[0-9a-f]{64}$')
+        && data.byteLength is int && data.byteLength > 0 && data.byteLength <= 1048576
+        && data.createdAt == request.time
+        && (data.status == 'failed'
+          ? (data.errorCode is string && data.errorCode.size() > 0 && data.errorCode.size() <= 64)
+          : !data.keys().hasAny(['errorCode']));
+    }
+
+    match /walkReports/{sessionId} {
+      allow get: if isAuthenticated()
+        && (isStaff()
+          || (resource == null
+            && (assignedWalkerCanAccessEmptyReportPath(sessionId)
+              || customerCanAccessEmptyReportPath(sessionId)))
+          || (resource != null
+            && (assignedWalkerCanReadReport(resource.data, sessionId)
+              || customerCanReadSubmittedReport(resource.data, sessionId))));
+      allow list: if isAuthenticated() && validListLimit(100)
+        && ((isActiveWalker() && resource.data.walkerId == request.auth.uid)
+          || isStaff());
+      allow create: if isActiveWalker()
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && reportSession(sessionId).walkerId == request.auth.uid
+        && validReportIdentity(request.resource.data, sessionId)
+        && validReportText(request.resource.data)
+        && validReportStatus(request.resource.data, sessionId)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.keys().hasOnly([
+          'walkSessionId', 'orderId', 'customerId', 'walkerId', 'dogIds',
+          'status', 'summary', 'behaviorNotes', 'bathroomNotes', 'waterProvided',
+          'incidentsSummary', 'mediaReferences', 'createdBy', 'createdAt',
+          'updatedAt', 'submittedAt', 'schemaVersion'
+        ]);
+      allow update: if isActiveWalker()
+        && exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && reportSession(sessionId).walkerId == request.auth.uid
+        && resource.data.status == 'draft'
+        && resource.data.walkerId == request.auth.uid
+        && request.resource.data.walkSessionId == resource.data.walkSessionId
+        && request.resource.data.orderId == resource.data.orderId
+        && request.resource.data.customerId == resource.data.customerId
+        && request.resource.data.walkerId == resource.data.walkerId
+        && request.resource.data.dogIds == resource.data.dogIds
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.schemaVersion == resource.data.schemaVersion
+        && validReportIdentity(request.resource.data, sessionId)
+        && validReportText(request.resource.data)
+        && validReportStatus(request.resource.data, sessionId)
+        && request.resource.data.updatedAt == request.time
+        && onlyAllowedFieldsChanged([
+          'status', 'summary', 'behaviorNotes', 'bathroomNotes', 'waterProvided',
+          'incidentsSummary', 'mediaReferences', 'updatedAt', 'submittedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    // Internal receipts are immutable snapshots. They are not CFDI and contain
+    // no asserted financial amounts until the privileged payment phase exists.
+    match /tickets/{sessionId} {
+      allow get: if isAuthenticated()
+        && (isStaff()
+          || (resource == null
+            && (customerCanAccessEmptyTicketPath(sessionId)
+              || assignedWalkerCanAccessEmptyTicketPath(sessionId)))
+          || (resource != null
+            && (customerCanReadTicket(resource.data, sessionId)
+              || assignedWalkerCanReadTicket(resource.data, sessionId))));
+      allow list: if isAuthenticated() && isStaff() && validListLimit(50);
+      allow create: if isAdmin() && validPersistentTicket(request.resource.data, sessionId);
+      allow update, delete: if false;
+
+      match /printEvents/{eventId} {
+        allow get: if isAuthenticated() && isStaff();
+        allow list: if isAuthenticated() && isStaff() && validListLimit(50);
+        allow create: if isAdmin()
+          && eventId.size() > 0 && eventId.size() <= 128
+          && validPrintEvent(request.resource.data, sessionId);
+        allow update, delete: if false;
       }
     }
 
@@ -189,33 +965,40 @@ function isValidReservation() {
     // ═══════════════════════════════════════════
 
     match /reservations/{resId} {
-      // READ: owner, assigned walker (by uid or name), admin, supervisor
+      // READ: owner, assigned walker (by uid only), admin, supervisor (active accounts)
       allow read: if isAuthenticated()
+        && isActiveAccount()
         && (isReservationClient()
-            || isWalkerAssignedToReservation()
-            || isWalkerByNameOnReservation()
+            || isAssignedWalker(resource.data.assignment.walkerId)
             || isAdmin()
             || isSupervisor());
 
-// CREATE: customer books for self, admin creates for any
-       allow create: if isAuthenticated()
-         && isValidReservation()
-         && (request.resource.data.customer.uid == request.auth.uid || isAdmin());
+      // CREATE: customer books for self, admin creates for any
+      allow create: if isActiveAccount()
+        && isValidReservation()
+        && noRoleField()
+        && (request.resource.data.customer.uid == request.auth.uid || isAdmin());
 
-      // UPDATE: admin always, walker for status transitions on assigned (by uid or name), client can cancel own pending
+      // UPDATE: admin always; walker only status/state transitions on assigned;
+      // client can cancel own non-terminal reservation
       allow update: if isAuthenticated()
+        && isActiveAccount()
         && (isAdmin()
-            || isWalkerAssignedInUpdate()
-            || (isWalker()
-                && request.resource.data.assignedWalker != null
-                && request.resource.data.assignedWalker == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name)
+            || isAssignedWalkerInUpdate()
             || (isReservationClient()
                 && request.resource.data.status == 'cancelled'
                 && resource.data.status != 'completed'
-                && resource.data.status != 'cancelled'));
+                && resource.data.status != 'cancelled'
+                && resource.data.status != 'no_show'));
 
       // DELETE: admin only
       allow delete: if isAdmin();
+    }
+
+    function isReservationClient() {
+      return isAuthenticated()
+        && resource.data.customer != null
+        && resource.data.customer.uid == request.auth.uid;
     }
 
     // ═══════════════════════════════════════════
@@ -238,6 +1021,7 @@ function isValidReservation() {
       allow read: if isAuthenticated();
       // Walker writes own presence, admin writes any
       allow write: if isAuthenticated()
+        && isActiveAccount()
         && (request.auth.uid == walkerId || isAdmin());
     }
 
@@ -248,10 +1032,14 @@ function isValidReservation() {
     match /walkerProfiles/{uid} {
       // All authenticated can read (client needs to see available walkers for selection)
       allow read: if isAuthenticated();
-      // Only Cloud Functions can write (createWalkerAccount)
+      // Only Admin SDK / admin writes
       allow write: if isAdmin();
-      // Walker can update own profile (schedule, zones, capacity, phone)
-      allow update: if (isWalker() && request.auth.uid == uid)
+      // Walker can update only fields used by the current profile screen.
+      allow update: if (isActiveWalker()
+          && request.auth.uid == uid
+          && noRoleField()
+          && request.resource.data.updatedAt is timestamp
+          && onlyAllowedFieldsChanged(['phone', 'schedule', 'updatedAt']))
         || isAdmin();
     }
 
@@ -273,8 +1061,8 @@ function isValidReservation() {
         && (resource.data.walkerId == request.auth.uid
             || resource.data.ownerId == request.auth.uid
             || isAdmin());
-      allow create: if isWalker() || isAdmin();
-      allow update: if isWalker() || isAdmin();
+      allow create: if (isWalker() || isAdmin()) && noRoleField();
+      allow update: if (isWalker() || isAdmin()) && noRoleField();
       allow delete: if isAdmin();
     }
 
@@ -285,7 +1073,9 @@ function isValidReservation() {
     match /reviews/{docId} {
       allow read: if true;
       allow create: if isAuthenticated()
-        && isValidReview();
+        && isActiveAccount()
+        && isValidReview()
+        && noRoleField();
       allow delete: if isAdmin();
       allow update: if false;
     }
@@ -295,11 +1085,50 @@ function isValidReservation() {
     // ═══════════════════════════════════════════
 
     match /gallery-images/{docId} {
-      allow read: if true;
+      allow read: if isStaff();
       allow create: if isAdmin()
-        && request.resource.data.keys().hasAny(['url', 'base64']);
-      allow delete: if isAdmin();
-      allow update: if false;
+        && validGalleryMetadata(request.resource.data)
+        && request.resource.data.publicationStatus == 'draft'
+        && request.resource.data.publicGalleryAllowed == false
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.assetDate == request.time
+        && request.resource.data.updatedAt == request.time
+        && galleryPublicationCoherent(docId, request.resource.data);
+      allow update: if isAdmin()
+        && validGalleryMetadata(request.resource.data)
+        && request.resource.data.assetPublicId == resource.data.assetPublicId
+        && request.resource.data.url == resource.data.url
+        && request.resource.data.width == resource.data.width
+        && request.resource.data.height == resource.data.height
+        && request.resource.data.format == resource.data.format
+        && request.resource.data.assetDate == resource.data.assetDate
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && galleryPublicationCoherent(docId, request.resource.data)
+        && onlyAllowedFieldsChanged([
+          'publicationStatus', 'consentRecorded', 'consentVerified',
+          'publicGalleryAllowed', 'usageRights', 'altText', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /gallery-public/{docId} {
+      allow get: if true;
+      allow list: if request.query.limit != null && request.query.limit <= 50;
+      allow create, update: if isAdmin()
+        && validPublicGalleryProjection(request.resource.data)
+        && request.resource.data.updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/gallery-images/$(docId))
+        && isPublicGalleryRecord(getAfter(/databases/$(database)/documents/gallery-images/$(docId)).data)
+        && publicGalleryMatchesPrivate(
+          request.resource.data,
+          getAfter(/databases/$(database)/documents/gallery-images/$(docId)).data
+        );
+      allow delete: if isAdmin()
+        && existsAfter(/databases/$(database)/documents/gallery-images/$(docId))
+        && getAfter(/databases/$(database)/documents/gallery-images/$(docId)).data.publicationStatus != 'published';
     }
 
     // ═══════════════════════════════════════════
@@ -313,13 +1142,16 @@ function isValidReservation() {
       allow delete: if isAdmin();
     }
 
-    // ═══════════════════════════════════════════
+    // ═══════���═══════════════════════════════════
     // ADMIN DOCUMENTS
     // ═══════════════════════════════════════════
 
     match /admin/prices {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read: if isAdmin() || isSupervisor();
+      allow create: if isAdmin() && validAdminServicePrices(request.resource.data);
+      allow update: if isAdmin() && request.resource.data.version == resource.data.version + 1
+        && validAdminServicePrices(request.resource.data);
+      allow delete: if false;
     }
 
     match /admin/config {
@@ -335,13 +1167,29 @@ function isValidReservation() {
     // Public site settings — single source of truth for public content
     match /appSettings/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if docId != 'servicePrices' && docId != 'bookingSchedule' && isAdmin();
     }
 
-    // FCM tokens: owner writes own, admin reads all
+    match /appSettings/servicePrices {
+      allow read: if true;
+      allow create: if isAdmin() && validServicePrices(request.resource.data);
+      allow update: if isAdmin() && request.resource.data.version == resource.data.version + 1
+        && validServicePrices(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /appSettings/bookingSchedule {
+      allow read: if true;
+      allow create: if isAdmin() && validBookingSchedule(request.resource.data);
+      allow update: if isAdmin()
+        && request.resource.data.version == resource.data.version + 1
+        && validBookingSchedule(request.resource.data);
+      allow delete: if false;
+    }
+
+    // FCM tokens: admin reads all; only Admin SDK writes
     match /admin/tokens {
       allow read: if isAdmin();
-      // Only Cloud Functions should write tokens via Admin SDK
       allow write: if false;
     }
 
@@ -352,7 +1200,7 @@ function isValidReservation() {
     match /conversations/{convId} {
       allow read: if isAuthenticated()
         && (isConversationParticipant() || isAdmin());
-      allow create: if isAuthenticated()
+      allow create: if isActiveAccount()
         && (request.auth.uid in request.resource.data.participants || isAdmin());
       allow update: if isAuthenticated()
         && (isConversationParticipant() || isAdmin());
@@ -367,6 +1215,11 @@ function isValidReservation() {
       }
     }
 
+    function isConversationParticipant() {
+      return isAuthenticated()
+        && request.auth.uid in resource.data.participants;
+    }
+
     // ═══════════════════════════════════════════
     // REFERRALS
     // ═══════════════════════════════════════════
@@ -376,8 +1229,9 @@ function isValidReservation() {
       allow read: if isAuthenticated()
         && (resource.data.referrerUid == request.auth.uid || isAdmin());
       // Authenticated users create own referrals
-      allow create: if isAuthenticated()
-        && request.resource.data.referrerUid == request.auth.uid;
+      allow create: if isActiveAccount()
+        && request.resource.data.referrerUid == request.auth.uid
+        && noRoleField();
       // Only admin can update status/rewards
       allow update: if isAdmin();
       allow delete: if isAdmin();
@@ -395,10 +1249,10 @@ function isValidReservation() {
 
     // ═══════════════════════════════════════════
     // WALLET / BILLETERA DIGITAL
-    // ═══════════════════════════════════════════
+    // ════════════��══════════════════════════════
 
     match /wallets/{uid} {
-      // Owner reads own wallet, admin reads all
+      // Owner reads own wallet, admin reads all — walkers have no access to finance
       allow read: if isAuthenticated()
         && (request.auth.uid == uid || isAdmin());
       // Only Cloud Functions (admin SDK) can write wallets
@@ -444,10 +1298,13 @@ function isValidReservation() {
             || resource.data.walkerId == request.auth.uid
             || isAdmin());
       // Client creates own request, admin creates any
-      allow create: if isAuthenticated()
+      allow create: if isActiveAccount()
+        && noRoleField()
         && (request.resource.data.clientId == request.auth.uid || isAdmin());
       // Client can cancel own pending, walker can update status of assigned, admin all
       allow update: if isAuthenticated()
+        && isActiveAccount()
+        && noRoleField()
         && ((resource.data.clientId == request.auth.uid && request.resource.data.status == 'cancelled')
             || (resource.data.walkerId == request.auth.uid)
             || isAdmin());
@@ -461,9 +1318,12 @@ function isValidReservation() {
             || isAdmin());
       // Walker creates own offer, admin creates any
       allow create: if isAuthenticated()
+        && isActiveAccount()
+        && noRoleField()
         && (request.resource.data.walkerId == request.auth.uid || isAdmin());
       // Walker responds (accept/decline)
       allow update: if isAuthenticated()
+        && noRoleField()
         && (resource.data.walkerId == request.auth.uid
             || isAdmin());
       allow delete: if false;
@@ -477,6 +1337,8 @@ function isValidReservation() {
             || isAdmin());
       // Walker or system creates on acceptance, admin creates any
       allow create: if isAuthenticated()
+        && isActiveAccount()
+        && noRoleField()
         && (request.resource.data.walkerId == request.auth.uid || isAdmin());
       // Admin can unlock
       allow update: if isAdmin();
@@ -484,11 +1346,11 @@ function isValidReservation() {
     }
 
     // ═══════════════════════════════════════════
-    // AUDIT LOGS (immutable)
+    // AUDIT LOGS (immutable, admin read, CF write)
     // ═══════════════════════════════════════════
 
     match /audit-logs/{docId} {
-      allow create: if isAuthenticated();
+      allow create: if isAdmin();
       allow read: if isAdmin();
       allow update, delete: if false;
     }

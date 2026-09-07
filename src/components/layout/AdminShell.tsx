@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, ReactNode } from 'react'
+import { useEffect, useState, ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { LogOut, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+import { isPanelRouteActive } from '@/lib/navigation'
 
 interface NavItem {
   id: string
@@ -13,6 +14,7 @@ interface NavItem {
   href: string
   icon?: React.ComponentType<{ size?: number | string }>
   color?: string
+  group?: string
 }
 
 interface AdminShellProps {
@@ -35,18 +37,38 @@ export default function AdminShell({
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const reduceMotion = useReducedMotion()
 
-  const isActive = (href: string) => pathname === href || (href !== '/' && pathname.startsWith(href))
+  const activeItem = navItems.find((item) => isPanelRouteActive(pathname, item.href))
+  const navGroups = navItems.reduce<Array<{ label: string; items: NavItem[] }>>((groups, item) => {
+    const label = item.group || 'General'
+    const current = groups.find((group) => group.label === label)
+    if (current) current.items.push(item)
+    else groups.push({ label, items: [item] })
+    return groups
+  }, [])
 
-  const renderNav = (item: NavItem, onNavigate?: () => void) => {
+  useEffect(() => {
+    if (!mobileOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [mobileOpen])
+
+  const renderNav = (item: NavItem, onNavigate?: () => void, forceExpanded = false) => {
     const Icon = item.icon
-    const active = isActive(item.href)
+    const active = isPanelRouteActive(pathname, item.href)
+    const showLabel = forceExpanded || !collapsed
     return (
-      <a
+      <Link
         key={item.id}
         href={item.href}
         onClick={onNavigate}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
+        aria-current={active ? 'page' : undefined}
+        aria-label={showLabel ? undefined : item.label}
+        className={`flex min-h-11 items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none ${
           active ? 'bg-brand-500/10 text-brand-600' : ''
         }`}
         style={{ color: active ? undefined : 'var(--text-secondary)' }}
@@ -57,8 +79,8 @@ export default function AdminShell({
             <Icon size={16} />
           </span>
         )}
-        {!collapsed && <span className="truncate">{item.label}</span>}
-      </a>
+        {showLabel && <span className="truncate">{item.label}</span>}
+      </Link>
     )
   }
 
@@ -68,12 +90,13 @@ export default function AdminShell({
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 72 : 256 }}
+        transition={{ duration: reduceMotion ? 0 : 0.2 }}
         className="hidden lg:flex flex-col border-r shrink-0 sticky top-0 h-screen overflow-hidden"
         style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
       >
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
-          <Link href={logoHref} aria-label="PET Ap">
+          <Link href={logoHref} aria-label="PET Ap" className="flex h-11 w-11 items-center justify-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <Logo size={36} />
           </Link>
           {!collapsed && (
@@ -89,15 +112,24 @@ export default function AdminShell({
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" aria-label="Navegación de administración">
-          {navItems.map((item) => renderNav(item))}
+        <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label="Navegación de administración">
+          {navGroups.map((group, index) => (
+            <div key={group.label} className={index > 0 ? 'mt-4' : ''}>
+              {!collapsed && (
+                <p className="px-4 pb-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted">
+                  {group.label}
+                </p>
+              )}
+              <div className="space-y-0.5">{group.items.map((item) => renderNav(item))}</div>
+            </div>
+          ))}
         </nav>
 
         {/* Footer */}
         <div className="p-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-danger-500/10 hover:text-danger-400"
+            className="flex min-h-11 w-full items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium transition-colors hover:bg-danger-500/10 hover:text-danger-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500 motion-reduce:transition-none"
             style={{ color: 'var(--text-secondary)' }}
             aria-label="Cerrar sesión"
           >
@@ -124,7 +156,7 @@ export default function AdminShell({
           aria-label={collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
           aria-expanded={!collapsed}
         >
-          {collapsed ? <ChevronRight size={8} /> : <ChevronLeft size={8} />}
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
       </motion.aside>
 
@@ -136,7 +168,7 @@ export default function AdminShell({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.22 }}
+              transition={{ duration: reduceMotion ? 0 : 0.2 }}
               className="absolute inset-0 bg-black/60"
               onClick={() => setMobileOpen(false)}
             />
@@ -144,19 +176,35 @@ export default function AdminShell({
               initial={{ x: -256 }}
               animate={{ x: 0 }}
               exit={{ x: -256 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="absolute left-0 top-0 bottom-0 w-56 p-3 overflow-y-auto"
+              transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }}
+              className="absolute bottom-0 left-0 top-0 w-[min(88vw,19rem)] overflow-y-auto p-3"
               style={{ background: 'var(--bg-card)' }}
-              role="navigation"
+              role="dialog"
+              aria-modal="true"
               aria-label="Menú de administración"
             >
-              <div className="flex items-center gap-3 mb-6 px-3">
-                <Logo size={36} />
-                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>PET Ap</span>
+              <div className="mb-5 flex min-h-11 items-center justify-between gap-3 px-2">
+                <div className="flex items-center gap-3">
+                  <Logo size={36} />
+                  <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>PET Ap</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl text-muted hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label="Cerrar menú de navegación"
+                >
+                  <X size={18} aria-hidden="true" />
+                </button>
               </div>
-              <div className="space-y-0.5">
-                {navItems.map((item) => renderNav({ ...item, href: item.href }, () => setMobileOpen(false)))}
-              </div>
+              {navGroups.map((group, index) => (
+                <div key={group.label} className={index > 0 ? 'mt-4' : ''}>
+                  <p className="px-4 pb-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted">{group.label}</p>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => renderNav(item, () => setMobileOpen(false), true))}
+                  </div>
+                </div>
+              ))}
             </motion.div>
           </div>
         )}
@@ -176,21 +224,22 @@ export default function AdminShell({
             >
               <Menu size={16} />
             </button>
-            <h1 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {title}
-            </h1>
+            <div className="min-w-0">
+              <p className="hidden text-[0.68rem] font-medium uppercase tracking-[0.12em] text-muted sm:block">{title}</p>
+              <h1 className="truncate text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{activeItem?.label || title}</h1>
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-xs px-4 py-2 rounded-lg transition-all hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+            <Link href="/" className="inline-flex min-h-11 items-center rounded-lg px-4 text-xs transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" style={{ color: 'var(--text-muted)' }}>
               Inicio
             </Link>
           </div>
         </div>
 
         {/* Page content */}
-        <div className="p-4 sm:p-6 lg:p-8" role="region">
+        <main id="main-content" className="min-w-0 p-4 sm:p-6 lg:p-8">
           {children}
-        </div>
+        </main>
       </div>
     </div>
   )

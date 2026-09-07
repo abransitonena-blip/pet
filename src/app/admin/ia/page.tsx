@@ -9,7 +9,6 @@ import {
 } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
-import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useConfig } from '@/context/ConfigContext'
@@ -26,11 +25,11 @@ interface Insight {
 
 export default function AdminIAPage() {
   const { reservations, loading } = useReservations()
-  const { prices } = usePrices()
+  const { prices, hasIncompletePricing } = usePrices()
   const { config } = useConfig()
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d')
 
-  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? getServicePrice(serviceName)
+  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? 0
 
   const insights = useMemo(() => {
     const now = new Date()
@@ -210,6 +209,7 @@ export default function AdminIAPage() {
           </button>
         ))}
       />
+      {hasIncompletePricing && <p role="alert" className="rounded-xl bg-warning/10 p-3 text-sm text-amber-900">Análisis parcial: hay servicios sin precio configurado y se excluyeron de los importes.</p>}
 
       {/* Quick Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

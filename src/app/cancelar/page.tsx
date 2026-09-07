@@ -7,6 +7,9 @@ import { db } from '@/firebase/config'
 import { Phone, Loader2, CheckCircle2, X, Dog, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { Reservation } from '@/types'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { BRAND } from '@/lib/brand'
+import { confirmWhatsAppShare } from '@/lib/utils'
 
 export default function CancelarPage() {
   const [phone, setPhone] = useState('')
@@ -15,6 +18,30 @@ export default function CancelarPage() {
   const [error, setError] = useState('')
   const [cancelling, setCancelling] = useState<string | null>(null)
   const [cancelled, setCancelled] = useState<string | null>(null)
+
+  if (!FEATURE_FLAGS.PUBLIC_PHONE_CANCELLATION_ENABLED) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
+        <div className="w-full max-w-md">
+          <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted hover:text-ink mb-6">
+            <ArrowLeft size={10} /> Volver al inicio
+          </Link>
+          <div className="glass-card p-6 sm:p-8 text-center" data-testid="public-cancellation-unavailable">
+            <X className="mx-auto mb-4 text-primary" size={28} />
+            <h1 className="text-xl font-bold text-ink mb-2">Cancela de forma segura</h1>
+            <p className="text-sm text-muted mb-5">No mostramos ni cancelamos reservas usando solamente un número de teléfono.</p>
+            <div className="space-y-3">
+              <Link href="/familia/historial" className="btn-primary w-full inline-flex justify-center">Ir a Familia PET</Link>
+              <button type="button" onClick={() => confirmWhatsAppShare(BRAND.whatsapp, 'Hola, necesito ayuda para revisar una cancelación de PET Ap.')} className="btn-secondary w-full inline-flex justify-center">
+                Solicitar contacto manual
+              </button>
+            </div>
+            <p className="text-xs text-muted mt-4">El mensaje no incluye información de tu reserva.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const search = async () => {
     if (!phone.trim()) return
@@ -40,6 +67,10 @@ export default function CancelarPage() {
   }
 
   const cancelReservation = async (id: string) => {
+    if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) {
+      setError('Esta reserva legacy es de solo lectura. Solicita ayuda desde Familia PET.')
+      return
+    }
     setCancelling(id)
     await updateDoc(doc(db, 'reservations', id), { status: 'cancelled' })
     setCancelled(id)
@@ -73,7 +104,7 @@ export default function CancelarPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && search()}
-              aria-label="Número de WhatsApp" placeholder="Ej: 55 2305 3772"
+              aria-label="Número de WhatsApp" placeholder="Ej: 55 3823 1235"
               className="flex-1 bg-white border border-ink/15 rounded-lg px-3 py-2.5 text-ink text-sm focus:outline-none focus:border-primary placeholder:text-muted"
             />
             <button

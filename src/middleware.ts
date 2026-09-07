@@ -1,55 +1,47 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { middlewareDecision } from '@/lib/privateRoutes'
 
 const SESSION_COOKIE = '__session'
-const ROLE_COOKIE = '__role'
-
-// SECURITY MODEL:
-// - __session: boolean flag ("has logged in").
-// - __role: role string ('admin' | 'walker' | 'client' | 'supervisor') set during login.
-// - Middleware checks __role server-side for route access.
-// - Real auth verification: Firebase Auth (onAuthStateChanged) + Firestore Rules (request.auth.uid).
-
-const ROLE_ROUTES: Record<string, string[]> = {
-  '/admin': ['admin', 'supervisor'],
-  '/familia': ['client', 'admin', 'walker', 'supervisor'],
-  '/walker': ['walker', 'supervisor'],
-  // legacy aliases (next.config redirects /mi-cuenta → /familia, /paseador → /walker)
-  '/mi-cuenta': ['client', 'admin', 'walker', 'supervisor'],
-  '/paseador': ['walker', 'supervisor'],
+const PRIVATE_RESPONSE_HEADERS = {
+  'Cache-Control': 'private, no-store, max-age=0',
+  'X-Robots-Tag': 'noindex, nofollow, noarchive',
 }
 
-function matchRoute(pathname: string): string | null {
-  for (const prefix of Object.keys(ROLE_ROUTES)) {
-    if (pathname === prefix || pathname.startsWith(prefix + '/')) return prefix
-  }
-  return null
+function privateResponse(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(PRIVATE_RESPONSE_HEADERS)) response.headers.set(key, value)
+  return response
 }
+
+// SECURITY MODEL (P0.8):
+// - This middleware is a GENERAL navigation gate only: it separates public
+//   routes from protected areas and sends unauthenticated users to the
+//   appropriate entry point: /login for Familia PET and /equipo for staff.
+//   It must NOT be the only security barrier.
+// - Real authorization lives in the protected layouts (custom claims in the ID
+//   token via useSessionRole), in Firestore Rules, and in Cloud Functions.
+// - The client-controllable `__role` cookie was removed: a cookie is never
+//   used to decide access, only the presence of a session flag.
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const routePrefix = matchRoute(pathname)
-  if (!routePrefix) return NextResponse.next()
-
-  const hasSession = !!request.cookies.get(SESSION_COOKIE)?.value
-  if (!hasSession) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
+  const decision = middlewareDecision(pathname, !!request.cookies.get(SESSION_COOKIE)?.value)
+  if (decision === null) return NextResponse.next()
+  if (decision === '/login' || decision === '/equipo') {
+    const loginUrl = new URL(decision, request.url)
+    loginUrl.searchParams.set('redirect', pathname + request.nextUrl.search)
+    return privateResponse(NextResponse.redirect(loginUrl))
   }
-
-  const role = request.cookies.get(ROLE_COOKIE)?.value
-  const allowedRoles = ROLE_ROUTES[routePrefix]
-
-  if (!role || !allowedRoles.includes(role)) {
-    // Admins/supervisors going to /walker or /familia → OK. Everyone else → redirect to home.
-    if (role === 'admin' || role === 'supervisor') return NextResponse.next()
-    return NextResponse.redirect(new URL('/', request.url))
-  }
-
-  return NextResponse.next()
+  return privateResponse(NextResponse.next())
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/familia/:path*', '/walker/:path*', '/mi-cuenta/:path*', '/paseador/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/familia/:path*',
+    '/walker/:path*',
+    '/supervisor/:path*',
+    '/mi-cuenta/:path*',
+    '/paseador/:path*',
+  ],
 }

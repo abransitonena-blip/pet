@@ -1,3 +1,5 @@
+import { entryForPrivatePath, isSafeRedirect } from '@/lib/roles'
+
 const SESSION_MAX_AGE = 86400 // 24h
 
 function setCookie(name: string, value: string, maxAge: number) {
@@ -8,16 +10,25 @@ function removeCookie(name: string) {
   document.cookie = `${name}=; path=/; max-age=0`
 }
 
-export function setSessionCookie(role?: string) {
+// Sets only the session-presence flag. Authorization is decided by the ID
+// token custom claims, never by this cookie (P0.8).
+export function setSessionCookie() {
   if (typeof document === 'undefined') return
   setCookie('__session', '1', SESSION_MAX_AGE)
-  if (role) setCookie('__role', role, SESSION_MAX_AGE)
 }
 
 export function clearSessionCookie() {
   if (typeof document === 'undefined') return
   removeCookie('__session')
-  removeCookie('__role')
+}
+
+export function loginPathWithRedirect(pathname: string): string {
+  return isSafeRedirect(pathname) ? `/login?redirect=${encodeURIComponent(pathname)}` : '/login'
+}
+
+export function accessPathWithRedirect(pathname: string): string {
+  const entry = entryForPrivatePath(pathname)
+  return isSafeRedirect(pathname) ? `${entry}?redirect=${encodeURIComponent(pathname)}` : entry
 }
 
 export function isWebView(): boolean {
@@ -36,6 +47,8 @@ export const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
   'auth/network-request-failed': 'No pudimos conectarnos con Google. Revisa tu conexión.',
   'auth/operation-not-allowed': 'El acceso con Google no está habilitado.',
   'auth/invalid-api-key': 'La configuración de autenticación no es válida.',
+  'auth/invalid-credential': 'Firebase Authentication no pudo validar la credencial de Google.',
+  'auth/internal-error': 'Firebase Authentication no pudo completar el acceso. Intenta nuevamente.',
   'auth/user-disabled': 'Esta cuenta fue desactivada.',
   'auth/admin-restricted-operation': 'El acceso con Google no está habilitado.',
   'auth/credential-already-in-use': 'Esta cuenta ya está vinculada a otro usuario.',
@@ -48,6 +61,61 @@ export function classifyGoogleError(error: unknown): string {
   const message = GOOGLE_ERROR_MESSAGES[code]
   if (message) return message
   return 'No pudimos iniciar sesión con Google. Puedes reintentar o usar correo.'
+}
+
+export type FamilyLoginStage = 'oauth' | 'auth' | 'claims' | 'profile'
+
+export class FamilyLoginFlowError extends Error {
+  readonly kind = 'family-login-flow-error'
+  readonly stage: FamilyLoginStage
+  readonly providerCode: string
+
+  constructor(stage: FamilyLoginStage, cause: unknown) {
+    super('family-login-flow-error')
+    this.name = 'FamilyLoginFlowError'
+    this.stage = stage
+    this.providerCode = cause && typeof cause === 'object' && 'code' in cause
+      ? String((cause as { code?: unknown }).code ?? '')
+      : ''
+  }
+}
+
+export function isFamilyLoginFlowError(error: unknown): error is FamilyLoginFlowError {
+  return !!error
+    && typeof error === 'object'
+    && 'kind' in error
+    && error.kind === 'family-login-flow-error'
+    && 'stage' in error
+    && ['oauth', 'auth', 'claims', 'profile'].includes(String(error.stage))
+    && 'providerCode' in error
+}
+
+export function familyLoginError(stage: FamilyLoginStage, cause: unknown): FamilyLoginFlowError {
+  return isFamilyLoginFlowError(cause) ? cause : new FamilyLoginFlowError(stage, cause)
+}
+
+export function classifyFamilyLoginError(error: unknown): string {
+  if (!isFamilyLoginFlowError(error)) return classifyGoogleError(error)
+
+  const code = error.providerCode.toLowerCase()
+  if (code.includes('permission-denied')) {
+    return 'Tu cuenta fue autenticada, pero no pudimos preparar tu perfil por permisos. Intenta nuevamente o solicita ayuda.'
+  }
+  if (code.includes('network-request-failed') || code === 'firestore/unavailable' || code === 'firestore/deadline-exceeded') {
+    return error.stage === 'profile'
+      ? 'Tu cuenta fue autenticada, pero no pudimos completar tu perfil por un problema de red. Intenta nuevamente.'
+      : 'No pudimos verificar tu acceso por un problema de red. Intenta nuevamente.'
+  }
+  if (error.stage === 'claims') {
+    return 'Tu cuenta fue autenticada, pero no pudimos verificar el tipo de acceso. Intenta nuevamente.'
+  }
+  if (error.stage === 'profile') {
+    return 'Tu cuenta fue autenticada, pero no pudimos completar tu perfil de Familia PET. Intenta nuevamente.'
+  }
+  if (error.stage === 'auth') {
+    return 'Google respondió, pero Firebase Authentication no pudo completar el acceso. Intenta nuevamente.'
+  }
+  return classifyGoogleError({ code: error.providerCode })
 }
 
 export const LOGIN_ERROR_MESSAGES: Record<string, string> = {

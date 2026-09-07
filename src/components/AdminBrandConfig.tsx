@@ -80,10 +80,10 @@ export default function AdminBrandConfig() {
               Descartar
             </Button>
           )}
-          <Button variant="secondary" size="sm" onClick={saveDraft} loading={saving} icon={<Save size={12} />}>
+          <Button variant="secondary" size="sm" onClick={saveDraft} isLoading={saving} icon={<Save size={12} />}>
             Guardar borrador
           </Button>
-          <Button variant="primary" size="sm" onClick={handlePublish} loading={saving} icon={<Send size={12} />}>
+          <Button variant="primary" size="sm" onClick={handlePublish} isLoading={saving} icon={<Send size={12} />}>
             Publicar
           </Button>
         </div>

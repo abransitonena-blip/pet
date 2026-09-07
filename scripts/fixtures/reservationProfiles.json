@@ -1,0 +1,5 @@
+[
+  { "id": "res-3", "customerId": "client-1", "dogIds": ["dog-1"], "date": "2025-04-01", "status": "completed" },
+  { "id": "res-4", "customerId": "client-2", "dogIds": ["dog-2"], "status": "pending" },
+  { "id": "res-collision", "customerId": "client-1", "dogIds": ["dog-collision"], "status": "booked" }
+]

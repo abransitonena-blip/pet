@@ -4,3 +4,8 @@ out/
 .env.local
 *.tsbuildinfo
 next-env.d.ts
+.vercel
+.env*
+/backups/
+**/firebase-adc.json
+*-debug.log

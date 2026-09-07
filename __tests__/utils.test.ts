@@ -1,22 +1,32 @@
-import { formatDisplayPhone, WHATSAPP_NUMBER } from '../src/lib/utils'
+import { formatDisplayPhone, normalizeWhatsAppRecipient, WHATSAPP_NUMBER } from '../src/lib/utils'
 import { DEFAULT_CONFIG } from '../src/lib/defaultConfig'
 import { brand } from '../src/lib/brand'
 
 describe('formatDisplayPhone', () => {
-  it('formats 12-digit E.164 (5215523053772)', () => {
-    expect(formatDisplayPhone('5215523053772')).toBe('+52 55 2305 3772')
+  it('formats the canonical 12-digit E.164 number', () => {
+    expect(formatDisplayPhone('525538231235')).toBe('+52 55 3823 1235')
   })
 
-  it('formats 12-digit without leading 1 (525523053772)', () => {
-    expect(formatDisplayPhone('525523053772')).toBe('+52 55 2305 3772')
+  it('formats a different 12-digit Mexican number', () => {
+    expect(formatDisplayPhone('525512345678')).toBe('+52 55 1234 5678')
   })
 
   it('strips non-digits', () => {
-    expect(formatDisplayPhone('+52 1 55 2305 3772')).toBe('+52 55 2305 3772')
+    expect(formatDisplayPhone('+52 55 3823 1235')).toBe('+52 55 3823 1235')
   })
 
   it('returns input untouched when fewer than 10 digits', () => {
-    expect(formatDisplayPhone('552305377')).toBe('552305377')
+    expect(formatDisplayPhone('553823123')).toBe('553823123')
+  })
+})
+
+describe('WhatsApp recipients', () => {
+  it.each([
+    ['5538231235', '525538231235'],
+    ['+52 55 3823 1235', '525538231235'],
+    ['5215538231235', '525538231235'],
+  ])('normalizes %s to a working wa.me recipient', (input, expected) => {
+    expect(normalizeWhatsAppRecipient(input)).toBe(expected)
   })
 })
 
@@ -31,6 +41,13 @@ describe('single source of truth for phone', () => {
 
   it('DEFAULT_CONFIG.whatsappE164 matches brand.whatsapp', () => {
     expect(DEFAULT_CONFIG.whatsappE164).toBe(brand.whatsapp)
+  })
+
+  it('uses the owner-approved business contact everywhere by default', () => {
+    expect(brand.whatsappRaw).toBe('5538231235')
+    expect(brand.whatsapp).toBe('525538231235')
+    expect(brand.displayPhone).toBe('+52 55 3823 1235')
+    expect(DEFAULT_CONFIG.displayPhone).toBe(brand.displayPhone)
   })
 
   it('walker phone is a valid 10-digit Mexican number', () => {

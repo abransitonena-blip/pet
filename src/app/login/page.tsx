@@ -2,24 +2,24 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Script from 'next/script'
 import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithCredential, signInWithPopup } from 'firebase/auth'
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
-import { Mail, Lock, Loader2, User, Phone, PersonStanding, ExternalLink, Shield } from 'lucide-react'
-import { brand } from '@/lib/brand'
+import { auth, authPersistenceReady } from '@/firebase/config'
+import { GOOGLE_CLIENT_ID, googleAuthProvider } from '@/lib/googleAuth'
+import { Mail, Lock, Loader2, User, Phone } from 'lucide-react'
 import { Events } from '@/lib/analytics'
+import { ensureCanonicalCustomerProfile, updateCustomerProfile } from '@/lib/customerProfile'
 import { Logo } from '@/components/ui/Logo'
+import { refreshTokenAndGetRole, resolveDestination as resolveDestinationShared, type Role } from '@/lib/roles'
 import {
   setSessionCookie,
   isWebView,
-  classifyGoogleError,
+  classifyFamilyLoginError,
   classifyLoginError,
+  familyLoginError,
+  isFamilyLoginFlowError,
   RESET_LINK_SENT_MESSAGE,
 } from '@/lib/auth'
-
-type Mode = 'select' | 'familia' | 'equipo' | 'paseador' | 'supervisor'
 
 declare global {
   interface Window {
@@ -48,45 +48,15 @@ declare global {
   }
 }
 
-async function ensureCustomerProfile(user: { uid: string; displayName: string | null; email: string | null }) {
-  const snap = await getDoc(doc(db, 'customerProfiles', user.uid))
-  if (!snap.exists()) {
-    await setDoc(doc(db, 'customerProfiles', user.uid), {
-      name: user.displayName || '',
-      email: user.email || '',
-      phone: '',
-      createdAt: serverTimestamp(),
-    })
-  }
-}
-
-const ROLE_HOME: Record<string, string> = {
-   admin: '/admin',
-   walker: '/walker',
-   client: '/familia',
-   supervisor: '/admin',
- }
 
 function getSafeRedirect(): string | null {
   if (typeof window === 'undefined') return null
-  const r = new URLSearchParams(window.location.search).get('redirect')
-  if (!r || !r.startsWith('/') || r.startsWith('//')) return null
-  return r
+  return new URLSearchParams(window.location.search).get('redirect')
 }
 
-function resolveDestination(role: 'client' | 'admin' | 'walker' | 'supervisor'): string {
-   const redirect = getSafeRedirect()
-   if (!redirect) return ROLE_HOME[role]
-   const prefix = redirect.split('/')[1] ?? ''
-   const allowed: Record<string, string[]> = {
-     admin: ['admin', 'familia', 'walker', 'mi-cuenta', 'paseador'],
-     walker: ['walker', 'paseador'],
-     client: ['familia', 'mi-cuenta'],
-     supervisor: ['admin'],
-   }
-   if (allowed[role].includes(prefix)) return redirect
-   return ROLE_HOME[role]
- }
+function resolveDestination(role: Role): string {
+   return resolveDestinationShared(role, getSafeRedirect())
+  }
 
 function GoogleMark({ size = 16 }: { size?: number }) {
   return (
@@ -101,7 +71,6 @@ function GoogleMark({ size = 16 }: { size?: number }) {
 
 export default function LoginPage() {
   const router = useRouter()
-  const [mode, setMode] = useState<Mode>('familia')
   const [familiaMode, setFamiliaMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -110,98 +79,168 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
-  const [showInternal, setShowInternal] = useState(false)
   const [, setGisReady] = useState(false)
   const [gisError, setGisError] = useState(false)
   const [webView, setWebView] = useState(false)
   const googleButtonRef = useRef<HTMLDivElement | null>(null)
+  const googleAttemptRef = useRef(false)
   const initializedRef = useRef(false)
-  const clickCount = useRef(0)
-  const clickTimer = useRef<NodeJS.Timeout | null>(null)
+  const gisScriptRef = useRef<HTMLScriptElement | null>(null)
+  const [authState, setAuthState] = useState<{
+    stage: string;
+    error: string | null;
+    code: string | null;
+    provider: string | null;
+    browser: string | null;
+    correlationId: string;
+    timestamp: string;
+  }>({
+    stage: 'idle',
+    error: null,
+    code: null,
+    provider: null,
+    browser: null,
+    correlationId: Math.random().toString(36).substring(2, 9),
+    timestamp: new Date().toISOString(),
+  })
 
-  const handleLogoClick = useCallback(() => {
-    clickCount.current += 1
-    if (clickTimer.current) clearTimeout(clickTimer.current)
-    if (clickCount.current >= 6) {
-      clickCount.current = 0
-      setShowInternal(true)
-    }
-    clickTimer.current = setTimeout(() => { clickCount.current = 0 }, 2000)
-  }, [])
+  const updateAuthState = (stage: string, error?: string | null, code?: string | null, provider?: string | null, browser?: string | null) => {
+    setAuthState({
+      stage,
+      error: error ?? null,
+      code: code ?? null,
+      provider: provider ?? null,
+      browser: browser ?? null,
+      correlationId: authState.correlationId,
+      timestamp: new Date().toISOString(),
+    });
+  };
 
   useEffect(() => {
     setWebView(isWebView())
   }, [])
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const urlMode = params.get('mode') as Mode | null
-    if (urlMode && ['familia', 'equipo', 'paseador', 'supervisor'].includes(urlMode)) {
-      setMode(urlMode)
-      setShowInternal(true)
+  const finalizeGoogle = useCallback(async (user: { uid: string; displayName: string | null; email: string | null }) => {
+    const currentUser = auth.currentUser
+    if (!currentUser || currentUser.uid !== user.uid) {
+      throw familyLoginError('auth', { code: 'auth/session-unavailable' })
     }
-  }, [])
+    let role: Role
+    try {
+      ;({ role } = await refreshTokenAndGetRole({
+        getIdToken: (forceRefresh) => currentUser.getIdToken(forceRefresh),
+        getIdTokenResult: () => currentUser.getIdTokenResult(),
+      }))
+    } catch (cause) {
+      throw familyLoginError('claims', cause)
+    }
 
-const finalizeGoogle = useCallback(async (user: { uid: string; displayName: string | null; email: string | null }) => {
-     await ensureCustomerProfile(user)
-     const userSnap = await getDoc(doc(db, 'users', user.uid))
-     const role = userSnap.exists() ? userSnap.data()?.role : null
-     if (role === 'admin' || role === 'walker' || role === 'supervisor') {
-       setSessionCookie(role)
-       router.replace(resolveDestination(role))
-     } else {
-       setSessionCookie('client')
-       router.replace(resolveDestination('client'))
-     }
-   }, [router])
+    updateAuthState('role_resolved')
+    if (role === 'customer') {
+      updateAuthState('profile_loading')
+      try {
+        const profileResult = await ensureCanonicalCustomerProfile(user)
+        updateAuthState(profileResult === 'created' ? 'profile_created' : 'profile_existing')
+      } catch (cause) {
+        throw familyLoginError('profile', cause)
+      }
+    }
+    setSessionCookie()
+    router.replace(resolveDestination(role))
+  }, [router])
 
   const handleGoogleCredential = useCallback(async (response: { credential: string }) => {
     if (!response.credential) {
-      setError('Google no devolvió un token de identificación.')
+      updateAuthState('google_credential_received', 'Google no devolvió un token de identificación.', 'missing-credential', 'GoogleIdentityServices')
       setLoading(false)
       return
     }
+    if (googleAttemptRef.current) return
+    googleAttemptRef.current = true
     setLoading(true)
-    setError('')
+    updateAuthState('google_credential_received', null, null, 'GoogleIdentityServices')
     try {
+      await authPersistenceReady
       const credential = GoogleAuthProvider.credential(response.credential)
       const result = await signInWithCredential(auth, credential)
       Events.loginMethod('google')
+      updateAuthState('firebase_credential_created')
       await finalizeGoogle(result.user)
     } catch (e) {
-      setError(classifyGoogleError(e))
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      const friendlyError = classifyFamilyLoginError(e)
+      const stage = isFamilyLoginFlowError(e) ? e.stage : 'auth'
+      updateAuthState(`${stage}_failed`, friendlyError, code, 'GoogleIdentityServices')
+      setError(friendlyError)
     } finally {
+      googleAttemptRef.current = false
       setLoading(false)
     }
   }, [finalizeGoogle])
 
   const handleGooglePopup = useCallback(async () => {
+    if (!GOOGLE_CLIENT_ID) {
+      setError('El acceso con Google no está configurado. Usa correo y contraseña.')
+      return
+    }
+    if (googleAttemptRef.current) return
+    googleAttemptRef.current = true
     setLoading(true)
-    setError('')
+    updateAuthState('google_ui_loaded', null, null, 'GoogleIdentityServices')
     try {
-      const result = await signInWithPopup(auth, new GoogleAuthProvider())
+      await authPersistenceReady
+      const result = await signInWithPopup(auth, googleAuthProvider)
       Events.loginMethod('google')
+      updateAuthState('firebase_credential_created')
       await finalizeGoogle(result.user)
     } catch (e) {
-      setError(classifyGoogleError(e))
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      const friendlyError = classifyFamilyLoginError(e)
+      const stage = isFamilyLoginFlowError(e) ? e.stage : 'oauth'
+      updateAuthState(`${stage}_failed`, friendlyError, code, 'GoogleIdentityServices')
+      setError(friendlyError)
     } finally {
+      googleAttemptRef.current = false
       setLoading(false)
     }
   }, [finalizeGoogle])
+
+  const loadGisScript = useCallback((onDone: () => void) => {
+    if (typeof document === 'undefined') return
+    if (gisScriptRef.current) {
+      gisScriptRef.current.onload = null
+      gisScriptRef.current.onerror = null
+      gisScriptRef.current.remove()
+      gisScriptRef.current = null
+    }
+    updateAuthState('google_script_loading', null, null, 'GoogleIdentityServices')
+    const s = document.createElement('script')
+    s.src = 'https://accounts.google.com/gsi/client'
+    s.async = true
+    s.onload = () => {
+      updateAuthState('google_script_loaded', null, null, 'GoogleIdentityServices')
+      onDone()
+    }
+    s.onerror = () => {
+      updateAuthState('google_script_error', 'No pudimos cargar Google en este momento.', 'script-load-failed', 'GoogleIdentityServices')
+      setGisError(true)
+    }
+    gisScriptRef.current = s
+    document.head.appendChild(s)
+  }, [])
 
   const renderGoogleButton = useCallback(() => {
     const el = googleButtonRef.current
     if (!window.google?.accounts?.id || !el) return false
 
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim()
-    if (!clientId) {
+    if (!GOOGLE_CLIENT_ID) {
       setGisError(true)
       return true
     }
 
     if (!initializedRef.current) {
       window.google.accounts.id.initialize({
-        client_id: clientId,
+        client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleCredential,
         auto_select: false,
         cancel_on_tap_outside: true,
@@ -211,6 +250,7 @@ const finalizeGoogle = useCallback(async (user: { uid: string; displayName: stri
 
     el.replaceChildren()
 
+    const availableWidth = Math.floor(el.getBoundingClientRect().width)
     window.google.accounts.id.renderButton(el, {
       type: 'standard',
       theme: 'outline',
@@ -218,7 +258,7 @@ const finalizeGoogle = useCallback(async (user: { uid: string; displayName: stri
       text: 'continue_with',
       shape: 'rectangular',
       logo_alignment: 'left',
-      width: 320,
+      width: Math.min(320, availableWidth > 0 ? availableWidth : 320),
     })
 
     setGisReady(true)
@@ -226,55 +266,55 @@ const finalizeGoogle = useCallback(async (user: { uid: string; displayName: stri
   }, [handleGoogleCredential])
 
   useEffect(() => {
-    if (mode !== 'familia' || webView || gisError) return
-    renderGoogleButton()
-  }, [mode, webView, gisError, renderGoogleButton])
+    if (webView || !GOOGLE_CLIENT_ID) return
+    loadGisScript(() => { renderGoogleButton() })
+    return () => {
+      if (gisScriptRef.current) {
+        gisScriptRef.current.onload = null
+        gisScriptRef.current.onerror = null
+        gisScriptRef.current.remove()
+        gisScriptRef.current = null
+      }
+    }
+  }, [webView, loadGisScript, renderGoogleButton])
 
   useEffect(() => {
-    if (mode !== 'familia' || webView) return
+    if (webView || !GOOGLE_CLIENT_ID) return
     const t = setTimeout(() => {
       if (!window.google?.accounts?.id && !initializedRef.current) {
         setGisError(true)
       }
     }, 8000)
     return () => clearTimeout(t)
-  }, [mode, webView])
+  }, [webView])
 
-const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'supervisor') => {
-     setLoading(true)
-     setError('')
-     try {
-       const cred = await signInWithEmailAndPassword(auth, email, password)
-       Events.loginMethod('email')
-       if (role === 'admin' || role === 'walker' || role === 'supervisor') {
-         const userSnap = await getDoc(doc(db, 'users', cred.user.uid))
-         const userRole = userSnap.exists() ? userSnap.data()?.role : null
-         if (role === 'admin' && userRole !== 'admin') {
-           setError('Parece que no tienes acceso al panel de equipo')
-           await auth.signOut()
-           return
-         }
-         if (role === 'walker' && userRole !== 'walker') {
-           setError('Parece que no tienes acceso de paseador')
-           await auth.signOut()
-           return
-         }
-         if (role === 'supervisor' && userRole !== 'supervisor') {
-           setError('Parece que no tienes acceso de supervisor')
-           await auth.signOut()
-           return
-         }
-         setSessionCookie(role)
-         router.push(resolveDestination(role))
-       } else {
-         await ensureCustomerProfile(cred.user)
-         setSessionCookie('client')
-         router.push(resolveDestination('client'))
-       }
-     } catch (e: unknown) {
-       setError(classifyLoginError(e))
-     }
-     setLoading(false)
+const handleEmailLogin = async () => {
+      setLoading(true)
+    setError('')
+    try {
+      await authPersistenceReady
+      const cred = await signInWithEmailAndPassword(auth, email, password)
+      Events.loginMethod('email')
+      await finalizeGoogle(cred.user)
+    } catch (e: unknown) {
+      const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
+      if (isFamilyLoginFlowError(e)) {
+        setError(classifyFamilyLoginError(e))
+      } else if (code === 'auth/invalid-credential') {
+        setError('Credenciales inválidas. Verifica tu correo y contraseña.')
+      } else if (code === 'auth/user-not-found') {
+        setError('Correo no registrado. Verifica tu correo o crea una cuenta.')
+      } else if (code === 'auth/wrong-password') {
+        setError('Contraseña incorrecta. Intenta de nuevo o restablece tu contraseña.')
+      } else if (code === 'auth/too-many-requests') {
+        setError('Demasiados intentos. Espera un momento e inténtalo de nuevo.')
+      } else if (code === 'auth/network-request-failed') {
+        setError('Error de conexión. Verifica tu red e inténtalo de nuevo.')
+      } else {
+        setError(classifyLoginError(e))
+      }
+    }
+    setLoading(false)
    }
 
   const handleForgotPassword = async () => {
@@ -302,19 +342,20 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
     if (!name.trim()) { setError('Ingresa tu nombre'); return }
     setLoading(true)
     try {
+      await authPersistenceReady
       const cred = await createUserWithEmailAndPassword(auth, email, password)
       await updateProfile(cred.user, { displayName: name })
-      await setDoc(doc(db, 'clients', cred.user.uid), {
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        createdAt: serverTimestamp(),
-      })
-      setSessionCookie()
-      router.push(resolveDestination('client'))
+      try {
+        await ensureCanonicalCustomerProfile({ uid: cred.user.uid, displayName: name.trim(), email: email.trim() })
+        if (phone.trim()) await updateCustomerProfile(cred.user.uid, { phone: phone.trim() })
+      } catch (cause) {
+        throw familyLoginError('profile', cause)
+      }
+      await finalizeGoogle(cred.user)
     } catch (e: unknown) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
-      if (code === 'auth/email-already-in-use') setError('Correo ya registrado')
+      if (isFamilyLoginFlowError(e)) setError(classifyFamilyLoginError(e))
+      else if (code === 'auth/email-already-in-use') setError('Correo ya registrado')
       else if (code === 'auth/weak-password') setError('Mínimo 6 caracteres')
       else if (code === 'auth/invalid-email') setError('Correo inválido')
       else setError('Error al registrarse')
@@ -323,109 +364,37 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={() => { renderGoogleButton() }}
-        onError={() => { setGisError(true) }}
-      />
+    <div className="min-h-screen overflow-x-hidden flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.32 }}
-        className="w-full max-w-md"
+        className="w-full min-w-0 max-w-md"
       >
         <div className="text-center mb-8">
-          <button onClick={handleLogoClick} className="mx-auto block mb-4" aria-label="Logo PET Ap">
+          <div className="mx-auto block mb-4" aria-label="Logo PET Ap">
             <Logo size={56} rounded="rounded-2xl" className="shadow-glow" />
-          </button>
+          </div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-            {mode === 'select' && 'Bienvenido a ' + brand.name}
-            {mode === 'familia' && 'Familia PET'}
-            {mode === 'equipo' && 'Administración PET'}
-            {mode === 'paseador' && 'Paseadores PET'}
-            {mode === 'supervisor' && 'Supervisores PET'}
+            Familia PET
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {mode === 'select' && 'Elige cómo quieres acceder'}
-            {mode === 'familia' && 'Accede para ver tus reservas, fotos y más'}
-            {mode === 'equipo' && 'Panel de administración'}
-            {mode === 'paseador' && 'Panel de paseos asignados'}
-            {mode === 'supervisor' && 'Panel de supervisión'}
+            Accede para ver tus reservas, fotos y más
           </p>
         </div>
 
-        {mode === 'select' && (
-          <div className="space-y-3">
-            <button
-              onClick={() => setMode('familia')}
-              className="w-full rounded-2xl p-5 text-left transition-all duration-200 hover:border-brand-500/30 group"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-success-500/10 flex items-center justify-center text-success-400 shrink-0">
-                  <User size={20} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
-                    Familias PET
-                  </h3>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                    Reserva paseos, revisa fotos del recorrido, gestiona tus perros y historial.
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-2 text-2xs font-medium text-brand-600">
-                    <span>Continuar con Google</span>
-                    <span>·</span>
-                    <span>o correo</span>
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            {showInternal && (
-              <>
-                <button
-                  onClick={() => setMode('equipo')}
-                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-primary"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  Acceso equipo →
-                </button>
-                <button
-                  onClick={() => setMode('paseador')}
-                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-primary"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  Acceso paseador →
-                </button>
-                <button
-                  onClick={() => setMode('supervisor')}
-                  className="w-full text-center py-3 text-xs font-medium transition-colors hover:text-primary"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  Acceso supervisor →
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
-        {mode === 'familia' && (
-          <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                  <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <div className="space-y-3">
-              {webView ? (
+              {!GOOGLE_CLIENT_ID ? (
+                <p className="rounded-xl p-3 text-xs text-center text-muted" role="status" style={{ border: '1px solid var(--border)' }}>
+                  El acceso con Google no está configurado. Usa correo y contraseña.
+                </p>
+              ) : webView ? (
                 <div className="rounded-xl p-4 text-center space-y-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)' }}>
                   <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     Para ingresar con Google, abre PET Ap en Safari o Chrome.
                   </p>
-                  <button
-                    onClick={() => window.location.href = 'googlechrome://' + window.location.host + window.location.pathname}
-                    className="inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-medium transition-all"
-                    style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-                  >
-                    <ExternalLink size={10} /> Abrir en el navegador
-                  </button>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>También puedes continuar abajo con correo y contraseña.</p>
                 </div>
               ) : gisError ? (
                 <div className="space-y-2">
@@ -442,7 +411,7 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
                   </p>
                 </div>
               ) : (
-                <div ref={googleButtonRef} className="flex justify-center min-h-[40px]" />
+                <div ref={googleButtonRef} className="min-h-[40px] min-w-0 max-w-full overflow-hidden flex justify-center" />
               )}
 
               <div className="flex items-center gap-3 py-1">
@@ -475,7 +444,7 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
                         type="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="55 2305 3772"
+                        placeholder="55 3823 1235"
                         className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                         style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                       />
@@ -520,9 +489,9 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
               {info && <p className="text-success-600 text-xs" role="status">{info}</p>}
 
               <button
-                onClick={familiaMode === 'login' ? () => handleEmailLogin('client') : handleRegister}
+                onClick={familiaMode === 'login' ? () => handleEmailLogin() : handleRegister}
                 disabled={loading || !email.trim() || !password.trim()}
-                className="btn-primary w-full"
+                className="btn btn-primary w-full"
               >
                 {loading ? <Loader2 className="animate-spin" size={14} /> : null}
                 {familiaMode === 'login' ? 'Entrar' : 'Crear cuenta'}
@@ -532,7 +501,7 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
                 <button
                   onClick={handleForgotPassword}
                   disabled={loading}
-                  className="text-xs block w-full text-center"
+                  className="flex min-h-11 w-full items-center justify-center text-center text-xs"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   ¿Olvidaste tu contraseña?
@@ -543,197 +512,16 @@ const handleEmailLogin = async (role: 'client' | 'admin' | 'walker' | 'superviso
             <div className="mt-4 pt-4 text-center space-y-2" style={{ borderTop: '1px solid var(--border)' }}>
               <button
                 onClick={() => { setFamiliaMode(familiaMode === 'login' ? 'register' : 'login'); setError('') }}
-                className="text-xs block w-full"
+                className="flex min-h-11 w-full items-center justify-center text-xs"
                 style={{ color: 'var(--text-muted)' }}
               >
                 {familiaMode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
               </button>
             </div>
           </div>
-        )}
-
-        {mode === 'equipo' && (
-          <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo de administrador</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@petap.com"
-                    autoComplete="email"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500/30"
-                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin('admin')}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500/30"
-                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  />
-                </div>
-              </div>
-
-              {error && <p className="text-red-700 text-xs" role="alert">{error}</p>}
-              {info && <p className="text-success-600 text-xs" role="status">{info}</p>}
-
-              <button
-                onClick={() => handleEmailLogin('admin')}
-                disabled={loading || !email.trim() || !password.trim()}
-                className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-accent-500 to-accent-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                {loading ? <Loader2 className="animate-spin" size={14} /> : null}
-                Acceder al panel
-              </button>
-
-              <button
-                onClick={handleForgotPassword}
-                disabled={loading}
-                className="text-xs block w-full text-center"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-          </div>
-        )}
-
-        {mode === 'paseador' && (
-          <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo de paseador</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="paseador@petap.com"
-                    autoComplete="email"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-success-500/30"
-                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin('walker')}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-success-500/30"
-                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  />
-                </div>
-              </div>
-
-              {error && <p className="text-red-700 text-xs" role="alert">{error}</p>}
-              {info && <p className="text-success-600 text-xs" role="status">{info}</p>}
-
-              <button
-                onClick={() => handleEmailLogin('walker')}
-                disabled={loading || !email.trim() || !password.trim()}
-                className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-success-500 to-success-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                {loading ? <Loader2 className="animate-spin" size={14} /> : <PersonStanding size={14} />}
-                Entrar como paseador
-              </button>
-
-              <button
-                onClick={handleForgotPassword}
-                disabled={loading}
-                className="text-xs block w-full text-center"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-          </div>
-        )}
-
-         {mode === 'supervisor' && (
-           <div className="rounded-2xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-             <div className="space-y-3">
-               <div>
-                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo de supervisor</label>
-                 <div className="relative">
-                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
-                   <input
-                     type="email"
-                     value={email}
-                     onChange={(e) => setEmail(e.target.value)}
-                     placeholder="supervisor@petap.com"
-                     autoComplete="email"
-                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                   />
-                 </div>
-               </div>
-
-               <div>
-                 <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
-                 <div className="relative">
-                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
-                   <input
-                     type="password"
-                     value={password}
-                     onChange={(e) => setPassword(e.target.value)}
-                     onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin('supervisor')}
-                     placeholder="••••••••"
-                     autoComplete="current-password"
-                     className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                   />
-                 </div>
-               </div>
-
-               {error && <p className="text-red-700 text-xs" role="alert">{error}</p>}
-               {info && <p className="text-success-600 text-xs" role="status">{info}</p>}
-
-               <button
-                 onClick={() => handleEmailLogin('supervisor')}
-                 disabled={loading || !email.trim() || !password.trim()}
-                 className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:opacity-90 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-               >
-                 {loading ? <Loader2 className="animate-spin" size={14} /> : <Shield size={14} />}
-                 Entrar como supervisor
-               </button>
-
-               <button
-                 onClick={handleForgotPassword}
-                 disabled={loading}
-                 className="text-xs block w-full text-center"
-                 style={{ color: 'var(--text-muted)' }}
-               >
-                 ¿Olvidaste tu contraseña?
-               </button>
-             </div>
-           </div>
-         )}
 
         <div className="text-center mt-6">
-          <a href="/" className="text-xs transition-colors hover:text-brand-600" style={{ color: 'var(--text-muted)' }}>
+          <a href="/" className="inline-flex min-h-11 items-center px-3 text-xs transition-colors hover:text-brand-600" style={{ color: 'var(--text-muted)' }}>
             ← Volver al sitio
           </a>
         </div>

@@ -6,12 +6,13 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { X } from 'lucide-react'
 import type { Reservation } from '@/types'
-import { SERVICE_NAMES, normalizeServiceName } from '@/lib/services'
+import { SERVICE_NAMES, normalizeServiceName } from '@/lib/walkServices'
 import { logChange } from '@/lib/audit'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import { useFocusTrap } from '@/lib/useFocusTrap'
 import { useToast } from '@/context/ToastContext'
 import { useConfig } from '@/context/ConfigContext'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 export default function EditReservationModal({
   isOpen,
@@ -40,6 +41,10 @@ export default function EditReservationModal({
   useEscapeKey(onClose, isOpen)
 
   const handleSave = async () => {
+    if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) {
+      toast('Esta reserva pertenece al historial legacy y es de solo lectura.', 'error')
+      return
+    }
     if (!reservation) return
     if (!form.date || !form.time || !form.service) return
     setSaving(true)

@@ -25,9 +25,10 @@ const ConfigContext = createContext<ConfigContextType>({
 
 function normalizeConfig(raw: Partial<SiteConfig>): SiteConfig {
   const merged = { ...DEFAULT_CONFIG, ...raw }
-  const whatsapp = String(merged.whatsapp || merged.whatsappE164 || brand.whatsapp).replace(/\D/g, '')
-  const whatsappE164 = whatsapp.length === 12 ? whatsapp : brand.whatsapp
-  const displayPhone = merged.displayPhone || `55 ${whatsappE164.slice(5, 9)} ${whatsappE164.slice(9)}`
+  // El contacto comercial es identidad de marca, no configuración operativa remota.
+  // Esto evita que un appSettings/public antiguo vuelva a publicar un número obsoleto.
+  const whatsappE164 = brand.whatsapp
+  const displayPhone = brand.displayPhone
 
   const reservedSubtitles = ['RESERVA', 'reserva', 'RESERVAS', 'Reserva', 'Paseos', 'Servicios', 'FAQ', 'Contacto']
   if (reservedSubtitles.includes(merged.heroSubtitle?.trim() || '')) {
@@ -47,7 +48,7 @@ function normalizeConfig(raw: Partial<SiteConfig>): SiteConfig {
     instagram: merged.instagram || merged.instagramUrl || DEFAULT_CONFIG.instagram,
     instagramUrl: merged.instagramUrl || merged.instagram || DEFAULT_CONFIG.instagram,
     schemaVersion: 2,
-    analyticsEnabled: merged.analyticsEnabled !== false,
+    analyticsEnabled: merged.analyticsEnabled === true,
   }
 }
 

@@ -26,7 +26,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
         </div>
       </div>
       <span className={`text-sm font-semibold ${isTopup ? 'text-success' : 'text-warning'}`}>
-        {isTopup ? '+' : ''}{tx.amount.toLocaleString('es-MX')} MXN
+        {isTopup ? '+' : ''}{tx.amount.toLocaleString('es-MX')} créditos
       </span>
     </div>
   )
@@ -36,12 +36,23 @@ export default function BilleteraPage() {
   const { wallet, loading, error, getTransactions } = useWallet()
   const [transactions, setTransactions] = useState<WalletTransaction[]>([])
   const [txLoading, setTxLoading] = useState(true)
+  const [txError, setTxError] = useState<'unavailable' | 'permission-denied' | 'network-error' | null>(null)
+
+  const loadTransactions = async () => {
+    setTxLoading(true)
+    setTxError(null)
+    const result = await getTransactions(30)
+    if (result.status === 'success') {
+      setTransactions(result.transactions)
+    } else {
+      setTransactions([])
+      setTxError(result.status)
+    }
+    setTxLoading(false)
+  }
 
   useEffect(() => {
-    getTransactions(30).then((txs) => {
-      setTransactions(txs)
-      setTxLoading(false)
-    })
+    void loadTransactions()
   }, [getTransactions])
 
   return (
@@ -51,8 +62,8 @@ export default function BilleteraPage() {
           <ArrowLeft size={16} />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-ink">Billetera</h1>
-          <p className="text-sm text-muted">Saldo y movimientos</p>
+          <h1 className="text-xl font-bold text-ink">Créditos PET</h1>
+          <p className="text-sm text-muted">Beneficios promocionales y movimientos</p>
         </div>
       </div>
 
@@ -67,17 +78,17 @@ export default function BilleteraPage() {
             <Wallet size={24} />
           </div>
           <div>
-            <p className="text-sm text-muted">Saldo disponible</p>
+            <p className="text-sm text-muted">Créditos promocionales disponibles</p>
             {loading ? (
               <div className="skeleton h-8 w-28 mt-1" />
             ) : (
               <p className="text-3xl font-bold text-ink">
-                ${(wallet?.balance ?? 0).toLocaleString('es-MX')}
+                {(wallet?.balance ?? 0).toLocaleString('es-MX')} créditos
               </p>
             )}
           </div>
         </div>
-        <p className="text-xs text-muted mt-2">MXN · Las cargas se reflejan inmediatamente</p>
+        <p className="text-xs text-muted mt-3">Los Créditos PET son beneficios promocionales. No representan dinero, no pueden retirarse ni transferirse y están sujetos a vigencia y condiciones.</p>
       </motion.div>
 
       <motion.div
@@ -89,7 +100,7 @@ export default function BilleteraPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-ink">Movimientos</h2>
           <button
-            onClick={() => { setTxLoading(true); getTransactions(30).then(setTransactions).finally(() => setTxLoading(false)) }}
+            onClick={() => void loadTransactions()}
             className="text-xs text-primary-hover transition-colors flex items-center gap-1"
           >
             <RefreshCw size={12} />
@@ -110,11 +121,19 @@ export default function BilleteraPage() {
               </div>
             ))}
           </div>
+        ) : txError ? (
+          <div className="text-center py-8" role="alert">
+            <Wallet size={32} className="mx-auto text-muted mb-2" />
+            <p className="text-sm text-ink">No pudimos consultar tus movimientos</p>
+            <p className="text-xs text-muted mt-1">
+              {txError === 'permission-denied' ? 'Tu sesión no tiene permiso para consultar estos datos.' : 'Revisa tu conexión e intenta nuevamente.'}
+            </p>
+          </div>
         ) : transactions.length === 0 ? (
           <div className="text-center py-8">
             <Wallet size={32} className="mx-auto text-muted mb-2" />
             <p className="text-sm text-muted">Sin movimientos aún</p>
-            <p className="text-xs text-muted mt-1">Los movimientos aparecerán aquí cuando cargues o uses saldo.</p>
+            <p className="text-xs text-muted mt-1">Aquí aparecerán únicamente movimientos promocionales confirmados.</p>
           </div>
         ) : (
           <div>

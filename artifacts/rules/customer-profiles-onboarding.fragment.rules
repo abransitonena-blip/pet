@@ -1,0 +1,50 @@
+// Candidate fragment only. Do not deploy this file by itself.
+// Expected base ruleset: 8c72a6da-eef2-4075-af8c-ecb5ac6f5a7d
+// Expected base SHA-256: e6932198dc19f41a588c0b5f32dec48444abe0409739e577c3b32a9784fb2e1f
+// Replace only the existing customerProfiles block after re-verifying that base.
+
+match /customerProfiles/{uid} {
+  function hasNoProtectedProfileFields(data) {
+    return !data.keys().hasAny([
+      'role', 'claims', 'customClaims', 'credits', 'wallet', 'walletBalance',
+      'loyaltyPoints', 'referralRewards', 'financialBalance', 'paymentStatus',
+      'permissions', 'adminStatus', 'suspended', 'audit', 'internalNotes'
+    ]);
+  }
+
+  function protectedProfileFieldsUnchanged() {
+    return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+      'role', 'claims', 'customClaims', 'credits', 'wallet', 'walletBalance',
+      'loyaltyPoints', 'referralRewards', 'financialBalance', 'paymentStatus',
+      'permissions', 'adminStatus', 'suspended', 'audit', 'internalNotes'
+    ]);
+  }
+
+  allow read: if isAuthenticated()
+    && (request.auth.uid == uid || isAdmin());
+
+  allow create: if isActiveAccount()
+    && isCustomer()
+    && request.auth.uid == uid
+    && noRoleField()
+    && hasNoProtectedProfileFields(request.resource.data)
+    && request.resource.data.name is string
+    && request.resource.data.email is string
+    && request.resource.data.phone is string
+    && request.resource.data.createdAt is timestamp
+    && request.resource.data.keys().hasAll(['name', 'email', 'phone', 'createdAt'])
+    && request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'createdAt']);
+
+  allow update: if noRoleField()
+    && protectedProfileFieldsUnchanged()
+    && ((isCustomer()
+        && request.auth.uid == uid
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.phone is string
+        && request.resource.data.updatedAt is timestamp
+        && onlyAllowedFieldsChanged(['name', 'email', 'phone', 'updatedAt']))
+      || isAdmin());
+
+  allow delete: if false;
+}

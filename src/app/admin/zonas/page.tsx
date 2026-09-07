@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import {
-  collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
+  collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, limit,
 } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -44,7 +44,7 @@ export default function AdminZonasPage() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    const q = query(collection(db, 'zones'))
+    const q = query(collection(db, 'zones'), limit(100))
     const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Zone))
       setZones(docs)

@@ -1,9 +1,9 @@
 import { db, auth } from '@/firebase/config'
-import { collection, addDoc, serverTimestamp, getDocs, query, where, limit, doc, setDoc, updateDoc, increment } from 'firebase/firestore'
+import { collection, serverTimestamp, doc, getDoc, writeBatch } from 'firebase/firestore'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
-import { getServicePrice } from '@/lib/services'
-import { showPushNotification } from '@/components/PWARegister'
-import { logAudit } from '@/lib/auditLog'
+import type { ReservationPackageType } from '@/lib/walkServices'
+import { isValidSameDayWindow } from '@/lib/reservationValidation'
+import { buildBookingSlots, parseBookingSchedule } from '@/lib/bookingSchedule'
 
 // Margin guard: discounts cannot reduce price below this percentage of base price
 const MIN_MARGIN_PERCENT = 30
@@ -15,16 +15,19 @@ export function applyMarginGuard(basePrice: number, discount: number): number {
 }
 
 export function parseTimeWindow(slot: string): { start: string; end: string } {
-  if (slot.includes('-')) {
-    const [start, end] = slot.split('-')
-    return { start, end }
+  const parts = slot.split('-')
+  if (parts.length !== 2 || !isValidSameDayWindow(parts[0], parts[1])) {
+    throw new Error('BOOKING_INVALID_TIME_WINDOW')
   }
-  return { start: slot, end: '' }
+  return { start: parts[0], end: parts[1] }
 }
 
 interface Form {
-  name: string; phone: string; petName: string; petType: string;
-  service: string; date: string; time: string; notes: string;
+  name: string; phone: string; petId?: string; petName: string; petType: string;
+  serviceId: string; serviceName: string; servicePackageType: ReservationPackageType | ''; serviceVersion: number | null;
+  serviceDurationMinutes: number | null;
+  zoneId: string;
+  date: string; time: string; notes: string;
   coupon: string; addressId: string; walkerPreference: string;
 }
 
@@ -38,246 +41,102 @@ interface Walker {
 
 interface SubmitResult {
   message: string
+  whatsappUrl: string
 }
 
 export async function submitReservation({
   form,
-  prices,
-  couponStatus,
-  referralCode,
-  weeklySchedule,
-  walkerPreference,
-  availableWalkers,
   selectedAddressId,
-  isWeeklyPackage,
 }: {
   form: Form
-  prices: Record<string, number>
   couponStatus: CouponStatus | null
   referralCode: string
-  weeklySchedule: Record<string, string>
   walkerPreference: string
   availableWalkers: Walker[]
   selectedAddressId: string
-  isWeeklyPackage: boolean
 }): Promise<SubmitResult> {
-  const basePrice = prices[form.service] ?? getServicePrice(form.service)
-  let discountAmount = 0
-  if (couponStatus?.valid && couponStatus.discount) {
-    discountAmount = couponStatus.type === 'percentage' ? Math.round(basePrice * couponStatus.discount / 100) : couponStatus.discount
-  }
-  discountAmount = applyMarginGuard(basePrice, discountAmount)
-  const finalPrice = basePrice - discountAmount
+  const user = auth.currentUser
+  if (!user) throw new Error('AUTH_REQUIRED')
+  if (!form.petId || !selectedAddressId) throw new Error('BOOKING_DATA_INCOMPLETE')
+  if (!form.zoneId) throw new Error('BOOKING_ZONE_UNAVAILABLE')
+  if (!form.serviceId || !form.serviceName || !form.servicePackageType) throw new Error('BOOKING_SERVICE_INCOMPLETE')
+  if (!Number.isSafeInteger(form.serviceVersion) || Number(form.serviceVersion) < 1) throw new Error('SERVICE_PRICE_NOT_CONFIGURED')
+  if (!Number.isSafeInteger(form.serviceDurationMinutes) || Number(form.serviceDurationMinutes) <= 0) throw new Error('BOOKING_SERVICE_DURATION_MISSING')
+  if (form.servicePackageType === 'weekly') throw new Error('BOOKING_WEEKLY_SCHEDULE_INCOMPLETE')
 
-  const PET_TYPES = [
-    { value: 'perro', label: 'Perro' },
-    { value: 'gato', label: 'Gato' },
-    { value: 'otro', label: 'Otro' },
-  ]
-  const petTypeLabel = PET_TYPES.find((p) => p.value === form.petType)?.label || form.petType
+  const scheduledWalks = [[form.date, form.time] as [string, string]]
 
-  let message = `🐾 *Nuevo${isWeeklyPackage ? ' Paquete Semanal' : ' Paseo'} — PET Ap*\n`
-  message += `👤 *Nombre:* ${form.name}\n`
-  message += `📱 *Teléfono:* ${form.phone}\n`
-  message += `🐶 *Mascota:* ${form.petName} (${petTypeLabel})\n`
-  message += `🎒 *Paquete:* ${form.service}\n`
-  if (basePrice > 0) message += `💰 *Precio:* $${basePrice.toLocaleString()}\n`
-  if (discountAmount > 0) message += `🏷️ *Descuento:* -$${discountAmount.toLocaleString()} (${form.coupon.toUpperCase()})\n`
-  message += `💵 *Total:* $${finalPrice.toLocaleString()}\n`
-  if (!isWeeklyPackage) {
-    message += `📅 *Fecha:* ${form.date}\n`
-    message += `🕐 *Hora:* ${form.time}\n`
-  } else {
-    const scheduledDays = Object.entries(weeklySchedule).filter(([, t]) => t).sort()
-    message += `📅 *Semana:* ${scheduledDays.length} días\n`
-    scheduledDays.forEach(([date, time]) => {
-      const d = new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' })
-      message += `  • ${d}: ${time}\n`
-    })
-  }
-  if (form.notes) message += `📝 *Notas:* ${form.notes}\n`
-
-  const orderIdRef = doc(collection(db, 'serviceOrders'))
-
-  if (isWeeklyPackage && Object.values(weeklySchedule).some((t) => !!t)) {
-    const scheduledDays = Object.entries(weeklySchedule).filter(([, t]) => t).sort()
-
-    await setDoc(orderIdRef, {
-      clientId: auth.currentUser?.uid || '',
-      clientName: form.name,
-      clientPhone: form.phone,
-      dogIds: [],
-      dogName: form.petName,
-      petType: form.petType,
-      serviceId: form.service,
-      serviceName: form.service,
-      packageType: 'weekly' as const,
-      numberOfSessions: scheduledDays.length,
-      addressId: selectedAddressId,
-      zoneId: '',
-      zoneName: '',
-      subtotal: basePrice,
-      zoneAdjustment: 0,
-      discount: discountAmount,
-      referralDiscount: 0,
-      total: finalPrice,
-      paymentStatus: 'pending' as const,
-      status: 'active' as const,
-      notes: form.notes,
-      referralCode: referralCode || '',
-      appliedCoupon: form.coupon.toUpperCase() || '',
-      createdAt: serverTimestamp(),
-    })
-
-    for (const [date, time] of scheduledDays) {
-      const window = parseTimeWindow(time)
-      const sessionRef = doc(collection(db, 'serviceOrders', orderIdRef.id, 'sessions'))
-      await setDoc(sessionRef, {
-        orderId: orderIdRef.id,
-        clientId: auth.currentUser?.uid || '',
-        clientName: form.name,
-        clientPhone: form.phone,
-        dogName: form.petName,
-        petType: form.petType,
-        serviceName: form.service,
-        date,
-        startTime: time,
-        arrivalWindowStart: window.start,
-        arrivalWindowEnd: window.end,
-        expectedEndTime: '',
-        zoneId: '',
-        zoneName: '',
-        addressId: selectedAddressId,
-        walkerId: walkerPreference || '',
-        walkerName: walkerPreference ? availableWalkers.find((w) => w.id === walkerPreference)?.name || '' : '',
-        assignmentStatus: walkerPreference ? 'client_preferred' : 'unassigned',
-        sessionStatus: 'pending',
-        notes: form.notes,
-        internalNotes: '',
-        history: [{ status: 'pending', timestamp: new Date().toISOString() }],
-        createdAt: serverTimestamp(),
-      })
-    }
-
-    for (const [date, time] of scheduledDays) {
-      const window = parseTimeWindow(time)
-      await addDoc(collection(db, 'reservations'), {
-        uid: auth.currentUser?.uid || '',
-        customer: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
-        name: form.name, phone: form.phone, petName: form.petName, petType: form.petType,
-        service: '[Paquete] ' + form.service, date, time,
-        arrivalWindowStart: window.start, arrivalWindowEnd: window.end,
-        notes: form.notes,
-        status: 'pending' as const,
-        assignedWalker: walkerPreference || '',
-        createdAt: serverTimestamp(),
-      })
-    }
-    showPushNotification('🐾 Paquete Semanal', `${form.name} agendó paquete de ${scheduledDays.length} sesiones`)
-  } else {
-    const window = parseTimeWindow(form.time)
-
-    await setDoc(orderIdRef, {
-      clientId: auth.currentUser?.uid || '',
-      clientName: form.name,
-      clientPhone: form.phone,
-      serviceName: form.service,
-      total: finalPrice,
-      discount: discountAmount,
-      paymentStatus: 'pending' as const,
-      status: 'active' as const,
-      notes: form.notes,
-      referralCode: referralCode || '',
-      appliedCoupon: form.coupon.toUpperCase() || '',
-      createdAt: serverTimestamp(),
-    })
-
-    const sessionRef = doc(collection(db, 'serviceOrders', orderIdRef.id, 'sessions'))
-    await setDoc(sessionRef, {
-      orderId: orderIdRef.id,
-      clientId: auth.currentUser?.uid || '',
-      clientName: form.name,
-      clientPhone: form.phone,
-      dogName: form.petName,
-      petType: form.petType,
-      serviceName: form.service,
-      date: form.date,
-      startTime: form.time,
-      arrivalWindowStart: window.start,
-      arrivalWindowEnd: window.end,
-      expectedEndTime: '',
-      zoneId: '',
-      zoneName: '',
-      addressId: selectedAddressId,
-      walkerId: walkerPreference || '',
-      walkerName: walkerPreference ? availableWalkers.find((w) => w.id === walkerPreference)?.name || '' : '',
-      assignmentStatus: walkerPreference ? 'client_preferred' : 'unassigned',
-      sessionStatus: 'pending',
-      notes: form.notes,
-      internalNotes: '',
-      history: [{ status: 'pending', timestamp: new Date().toISOString() }],
-      createdAt: serverTimestamp(),
-    })
-
-    await addDoc(collection(db, 'reservations'), {
-      uid: auth.currentUser?.uid || '',
-      customer: { uid: auth.currentUser?.uid || '', name: form.name, phone: form.phone },
-      name: form.name, phone: form.phone, petName: form.petName, petType: form.petType,
-      service: form.service, date: form.date, time: form.time,
-      arrivalWindowStart: window.start, arrivalWindowEnd: window.end,
-      notes: form.notes,
-      status: 'pending' as const,
-      assignedWalker: walkerPreference || '',
-      createdAt: serverTimestamp(),
-    })
-    showPushNotification('🐾 Nueva reserva', `${form.name} agendó "${form.service}" para ${form.petName}`)
+  if (scheduledWalks.length === 0 || scheduledWalks.some(([date, time]) => !date || !time)) {
+    throw new Error('BOOKING_SCHEDULE_INCOMPLETE')
   }
 
-  // Save/update customer profile
-  if (auth.currentUser) {
-    await setDoc(doc(db, 'customerProfiles', auth.currentUser.uid), {
-      name: form.name,
-      phone: form.phone,
-      email: auth.currentUser.email || '',
-    }, { merge: true }).catch(() => {})
-  }
+  const validatedWalks = scheduledWalks.map(([date, time]) => ({
+    date,
+    time,
+    window: parseTimeWindow(time),
+  }))
 
-  // Increment coupon usedCount
-  if (form.coupon.trim() && couponStatus?.valid) {
-    const couponQ = query(collection(db, 'coupons'), where('code', '==', form.coupon.trim().toUpperCase()), limit(1))
-    const couponSnap = await getDocs(couponQ)
-    if (!couponSnap.empty) {
-      await updateDoc(doc(db, 'coupons', couponSnap.docs[0].id), {
-        usedCount: increment(1),
-      }).catch(() => {})
-    }
+  const [dogSnapshot, addressSnapshot, zoneSnapshot, bookingScheduleSnapshot] = await Promise.all([
+    getDoc(doc(db, 'dogs', form.petId)),
+    getDoc(doc(db, 'addresses', selectedAddressId)),
+    getDoc(doc(db, 'zones', form.zoneId)),
+    getDoc(doc(db, 'appSettings', 'bookingSchedule')),
+  ])
+  const dog = dogSnapshot.data()
+  const address = addressSnapshot.data()
+  const zone = zoneSnapshot.data()
+  if (!dogSnapshot.exists() || dog?.ownerId !== user.uid) throw new Error('BOOKING_DOG_UNAVAILABLE')
+  if (!addressSnapshot.exists() || address?.ownerId !== user.uid) throw new Error('BOOKING_ADDRESS_UNAVAILABLE')
+  if (address?.zoneId !== form.zoneId || !zoneSnapshot.exists() || zone?.active !== true) {
+    throw new Error('BOOKING_ZONE_UNAVAILABLE')
   }
+  const bookingSchedule = bookingScheduleSnapshot.exists() ? parseBookingSchedule(bookingScheduleSnapshot.data()) : null
+  if (!bookingSchedule?.active) throw new Error('BOOKING_SCHEDULE_UNAVAILABLE')
+  const requestedSlot = buildBookingSlots(bookingSchedule, form.date, Number(form.serviceDurationMinutes))
+    .find((slot) => slot.start === validatedWalks[0].window.start && slot.end === validatedWalks[0].window.end)
+  if (!requestedSlot) throw new Error('BOOKING_SLOT_UNAVAILABLE')
 
-  // Audit log
-  logAudit({
-    action: 'create',
-    entity: 'reservation',
-    entityId: orderIdRef.id,
-    after: { service: form.service, date: form.date, time: form.time, customer: form.name, pet: form.petName },
+  const orderRef = doc(collection(db, 'serviceOrders'))
+  const batch = writeBatch(db)
+  batch.set(orderRef, {
+    customerId: user.uid,
+    dogIds: [form.petId],
+    serviceId: form.serviceId,
+    serviceName: form.serviceName,
+    serviceVersion: form.serviceVersion,
+    paymentStatus: 'pending',
+    packageType: form.servicePackageType,
+    numberOfSessions: scheduledWalks.length,
+    addressId: selectedAddressId,
+    notes: form.notes,
+    status: 'pending_confirmation',
+    requestedSchedule: validatedWalks.map(({ date, time }) => ({ date, time })),
+    createdAt: serverTimestamp(),
   })
 
-  // Referral tracking
-  if (referralCode && referralCode !== form.phone) {
-    const refQ = query(collection(db, 'referrals'), where('code', '==', referralCode), where('active', '==', true))
-    const refSnap = await getDocs(refQ)
-    if (!refSnap.empty) {
-      const refDoc = refSnap.docs[0]
-      await addDoc(collection(db, 'referrals', refDoc.id, 'conversions'), {
-        refereePhone: form.phone,
-        refereeName: form.name,
-        reservationId: 'pending',
-        status: 'pending',
-        createdAt: serverTimestamp(),
-      }).catch(() => {})
-    }
+  for (const { date, window } of validatedWalks) {
+    const sessionRef = doc(collection(db, 'walkSessions'))
+    batch.set(sessionRef, {
+      orderId: orderRef.id,
+      customerId: user.uid,
+      dogIds: [form.petId],
+      addressId: selectedAddressId,
+      serviceId: form.serviceId,
+      serviceVersion: form.serviceVersion,
+      scheduledDate: date,
+      scheduledStart: window.start,
+      arrivalWindowStart: window.start,
+      arrivalWindowEnd: window.end,
+      notes: form.notes,
+      status: 'requested',
+      createdAt: serverTimestamp(),
+    })
   }
 
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank')
+  await batch.commit()
 
-  return { message }
+  const dates = scheduledWalks.map(([date]) => date).join(', ')
+  const message = `Solicitud PET ${orderRef.id}\nFecha(s): ${dates}\nSolicito contacto para confirmar.`
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+  return { message, whatsappUrl }
 }

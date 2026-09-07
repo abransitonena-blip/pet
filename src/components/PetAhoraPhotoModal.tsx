@@ -6,6 +6,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { uploadToCloudinary, getCurrentPosition } from '@/lib/cloudinary'
 import { Camera, X, Check, Loader2 } from 'lucide-react'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 interface Props {
   isOpen: boolean
@@ -44,6 +45,10 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
   }
 
   const handleSave = async () => {
+    if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
+      setError('La carga de fotos operativas está temporalmente desactivada.')
+      return
+    }
     if (!photoFile || saving) return
     setSaving(true)
     setError('')
@@ -94,7 +99,11 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
           </button>
         </div>
 
-        {photo ? (
+        {!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED ? (
+          <div className="mb-4 rounded-xl border border-border p-5 text-center text-sm text-muted">
+            Las fotos operativas privadas no están disponibles mientras no exista almacenamiento privado seguro.
+          </div>
+        ) : photo ? (
           <div className="relative mb-4 rounded-xl overflow-hidden aspect-square">
             <img src={photo} alt="Foto" className="w-full h-full object-cover" />
           </div>
@@ -113,7 +122,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
 
         {error && <p className="text-xs mb-3" style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
-        <div className="flex gap-2">
+        {FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED && <div className="flex gap-2">
           {photo && (
             <button onClick={() => { setPhoto(null); setPhotoFile(null) }} className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all" style={{ background: 'var(--glass-bg)', color: 'var(--text-muted)' }}>
               Retomar
@@ -127,7 +136,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
           >
             {saving ? <><Loader2 className="animate-spin" size={11} /> Guardando...</> : <><Check size={11} /> {photo ? 'Guardar' : 'Seleccionar foto'}</>}
           </button>
-        </div>
+        </div>}
       </motion.div>
     </div>
   )

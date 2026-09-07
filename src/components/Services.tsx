@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { Clock, Dog, Zap, Camera, Calendar } from 'lucide-react'
-import { SERVICE_CATEGORIES } from '@/lib/services'
+import { SERVICE_CATEGORIES } from '@/lib/walkServices'
 import Link from 'next/link'
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -62,7 +62,7 @@ export default function Services() {
 
                 <p className="text-sm leading-relaxed text-muted mb-3 line-clamp-2">{cat.description}</p>
 
-                <Link href="/login?redirect=/familia/nueva-reserva" className="text-sm font-medium text-primary hover:text-primary-hover transition-colors inline-flex items-center gap-1">
+                <Link href="/login?redirect=/familia/nueva-reserva" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                   Ver detalles
                 </Link>
               </motion.div>

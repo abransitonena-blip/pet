@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { User, CheckCircle2, Loader2, ArrowRight } from 'lucide-react'
-import { collection, query, where, getDocs, limit } from 'firebase/firestore'
-import { db, auth } from '@/firebase/config'
+import { useEffect } from 'react'
+import { ShieldCheck, ArrowRight } from 'lucide-react'
 
 interface Walker {
   id: string
@@ -26,122 +24,33 @@ interface StepV2WalkerProps {
 }
 
 export default function StepV2Walker({
-  form, updateForm, availableWalkers, setAvailableWalkers,
-  setSearchingWalkers, searchResult, setSearchResult,
-  onNext, onBack,
+  form, updateForm, onNext, onBack,
 }: StepV2WalkerProps) {
-  const [searching, setSearching] = useState(false)
-
-  const handleAutoSearch = useCallback(async () => {
-    setSearching(true)
-    setSearchResult(null)
-
-    try {
-      const user = auth.currentUser
-      if (!user) return
-
-      const snapshot = await getDocs(
-        query(collection(db, 'walkerProfiles'), where('status', '==', 'active'), limit(5))
-      )
-
-      const walkers = snapshot.docs.map(d => ({
-        id: d.id,
-        name: d.data().name || 'Paseador',
-        rating: d.data().rating || 0,
-        completedWalks: d.data().completedWalks || 0,
-      }))
-
-      setAvailableWalkers(walkers)
-
-      if (walkers.length > 0) {
-        const best = walkers[0]
-        setSearchResult({ id: best.id, name: best.name, reason: 'Mejor compatibilidad' })
-        updateForm({ walkerId: best.id, walkerName: best.name, autoSearch: true })
-      } else {
-        setSearchResult({ id: '', name: '', reason: 'No se encontraron paseadores disponibles' })
-      }
-    } catch {
-      setSearchResult({ id: '', name: '', reason: 'Error al buscar paseadores' })
-    } finally {
-      setSearching(false)
-      setSearchingWalkers(false)
-    }
-  }, [updateForm, setAvailableWalkers, setSearchingWalkers, setSearchResult])
-
   useEffect(() => {
-    if (form.autoSearch && availableWalkers.length === 0 && !searching) {
-      handleAutoSearch()
+    if (form.walkerId || form.walkerName || !form.autoSearch) {
+      updateForm({ walkerId: '', walkerName: '', autoSearch: true, searchCancel: false })
     }
-  }, [])
+  }, [form.autoSearch, form.walkerId, form.walkerName, updateForm])
 
   return (
     <div className="space-y-4">
       <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-        ¿Quién te acompaña?
+        Asignación del paseo
       </p>
 
-      {form.autoSearch && !searchResult && (
-        <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
-          <Loader2 size={16} className="animate-spin" style={{ color: 'var(--brand)' }} />
-          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Buscando paseador compatible...</span>
-          <button
-            onClick={() => updateForm({ autoSearch: false, searchCancel: true })}
-            className="text-xs ml-auto"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            Cancelar
-          </button>
-        </div>
-      )}
-
-      {searchResult && !searchResult.id && (
-        <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)' }}>
-          {searchResult.reason}
-        </div>
-      )}
-
-      {searchResult && searchResult.id && (
-        <div className="p-3 rounded-xl" style={{ background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={16} style={{ color: 'var(--brand)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-              {searchResult.name} — {searchResult.reason}
-            </span>
+      <div className="p-4 rounded-xl" style={{ background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}>
+        <div className="flex items-start gap-3">
+          <ShieldCheck size={20} className="shrink-0 mt-0.5" style={{ color: 'var(--brand)' }} />
+          <div>
+            <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+              El equipo PET asignará al paseador
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+              Revisaremos zona, disponibilidad y necesidades del paseo. Tu solicitud no queda asignada hasta que la confirmemos.
+            </p>
           </div>
         </div>
-      )}
-
-      {!form.autoSearch && (
-        <div className="space-y-2">
-          {availableWalkers.map(walker => (
-            <button
-              key={walker.id}
-              onClick={() => updateForm({ walkerId: walker.id, walkerName: walker.name })}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
-                form.walkerId === walker.id
-                  ? 'bg-brand-500/10 border-brand-500/30'
-                  : 'bg-white/50 border-transparent hover:bg-ink/5'
-              }`}
-              style={{ border: form.walkerId === walker.id ? '1px solid var(--brand)' : '1px solid var(--border)' }}
-            >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                style={{ background: form.walkerId === walker.id ? 'var(--brand)' : 'var(--glass-bg)' }}
-              >
-                <User size={18} className="text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{walker.name}</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  ⭐ {walker.rating} · {walker.completedWalks} paseos
-                </p>
-              </div>
-              {form.walkerId === walker.id && (
-                <CheckCircle2 size={16} className="ml-auto shrink-0" style={{ color: 'var(--brand)' }} />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+      </div>
 
       <div className="flex justify-between pt-2">
         <button onClick={onBack} className="px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
@@ -149,7 +58,6 @@ export default function StepV2Walker({
         </button>
         <button
           onClick={onNext}
-          disabled={form.autoSearch && !searchResult?.id}
           className="btn-primary inline-flex items-center gap-2"
         >
           Siguiente <ArrowRight size={14} />

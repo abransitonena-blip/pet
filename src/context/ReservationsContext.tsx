@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { db, auth } from '@/firebase/config'
 import { collection, query, orderBy, onSnapshot, limit, startAfter, getDocs, DocumentSnapshot } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
+import { dedupeById } from '@/lib/collectionUtils'
 import type { Reservation } from '@/types'
 
 interface ReservationsContextType {
@@ -65,7 +66,7 @@ export function ReservationsProvider({ children }: { children: ReactNode }) {
       )
       const snap = await getDocs(q)
       const newDocs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-      setReservations((prev) => [...prev, ...newDocs])
+      setReservations((prev) => dedupeById([...prev, ...newDocs]))
       setLastDoc(snap.docs[snap.docs.length - 1] || null)
       setHasMore(snap.docs.length === PAGE_SIZE)
     } catch {

@@ -2,20 +2,22 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, limit } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import {
   CalendarDays, Dog, History, PawPrint, Gift,
-  ArrowRight, CheckCircle2, AlertTriangle, Redo2,
+  ArrowRight, CheckCircle2, ClipboardList, AlertTriangle, Redo2,
 } from 'lucide-react'
 import PetAhoraRequestForm from '@/components/PetAhoraRequestForm'
+import { getCustomerProfile } from '@/lib/customerProfile'
 import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
 import WalletCard from '@/components/WalletCard'
 import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
+import CanonicalFamilyRequests from '@/components/family/CanonicalFamilyRequests'
 
 interface UserProfile {
   name: string
@@ -26,6 +28,7 @@ interface UserProfile {
 export default function DashboardPage() {
   const router = useRouter()
   const [reservations, setReservations] = useState<Reservation[]>([])
+  const [customerId, setCustomerId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [activePetAhoraId, setActivePetAhoraId] = useState<string | null>(null)
@@ -37,16 +40,15 @@ export default function DashboardPage() {
 
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
       if (unsubRes) { unsubRes(); unsubRes = undefined }
-      if (!user) { router.push('/login'); return }
+      if (!user) { setCustomerId(''); router.push('/login'); return }
+      setCustomerId(user.uid)
 
-      const profileSnap = await import('firebase/firestore').then(({ getDoc, doc }) =>
-        getDoc(doc(db, 'clients', user.uid))
-      )
-      if (profileSnap.exists()) {
-        setProfile(profileSnap.data() as UserProfile)
+      const profile = await getCustomerProfile(user.uid)
+      if (profile) {
+        setProfile(profile as UserProfile)
       }
 
-      const q = query(collection(db, 'reservations'), where('uid', '==', user.uid))
+      const q = query(collection(db, 'reservations'), where('uid', '==', user.uid), limit(50))
       unsubRes = onSnapshot(q, (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
         docs.sort((a, b) => {
@@ -65,8 +67,6 @@ export default function DashboardPage() {
 
   const upcoming = reservations.filter((r) => r.status === 'pending' || r.status === 'assigned')
   const completed = reservations.filter((r) => r.status === 'completed')
-  const nextWalk = upcoming[0]
-
   const greeting = (() => {
     const h = new Date().getHours()
     if (h < 12) return 'Buenos días'
@@ -101,43 +101,29 @@ export default function DashboardPage() {
           <h1 className="text-xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
             {profile?.name || 'Familia PET'} 🐾
           </h1>
-          {nextWalk ? (
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
-              <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0">
-                <Dog size={16} className="text-brand-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Tu próximo paseo</p>
-                <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-                  {nextWalk.service} · {nextWalk.petName}
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{nextWalk.date}</p>
-                <p className="text-xs font-medium" style={{ color: 'var(--brand)' }}>
-                  {nextWalk.arrivalWindowStart ? `${nextWalk.arrivalWindowStart}${nextWalk.arrivalWindowEnd ? `-${nextWalk.arrivalWindowEnd}` : ''}` : nextWalk.time}
-                </p>
-              </div>
+          <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
+            <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0">
+              <ClipboardList size={16} className="text-brand-600" />
             </div>
-          ) : (
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
-              <div className="w-10 h-10 rounded-xl bg-success-500/10 flex items-center justify-center shrink-0">
-                <CheckCircle2 size={16} className="text-success-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Todo listo para la próxima aventura
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  No tienes paseos pendientes
-                </p>
-              </div>
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                Seguimiento de solicitudes
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Consulta abajo el estado real de tus solicitudes actuales.
+              </p>
             </div>
-          )}
+          </div>
         </div>
       </motion.div>
 
+      {customerId && <CanonicalFamilyRequests customerId={customerId} />}
+
       {/* Quick Stats */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Historial anterior</p>
+        <p className="mt-1 text-xs text-muted">Estas cifras provienen de reservas legacy de solo lectura durante la transición.</p>
+      </div>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -180,8 +166,8 @@ export default function DashboardPage() {
           <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center mb-3">
             <Gift size={16} className="text-pink-400" />
           </div>
-          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{completed.length * 10}</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Puntos de lealtad</p>
+          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Consulta manual</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Lealtad promocional</p>
         </motion.div>
       </div>
 

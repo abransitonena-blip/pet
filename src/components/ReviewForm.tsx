@@ -7,6 +7,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { Star, PawPrint, Loader2, CheckCircle2, User } from 'lucide-react'
 import Link from 'next/link'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 export default function ReviewForm() {
   const [user, setUser] = useState<{ uid: string; displayName: string | null } | null>(null)
@@ -20,6 +21,7 @@ export default function ReviewForm() {
   const [error, setError] = useState("")
 
   useEffect(() => {
+    if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) return
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u ? { uid: u.uid, displayName: u.displayName } : null)
     })
@@ -28,6 +30,10 @@ export default function ReviewForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) {
+      setError('Las reseñas se habilitarán en Familia PET cuando podamos verificar el paseo.')
+      return
+    }
     if (rating === 0) return
     setSending(true)
 
@@ -63,7 +69,14 @@ export default function ReviewForm() {
       viewport={{ once: true }}
       className="glass-card p-6 sm:p-8"
     >
-      {!user ? (
+      {!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED ? (
+        <div className="text-center py-8" data-testid="public-reviews-unavailable">
+          <PawPrint className="mx-auto mb-3 text-muted" size={24} />
+          <p className="text-sm font-semibold text-ink">Las reseñas públicas están temporalmente desactivadas</p>
+          <p className="text-xs text-muted mt-2 mb-4">La futura reseña se solicitará desde Familia PET después de verificar un paseo pagado y completado.</p>
+          <Link href="/familia" className="btn-primary inline-flex min-h-11 items-center">Ir a Familia PET</Link>
+        </div>
+      ) : !user ? (
         <div className="text-center py-8">
           <User className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Inicia sesión para dejar tu reseña</p>

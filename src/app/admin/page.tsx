@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, getDocs, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { CalendarDays,
@@ -16,6 +16,7 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import EmptyState from '@/components/ui/EmptyState'
 import LoadingState from '@/components/ui/LoadingState'
 import type { Reservation } from '@/types'
+import { confirmWhatsAppShare } from '@/lib/utils'
 
 interface Stats {
   todayReservations: number
@@ -77,7 +78,7 @@ export default function AdminDashboard() {
     })
 
     // One-shot clients count (no real-time needed for a counter)
-    getDocs(query(collection(db, 'customerProfiles'))).then((snap) => {
+    getDocs(query(collection(db, 'customerProfiles'), limit(100))).then((snap) => {
       setStats((prev) => ({ ...prev, totalClients: snap.size }))
     }).catch(() => {})
 
@@ -220,14 +221,14 @@ export default function AdminDashboard() {
                     <div className="flex items-center gap-2">
                       <StatusBadge status={res.status} />
                       {res.phone && (
-                        <a
-                          href={`https://wa.me/521${res.phone}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => confirmWhatsAppShare(`521${res.phone}`, `Solicitud PET ${res.id}: solicito ponerme en contacto sobre la fecha ${res.date}.`)}
                           className="w-7 h-7 rounded-lg flex items-center justify-center text-success-400 hover:bg-success-500/10 transition-colors"
+                          aria-label="Revisar mensaje antes de abrir WhatsApp"
                         >
                           <WhatsAppIcon width={12} height={12} />
-                        </a>
+                        </button>
                       )}
                     </div>
                   </div>

@@ -4,84 +4,155 @@ import { useState, useEffect } from 'react'
 import { db } from '@/firebase/config'
 import {
   collection, query, orderBy, onSnapshot, where, limit as fsLimit, getDocs,
+  doc, runTransaction, serverTimestamp, type FirestoreError, type QueryConstraint,
 } from 'firebase/firestore'
 import type { ServiceOrder, WalkSession } from '@/types'
+import { classifyWalkerReadError, getWalkerTransition, type WalkerReadError } from '@/lib/walkerPanel'
 
 export interface ServiceOrderWithSessions extends ServiceOrder {
   sessions: WalkSession[]
 }
 
-export function useServiceOrders(opts?: { clientId?: string; status?: string; pageSize?: number }) {
+type ReadError = 'permission-denied' | 'network-error' | null
+
+function classifyReadError(error: FirestoreError): Exclude<ReadError, null> {
+  return error.code === 'permission-denied' ? 'permission-denied' : 'network-error'
+}
+
+export function useServiceOrders(opts?: { customerId?: string; status?: string; pageSize?: number }) {
   const [orders, setOrders] = useState<ServiceOrderWithSessions[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<ReadError>(null)
 
   useEffect(() => {
-    const constraints: any[] = [orderBy('createdAt', 'desc')]
-    if (opts?.clientId) constraints.push(where('clientId', '==', opts.clientId))
+    const constraints: QueryConstraint[] = [orderBy('createdAt', 'desc')]
+    if (opts?.customerId) constraints.push(where('customerId', '==', opts.customerId))
     if (opts?.status) constraints.push(where('status', '==', opts.status))
-    if (opts?.pageSize) constraints.push(fsLimit(opts.pageSize))
+    constraints.push(fsLimit(Math.min(opts?.pageSize ?? 50, 100)))
 
     const q = query(collection(db, 'serviceOrders'), ...constraints)
 
     const unsub = onSnapshot(q, async (snap) => {
-      const orderList: ServiceOrderWithSessions[] = []
-      for (const orderDoc of snap.docs) {
-        const orderData = { id: orderDoc.id, ...orderDoc.data() } as ServiceOrder
-
-        // Fetch sessions subcollection
-        const sessionsQ = query(
-          collection(db, 'serviceOrders', orderDoc.id, 'sessions'),
-          orderBy('date', 'asc'),
-        )
-        const sessionsSnap = await getDocs(sessionsQ).catch(() => null)
-        const sessions = sessionsSnap
-          ? sessionsSnap.docs.map((s) => ({ id: s.id, ...s.data() } as WalkSession))
-          : []
-
-        orderList.push({ ...orderData, sessions })
-      }
-      setOrders(orderList)
-      setLoading(false)
-    }, () => setLoading(false))
-
-    return unsub
-  }, [opts?.clientId, opts?.status, opts?.pageSize])
-
-  return { orders, loading }
-}
-
-export function useWalkerSessions(walkerId: string, walkerName: string) {
-  const [sessions, setSessions] = useState<(WalkSession & { orderId: string })[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!walkerId && !walkerName) { setLoading(false); return }
-
-    // Fetch all active orders, then filter sessions by walker
-    const q = query(collection(db, 'serviceOrders'), where('status', '==', 'active'))
-    const unsub = onSnapshot(q, async (snap) => {
-      const matched: (WalkSession & { orderId: string })[] = []
-      for (const orderDoc of snap.docs) {
-        const sessionsQ = query(
-          collection(db, 'serviceOrders', orderDoc.id, 'sessions'),
-          where('assignmentStatus', 'in', ['assigned', 'confirmed']),
-        )
-        const sessionsSnap = await getDocs(sessionsQ).catch(() => null)
-        if (sessionsSnap) {
-          for (const s of sessionsSnap.docs) {
-            const data = s.data()
-            if (data.walkerId === walkerId || data.walkerName === walkerName) {
-              matched.push({ id: s.id, orderId: orderDoc.id, ...data } as WalkSession & { orderId: string })
-            }
+      try {
+        const sessionByOrder = new Map<string, WalkSession[]>()
+        const orderIds = snap.docs.map((orderDoc) => orderDoc.id)
+        for (let index = 0; index < orderIds.length; index += 30) {
+          const ids = orderIds.slice(index, index + 30)
+          if (ids.length === 0) continue
+          const sessionConstraints: QueryConstraint[] = [
+            where('orderId', 'in', ids),
+            orderBy('scheduledDate', 'asc'),
+            fsLimit(100),
+          ]
+          if (opts?.customerId) {
+            sessionConstraints.unshift(where('customerId', '==', opts.customerId))
+          }
+          const sessionsSnap = await getDocs(query(collection(db, 'walkSessions'), ...sessionConstraints))
+          for (const sessionDoc of sessionsSnap.docs) {
+            const data = sessionDoc.data()
+            const session = {
+              id: sessionDoc.id,
+              ...data,
+              date: data.scheduledDate,
+              startTime: data.scheduledStart,
+              sessionStatus: data.status,
+            } as WalkSession
+            const current = sessionByOrder.get(data.orderId) ?? []
+            current.push(session)
+            sessionByOrder.set(data.orderId, current)
           }
         }
+        setOrders(snap.docs.map((orderDoc) => ({
+          id: orderDoc.id,
+          ...orderDoc.data(),
+          sessions: sessionByOrder.get(orderDoc.id) ?? [],
+        } as ServiceOrderWithSessions)))
+        setError(null)
+      } catch (readError) {
+        setOrders([])
+        setError(classifyReadError(readError as FirestoreError))
+      } finally {
+        setLoading(false)
       }
-      setSessions(matched.sort((a, b) => (a.date > b.date ? 1 : -1)))
+    }, (readError) => {
+      setOrders([])
+      setError(classifyReadError(readError))
       setLoading(false)
-    }, () => setLoading(false))
+    })
 
     return unsub
-  }, [walkerId, walkerName])
+  }, [opts?.customerId, opts?.status, opts?.pageSize])
 
-  return { sessions, loading }
+  return { orders, loading, error }
+}
+
+export function useWalkerSessions(walkerId: string, _walkerName = '') {
+  const [sessions, setSessions] = useState<(WalkSession & { orderId: string })[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<WalkerReadError | null>(null)
+  const [revision, setRevision] = useState(0)
+
+  useEffect(() => {
+    if (!walkerId) {
+      setSessions([])
+      setError(null)
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    const q = query(
+      collection(db, 'walkSessions'),
+      where('walkerId', '==', walkerId),
+      orderBy('scheduledDate', 'asc'),
+      fsLimit(100),
+    )
+    const unsub = onSnapshot(q, (snap) => {
+      setSessions(snap.docs.map((sessionDoc) => {
+        const data = sessionDoc.data()
+        return {
+          id: sessionDoc.id,
+          ...data,
+          date: data.scheduledDate,
+          startTime: data.scheduledStart,
+          sessionStatus: data.status,
+        } as WalkSession & { orderId: string }
+      }))
+      setError(null)
+      setLoading(false)
+    }, (readError) => {
+      setError(classifyWalkerReadError(readError))
+      setLoading(false)
+    })
+
+    return unsub
+  }, [walkerId, revision])
+
+  return { sessions, loading, error, retry: () => setRevision((value) => value + 1) }
+}
+
+export async function advanceWalkerSession(session: WalkSession): Promise<void> {
+  const status = session.status ?? session.sessionStatus
+  const transition = getWalkerTransition(status)
+  if (!transition) throw new Error('walker-transition-not-allowed')
+
+  const sessionRef = doc(db, 'walkSessions', session.id)
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(sessionRef)
+    if (!snapshot.exists()) throw new Error('walker-session-not-found')
+
+    const current = snapshot.data()
+    if (current.status !== transition.from || current.walkerId !== session.walkerId) {
+      throw new Error('walker-transition-conflict')
+    }
+
+    const timestamp = serverTimestamp()
+    transaction.update(sessionRef, {
+      status: transition.to,
+      [transition.timestampField]: timestamp,
+      updatedAt: timestamp,
+    })
+  })
 }

@@ -18,8 +18,7 @@ export default function WalletCard({ compact = false }: { compact?: boolean }) {
 
   if (!wallet) return null
 
-  const formatCurrency = (amount: number) =>
-    `$${amount.toLocaleString('es-MX')}`
+  const formatCredits = (amount: number) => `${amount.toLocaleString('es-MX')} créditos`
 
   if (compact) {
     return (
@@ -29,8 +28,8 @@ export default function WalletCard({ compact = false }: { compact?: boolean }) {
             <Wallet size={18} />
           </div>
           <div>
-            <p className="text-xs text-muted">Saldo disponible</p>
-            <p className="text-lg font-bold text-ink">{formatCurrency(wallet.balance)}</p>
+            <p className="text-xs text-muted">Créditos PET</p>
+            <p className="text-lg font-bold text-ink">{formatCredits(wallet.balance)}</p>
           </div>
         </div>
         <ArrowRight size={16} className="text-muted group-hover:text-primary transition-colors" />
@@ -46,8 +45,8 @@ export default function WalletCard({ compact = false }: { compact?: boolean }) {
             <Wallet size={24} />
           </div>
           <div>
-            <p className="text-sm text-muted">Saldo disponible</p>
-            <p className="text-2xl font-bold text-ink">{formatCurrency(wallet.balance)}</p>
+            <p className="text-sm text-muted">Créditos PET disponibles</p>
+            <p className="text-2xl font-bold text-ink">{formatCredits(wallet.balance)}</p>
           </div>
         </div>
       </div>
@@ -56,15 +55,15 @@ export default function WalletCard({ compact = false }: { compact?: boolean }) {
         <div className="p-3 rounded-xl bg-success/5 flex items-center gap-2">
           <TrendingUp size={14} className="text-success shrink-0" />
           <div>
-            <p className="text-2xs text-muted">Total cargado</p>
-            <p className="text-sm font-semibold text-ink">{formatCurrency(wallet.totalTopUp)}</p>
+            <p className="text-2xs text-muted">Créditos registrados</p>
+            <p className="text-sm font-semibold text-ink">{formatCredits(wallet.totalTopUp)}</p>
           </div>
         </div>
         <div className="p-3 rounded-xl bg-warning/5 flex items-center gap-2">
           <TrendingDown size={14} className="text-warning shrink-0" />
           <div>
-            <p className="text-2xs text-muted">Total usado</p>
-            <p className="text-sm font-semibold text-ink">{formatCurrency(wallet.totalDeducted)}</p>
+            <p className="text-2xs text-muted">Créditos utilizados</p>
+            <p className="text-sm font-semibold text-ink">{formatCredits(wallet.totalDeducted)}</p>
           </div>
         </div>
       </div>

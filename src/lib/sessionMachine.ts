@@ -3,22 +3,12 @@
  *
  * PRD section 12 mandates: "Máquina de estados explícita en el código, no solo documentada."
  *
- * States:
- *   pending → assigned → walker_confirmed → on_the_way → arrived → in_progress → completed
- *   Any state → cancelled
- *   Any state → no_show (only from assigned/on_the_way/arrived)
+ * Canonical states are shared with Firestore-facing code via domainStates.ts.
  */
 
-export type SessionStatus =
-  | 'pending'
-  | 'assigned'
-  | 'walker_confirmed'
-  | 'on_the_way'
-  | 'arrived'
-  | 'in_progress'
-  | 'completed'
-  | 'cancelled'
-  | 'no_show'
+import type { WalkSessionStatus } from '@/lib/domainStates'
+
+export type SessionStatus = WalkSessionStatus
 
 export type AssignmentStatus =
   | 'unassigned'
@@ -29,9 +19,10 @@ export type AssignmentStatus =
 
 /** Valid transitions: from state → set of valid target states */
 const TRANSITIONS: Record<SessionStatus, SessionStatus[]> = {
-  pending:          ['assigned', 'cancelled'],
-  assigned:         ['walker_confirmed', 'cancelled', 'no_show'],
-  walker_confirmed: ['on_the_way', 'cancelled', 'no_show'],
+  requested:        ['pending_assignment', 'cancelled'],
+  pending_assignment: ['assigned', 'cancelled'],
+  assigned:         ['confirmed', 'cancelled', 'no_show'],
+  confirmed:        ['on_the_way', 'cancelled', 'no_show'],
   on_the_way:       ['arrived', 'cancelled', 'no_show'],
   arrived:          ['in_progress', 'cancelled'],
   in_progress:      ['completed', 'cancelled'],
@@ -53,10 +44,13 @@ export function transition(from: SessionStatus, to: SessionStatus): SessionStatu
 }
 
 /** Human-readable labels for session statuses */
-export const STATUS_LABELS: Record<SessionStatus, string> = {
-  pending:          'Pendiente',
+export const STATUS_LABELS: Record<string, string> = {
+  pending:          'Pendiente (legacy)',
+  walker_confirmed: 'Paseador confirmado (legacy)',
+  requested:        'Solicitado',
+  pending_assignment: 'Pendiente de asignación',
   assigned:         'Asignado',
-  walker_confirmed: 'Paseador confirmado',
+  confirmed:        'Paseador confirmado',
   on_the_way:       'En camino',
   arrived:          'Llegó',
   in_progress:      'Paseando',
@@ -67,8 +61,9 @@ export const STATUS_LABELS: Record<SessionStatus, string> = {
 
 /** Legacy status aliases from reservations collection → new SessionStatus */
 export const LEGACY_STATUS_MAP: Record<string, SessionStatus> = {
-  pending:   'pending',
+  pending:   'requested',
   assigned:  'assigned',
+  walker_confirmed: 'confirmed',
   en_camino: 'on_the_way',
   paseando:  'in_progress',
   completed: 'completed',
@@ -77,10 +72,13 @@ export const LEGACY_STATUS_MAP: Record<string, SessionStatus> = {
 }
 
 /** Status badge color class hints */
-export const STATUS_COLORS: Record<SessionStatus, { bg: string; text: string }> = {
+export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   pending:          { bg: 'bg-yellow-500/15', text: 'text-yellow-800' },
-  assigned:         { bg: 'bg-brand-500/15', text: 'text-brand-600' },
   walker_confirmed: { bg: 'bg-blue-500/15', text: 'text-blue-700' },
+  requested:        { bg: 'bg-yellow-500/15', text: 'text-yellow-800' },
+  pending_assignment: { bg: 'bg-yellow-500/15', text: 'text-yellow-800' },
+  assigned:         { bg: 'bg-brand-500/15', text: 'text-brand-600' },
+  confirmed:        { bg: 'bg-blue-500/15', text: 'text-blue-700' },
   on_the_way:       { bg: 'bg-blue-500/10', text: 'text-blue-700' },
   arrived:          { bg: 'bg-purple-500/15', text: 'text-purple-700' },
   in_progress:      { bg: 'bg-success-500/20', text: 'text-success-600' },

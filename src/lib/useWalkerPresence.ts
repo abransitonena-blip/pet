@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import type { PresenceStatus } from '@/types'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 const HEARTBEAT_INTERVAL_MS = 15000
 
@@ -24,7 +25,7 @@ export function useWalkerPresence({ walkerId, walkerName, enabled = true }: UseW
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const sendHeartbeat = useCallback(async (status: PresenceStatus, pos?: GeolocationPosition | null) => {
-    if (!walkerId) return
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED || !walkerId) return
     try {
       await setDoc(doc(db, 'walkerPresence', walkerId), {
         walkerId,
@@ -35,13 +36,24 @@ export function useWalkerPresence({ walkerId, walkerName, enabled = true }: UseW
         lng: pos?.lng ?? null,
         batteryLevel: null,
       }, { merge: true })
-    } catch {
-      // silently fail — presence is best-effort
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[walker-presence] No se pudo actualizar la presencia.', {
+          code: error && typeof error === 'object' && 'code' in error
+            ? String((error as { code?: unknown }).code)
+            : 'unknown',
+        })
+      }
     }
   }, [walkerId, walkerName])
 
   const startHeartbeat = useCallback(async () => {
-    if (!enabled || !walkerId) return
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED || !enabled || !walkerId) return
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
 
     statusRef.current = 'online'
 
@@ -74,7 +86,7 @@ export function useWalkerPresence({ walkerId, walkerName, enabled = true }: UseW
   }, [enabled, walkerId, sendHeartbeat])
 
   useEffect(() => {
-    if (!enabled || !walkerId) return
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED || !enabled || !walkerId) return
 
     startHeartbeat()
 
@@ -88,7 +100,7 @@ export function useWalkerPresence({ walkerId, walkerName, enabled = true }: UseW
     document.addEventListener('visibilitychange', handleVisibility)
 
     const handleBeforeUnload = () => {
-      navigator.sendBeacon?.(
+      if (FEATURE_FLAGS.PET_AHORA_ENABLED) navigator.sendBeacon?.(
         `/api/presence-offline?walkerId=${walkerId}`
       )
     }

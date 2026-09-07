@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-30",
+  "generatedAt": "2026-09-01",
   "owner": "PET Ap",
   "contact": "ap9871888@gmail.com",
   "assets": [
@@ -28,9 +28,29 @@
       "authorized": true
     },
     {
+      "path": "/brand/pet-ap-dog-logo.png",
+      "type": "image/png",
+      "purpose": "Logo principal de PET Ap en interfaz, favicon y PWA",
+      "origin": "owner-provided",
+      "license": "authorized-by-owner-for-PET-Ap",
+      "authorized": true,
+      "sourceSha256": "dada755ff382c57e113f5a06489204990df7ebf530ff9451f8e6e99c61b8b594",
+      "assetSha256": "dada755ff382c57e113f5a06489204990df7ebf530ff9451f8e6e99c61b8b594"
+    },
+    {
+      "path": "/brand/pet-ap-ticket-dog.png",
+      "type": "image/png",
+      "purpose": "Logo monocromático para vista térmica y raster ESC/POS de tickets internos",
+      "origin": "owner-provided",
+      "license": "authorized-by-owner-for-PET-Ap",
+      "authorized": true,
+      "sourceSha256": "dada755ff382c57e113f5a06489204990df7ebf530ff9451f8e6e99c61b8b594",
+      "assetSha256": "5db1eb147d03efa1219fa0ffd226efd002e94355b9bb636f0ce1a13c4e3ba52b"
+    },
+    {
       "path": "/sw.js",
       "type": "text/javascript",
-      "purpose": "Service worker (offline cache)",
+      "purpose": "Actualización controlada de la aplicación y caché exclusiva de iconos locales",
       "origin": "in-house",
       "license": "proprietary-PET-Ap",
       "authorized": true
@@ -38,10 +58,11 @@
     {
       "path": "/firebase-messaging-sw.js",
       "type": "text/javascript",
-      "purpose": "Firebase messaging service worker",
-      "origin": "Firebase/Google",
-      "license": "Apache-2.0",
-      "authorized": true
+      "purpose": "Legacy disabled placeholder; not registered",
+      "origin": "in-house containment placeholder",
+      "license": "proprietary-PET-Ap",
+      "authorized": false,
+      "status": "disabled-legacy"
     },
     {
       "path": "/robots.txt",
@@ -68,16 +89,16 @@
       "notes": "Única librería de íconos en uso. Ver THIRD_PARTY_NOTICES.md"
     },
     {
-      "source": "gallery-images (Firestore)",
+      "source": "gallery-images (Firestore; explicit public consent only)",
       "type": "photographs",
       "license": "consentimiento por propietario",
-      "notes": "Cada foto requiere autorización previa. Ver ASSET_LICENSES.md"
+      "notes": "Requiere publicationStatus=published, publicGalleryAllowed=true, consentVerified=true, consentRecordedAt válido, usageRights=public-gallery y no estar revocado ni pendiente de eliminación. El marcador no sustituye la evidencia. Ver ASSET_LICENSES.md"
     },
     {
-      "source": "Google Fonts (Inter, JetBrains Mono)",
+      "source": "Manrope e Inter mediante next/font",
       "type": "webfont",
       "license": "OFL-1.1",
-      "notes": "OFL permite uso sin restricción comercial"
+      "notes": "SIL OFL 1.1; servidas desde el build, sin stylesheet remoto en runtime"
     }
   ],
   "prohibited": [

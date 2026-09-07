@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { db, auth } from '@/firebase/config'
 import {
   collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
+  limit,
 } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import {
@@ -34,22 +35,27 @@ const EMPTY_FORM = {
   contactPhone: '',
   pickupInstructions: '',
   deliveryInstructions: '',
+  zoneId: '',
 }
 
 export default function DireccionesPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get('returnTo') === '/familia/nueva-reserva' ? '/familia/nueva-reserva' : null
   const [addresses, setAddresses] = useState<Address[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Address | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [zones, setZones] = useState<Array<{ id: string; name: string }>>([])
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (!user) { router.push('/login'); return }
-      const q = query(collection(db, 'addresses'), where('ownerId', '==', user.uid))
+      const q = query(collection(db, 'addresses'), where('ownerId', '==', user.uid), limit(25))
       const unsub = onSnapshot(q, (snap) => {
         setAddresses(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Address)))
         setLoading(false)
@@ -58,6 +64,13 @@ export default function DireccionesPage() {
     })
     return unsubAuth
   }, [router])
+
+  useEffect(() => {
+    const zonesQuery = query(collection(db, 'zones'), where('active', '==', true), limit(100))
+    return onSnapshot(zonesQuery, (snapshot) => {
+      setZones(snapshot.docs.map((item) => ({ id: item.id, name: String(item.data().name || item.id) })))
+    }, () => setSaveError('No pudimos consultar las zonas disponibles.'))
+  }, [])
 
   const openCreate = () => {
     setEditing(null)
@@ -82,15 +95,20 @@ export default function DireccionesPage() {
       contactPhone: addr.contactPhone || '',
       pickupInstructions: addr.pickupInstructions || '',
       deliveryInstructions: addr.deliveryInstructions || '',
+      zoneId: addr.zoneId || '',
     })
     setShowForm(true)
   }
 
   const handleSave = async () => {
-    if (!form.street.trim() || !form.colony.trim()) return
+    if (!form.street.trim() || !form.colony.trim() || !form.city.trim() || !form.zoneId) {
+      setSaveError('Completa calle, colonia, ciudad y selecciona una zona disponible.')
+      return
+    }
     const user = auth.currentUser
     if (!user) return
     setSaving(true)
+    setSaveError('')
     try {
       const data = {
         ownerId: user.uid,
@@ -110,7 +128,7 @@ export default function DireccionesPage() {
         deliveryInstructions: form.deliveryInstructions.trim(),
         lat: 0,
         lng: 0,
-        zoneId: '',
+        zoneId: form.zoneId,
         isDefault: addresses.length === 0,
       }
       if (editing) {
@@ -121,8 +139,12 @@ export default function DireccionesPage() {
       setShowForm(false)
       setEditing(null)
       setForm(EMPTY_FORM)
+      if (returnTo) router.push(returnTo)
     } catch (err) {
-      console.error('Error saving address:', err)
+      const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: unknown }).code) : ''
+      setSaveError(code.includes('permission-denied')
+        ? 'Tu sesión no tiene permiso para guardar esta dirección.'
+        : code.includes('unavailable') ? 'No pudimos conectar. Intenta nuevamente.' : 'No pudimos guardar la dirección.')
     }
     setSaving(false)
   }
@@ -206,14 +228,14 @@ export default function DireccionesPage() {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {!addr.isDefault && (
-                    <button onClick={() => setDefault(addr.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-600" title="Predeterminada">
+                    <button onClick={() => setDefault(addr.id)} className="h-11 w-11 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-600" title="Marcar como predeterminada" aria-label="Marcar como predeterminada">
                       <Star size={11} />
                     </button>
                   )}
-                  <button onClick={() => openEdit(addr)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-blue-500/10 text-blue-400" title="Editar">
+                  <button onClick={() => openEdit(addr)} className="h-11 w-11 rounded-lg flex items-center justify-center transition-colors hover:bg-blue-500/10 text-blue-400" title="Editar" aria-label="Editar dirección">
                     <Pencil size={12} />
                   </button>
-                  <button onClick={() => setConfirmDelete(addr.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400" title="Eliminar">
+                  <button onClick={() => setConfirmDelete(addr.id)} className="h-11 w-11 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400" title="Eliminar" aria-label="Eliminar dirección">
                     <Trash2 size={11} />
                   </button>
                 </div>
@@ -247,9 +269,18 @@ export default function DireccionesPage() {
                 <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                   {editing ? 'Editar dirección' : 'Nueva dirección'}
                 </h2>
-                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+                <button onClick={() => setShowForm(false)} className="h-11 w-11 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }} aria-label="Cerrar formulario">
                   <X size={14} />
                 </button>
+              </div>
+
+              <div>
+                <label htmlFor="address-zone" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Zona disponible *</label>
+                <select id="address-zone" value={form.zoneId} onChange={(event) => setForm({ ...form, zoneId: event.target.value })} className="input-field min-h-11 w-full" required>
+                  <option value="">Selecciona una zona</option>
+                  {zones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}
+                </select>
+                {zones.length === 0 && <p className="mt-1 text-xs text-warning">Aún no hay zonas activas disponibles. Contacta a PET Ap para confirmar cobertura.</p>}
               </div>
 
               {/* Alias */}
@@ -326,7 +357,7 @@ export default function DireccionesPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ciudad</label>
+                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ciudad *</label>
                   <input
                     type="text"
                     value={form.city}
@@ -434,14 +465,15 @@ export default function DireccionesPage() {
               </div>
 
               {/* Actions */}
+              {saveError && <p className="rounded-xl bg-danger/10 p-3 text-sm text-danger" role="alert">{saveError}</p>}
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                <button onClick={() => setShowForm(false)} className="min-h-11 flex-1 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                   Cancelar
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving || !form.street.trim() || !form.colony.trim()}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-primary to-amber-600 text-white hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  disabled={saving || !form.street.trim() || !form.colony.trim() || !form.city.trim() || !form.zoneId}
+                  className="min-h-11 flex-1 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary-hover transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {saving ? <><Loader2 className="animate-spin" size={12} /> Guardando...</> : <><Check size={12} /> {editing ? 'Actualizar' : 'Guardar'}</>}
                 </button>

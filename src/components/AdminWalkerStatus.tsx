@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot } from 'firebase/firestore'
+import { collection, onSnapshot, query, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { Footprints, Wifi, WifiOff, MapPin, Clock } from 'lucide-react'
@@ -24,14 +24,14 @@ export default function AdminWalkerStatus() {
 
   useEffect(() => {
     // Load zone names for display
-    const unsubZones = onSnapshot(collection(db, 'zones'), (snap) => {
+    const unsubZones = onSnapshot(query(collection(db, 'zones'), limit(100)), (snap) => {
       const names: Record<string, string> = {}
       snap.docs.forEach((d) => { names[d.id] = d.data().name || d.id })
       setZoneNames(names)
     })
 
     // Listen to walkerPresence for online/offline status
-    const unsub = onSnapshot(collection(db, 'walkerPresence'), (snap) => {
+    const unsub = onSnapshot(query(collection(db, 'walkerPresence'), limit(100)), (snap) => {
       const now = Date.now() / 1000
       const list: OnlineWalker[] = []
       snap.docs.forEach((d) => {

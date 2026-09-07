@@ -9,6 +9,8 @@ import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import { brand } from '@/lib/brand'
 import { useToast } from '@/context/ToastContext'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { confirmWhatsAppShare } from '@/lib/utils'
 
 interface Referral {
   id: string
@@ -50,6 +52,10 @@ export default function AdminReferidosPage() {
   }, [referrals])
 
   const handleAdd = async () => {
+    if (!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED) {
+      toast('La automatización de referidos está desactivada. Registra cualquier revisión mediante el proceso manual seguro.', 'error')
+      return
+    }
     if (!newRef.referrerName.trim() || !newRef.referrerPhone.trim() || !newRef.refereeName.trim()) return
     setSaving(true)
     try {
@@ -67,6 +73,10 @@ export default function AdminReferidosPage() {
   }
 
   const handleDelete = async (id: string) => {
+    if (!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED) {
+      toast('Las mutaciones automáticas de referidos están desactivadas.', 'error')
+      return
+    }
     try {
       await deleteDoc(doc(db, 'referrals', id))
       toast('Referido eliminado')
@@ -74,6 +84,10 @@ export default function AdminReferidosPage() {
   }
 
   const handleStatus = async (id: string, status: Referral['status']) => {
+    if (!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED) {
+      toast('Las recompensas automáticas están desactivadas y requieren revisión manual.', 'error')
+      return
+    }
     try {
       await import('firebase/firestore').then(({ updateDoc, doc: d }) =>
         updateDoc(d(db, 'referrals', id), { status })
@@ -89,10 +103,10 @@ export default function AdminReferidosPage() {
     setTimeout(() => setCopied(''), 2000)
   }
 
-  const shareWhatsApp = (name: string, phone: string) => {
+  const shareWhatsApp = (_name: string, phone: string) => {
     const link = `${window.location.origin}?ref=${phone.replace(/\D/g, '')}`
-    const msg = `🐾 ¡Te recomiendo ${brand.name}! Paseos personalizados con fotos y reporte. Agenda aquí: ${link}`
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+    const msg = `🐾 Te recomiendo ${brand.name} para solicitar paseos caninos programados. Conoce el servicio aquí: ${link}`
+    confirmWhatsAppShare('', msg)
   }
 
   const STATUS_STYLES: Record<string, string> = {

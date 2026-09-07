@@ -6,6 +6,7 @@ import { db } from '@/firebase/config'
 import {
   doc, updateDoc,
   deleteDoc, serverTimestamp, where, getDocs, collection, query as fsQuery, orderBy as fsOrderBy,
+  limit as fsLimit,
 } from 'firebase/firestore'
 import { Search, Dog, Pencil, Trash2,
   Camera, Download, Loader2, X,
@@ -25,6 +26,9 @@ import WalkSessionModal from '@/components/WalkSessionModal'
 import { logChange } from '@/lib/audit'
 import type { Reservation } from '@/types'
 import { useServiceOrders } from '@/lib/useServiceOrders'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { confirmWhatsAppShare } from '@/lib/utils'
+import CanonicalDispatchPanel from '@/components/admin/CanonicalDispatchPanel'
 
 type StatusFilter = 'all' | 'pending' | 'assigned' | 'on_the_way' | 'in_progress' | 'completed' | 'cancelled'
 
@@ -42,7 +46,7 @@ export default function AdminReservas() {
   const [walkModal, setWalkModal] = useState<{ reservation: Reservation; mode: 'check_in' | 'check_out' } | null>(null)
   const [walkerFilter, setWalkerFilter] = useState('')
   const [autoAssigning, setAutoAssigning] = useState(false)
-  const [viewTab, setViewTab] = useState<'reservations' | 'orders'>('reservations')
+  const [viewTab, setViewTab] = useState<'canonical' | 'reservations' | 'orders'>('canonical')
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const { toast } = useToast()
   const { config } = useConfig()
@@ -86,6 +90,10 @@ export default function AdminReservas() {
   }, [reservations])
 
   const handlePaymentToggle = async (id: string, current: 'pending' | 'paid' | undefined) => {
+    if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) {
+      toast('El historial legacy es de solo lectura. Actualiza la orden canónica.', 'error')
+      return
+    }
     const newStatus = current === 'paid' ? 'pending' : 'paid'
     try {
       logChange('payment_toggle', id, { from: current, to: newStatus })
@@ -96,6 +104,11 @@ export default function AdminReservas() {
 
   const handleDelete = async () => {
     if (!confirmDelete) return
+    if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) {
+      setConfirmDelete(null)
+      toast('Las reservas legacy no se eliminan desde el navegador.', 'error')
+      return
+    }
     try {
       logChange('delete', confirmDelete, { col: 'reservations' })
       await deleteDoc(doc(db, 'reservations', confirmDelete))
@@ -106,11 +119,16 @@ export default function AdminReservas() {
 
   const openWhatsApp = (phone: string, name: string) => {
     const cleaned = phone.replace(/\D/g, '')
-    window.open(`https://wa.me/52${cleaned}?text=Hola ${encodeURIComponent(name)}, soy de PET Ap 🐾`, '_blank')
+    confirmWhatsAppShare(`52${cleaned}`, `Hola ${name}, soy de PET Ap. Solicito contacto sobre tu servicio.`)
   }
 
   const viewHistory = async (phone: string) => {
-    const q = fsQuery(collection(db, 'reservations'), where('phone', '==', phone), fsOrderBy('createdAt', 'desc'))
+    const q = fsQuery(
+      collection(db, 'reservations'),
+      where('phone', '==', phone),
+      fsOrderBy('createdAt', 'desc'),
+      fsLimit(100),
+    )
     const snap = await getDocs(q)
     const history = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
     setHistoryReservations(history as Reservation[])
@@ -135,6 +153,10 @@ export default function AdminReservas() {
   }
 
   const autoAssign = async () => {
+    if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) {
+      toast('La asignación legacy está desactivada. Usa walkSessions.', 'error')
+      return
+    }
     setAutoAssigning(true)
     try {
       const today = new Date().toISOString().split('T')[0]
@@ -147,7 +169,7 @@ export default function AdminReservas() {
       }
 
       // Fetch walkerProfiles from Firestore (rich data with zones, schedule, status)
-      const walkerProfilesSnap = await getDocs(collection(db, 'walkerProfiles'))
+      const walkerProfilesSnap = await getDocs(fsQuery(collection(db, 'walkerProfiles'), fsLimit(100)))
       const walkerProfiles = walkerProfilesSnap.docs
         .map((d) => ({ id: d.id, ...d.data() } as Record<string, unknown>))
         .filter((w) => w.status === 'active')
@@ -272,11 +294,13 @@ export default function AdminReservas() {
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
-        title="Gestión de Reservas"
-        description={`${stats.total} reservas · ${stats.pending} pendientes · ${stats.today} hoy`}
-        actions={
+        title="Operación de paseos"
+        description={viewTab === 'canonical'
+          ? 'Revisión y asignación por UID de solicitudes canónicas'
+          : `${stats.total} reservas legacy · ${stats.pending} pendientes · ${stats.today} hoy`}
+        actions={viewTab === 'reservations' ? (
           <>
-            <button onClick={autoAssign} disabled={autoAssigning || stats.pending === 0} className="btn-secondary !text-xs flex items-center gap-1.5 disabled:opacity-40">
+            <button onClick={autoAssign} disabled={autoAssigning || stats.pending === 0 || !FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className="btn-secondary !text-xs flex items-center gap-1.5 disabled:opacity-40">
               {autoAssigning ? <Loader2 className="animate-spin" size={12} /> : <Sparkles size={12} />}
               Auto-asignar
             </button>
@@ -284,10 +308,11 @@ export default function AdminReservas() {
               <Download size={12} /> Exportar
             </button>
           </>
-        }
+        ) : undefined}
       />
 
       {/* Stats cards */}
+      {viewTab === 'reservations' && <>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Total', value: stats.total, color: '#D97706' },
@@ -339,16 +364,25 @@ export default function AdminReservas() {
           title="Hasta"
         />
       </div>
+      </>}
 
       {/* View tabs */}
       <div className="flex gap-2">
+        <button
+          onClick={() => setViewTab('canonical')}
+          className={`min-h-11 rounded-xl px-4 text-xs font-medium transition-all ${
+            viewTab === 'canonical' ? 'bg-brand-500/15 text-brand-600 border border-brand-500/30' : 'border border-ink/15 text-muted hover:text-ink/70'
+          }`}
+        >
+          Solicitudes canónicas
+        </button>
         <button
           onClick={() => setViewTab('reservations')}
           className={`text-xs px-4 py-2 rounded-lg font-medium transition-all ${
             viewTab === 'reservations' ? 'bg-brand-500/15 text-brand-600 border border-brand-500/30' : 'border border-ink/15 text-muted hover:text-ink/70'
           }`}
         >
-          🐾 Reservas
+          🐾 Legacy · solo lectura
         </button>
         <button
           onClick={() => setViewTab('orders')}
@@ -359,6 +393,14 @@ export default function AdminReservas() {
           <Package size={11} /> Paquetes {orders.length > 0 && <span className="bg-brand-500/20 text-brand-600 px-1.5 py-0.5 rounded-full text-2xs">{orders.length}</span>}
         </button>
       </div>
+
+      {viewTab === 'canonical' && <CanonicalDispatchPanel />}
+
+      {viewTab === 'reservations' && !FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED && (
+        <p className="rounded-xl bg-warning/10 px-4 py-3 text-sm text-amber-800" role="status">
+          `reservations` se conserva únicamente para consulta histórica. Las asignaciones nuevas se realizan en Solicitudes canónicas.
+        </p>
+      )}
 
       {/* Status filter tabs (only for reservations view) */}
       {viewTab === 'reservations' && (
@@ -424,9 +466,10 @@ export default function AdminReservas() {
                     <span>⏰ {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>
                     <button
                       onClick={() => handlePaymentToggle(res.id, res.paymentStatus)}
+                      disabled={!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED}
                       className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-all ${
                         res.paymentStatus === 'paid' ? 'bg-success-500/15 text-success-600' : 'bg-brand-500/15 text-brand-600'
-                      }`}
+                      } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
                       {res.paymentStatus === 'paid' ? '✓ Pagado' : '⏳ Pendiente'}
                     </button>
@@ -441,30 +484,30 @@ export default function AdminReservas() {
                   <button onClick={() => openWhatsApp(res.phone, res.name)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="WhatsApp">
                     <WhatsAppIcon width={13} height={13} />
                   </button>
-                  <button onClick={() => setEditingReservation(res)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-blue-500/10 text-blue-400" title="Editar">
+                  <button onClick={() => setEditingReservation(res)} disabled={!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-blue-500/10 text-blue-400 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? 'Editar' : 'Legacy de solo lectura'}>
                     <Pencil size={12} />
                   </button>
                   {(res.status === 'pending' || res.status === 'assigned') && (
-                    <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'on_the_way' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
+                    <button onClick={async () => { if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) { toast('El historial legacy es de solo lectura.', 'error'); return } try { await updateDoc(doc(db, 'reservations', res.id), { status: 'on_the_way' }); toast('Estado actualizado') } catch { toast('Error al actualizar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400" title="En camino">
                       <ArrowRight size={12} />
                     </button>
                   )}
                   {res.status === 'on_the_way' && (
-                    <button onClick={() => setWalkModal({ reservation: res, mode: 'check_in' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Iniciar paseo (check-in)">
+                    <button onClick={() => setWalkModal({ reservation: res, mode: 'check_in' })} disabled={!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? 'Iniciar paseo (check-in)' : 'Legacy de solo lectura'}>
                       <Camera size={12} />
                     </button>
                   )}
                   {res.status === 'in_progress' && (
-                    <button onClick={() => setWalkModal({ reservation: res, mode: 'check_out' })} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400" title="Terminar paseo (check-out)">
+                    <button onClick={() => setWalkModal({ reservation: res, mode: 'check_out' })} disabled={!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? 'Terminar paseo (check-out)' : 'Legacy de solo lectura'}>
                       <PersonStanding size={12} />
                     </button>
                   )}
                   {res.status === 'completed' && (
-                    <button onClick={async () => { try { await updateDoc(doc(db, 'reservations', res.id), { status: 'pending' }); toast('Estado restaurado') } catch { toast('Error al restaurar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Restaurar">
+                    <button onClick={async () => { if (!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) { toast('El historial legacy es de solo lectura.', 'error'); return } try { await updateDoc(doc(db, 'reservations', res.id), { status: 'pending' }); toast('Estado restaurado') } catch { toast('Error al restaurar estado', 'error') } }} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-brand-500/10 text-brand-400" title="Restaurar">
                       <Undo2 size={11} />
                     </button>
                   )}
-                  <button onClick={() => setConfirmDelete(res.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400" title="Eliminar">
+                  <button onClick={() => setConfirmDelete(res.id)} disabled={!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 text-danger-400 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? 'Eliminar' : 'Legacy de solo lectura'}>
                     <Trash2 size={11} />
                   </button>
                 </div>
@@ -477,6 +520,9 @@ export default function AdminReservas() {
       {/* ─── SERVICE ORDERS TAB ─── */}
       {viewTab === 'orders' && (
         <div className="space-y-3">
+          <div className="rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-amber-900" role="note">
+            Vista transitoria de órdenes anteriores, disponible únicamente para consulta. La revisión y asignación nueva se realiza en Solicitudes canónicas.
+          </div>
           {orders.length === 0 ? (
             <EmptyState icon={<Package size={24} />} title="No hay paquetes semanales activos" />
           ) : (
@@ -493,8 +539,8 @@ export default function AdminReservas() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{order.customerName}</span>
-                        <Badge variant={order.status === 'active' ? 'success' : order.status === 'completed' ? 'default' : 'danger'}>
-                          {order.status === 'active' ? 'Activo' : order.status === 'completed' ? 'Completado' : order.status}
+                        <Badge variant={order.status === 'confirmed' ? 'success' : order.status === 'completed' ? 'default' : 'danger'}>
+                          {order.status === 'confirmed' ? 'Confirmado' : order.status === 'completed' ? 'Completado' : order.status}
                         </Badge>
                         <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-600 font-medium">
                           {completedSessions.length}/{scheduledSessions.length} sesiones

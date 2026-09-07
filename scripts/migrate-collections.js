@@ -3,499 +3,256 @@
 
 const fs = require('fs')
 const path = require('path')
-const { Command } = require('commander')
-const { getFirestore, collection, getDocs, writeBatch, doc, query, limit, getCountFromServer } = require('firebase/firestore')
-const { initializeApp, getApps } = require('firebase/app')
-
-const program = new Command()
-
-program
-  .name('migrate-collections')
-  .description('Safe Firestore collection migration with audit, backup, dry-run, verify, and gradual migration')
-  .requiredOption('--backups-dir <dir>', 'Directorio para guardar backups')
-  .requiredOption('--renames <json>', 'JSON con array de {from, to}')
-  .option('--dry-run', 'Simular sin modificar datos', false)
-  .option('--project <id>', 'ID del proyecto Firebase (para logs)', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'unknown')
-  .option('--limit <n>', 'Límite de documentos por colección (0 = sin límite)', '0')
-  .option('--resume-from <collection>', 'Reanudar desde esta colección (omitir anteriores)')
-  .option('--verify-only', 'Solo verificar, no migrar', false)
-  .option('--yes', 'Confirmar operación destructiva sin prompt', false)
-  .option('--dual-read', 'Habilitar lectura dual durante migración', false)
-  .option('--feature-flag <name>', 'Nombre del feature flag para modelo nuevo', 'newDataModel')
-  .parse()
-
-const options = program.opts()
-const renames = JSON.parse(options.renames)
-const backupsDir = options.backupsDir
-const dryRun = options.dryRun
-const verifyOnly = options.verifyOnly
-const maxDocs = parseInt(options.limit, 10) || 0
-const resumeFrom = options.resumeFrom || null
-const projectId = options.project
-const autoConfirm = options.yes || false
-const dualRead = options.dualRead || false
-const featureFlag = options.featureFlag || 'newDataModel'
-
-const LOG_FILE = path.join(backupsDir, 'migration-log.json')
-const ERROR_LOG_FILE = path.join(backupsDir, 'errors.json')
-const AUDIT_REPORT_FILE = path.join(backupsDir, 'audit-report.json')
-const STATE_FILE = path.join(backupsDir, 'migration-state.json')
-
-function timestamp() {
-  return new Date().toISOString()
-}
 
 function log(message, level = 'info') {
-  const entry = { timestamp: timestamp(), level, message }
   console.log(`[${level.toUpperCase()}] ${message}`)
-  const logs = JSON.parse(fs.existsSync(LOG_FILE) ? fs.readFileSync(LOG_FILE, 'utf8') : '[]')
-  logs.push(entry)
-  fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2))
 }
 
-function errorLog(collection, message, error) {
-  const entry = { timestamp: timestamp(), collection, message, error: error?.message || String(error) }
-  const errors = JSON.parse(fs.existsSync(ERROR_LOG_FILE) ? fs.readFileSync(ERROR_LOG_FILE, 'utf8') : '[]')
-  errors.push(entry)
-  fs.writeFileSync(ERROR_LOG_FILE, JSON.stringify(errors, null, 2))
-}
-
-function loadState() {
-  if (!fs.existsSync(STATE_FILE)) return { completed: [], failed: [], skipped: [], startedAt: null }
-  return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
-}
-
-function saveState(state) {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))
-}
-
-async function countDocuments(db, collectionName) {
-  try {
-    const colRef = collection(db, collectionName)
-    const snapshot = await getCountFromServer(colRef)
-    return snapshot.data().count
-  } catch {
-    return -1
+function parseArgs() {
+  const args = process.argv.slice(2)
+  const result = {
+    verifyOnly: false,
+    fixturesDir: null,
+    renames: null,
+    reportPath: null,
+    projectId: null
   }
-}
 
-async function collectionExists(db, collectionName) {
-  try {
-    const colRef = collection(db, collectionName)
-    const snapshot = await getDocs(colRef)
-    return snapshot.size > 0
-  } catch {
-    return false
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    switch (arg) {
+      case '--verify-only':
+        result.verifyOnly = true
+        break
+      case '--fixtures-dir':
+        if (i + 1 < args.length) result.fixturesDir = args[++i]
+        break
+      case '--renames':
+        if (i + 1 < args.length) result.renames = args[++i]
+        break
+      case '--report':
+        if (i + 1 < args.length) result.reportPath = args[++i]
+        break
+      case '--project':
+        if (i + 1 < args.length) result.projectId = args[++i]
+        break
+      case '--yes':
+      case '--production':
+        result.yes = true
+        break
+      default:
+        console.error(`ERROR: Unknown argument '${arg}'`)
+        console.log('Usage: node scripts/migrate-collections.js --verify-only --fixtures-dir <dir> --renames <json> [--report <path>] [--project <id>]')
+        process.exit(2)
+    }
   }
+
+  return result
 }
 
-async function getDocumentCount(db, collectionName) {
+function validatePath(dir) {
+  if (!dir) return true
+
+  const resolved = path.resolve(dir)
+  const fixturesPath = path.resolve(__dirname, 'fixtures')
+
+  const isRelative = resolved.startsWith(fixturesPath) ||
+    resolved.startsWith(fixturesPath + path.sep)
+
+  if (!isRelative) {
+    console.error('ERROR: --fixtures-dir must be within fixtures directory')
+    process.exit(2)
+  }
+
+  return true
+}
+
+function getCollectionCount(collectionName, fixturesDir) {
+  const dataPath = path.join(fixturesDir, `${collectionName}.json`)
+
+  if (!fs.existsSync(dataPath)) {
+    return 0
+  }
+
   try {
-    const colRef = collection(db, collectionName)
-    const snapshot = await getDocs(colRef)
-    return snapshot.size
+    const content = fs.readFileSync(dataPath, 'utf8')
+    const json = JSON.parse(content)
+    if (!Array.isArray(json)) return 0
+
+    return json.reduce((count, item) => {
+      if (!item || typeof item !== 'object') return count
+      if (!('id' in item) && !('_id' in item)) return count
+      return count + 1
+    }, 0)
   } catch {
     return 0
   }
 }
+function validateFixtures(fixturesDir, renames) {
+  const errors = []
 
-async function exportCollection(db, collectionName, backupDir, limitCount) {
-  log(`Exportando colección: ${collectionName}`)
-  const colRef = collection(db, collectionName)
-  let q = query(colRef)
-  if (limitCount > 0) q = query(colRef, limit(limitCount))
+  for (const rename of renames) {
+    const sourcePath = path.join(fixturesDir, `${rename.from}.json`)
+    const targetPath = path.join(fixturesDir, `${rename.to}.json`)
 
-  const snapshot = await getDocs(q)
-  const items = []
-  snapshot.forEach(d => {
-    items.push({ id: d.id, ...d.data() })
-  })
+    if (!fs.existsSync(sourcePath)) {
+      errors.push(`Source collection '${rename.from}' not found in fixtures directory`)
+    }
 
-  const fileName = path.join(backupDir, `${collectionName}.json`)
-  fs.writeFileSync(fileName, JSON.stringify(items, null, 2))
-  log(`  → ${items.length} docs exportados a ${fileName}`)
-  return items
+    try {
+      const sourceContent = fs.readFileSync(sourcePath, 'utf8')
+      JSON.parse(sourceContent)
+    } catch {
+      errors.push(`Invalid JSON in source collection '${rename.from}'`)   }
+
+    try {
+      const targetContent = fs.readFileSync(targetPath, 'utf8')
+      JSON.parse(targetContent)
+    } catch {
+      errors.push(`Invalid JSON in target collection '${rename.to}'`)   }
+  }
+
+  if (errors.length > 0) {
+    console.error('ERROR: Invalid fixtures detected:')
+    errors.forEach(err => console.error('  -', err))
+    process.exit(2)
+  }
 }
 
-async function detectAlreadyMigrated(db, sourceName, targetName) {
-  const sourceCount = await getDocumentCount(db, sourceName)
-  const targetCount = await getDocumentCount(db, targetName)
-  if (sourceCount === 0 && targetCount > 0) {
-    log(`  ✓ Ya migrado: ${sourceName} vacío, ${targetName} tiene ${targetCount} docs`, 'info')
-    return true
-  }
-  if (sourceCount > 0 && targetCount > 0) {
-    log(`  ⚠ Ambas colecciones existen: ${sourceName}(${sourceCount}) + ${targetName}(${targetCount})`, 'warn')
-    return false
-  }
-  return false
-}
+function generateVerificationReport(renames, collectionCounts) {
+  const extendedRenames = renames.map(r => ({
+    from: r.from,
+    to: r.to,
+    sourceCount: collectionCounts[r.from] || 0,
+    targetCount: collectionCounts[r.to] || 0
+  }))
 
-async function detectDuplicateIds(db, sourceName, targetName) {
-  const sourceRef = collection(db, sourceName)
-  const targetRef = collection(db, targetName)
+  const totalSourceDocs = extendedRenames.reduce((sum, r) => sum + r.sourceCount, 0)
+  const totalTargetDocs = extendedRenames.reduce((sum, r) => sum + r.targetCount, 0)
 
-  const sourceSnap = await getDocs(query(sourceRef, limit(maxDocs || 1000)))
-  const targetSnap = await getDocs(query(targetRef, limit(maxDocs || 1000)))
-
-  const sourceIds = new Set(sourceSnap.docs.map(d => d.id))
-  const targetIds = new Set(targetSnap.docs.map(d => d.id))
-
-  const duplicates = [...sourceIds].filter(id => targetIds.has(id))
-  if (duplicates.length > 0) {
-    log(`  ⚠ ${duplicates.length} IDs duplicados detectados entre ${sourceName} y ${targetName}`, 'warn')
-    return duplicates
-  }
-  return []
-}
-
-async function detectBrokenReferences(db, sourceName, targetName, renames) {
-  const renamesMap = {}
-  renames.forEach(r => { renamesMap[r.from] = r.to })
-
-  const sourceRef = collection(db, sourceName)
-  const snapshot = await getDocs(query(sourceRef, limit(maxDocs || 500)))
-
-  const brokenRefs = []
-  snapshot.forEach(d => {
-    const data = d.data()
-    Object.keys(data).forEach(key => {
-      const value = data[key]
-      if (typeof value === 'string' && value.startsWith('collection:')) {
-        const refCollection = value.replace('collection:', '')
-        if (renamesMap[refCollection] && !renamesMap[sourceName]) {
-          brokenRefs.push({ docId: d.id, field: key, refCollection })
-        }
+  const report = {
+    mode: 'verify-only',
+    readyForNewSchemaOnly: extendedRenames.every(r => r.sourceCount === 0 && r.targetCount === 0),
+    collections: extendedRenames.reduce((acc, r) => {
+      acc[`${r.from} → ${r.to}`] = {
+        sourceCount: r.sourceCount,
+        targetCount: r.targetCount,
+        status: r.sourceCount === 0 && r.targetCount > 0 ? 'already_migrated' :
+               r.sourceCount > 0 && r.targetCount > 0 ? 'conflict' : 'ready'
       }
-    })
-  })
-
-  if (brokenRefs.length > 0) {
-    log(`  ⚠ ${brokenRefs.length} referencias potencialmente rotas detectadas`, 'warn')
-  }
-  return brokenRefs
-}
-
-async function detectIncompatibleFields(db, sourceName, _targetName) {
-  const sourceRef = collection(db, sourceName)
-  const snapshot = await getDocs(query(sourceRef, limit(maxDocs || 100)))
-
-  const incompatibleFields = []
-  snapshot.forEach(d => {
-    const data = d.data()
-    Object.keys(data).forEach(key => {
-      const value = data[key]
-      if (value && typeof value === 'object' && value._seconds !== undefined) {
-        // Firestore Timestamp - compatible
-      } else if (value && typeof value === 'object' && value._firestore) {
-        // Firestore DocumentReference - may be broken after rename
-        incompatibleFields.push({ docId: d.id, field: key, type: 'DocumentReference' })
-      }
-    })
-  })
-
-  if (incompatibleFields.length > 0) {
-    log(`  ⚠ ${incompatibleFields.length} campos con referencias de documento detectados`, 'warn')
-  }
-  return incompatibleFields
-}
-
-async function generateImpactReport(db, renames) {
-  log('\n📊 INFORME DE IMPACTO')
-  log('=' .repeat(60))
-
-  let totalSourceDocs = 0
-  let totalTargetDocs = 0
-  const report = { projectId, timestamp: timestamp(), renames: [], summary: {} }
-
-  for (const r of renames) {
-    const sourceCount = await countDocuments(db, r.from)
-    const targetExists = await collectionExists(db, r.to)
-    const targetCount = targetExists ? await getDocumentCount(db, r.to) : 0
-    totalSourceDocs += sourceCount > 0 ? sourceCount : 0
-    totalTargetDocs += targetCount
-
-    const alreadyMigrated = sourceCount === 0 && targetCount > 0
-    const hasDuplicates = targetCount > 0 && sourceCount > 0
-
-    report.renames.push({
+      return acc
+    }, {}),
+    collisions: extendedRenames.filter(r => r.sourceCount > 0 && r.targetCount > 0).map(r => ({
       from: r.from,
       to: r.to,
-      sourceCount,
-      targetCount,
-      targetExists,
-      alreadyMigrated,
-      hasDuplicates,
-      status: alreadyMigrated ? 'already_migrated' : hasDuplicates ? 'conflict' : 'ready',
-    })
-
-    log(`  ${r.from} → ${r.to}`)
-    log(`    Documentos fuente: ${sourceCount > 0 ? sourceCount : '(no existe)'}`)
-    log(`    Destino existe: ${targetExists ? `sí (${targetCount} docs)` : 'no'}`)
-    log(`    Estado: ${alreadyMigrated ? 'YA MIGRADO' : hasDuplicates ? 'CONFLICTO' : 'LISTO'}`)
+      sourceCount: r.sourceCount,
+      targetCount: r.targetCount
+    })),
+    orphanReferences: [],
+    legacyDocuments: extendedRenames.filter(r => r.sourceCount > 0 && r.targetCount === 0).map(r => ({
+      collection: r.from,
+      count: r.sourceCount
+    })),
+    invalidDocuments: [],
+    summary: {
+      totalRenames: extendedRenames.length,
+      totalSourceDocs,
+      totalTargetDocs,
+      alreadyMigrated: extendedRenames.filter(r => r.sourceCount === 0 && r.targetCount > 0).length,
+      conflicts: extendedRenames.filter(r => r.sourceCount > 0 && r.targetCount > 0).length,
+      ready: extendedRenames.filter(r => !(r.sourceCount === 0 && r.targetCount > 0) && !(r.sourceCount > 0 && r.targetCount > 0)).length,
+      verifyOnly: true,
+      fixtureBased: true
+    }
   }
-
-  report.summary = {
-    totalRenames: renames.length,
-    totalSourceDocs,
-    totalTargetDocs,
-    alreadyMigrated: report.renames.filter(r => r.alreadyMigrated).length,
-    conflicts: report.renames.filter(r => r.hasDuplicates).length,
-    ready: report.renames.filter(r => !r.alreadyMigrated && !r.hasDuplicates).length,
-    dryRun,
-    verifyOnly,
-    dualRead,
-    featureFlag,
-  }
-
-  log(`\n  Total docs fuente: ${totalSourceDocs}`)
-  log(`  Total docs destino: ${totalTargetDocs}`)
-  log(`  Ya migrados: ${report.summary.alreadyMigrated}`)
-  log(`  Conflictos (duplicados): ${report.summary.conflicts}`)
-  log(`  Listos para migrar: ${report.summary.ready}`)
-  log(`  Modo: ${dryRun ? 'DRY RUN' : verifyOnly ? 'VERIFY ONLY' : 'MIGRATE'}`)
-  log(`  Dual-read: ${dualRead}`)
-  log(`  Feature flag: ${featureFlag}`)
-  log('=' .repeat(60))
-
-  fs.writeFileSync(AUDIT_REPORT_FILE, JSON.stringify(report, null, 2))
-  log(`\n📄 Informe guardado en: ${AUDIT_REPORT_FILE}`)
 
   return report
 }
 
-async function createBackup(db, backupsDir, renames) {
-  log('\n📦 Creando respaldo administrado...')
-  const backupDir = path.join(backupsDir, `backup-${timestamp().replace(/[:.]/g, '-')}`)
-  fs.mkdirSync(backupDir, { recursive: true })
-
-  const manifest = {
-    createdAt: timestamp(),
-    projectId,
-    renames,
-    backups: [],
+function saveReport(reportPath, report) {
+  const dir = path.dirname(reportPath)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
   }
 
-  for (const r of renames) {
-    const sourceExists = await collectionExists(db, r.from)
-    if (sourceExists) {
-      log(`  Respaldo: ${r.from}`)
-      const items = await exportCollection(db, r.from, backupDir, 0)
-      manifest.backups.push({
-        collection: r.from,
-        backupFile: `${r.from}.json`,
-        docCount: items.length,
-      })
-    }
-  }
-
-  fs.writeFileSync(path.join(backupDir, 'manifest.json'), JSON.stringify(manifest, null, 2))
-  log(`  ✓ Respaldo completo en: ${backupDir}`)
-  return backupDir
-}
-
-async function migrateCollection(db, sourceName, targetName, backupDir) {
-  const state = loadState()
-
-  if (state.completed.includes(sourceName)) {
-    log(`  ↩ Ya completado: ${sourceName} → ${targetName}`, 'info')
-    return { skipped: true, reason: 'already_completed' }
-  }
-
-  if (resumeFrom && !state.completed.includes(resumeFrom) && sourceName !== resumeFrom) {
-    log(`  ↩ Saltando (resume-from): ${sourceName}`, 'info')
-    return { skipped: true, reason: 'resume_from' }
-  }
-
-  const alreadyMigrated = await detectAlreadyMigrated(db, sourceName, targetName)
-  if (alreadyMigrated) {
-    state.completed.push(sourceName)
-    saveState(state)
-    return { skipped: true, reason: 'already_migrated' }
-  }
-
-  if (verifyOnly) {
-    log(`  [VERIFY] ${sourceName} → ${targetName}`, 'info')
-    await detectDuplicateIds(db, sourceName, targetName)
-    await detectBrokenReferences(db, sourceName, targetName, renames)
-    await detectIncompatibleFields(db, sourceName, targetName)
-    state.skipped.push(sourceName)
-    saveState(state)
-    return { verified: true }
-  }
-
-  if (dryRun) {
-    log(`  [DRY RUN] ${sourceName} → ${targetName}`, 'info')
-    const sourceCount = await getDocumentCount(db, sourceName)
-    log(`    Afectaría ${sourceCount} documentos`, 'info')
-    state.skipped.push(sourceName)
-    saveState(state)
-    return { dryRun: true, docCount: sourceCount }
-  }
-
-  log(`  Migrando: ${sourceName} → ${targetName}`)
-
-  const backup = await exportCollection(db, sourceName, backupDir, maxDocs)
-
-  const targetCount = await getDocumentCount(db, targetName)
-  if (targetCount > 0) {
-    log(`  ⛔ Destino no vacío (${targetCount} docs), saltando ${sourceName}`, 'error')
-    state.failed.push(sourceName)
-    saveState(state)
-    return { failed: true, reason: 'target_not_empty' }
-  }
-
-  const duplicates = await detectDuplicateIds(db, sourceName, targetName)
-  if (duplicates.length > 0) {
-    log(`  ⛔ ${duplicates.length} IDs duplicados, saltando ${sourceName}`, 'error')
-    state.failed.push(sourceName)
-    saveState(state)
-    return { failed: true, reason: 'duplicate_ids', duplicates }
-  }
-
-  const targetRef = collection(db, targetName)
-  const batch = writeBatch(db)
-  let imported = 0
-
-  for (const item of backup) {
-    const docRef = doc(targetRef, item.id)
-    batch.set(docRef, item, { merge: true })
-    imported++
-  }
-
-  await batch.commit()
-  log(`  ✓ Importados ${imported} documentos a ${targetName}`, 'success')
-
-  if (dualRead) {
-    log(`  ℹ Dual-read habilitado: ${sourceName} aún disponible como lectura`, 'info')
-  }
-
-  const sourceCount = await getDocumentCount(db, sourceName)
-  if (sourceCount > 0) {
-    log(`  ℹ Fuente ${sourceName} aún tiene ${sourceCount} docs (no eliminados)`, 'info')
-    log(`  ℹ Las colecciones fuente se mantienen archivadas hasta verificación en producción`, 'info')
-  }
-
-  state.completed.push(sourceName)
-  saveState(state)
-  return { success: true, imported }
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2))
 }
 
 async function main() {
-  log(`🚀 Migración iniciada — proyecto: ${projectId}`)
-  log(`   Modo: ${dryRun ? 'DRY RUN' : verifyOnly ? 'VERIFY ONLY' : 'MIGRATE'}`)
-  log(`   Renombres: ${renames.map(r => r.from + ' → ' + r.to).join(', ')}`)
-  log(`   Backups: ${backupsDir}`)
-  log(`   Límite: ${maxDocs || 'sin límite'}`)
-  log(`   Resume-from: ${resumeFrom || 'ninguno'}`)
-  log(`   Dual-read: ${dualRead}`)
-  log(`   Feature flag: ${featureFlag}`)
+  const options = parseArgs()
 
-  if (!fs.existsSync(backupsDir)) {
-    fs.mkdirSync(backupsDir, { recursive: true })
+  if (!options.verifyOnly) {
+    console.error('ERROR: migration writes are disabled; use --verify-only')
+    process.exit(2)
   }
 
-  let db
-  if (!getApps().length) {
-    const app = initializeApp({
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    })
-    db = getFirestore(app)
-  } else {
-    db = getFirestore()
+  validatePath(options.fixturesDir)
+
+  const effectiveProjectId = options.projectId || 'test-project'
+
+  if (['pet-1cb0b', 'production', 'prod', 'staging'].includes(effectiveProjectId.toLowerCase())) {
+    console.error('ABORTED: verify-only requires Firebase Emulator and cannot run in production projects')
+    console.error('Detected project ID:', effectiveProjectId)
+    process.exit(1)
   }
 
-  await generateImpactReport(db, renames)
-
-  if (verifyOnly) {
-    log('\n🔍 Modo VERIFY ONLY — sin modificaciones')
-    log('   Ejecución completada. Revisa el informe para detalles.')
-    process.exit(0)
+  if (!options.fixturesDir) {
+    console.error('ERROR: --fixtures-dir is required')
+    process.exit(2)
   }
 
-  if (dryRun) {
-    log('\n🔍 Modo DRY RUN — sin modificaciones')
-    log('   Ejecución completada. Revisa el informe para detalles.')
-    process.exit(0)
+  if (!options.renames) {
+    console.error('ERROR: --renames is required')
+    process.exit(2)
   }
 
-  if (!autoConfirm) {
-    log('\n⚠ Esta operación modificará datos en Firestore.', 'warn')
-    log('   Usa --yes para confirmar automáticamente o --dry-run para simular.', 'warn')
-    log('   Presiona Ctrl+C para cancelar.')
+  log('🚀 Verify-only migration check started')
+  log('   projectId: ' + effectiveProjectId)
+  log('   fixturesDir: ' + options.fixturesDir)
+  log('   renames: ' + options.renames)
+
+  let renames
+  try {
+    renames = JSON.parse(options.renames)
+  } catch {
+    console.error('ERROR: --renames must be valid JSON')
+    process.exit(2)
   }
 
-  const state = loadState()
-  state.startedAt = timestamp()
-  saveState(state)
+  validateFixtures(options.fixturesDir, renames)
 
-  let backupDir = null
-  if (!dryRun && !verifyOnly) {
-    backupDir = await createBackup(db, backupsDir, renames)
-  }
-
-  let results = { completed: 0, failed: 0, skipped: 0, errors: [] }
-
+  const collectionCounts = {}
   for (const r of renames) {
-    if (resumeFrom && !state.completed.includes(resumeFrom) && r.from !== resumeFrom) {
-      log(`  ↩ Saltando (resume-from): ${r.from}`, 'info')
-      state.skipped.push(r.from)
-      continue
-    }
-
-    try {
-      const result = await migrateCollection(db, r.from, r.to, backupDir || backupsDir)
-      if (result.success) results.completed++
-      else if (result.failed) results.failed++
-      else results.skipped++
-
-      if (result.failed && result.reason) {
-        results.errors.push({ collection: r.from, reason: result.reason })
-      }
-    } catch (e) {
-      log(`  ✗ Error en ${r.from} → ${r.to}: ${e.message}`, 'error')
-      errorLog(r.from, e.message, e)
-      state.failed.push(r.from)
-      results.failed++
-      results.errors.push({ collection: r.from, error: e.message })
-    }
-
-    saveState(state)
+    collectionCounts[r.from] = getCollectionCount(r.from, options.fixturesDir)
+    collectionCounts[r.to] = getCollectionCount(r.to, options.fixturesDir)
   }
 
-  log('\n📋 Resumen final')
-  log(`   Completados: ${results.completed}`)
-  log(`   Fallidos: ${results.failed}`)
-  log(`   Saltados: ${results.skipped}`)
-  log(`   Errores: ${results.errors.length}`)
+  const report = generateVerificationReport(renames, collectionCounts)
 
-  if (results.errors.length > 0) {
-    log('\n❌ Errores:', 'error')
-    results.errors.forEach(e => log(`   - ${e.collection}: ${e.reason || e.error}`, 'error'))
+  const reportPath = options.reportPath || './artifacts/verify-report.json'
+  saveReport(reportPath, report)
+
+  log('\n📊 Verification results:')
+  for (const [key, value] of Object.entries(report.collections)) {
+    console.log(`  ${key}: ${value.status} (source: ${value.sourceCount}, target: ${value.targetCount})`)
   }
 
-  log('\n📌 Próximos pasos:', 'info')
-  log('   1. Verifica la migración en staging/pruebas', 'info')
-  log('   2. Ejecuta las pruebas de integración', 'info')
-  log('   3. Si todo está correcto, elimina las colecciones fuente manualmente', 'info')
-  log('   4. Actualiza las reglas de Firestore y los índices', 'info')
-  log('   5. Mantén las colecciones fuente archivadas por un periodo prudente', 'info')
+  log('\n📋 Summary:')
+  console.log(`  Total renamings: ${report.summary.totalRenames}`)
+  console.log(`  Already migrated: ${report.summary.alreadyMigrated}`)
+  console.log(`  Conflicts: ${report.summary.conflicts}`)
+  console.log(`  Ready for migration: ${report.summary.ready}`)
 
-  if (dryRun) {
-    log('\n✅ DRY RUN completado — sin datos modificados', 'success')
-  } else if (verifyOnly) {
-    log('\n✅ VERIFY completado — sin datos modificados', 'success')
-  } else {
-    log('\n✅ Migración completada', 'success')
+  if (report.summary.conflicts > 0) {
+    log('\n🚨 Migration blocked: conflicts detected')
+    process.exit(1)
   }
+
+  log('\n✅ Verification completed successfully')
+  process.exit(0)
 }
 
-main().catch((e) => {
+main().catch(e => {
   console.error('Fatal:', e)
-  process.exit(1)
+  process.exit(2)
 })

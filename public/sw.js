@@ -1,57 +1,47 @@
-const CACHE = 'pet-v1'
+const CACHE = 'pet-ap-static-v4'
+const OWNED_CACHE_PREFIX = 'pet-ap-'
+const LEGACY_CACHES = new Set(['pet-v1', 'pet-static-v1', 'pet-v2-static'])
 
 const ASSETS = [
-  '/',
-  '/manifest.json',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg',
+  '/brand/pet-ap-dog-logo.png',
 ]
 
-const EXCLUDE_HOSTS = [
-  'firestore.googleapis.com',
-  'firebaseapp.com',
-  'firebaseio.com',
-  'googleapis.com',
+const PRIVATE_PREFIXES = [
+  '/admin', '/familia', '/walker', '/supervisor', '/equipo', '/login',
+  '/cancelar', '/api/', '/mi-cuenta', '/paseador', '/__/auth/', '/auth/',
 ]
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)))
-  self.skipWaiting()
 })
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE && (key.startsWith(OWNED_CACHE_PREFIX) || LEGACY_CACHES.has(key)))
+          .map((key) => caches.delete(key))
+      )
     ).then(() => self.clients.claim())
   )
 })
 
+self.addEventListener('message', (e) => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting()
+})
+
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url)
-  if (EXCLUDE_HOSTS.some((host) => url.hostname.includes(host))) return
   if (e.request.method !== 'GET') return
+  if (url.origin !== self.location.origin) return
+  if (url.search || e.request.mode === 'navigate') return
+  if (PRIVATE_PREFIXES.some((prefix) => url.pathname === prefix || url.pathname.startsWith(prefix.endsWith('/') ? prefix : `${prefix}/`))) return
+  if (!ASSETS.includes(url.pathname)) return
 
   e.respondWith(
-    caches.match(e.request).then((r) => r || fetch(e.request).catch(() => new Response('Offline', { status: 503 })))
+    caches.open(CACHE).then((cache) => cache.match(e.request)).then((response) => response || fetch(e.request))
   )
 })
 
-self.addEventListener('push', (e) => {
-  const data = e.data?.json() || { title: '🐾 PET Ap', body: 'Nueva actualización', icon: '/icons/icon-192.svg' }
-  e.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: data.icon || '/icons/icon-192.svg',
-      badge: '/icons/icon-192.svg',
-      vibrate: [200, 100, 200],
-      data: { url: data.url || '/' },
-    })
-  )
-})
-
-self.addEventListener('notificationclick', (e) => {
-  e.notification.close()
-  const url = e.notification.data?.url || '/'
-  e.waitUntil(clients.openWindow(url))
-})
+// Push/FCM handlers remain intentionally absent while FCM_ENABLED is false.

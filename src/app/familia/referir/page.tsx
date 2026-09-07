@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { getCustomerProfile } from '@/lib/customerProfile'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import { ArrowLeft, UserPlus, Users, CheckCircle2, Clock, Gift } from 'lucide-react'
 import ReferralSection from '@/components/ReferralSection'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 export default function ReferirPage() {
   const router = useRouter()
@@ -20,14 +22,15 @@ export default function ReferirPage() {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) { router.push('/login'); return }
       setUid(user.uid)
-      const snap = await getDoc(doc(db, 'clients', user.uid))
-      if (snap.exists()) setPhone(snap.data().phone || '')
+      const profile = await getCustomerProfile(user.uid)
+      if (profile) setPhone(profile.phone || '')
       setLoading(false)
     })
     return unsub
   }, [router])
 
   useEffect(() => {
+    if (!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED) return
     if (!uid) return
     const q = query(collection(db, 'referrals'), where('referrerUid', '==', uid))
     return onSnapshot(q, (snap) => {
@@ -63,7 +66,7 @@ export default function ReferirPage() {
         </button>
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Recomendar</h1>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Invita amigos y ganen ambos</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Comparte una invitación; las recompensas requieren revisión</p>
         </div>
       </div>
 
@@ -81,8 +84,8 @@ export default function ReferirPage() {
         <div className="grid grid-cols-3 gap-3">
           {[
             { icon: UserPlus, label: 'Comparte', desc: 'Tu link personal' },
-            { icon: CheckCircle2, label: 'Amigo agenda', desc: 'Primer paseo' },
-            { icon: Gift, label: 'Ganan ambos', desc: '$20 de descuento' },
+            { icon: CheckCircle2, label: 'Cliente nuevo', desc: 'Primer paseo pagado y completado' },
+            { icon: Gift, label: 'Revisión', desc: 'Crédito promocional sujeto a condiciones' },
           ].map((step, i) => {
             const Icon = step.icon
             return (
@@ -98,7 +101,14 @@ export default function ReferirPage() {
         </div>
       </motion.div>
 
+      {!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED && (
+        <div className="rounded-2xl p-4 text-xs text-muted" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          Las recompensas automáticas están desactivadas. Administración revisará manualmente elegibilidad, límite mensual, vigencia y margen antes de registrar cualquier Crédito PET.
+        </div>
+      )}
+
       {/* Referral stats */}
+      {FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -124,6 +134,7 @@ export default function ReferirPage() {
           )
         })}
       </motion.div>
+      )}
 
       {/* Referral link + share */}
       <motion.div

@@ -6,6 +6,7 @@ import { db } from '@/firebase/config'
 import { usePetAhoraDispatch } from './usePetAhoraDispatch'
 import { playOfferChime } from './notificationSound'
 import type { PetAhoraOffer, PetAhoraRequest } from '@/types'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 export function usePetAhoraWalkerOffers(walkerId: string | undefined) {
   const [offers, setOffers] = useState<(PetAhoraOffer & { request?: PetAhoraRequest })[]>([])
@@ -14,6 +15,7 @@ export function usePetAhoraWalkerOffers(walkerId: string | undefined) {
   usePetAhoraDispatch()
 
   useEffect(() => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) { setLoading(false); return }
     if (!walkerId) { setLoading(false); return }
 
     const q = query(
@@ -55,6 +57,7 @@ export function usePetAhoraClientRequest(requestId: string | null) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) { setLoading(false); return }
     if (!requestId) return
     setLoading(true)
 

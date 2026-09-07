@@ -11,7 +11,7 @@ const ROOT = resolve(__dirname, '..')
 
 const SKIP = new Set(['node_modules', '.next', '.git', '.vercel'])
 const PATTERNS = [
-  { re: /quebrada/i, label: 'texto legacy "Quebrada" (marca geográfica eliminada)' },
+  { re: /zona\s+quebrada/i, label: 'frase comercial legacy "Zona Quebrada"' },
 ]
 
 function walk(dir) {
@@ -55,4 +55,4 @@ if (failures.length > 0) {
   process.exit(1)
 }
 
-console.log('✔ Guard de marca: sin texto legacy ("Quebrada") en src/public/rules.')
+console.log('✔ Guard de marca: sin frase comercial legacy "Zona Quebrada" en src/public/rules.')

@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle } from 'lucide-react'
+import Button from '@/components/ui/Button'
 
 interface ErrorStateProps {
   title?: string
@@ -23,13 +24,13 @@ export default function ErrorState({
       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{title}</p>
       <p className="text-xs mt-1 max-w-xs mx-auto" style={{ color: 'var(--text-muted)' }}>{description}</p>
       {onRetry && (
-        <button
+        <Button
+          variant="secondary"
           onClick={onRetry}
-          className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-danger-500/10 transition-colors hover:bg-danger-500/20"
-          style={{ color: 'var(--color-error)' }}
+          className="mt-4 border-danger/30 text-danger hover:bg-danger-light"
         >
           {retryLabel}
-        </button>
+        </Button>
       )}
     </div>
   )

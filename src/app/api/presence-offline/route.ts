@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { collection, doc, getDocs, writeBatch, serverTimestamp, query, where } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+function privateJson(body: unknown, status = 200) {
+  return NextResponse.json(body, {
+    status,
+    headers: { 'Cache-Control': 'private, no-store, max-age=0', 'X-Robots-Tag': 'noindex, nofollow' },
+  })
+}
 
 // En cola de sync para walkers offline — fetch local buffer, sube en lote, limpia tras éxito
+//
+// PROTECCIÓN (P0.8): el Bearer token es un ID token de Firebase Auth verificado con
+// firebase-admin. La autorización se decide por el custom claim `role` del token
+// (walker), nunca por un documento ni por parámetros del cliente. Falla cerrado.
 export async function GET(request: NextRequest) {
   const from = request.nextUrl.searchParams.get('from') || undefined
   const to = request.nextUrl.searchParams.get('to') || undefined
@@ -10,22 +23,18 @@ export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return privateJson({ error: 'Unauthorized' }, 401)
     }
 
-    const userDoc = await import('firebase/firestore').then(({ doc, getDoc }) => getDoc(doc(db, 'users', 'dummy')))
-    if (!userDoc.exists()) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-    const userRole = userDoc.data().role
-    if (userRole !== 'walker') {
-      return NextResponse.json({ error: 'Forbidden: walker only' }, { status: 403 })
+    const { verifyWalkerToken } = await import('@/lib/serverAuth')
+    const uid = await verifyWalkerToken(authHeader.slice('Bearer '.length))
+    if (!uid) {
+      return privateJson({ error: 'Forbidden: walker only' }, 403)
     }
 
-    // Buffer local: 'presenceOffline' -> cola por walkerId + timestamp
+    const { db } = await import('@/firebase/config')
     const base = collection(db, 'presenceOffline')
-    const walkerId = 'dummy'
-    let q = query(base, where('processed', '==', false), where('walkerId', '==', walkerId))
+    let q = query(base, where('processed', '==', false), where('walkerId', '==', uid))
 
     if (from && to) {
       q = query(q, where('timestamp', '>=', from), where('timestamp', '<=', to))
@@ -33,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     const snapshot = await getDocs(q)
     if (snapshot.empty) {
-      return NextResponse.json({ message: 'no pending offline items', synced: 0 })
+      return privateJson({ message: 'no pending offline items', synced: 0 })
     }
 
     const batch = writeBatch(db)
@@ -57,9 +66,8 @@ export async function GET(request: NextRequest) {
     await batch.commit()
 
     const synced = snapshot.size
-    return NextResponse.json({ synced, walkerId })
-  } catch (e) {
-    console.error('Presence offline sync error:', e)
-    return NextResponse.json({ error: 'sync_failed' }, { status: 500 })
+    return privateJson({ synced, walkerId: uid })
+  } catch {
+    return privateJson({ error: 'Sync failed' }, 500)
   }
 }

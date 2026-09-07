@@ -48,6 +48,14 @@ export default tseslint.config(
     ...eslintPluginReactRefresh.configs.recommended,
   },
   {
+    // Next.js App Router files export metadata/generateMetadata/constants by
+    // convention; fast-refresh rule is not applicable to them.
+    files: ['src/app/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
     files: ['scripts/**/*.js', 'scripts/**/*.mjs', 'functions/**/*.js', '**/*.config.js', '**/*.config.mjs'],
     languageOptions: {
       globals: globals.node,

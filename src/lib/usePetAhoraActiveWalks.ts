@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import type { PetAhoraRequest } from '@/types'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 export function usePetAhoraActiveWalks(walkerId: string | undefined) {
   const [walks, setWalks] = useState<PetAhoraRequest[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) { setLoading(false); return }
     if (!walkerId) { setLoading(false); return }
 
     const q = query(
@@ -39,8 +41,9 @@ export function usePetAhoraActiveWalks(walkerId: string | undefined) {
 export async function updatePetAhoraWalkStatus(
   requestId: string,
   status: string,
-  extra?: Record<string, any>,
+  extra?: Record<string, unknown>,
 ): Promise<boolean> {
+  if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
   try {
     await updateDoc(doc(db, 'petAhoraRequests', requestId), { status, ...extra })
     return true

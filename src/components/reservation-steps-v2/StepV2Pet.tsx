@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { Dog, Plus, CheckCircle2, ArrowRight } from 'lucide-react'
 import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db, auth } from '@/firebase/config'
+import Button from '@/components/ui/Button'
+import Card from '@/components/ui/Card'
+import Input from '@/components/ui/Input'
 
 interface StepV2PetProps {
   form: { petId: string; petName: string; petType: string }
@@ -32,6 +35,7 @@ export default function StepV2Pet({ form, updateForm, userPets, onNext }: StepV2
     await setDoc(petRef, {
       name: newPetName.trim(),
       type: newPetType,
+      petType: newPetType,
       ownerId: user.uid,
       createdAt: serverTimestamp(),
     })
@@ -48,40 +52,49 @@ export default function StepV2Pet({ form, updateForm, userPets, onNext }: StepV2
       </p>
 
       {userPets.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2" role="radiogroup" aria-label="Seleccionar mascota">
           {userPets.map(pet => (
-            <button
+            <div
               key={pet.id}
+              role="radio"
+              aria-checked={form.petId === pet.id}
+              tabIndex={0}
               onClick={() => updateForm({ petId: pet.id, petName: pet.name, petType: pet.type || 'perro' })}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
-                form.petId === pet.id
-                  ? 'bg-brand-500/10 border-brand-500/30'
-                  : 'bg-white/50 border-transparent hover:bg-ink/5'
-              }`}
-              style={{ border: form.petId === pet.id ? '1px solid var(--brand)' : '1px solid var(--border)' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  updateForm({ petId: pet.id, petName: pet.name, petType: pet.type || 'perro' })
+                }
+              }}
+              className="cursor-pointer"
             >
-              <Dog size={20} className="shrink-0" style={{ color: form.petId === pet.id ? 'var(--brand)' : 'var(--text-muted)' }} />
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{pet.name}</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{pet.type === 'perro' ? '🐕 Perro' : pet.type === 'gato' ? '🐈 Gato' : '🐾 Otro'}</p>
-              </div>
-              {form.petId === pet.id && (
-                <CheckCircle2 size={16} className="ml-auto shrink-0" style={{ color: 'var(--brand)' }} />
-              )}
-            </button>
+              <Card
+                className={`w-full flex items-center gap-3 p-3 transition-all ${form.petId === pet.id
+                  ? 'bg-brand-500/10 border-brand-500/30'
+                  : 'bg-white/50 border-transparent hover:bg-ink/5'}`}
+                style={{ border: form.petId === pet.id ? '1px solid var(--brand)' : '1px solid var(--border)' }}
+              >
+                <Dog size={20} className="shrink-0" style={{ color: form.petId === pet.id ? 'var(--brand)' : 'var(--text-muted)' }} />
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{pet.name}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{pet.type === 'perro' ? '🐕 Perro' : pet.type === 'gato' ? '🐈 Gato' : '🐾 Otro'}</p>
+                </div>
+                {form.petId === pet.id && (
+                  <CheckCircle2 size={16} className="ml-auto shrink-0" style={{ color: 'var(--brand)' }} />
+                )}
+              </Card>
+            </div>
           ))}
         </div>
       )}
 
       {showAdd ? (
-        <div className="space-y-3 p-4 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-          <input
+        <Card className="space-y-3 p-4">
+          <Input
             type="text"
             value={newPetName}
             onChange={(e) => setNewPetName(e.target.value)}
             placeholder="Nombre de tu mascota"
-            className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-            style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
           />
           <select
             value={newPetType}
@@ -94,40 +107,41 @@ export default function StepV2Pet({ form, updateForm, userPets, onNext }: StepV2
             <option value="otro">🐾 Otro</option>
           </select>
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="primary"
               onClick={handleAddPet}
               disabled={!newPetName.trim()}
-              className="flex-1 py-3 rounded-xl text-sm font-semibold bg-brand-500 text-white hover:opacity-90 transition-all disabled:opacity-40"
+              className="flex-1"
             >
               Agregar
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => setShowAdd(false)}
-              className="px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5"
-              style={{ color: 'var(--text-muted)' }}
             >
               Cancelar
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       ) : (
-        <button
+        <Button
+          variant="secondary"
           onClick={() => setShowAdd(true)}
-          className="w-full flex items-center gap-2 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5"
-          style={{ color: 'var(--text-muted)', border: '1px dashed var(--border)' }}
+          leftIcon={<Plus size={16} />}
         >
-          <Plus size={16} /> Agregar mascota
-        </button>
+          Agregar mascota
+        </Button>
       )}
 
       <div className="flex justify-end pt-2">
-        <button
+        <Button
+          variant="primary"
           onClick={onNext}
           disabled={!form.petId}
-          className="btn-primary inline-flex items-center gap-2"
+          leftIcon={<ArrowRight size={14} />}
         >
-          Siguiente <ArrowRight size={14} />
-        </button>
+          Siguiente
+        </Button>
       </div>
     </div>
   )

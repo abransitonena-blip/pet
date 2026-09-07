@@ -1,340 +1,232 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
-import { onAuthStateChanged, updatePassword } from 'firebase/auth'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Save, Clock, MapPin, User, Lock, CheckCircle } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { updatePassword } from 'firebase/auth'
+import { collection, doc, documentId, getDocs, limit, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
+import { ArrowLeft, CheckCircle2, Clock3, LockKeyhole, MapPin, Save, ShieldCheck, UserRound } from 'lucide-react'
+import { auth, db } from '@/firebase/config'
+import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
+import { Button, Card, Input, LoadingState } from '@/components/ui'
 
-const WEEKDAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-const WEEKDAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+const WEEKDAYS = [
+  ['monday', 'Lunes'], ['tuesday', 'Martes'], ['wednesday', 'Miércoles'],
+  ['thursday', 'Jueves'], ['friday', 'Viernes'], ['saturday', 'Sábado'], ['sunday', 'Domingo'],
+] as const
 
-interface DaySchedule {
-  active: boolean
-  start: string
-  end: string
+interface DaySchedule { active: boolean; start: string; end: string }
+type ScheduleState = Record<string, DaySchedule>
+
+function scheduleFromProfile(schedule: Record<string, { start: string; end: string }[]>): ScheduleState {
+  return Object.fromEntries(WEEKDAYS.map(([key]) => {
+    const range = schedule[key]?.[0]
+    return [key, { active: Boolean(range), start: range?.start || '08:00', end: range?.end || '18:00' }]
+  }))
 }
-
-interface ScheduleState {
-  [key: string]: DaySchedule
-}
-
-const defaultSchedule: ScheduleState = Object.fromEntries(
-  WEEKDAY_KEYS.map((k, i) => [k, { active: i < 6, start: '08:00', end: i < 5 ? '18:00' : '14:00' }])
-)
 
 export default function WalkerProfilePage() {
-  const router = useRouter()
-  const [uid, setUid] = useState('')
-  const [loading, setLoading] = useState(true)
+  const { uid, profile, updateLocalProfile } = useWalkerPanel()
+  const [phone, setPhone] = useState(profile.phone)
+  const [schedule, setSchedule] = useState<ScheduleState>(() => scheduleFromProfile(profile.schedule))
+  const [zoneNames, setZoneNames] = useState<Record<string, string>>({})
+  const [loadingZones, setLoadingZones] = useState(profile.zones.length > 0)
+  const [zoneError, setZoneError] = useState('')
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [walkerName, setWalkerName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [zones, setZones] = useState<string[]>([])
-  const [allZones, setAllZones] = useState<{ id: string; name: string }[]>([])
-  const [schedule, setSchedule] = useState<ScheduleState>(defaultSchedule)
-  const [maxDaily, setMaxDaily] = useState(8)
-  const [maxWeekly, setMaxWeekly] = useState(40)
-  const [currentPassword, setCurrentPassword] = useState('')
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
   const [newPassword, setNewPassword] = useState('')
-  const [passwordMsg, setPasswordMsg] = useState('')
+  const [passwordStatus, setPasswordStatus] = useState('')
+  const hasPasswordProvider = useMemo(
+    () => auth.currentUser?.providerData.some((provider) => provider.providerId === 'password') ?? false,
+    [],
+  )
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) { router.push('/login'); return }
-      setUid(user.uid)
-      setEmail(user.email || '')
+    if (profile.zones.length === 0) {
+      setLoadingZones(false)
+      return
+    }
 
-      const profileSnap = await getDoc(doc(db, 'walkerProfiles', user.uid))
-      if (profileSnap.exists()) {
-        const p = profileSnap.data()
-        setWalkerName(p.name || '')
-        setPhone(p.phone || '')
-        setZones(p.zones || [])
-        setMaxDaily(p.maxDaily || 8)
-        setMaxWeekly(p.maxWeekly || 40)
-
-        if (p.schedule && Object.keys(p.schedule).length > 0) {
-          const s: ScheduleState = {}
-          WEEKDAY_KEYS.forEach((k) => {
-            const day = p.schedule[k]
-            if (day && day.length > 0) {
-              s[k] = { active: true, start: day[0].start || '08:00', end: day[0].end || '18:00' }
-            } else {
-              s[k] = { active: false, start: '08:00', end: '18:00' }
-            }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const result: Record<string, string> = {}
+        for (let index = 0; index < profile.zones.length; index += 30) {
+          const ids = profile.zones.slice(index, index + 30)
+          const snapshot = await getDocs(query(
+            collection(db, 'zones'),
+            where(documentId(), 'in', ids),
+            limit(ids.length),
+          ))
+          snapshot.docs.forEach((zoneDoc) => {
+            const data = zoneDoc.data()
+            result[zoneDoc.id] = typeof data.name === 'string' && data.name.trim() ? data.name : zoneDoc.id
           })
-          setSchedule(s)
         }
+        if (!cancelled) setZoneNames(result)
+      } catch (cause) {
+        if (cancelled) return
+        const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
+        setZoneError(code.includes('permission-denied')
+          ? 'No tienes permiso para consultar el catálogo de zonas.'
+          : 'No pudimos consultar los nombres de tus zonas.')
+      } finally {
+        if (!cancelled) setLoadingZones(false)
       }
+    })()
+    return () => { cancelled = true }
+  }, [profile.zones])
 
-      // Just read all zone docs
-      const { getDocs, collection, query } = await import('firebase/firestore')
-      const zonesQuery = query(collection(db, 'zones'))
-      const zonesSnap2 = await getDocs(zonesQuery)
-      setAllZones(zonesSnap2.docs.map((d) => ({ id: d.id, name: d.data().name || d.id })))
-
-      setLoading(false)
-    })
-    return unsub
-  }, [router])
-
-  const toggleZone = (zoneId: string) => {
-    setZones((prev) =>
-      prev.includes(zoneId) ? prev.filter((z) => z !== zoneId) : [...prev, zoneId]
-    )
+  const updateDay = (key: string, changes: Partial<DaySchedule>) => {
+    setSchedule((current) => ({ ...current, [key]: { ...current[key], ...changes } }))
+    setSaveStatus('idle')
   }
 
-  const updateDaySchedule = (key: string, field: keyof DaySchedule, value: boolean | string) => {
-    setSchedule((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], [field]: value },
-    }))
-  }
-
-  const handleSave = async () => {
+  const saveProfile = async () => {
+    if (saving) return
     setSaving(true)
-    setSaved(false)
+    setSaveStatus('idle')
+    const scheduleData = Object.fromEntries(WEEKDAYS.map(([key]) => [
+      key,
+      schedule[key]?.active ? [{ start: schedule[key].start, end: schedule[key].end }] : [],
+    ]))
     try {
-      const scheduleData: Record<string, { start: string; end: string }[]> = {}
-      WEEKDAY_KEYS.forEach((k) => {
-        if (schedule[k]?.active) {
-          scheduleData[k] = [{ start: schedule[k].start, end: schedule[k].end }]
-        } else {
-          scheduleData[k] = []
-        }
-      })
-
       await updateDoc(doc(db, 'walkerProfiles', uid), {
-        phone,
-        zones,
-        maxDaily,
-        maxWeekly,
+        phone: phone.trim(),
         schedule: scheduleData,
+        updatedAt: serverTimestamp(),
       })
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      updateLocalProfile({ phone: phone.trim(), schedule: scheduleData })
+      setSaveStatus('saved')
     } catch {
-      // silent
+      setSaveStatus('error')
     } finally {
       setSaving(false)
     }
   }
 
-  const handlePasswordChange = async () => {
-    if (!currentPassword || !newPassword || newPassword.length < 6) {
-      setPasswordMsg('La contraseña debe tener al menos 6 caracteres')
-      return
-    }
-    setPasswordMsg('')
-    const user = auth.currentUser
-    if (!user) return
+  const changePassword = async () => {
+    if (newPassword.length < 8 || !auth.currentUser) return
+    setPasswordStatus('')
     try {
-      await updatePassword(user, newPassword)
-      setPasswordMsg('✅ Contraseña actualizada')
-      setCurrentPassword('')
+      await updatePassword(auth.currentUser, newPassword)
       setNewPassword('')
-    } catch {
-      setPasswordMsg('Error: verifica tu sesión o contraseña actual')
+      setPasswordStatus('Contraseña actualizada correctamente.')
+    } catch (cause) {
+      const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
+      setPasswordStatus(code === 'auth/requires-recent-login'
+        ? 'Por seguridad, cierra sesión y vuelve a entrar antes de cambiar la contraseña.'
+        : 'No pudimos actualizar la contraseña. Inténtalo nuevamente.')
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="skeleton h-10 w-48 rounded-xl" />
-        <div className="skeleton h-64 rounded-2xl" />
-      </div>
-    )
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/walker" className="w-9 h-9 rounded-xl card flex items-center justify-center text-muted hover:text-ink transition-colors">
-          <ArrowLeft size={16} />
+    <div className="mx-auto max-w-2xl space-y-5">
+      <header className="flex items-center gap-3">
+        <Link href="/walker" aria-label="Volver a Mis paseos" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-muted transition-colors hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <ArrowLeft size={18} />
         </Link>
-        <div>
-          <h1 className="text-xl font-bold text-ink">Mi perfil</h1>
-          <p className="text-sm text-muted">Horario, zonas y configuración</p>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Cuenta operativa</p>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Mi perfil</h1>
+          <p className="text-sm text-muted">Datos personales y disponibilidad declarada</p>
         </div>
-      </div>
+      </header>
 
-      {/* Profile info */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-trust/10 flex items-center justify-center text-trust">
-            <User size={24} />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-ink">{walkerName}</p>
-            <p className="text-sm text-muted">{email}</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="input-label">Teléfono</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="input mt-1"
-              placeholder="5512345678"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="input-label">Paseos máx. por día</label>
-              <input
-                type="number"
-                value={maxDaily}
-                onChange={(e) => setMaxDaily(Number(e.target.value))}
-                min={1}
-                max={30}
-                className="input mt-1"
-              />
+      <Card className="p-4 shadow-none sm:p-5">
+        <div className="flex items-center gap-3">
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary"><UserRound size={20} /></div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate font-bold text-ink">{profile.name}</p>
+              <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success-700">Activo</span>
             </div>
-            <div>
-              <label className="input-label">Paseos máx. por semana</label>
-              <input
-                type="number"
-                value={maxWeekly}
-                onChange={(e) => setMaxWeekly(Number(e.target.value))}
-                min={1}
-                max={100}
-                className="input mt-1"
-              />
-            </div>
+            <p className="truncate text-sm text-muted">{profile.email}</p>
           </div>
         </div>
-      </motion.div>
 
-      {/* Zones */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.1 }} className="card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <MapPin size={16} className="text-primary" />
-          <h2 className="text-sm font-semibold text-ink">Zonas disponibles</h2>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {allZones.map((z) => (
-            <button
-              key={z.id}
-              onClick={() => toggleZone(z.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                zones.includes(z.id)
-                  ? 'bg-primary/10 border-primary text-primary'
-                  : 'border-border text-muted hover:border-hover'
-              }`}
-            >
-              {z.name}
-            </button>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Schedule */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.2 }} className="card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Clock size={16} className="text-primary" />
-          <h2 className="text-sm font-semibold text-ink">Horario semanal</h2>
-        </div>
-        <div className="space-y-3">
-          {WEEKDAY_KEYS.map((key, i) => (
-            <div key={key} className="flex items-center gap-3">
-              <button
-                onClick={() => updateDaySchedule(key, 'active', !schedule[key]?.active)}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
-                  schedule[key]?.active
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'bg-border/50 text-muted border border-border'
-                }`}
-              >
-                {schedule[key]?.active ? '✓' : '✗'}
-              </button>
-              <span className={`text-sm w-20 font-medium ${schedule[key]?.active ? 'text-ink' : 'text-muted'}`}>
-                {WEEKDAYS[i]}
-              </span>
-              {schedule[key]?.active && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="time"
-                    value={schedule[key]?.start || '08:00'}
-                    onChange={(e) => updateDaySchedule(key, 'start', e.target.value)}
-                    className="input !py-1.5 !px-2 !text-xs w-24"
-                  />
-                  <span className="text-xs text-muted">a</span>
-                  <input
-                    type="time"
-                    value={schedule[key]?.end || '18:00'}
-                    onChange={(e) => updateDaySchedule(key, 'end', e.target.value)}
-                    className="input !py-1.5 !px-2 !text-xs w-24"
-                  />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Save */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="btn-primary inline-flex items-center gap-2"
-        >
-          {saving ? (
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-ink/20 border-t-ink rounded-full animate-spin" />
-              Guardando...
-            </span>
-          ) : (
-            <>
-              <Save size={14} /> Guardar cambios
-            </>
-          )}
-        </button>
-        {saved && (
-          <span className="flex items-center gap-1 text-xs text-success">
-            <CheckCircle size={12} /> Guardado
-          </span>
-        )}
-      </div>
-
-      {/* Change password */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.3 }} className="card p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Lock size={16} className="text-primary" />
-          <h2 className="text-sm font-semibold text-ink">Cambiar contraseña</h2>
-        </div>
-        <div className="space-y-3">
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Nueva contraseña (mín. 6 caracteres)"
-            aria-label="Nueva contraseña"
-            className="input"
+        <div className="mt-5">
+          <label htmlFor="walker-phone" className="input-label">Teléfono operativo <span className="font-normal text-muted">(opcional)</span></label>
+          <Input
+            id="walker-phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            maxLength={20}
+            value={phone}
+            onChange={(event) => { setPhone(event.target.value); setSaveStatus('idle') }}
+            className="mt-1"
           />
-          <button
-            onClick={handlePasswordChange}
-            disabled={!newPassword || newPassword.length < 6}
-            className="btn-secondary text-sm"
-          >
-            Actualizar contraseña
-          </button>
-          {passwordMsg && (
-            <p className="text-xs text-muted mt-1">{passwordMsg}</p>
-          )}
         </div>
-      </motion.div>
+
+        <dl className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-ink/5 p-3"><dt className="text-xs text-muted">Máximo diario</dt><dd className="mt-1 text-sm font-bold text-ink">{profile.maxDaily ?? 'Por definir'}</dd></div>
+          <div className="rounded-xl bg-ink/5 p-3"><dt className="text-xs text-muted">Máximo semanal</dt><dd className="mt-1 text-sm font-bold text-ink">{profile.maxWeekly ?? 'Por definir'}</dd></div>
+        </dl>
+      </Card>
+
+      <Card className="p-4 shadow-none sm:p-5">
+        <div className="mb-3 flex items-center gap-2"><MapPin size={17} className="text-primary" /><h2 className="font-bold text-ink">Zonas asignadas</h2></div>
+        <p className="mb-4 text-xs text-muted">Administración gestiona estas zonas. El panel no permite modificarlas.</p>
+        {loadingZones ? <LoadingState message="Consultando zonas…" rows={1} height="h-10" /> : zoneError ? (
+          <p className="rounded-xl bg-danger-500/10 p-3 text-sm text-red-700" role="alert">{zoneError}</p>
+        ) : profile.zones.length === 0 ? (
+          <p className="rounded-xl bg-warning/10 p-3 text-sm text-amber-800">Aún no tienes zonas asignadas. Contacta a administración antes de aceptar paseos.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {profile.zones.map((zone) => <span key={zone} className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">{zoneNames[zone] || zone}</span>)}
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-4 shadow-none sm:p-5">
+        <div className="mb-1 flex items-center gap-2"><Clock3 size={17} className="text-primary" /><h2 className="font-bold text-ink">Disponibilidad semanal</h2></div>
+        <p className="mb-4 text-xs text-muted">Declara cuándo puedes recibir asignaciones. Esto no confirma paseos automáticamente.</p>
+        <div className="space-y-2">
+          {WEEKDAYS.map(([key, label]) => {
+            const day = schedule[key]
+            return (
+              <div key={key} className="rounded-xl bg-ink/[0.035] p-3 sm:flex sm:items-center sm:gap-3">
+                <button
+                  type="button"
+                  aria-pressed={day.active}
+                  aria-label={`${day.active ? 'Desactivar' : 'Activar'} ${label}`}
+                  onClick={() => updateDay(key, { active: !day.active })}
+                  className={`min-h-11 w-full rounded-lg px-3 text-left text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-28 ${day.active ? 'bg-primary/10 text-primary' : 'bg-ink/5 text-muted'}`}
+                >
+                  {label} <span aria-hidden="true">{day.active ? '✓' : '—'}</span>
+                </button>
+                {day.active && (
+                  <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:mt-0 sm:flex-1">
+                    <Input type="time" aria-label={`Inicio ${label}`} value={day.start} onChange={(event) => updateDay(key, { start: event.target.value })} />
+                    <span className="text-xs text-muted">a</span>
+                    <Input type="time" aria-label={`Fin ${label}`} value={day.end} onChange={(event) => updateDay(key, { end: event.target.value })} />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Button onClick={() => void saveProfile()} isLoading={saving} leftIcon={<Save size={15} />}>Guardar cambios</Button>
+          {saveStatus === 'saved' && <p className="inline-flex items-center gap-1.5 text-sm font-medium text-success-700" role="status"><CheckCircle2 size={15} />Cambios guardados</p>}
+          {saveStatus === 'error' && <p className="text-sm text-red-700" role="alert">No pudimos guardar. Revisa tu conexión o permisos.</p>}
+        </div>
+      </Card>
+
+      <Card className="p-4 shadow-none sm:p-5">
+        <div className="mb-2 flex items-center gap-2"><LockKeyhole size={17} className="text-primary" /><h2 className="font-bold text-ink">Método de acceso</h2></div>
+        {hasPasswordProvider ? (
+          <div className="space-y-3">
+            <p className="text-xs text-muted">La contraseña requiere una sesión reciente y al menos 8 caracteres.</p>
+            <Input type="password" autoComplete="new-password" aria-label="Nueva contraseña" placeholder="Nueva contraseña" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+            <Button variant="secondary" onClick={() => void changePassword()} disabled={newPassword.length < 8}>Actualizar contraseña</Button>
+          </div>
+        ) : (
+          <p className="inline-flex items-start gap-2 rounded-xl bg-ink/5 p-3 text-sm text-muted"><ShieldCheck size={17} className="mt-0.5 shrink-0 text-success-700" />Tu cuenta usa Google. PET Ap no almacena ni cambia tu contraseña de Google.</p>
+        )}
+        {passwordStatus && <p className="mt-3 text-sm text-muted" role="status">{passwordStatus}</p>}
+      </Card>
     </div>
   )
 }

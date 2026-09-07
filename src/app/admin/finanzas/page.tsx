@@ -5,7 +5,6 @@ import { Download } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import DataCard from '@/components/ui/DataCard'
-import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import { useReservations } from '@/context/ReservationsContext'
 
@@ -14,9 +13,9 @@ export default function AdminFinanzasPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [datePreset, setDatePreset] = useState<'all' | 'today' | 'week' | 'month' | 'year'>('all')
-  const { prices } = usePrices()
+  const { prices, hasIncompletePricing } = usePrices()
 
-  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? getServicePrice(serviceName)
+  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? 0
 
   const dateFiltered = useMemo(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -130,6 +129,7 @@ export default function AdminFinanzasPage() {
           </button>
         }
       />
+      {hasIncompletePricing && <p role="alert" className="rounded-xl bg-warning/10 p-3 text-sm text-amber-900">Cálculo parcial: hay servicios sin precio configurado y se excluyeron de los importes.</p>}
 
       {/* Date filters */}
       <div className="flex flex-wrap gap-2">

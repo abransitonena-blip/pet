@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc,
-  doc, serverTimestamp,
+  doc, serverTimestamp, limit,
 } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -89,7 +89,7 @@ function ChipInput({ items, onChange, placeholder, color }: {
   const [value, setValue] = useState('')
   const add = () => {
     const v = value.trim()
-    if (v && !items.includes(v)) { onChange([...items, v]); setValue('') }
+    if (v && items.length < 10 && !items.includes(v)) { onChange([...items, v]); setValue('') }
   }
   const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
   return (
@@ -105,6 +105,7 @@ function ChipInput({ items, onChange, placeholder, color }: {
       <div className="flex gap-2">
         <input
           type="text"
+          maxLength={80}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
@@ -137,7 +138,7 @@ export default function MisPerrosPage() {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (unsubPets) { unsubPets(); unsubPets = undefined }
       if (!user) { router.push('/login'); return }
-      const q = query(collection(db, 'dogs'), where('ownerId', '==', user.uid))
+      const q = query(collection(db, 'dogs'), where('ownerId', '==', user.uid), limit(50))
       unsubPets = onSnapshot(q, (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Pet))
         docs.sort((a, b) => {
@@ -223,7 +224,7 @@ export default function MisPerrosPage() {
       }
 
       if (editingPet) {
-        await updateDoc(doc(db, 'pets', editingPet.id), data)
+        await updateDoc(doc(db, 'dogs', editingPet.id), data)
       } else {
         await addDoc(collection(db, 'dogs'), {
           ...data,
@@ -241,7 +242,7 @@ export default function MisPerrosPage() {
   }
 
   const handleDelete = async (petId: string) => {
-    await deleteDoc(doc(db, 'pets', petId))
+    await deleteDoc(doc(db, 'dogs', petId))
     setConfirmDelete(null)
   }
 
@@ -299,8 +300,13 @@ export default function MisPerrosPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/familia')} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
-            <ArrowLeft size={14} />
+          <button
+            onClick={() => router.push('/familia')}
+            className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            style={{ color: 'var(--text-muted)' }}
+            aria-label="Volver al inicio de Familia PET"
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
           </button>
           <div>
             <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Mis perros</h1>
@@ -596,16 +602,17 @@ export default function MisPerrosPage() {
 
                 {activeTab === 'salud' && (
                   <>
+                    <p className="rounded-xl border p-3 text-xs" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>Información opcional. Registra únicamente alergias, medicamentos o contactos que el equipo necesite conocer para realizar el paseo de forma segura; no solicitamos un diagnóstico médico.</p>
                     {/* Allergies */}
                     <div>
                       <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Alergias</label>
-                      <ChipInput items={form.health.allergies} onChange={(val) => setField('health', { ...form.health, allergies: val })} placeholder="Ej: Pollo, polen..." color="rgba(220,38,38,0.15)" />
+                      <ChipInput items={form.health.allergies} onChange={(val) => setField('health', { ...form.health, allergies: val })} placeholder="Solo si es relevante para el paseo" color="rgba(220,38,38,0.15)" />
                     </div>
 
                     {/* Medications */}
                     <div>
                       <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Medicamentos</label>
-                      <ChipInput items={form.health.medications} onChange={(val) => setField('health', { ...form.health, medications: val })} placeholder="Ej: Apoquel, Nexgard..." color="rgba(59,130,246,0.15)" />
+                      <ChipInput items={form.health.medications} onChange={(val) => setField('health', { ...form.health, medications: val })} placeholder="Solo si requiere una precaución operativa" color="rgba(59,130,246,0.15)" />
                     </div>
 
                     {/* Vaccines */}
@@ -644,8 +651,8 @@ export default function MisPerrosPage() {
                         <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Veterinario</label>
                       </div>
                       <div className="space-y-2">
-                        <input type="text" value={form.health.vetName} onChange={(e) => setField('health', { ...form.health, vetName: e.target.value })} placeholder="Nombre del veterinario" className="w-full px-3 py-2 rounded-lg text-xs border transition-all focus:outline-none" style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
-                        <input type="tel" value={form.health.vetPhone} onChange={(e) => setField('health', { ...form.health, vetPhone: e.target.value })} placeholder="Teléfono" className="w-full px-3 py-2 rounded-lg text-xs border transition-all focus:outline-none" style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                        <input type="text" maxLength={100} value={form.health.vetName} onChange={(e) => setField('health', { ...form.health, vetName: e.target.value })} placeholder="Contacto veterinario (opcional)" className="w-full px-3 py-2 rounded-lg text-xs border transition-all focus:outline-none" style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                        <input type="tel" maxLength={20} value={form.health.vetPhone} onChange={(e) => setField('health', { ...form.health, vetPhone: e.target.value })} placeholder="Teléfono (opcional)" className="w-full px-3 py-2 rounded-lg text-xs border transition-all focus:outline-none" style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                       </div>
                     </div>
                   </>

@@ -10,6 +10,7 @@ import { useConfig } from '@/context/ConfigContext'
 import { Zap, Loader2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import type { Pet, Address } from '@/types'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 interface Props {
   onRequestCreated?: (requestId: string) => void
@@ -27,6 +28,7 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!FEATURE_FLAGS.PET_AHORA_ENABLED) { setLoading(false); return }
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (!u) { setLoading(false); return }
       setUser({ uid: u.uid, name: u.displayName || '', phone: u.phoneNumber || '' })
@@ -69,7 +71,16 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
     }
   }
 
-  if (!config.features.petAhoraEnabled) return null
+  if (!FEATURE_FLAGS.PET_AHORA_ENABLED || !config.features.petAhoraEnabled) {
+    return (
+      <div className="glass-card p-6 text-center" data-testid="pet-ahora-unavailable">
+        <Zap className="mx-auto mb-3 text-secondary" size={24} />
+        <h3 className="text-lg font-bold mb-2">PET Ahora está temporalmente en preparación</h3>
+        <p className="text-sm text-muted mb-4">Mientras terminamos la operación segura, puedes reservar un paseo programado.</p>
+        <Link href="/familia/nueva-reserva" className="btn-primary inline-flex">Programar un paseo</Link>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

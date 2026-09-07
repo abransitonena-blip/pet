@@ -1,55 +1,72 @@
-'use client'
+"use client"
 
-import { ButtonHTMLAttributes, forwardRef } from 'react'
+import React from 'react'
 import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
-type Size = 'sm' | 'md' | 'lg'
-
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant
-  size?: Size
-  loading?: boolean
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'icon'
+  size?: 'sm' | 'md' | 'lg'
+  isLoading?: boolean
+  leftIcon?: React.ReactNode
+  rightIcon?: React.ReactNode
   icon?: React.ReactNode
 }
 
-const variantStyles: Record<Variant, string> = {
-  primary: 'bg-gradient-to-r from-primary to-amber-600 text-white hover:shadow-glow focus-visible:ring-primary',
-  secondary: 'border border-border bg-transparent text-[var(--text-secondary)] hover:border-primary/30 hover:bg-glass-bg focus-visible:ring-primary',
-  ghost: 'text-[var(--text-muted)] hover:text-ink hover:bg-ink/5 focus-visible:ring-primary',
-  danger: 'bg-danger-500 text-white hover:bg-danger-600 focus-visible:ring-danger-400',
-  success: 'bg-success-500 text-white hover:bg-success-600 focus-visible:ring-success-400',
-}
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant = 'primary',
+      size = 'md',
+      isLoading = false,
+      disabled = false,
+      leftIcon,
+      rightIcon,
+      icon,
+      children,
+      onClick,
+      ...props
+    },
+    ref
+  ) => {
+    const baseClasses = 'inline-flex min-h-11 items-center justify-center font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:transform-none'
 
-const sizeStyles: Record<Size, string> = {
-  sm: 'px-3 py-1.5 text-xs rounded-lg gap-1.5',
-  md: 'px-5 py-2.5 text-sm rounded-xl gap-2',
-  lg: 'px-7 py-3.5 text-base rounded-xl gap-2.5',
-}
+    const variantClasses = {
+      primary: 'bg-primary text-white shadow-sm hover:bg-primary-hover active:scale-[0.98]',
+      secondary: 'border border-border bg-surface text-ink hover:border-ink/30 hover:bg-ink/[0.03] active:scale-[0.98]',
+      ghost: 'bg-transparent text-muted hover:bg-ink/[0.05] hover:text-ink active:scale-[0.98]',
+      danger: 'bg-danger text-white shadow-sm hover:bg-danger-600 active:scale-[0.98]',
+      icon: 'h-11 w-11 rounded-lg bg-transparent p-0 text-muted hover:bg-ink/[0.05] hover:text-ink active:scale-[0.98]'
+    }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', loading, icon, disabled, className = '', children, ...props }, ref) => {
+    const sizeClasses = {
+      sm: 'h-11 px-3 text-sm rounded-lg gap-1.5',
+      md: 'h-11 px-4 text-sm rounded-lg gap-2',
+      lg: 'h-12 px-6 text-base rounded-lg gap-2.5'
+    }
+
+    const effectiveLeftIcon = isLoading ? undefined : (leftIcon ?? icon)
+
     return (
       <button
         ref={ref}
-        disabled={disabled || loading}
-        className={`
-          inline-flex items-center justify-center font-semibold
-          transition-all duration-200 ease-out
-          active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-          ${variantStyles[variant]}
-          ${sizeStyles[size]}
-          ${className}
-        `}
+        className={cn(baseClasses, variantClasses[variant], sizeClasses[size], className)}
+        disabled={disabled || isLoading}
+        onClick={onClick}
         {...props}
       >
-        {loading ? <Loader2 className="animate-spin" size={size === 'sm' ? 12 : 14} /> : icon}
+        {isLoading && (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+        )}
+        {!isLoading && effectiveLeftIcon}
         {children}
+        {!isLoading && rightIcon}
       </button>
     )
   }
 )
 
 Button.displayName = 'Button'
+
 export default Button

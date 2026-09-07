@@ -5,13 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useReservations } from '@/context/ReservationsContext'
 import { Search, Users, Dog, CalendarDays,
   Clock, UserPlus, X, Crown, Heart, AlertTriangle } from 'lucide-react'
-import { getServicePrice } from '@/lib/services'
 import { usePrices } from '@/context/PricesContext'
 import Badge from '@/components/ui/Badge'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
 import type { Reservation } from '@/types'
+import { confirmWhatsAppShare } from '@/lib/utils'
 
 interface Client {
   name: string
@@ -60,7 +60,7 @@ export default function AdminClientesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [segmentFilter, setSegmentFilter] = useState<string>('all')
-  const { prices } = usePrices()
+  const { prices, hasIncompletePricing } = usePrices()
 
   const clients = useMemo(() => {
     const map = new Map<string, Client>()
@@ -89,7 +89,7 @@ export default function AdminClientesPage() {
       c.reservations.push(r)
       if (!c.petNames.includes(r.petName)) c.petNames.push(r.petName)
       if (r.paymentStatus === 'paid') {
-        const price = prices[r.service] ?? getServicePrice(r.service)
+        const price = prices[r.service] ?? 0
         c.totalSpent += price
       }
       if (r.date > c.lastVisit) c.lastVisit = r.date
@@ -161,7 +161,7 @@ export default function AdminClientesPage() {
 
   const openWhatsApp = (phone: string) => {
     const cleaned = phone.replace(/\D/g, '')
-    window.open(`https://wa.me/52${cleaned}?text=Hola, soy de PET Ap 🐾`, '_blank')
+    confirmWhatsAppShare(`52${cleaned}`, 'Hola, soy de PET Ap. Solicito ponerme en contacto contigo.')
   }
 
   return (
@@ -170,6 +170,7 @@ export default function AdminClientesPage() {
         title="CRM de Clientes"
         description={`${stats.totalClients} clientes · ${stats.vipClients} VIP · ${stats.atRiskClients} en riesgo`}
       />
+      {hasIncompletePricing && <p role="alert" className="rounded-xl bg-warning/10 p-3 text-sm text-amber-900">Totales parciales: hay servicios sin precio configurado y se excluyeron de los importes.</p>}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

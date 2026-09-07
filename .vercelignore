@@ -1,0 +1,3 @@
+/backups/
+**/firebase-adc.json
+.env*

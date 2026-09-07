@@ -137,6 +137,14 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+
   body {
     font-family: var(--font-body);
     font-size: var(--text-body);
@@ -161,7 +169,7 @@
 
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: var(--radius-full); }
+  ::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: var(--radius-full, 9999px); }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 }
 
@@ -175,7 +183,7 @@
   .card {
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-xl, 16px);
     box-shadow: var(--shadow-card);
     transition: box-shadow var(--transition-base), border-color var(--transition-base);
   }
@@ -187,7 +195,7 @@
   .card-elevated {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-xl, 16px);
     box-shadow: var(--shadow-lg);
   }
 
@@ -198,7 +206,7 @@
     justify-content: center;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-5);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-lg, 12px);
     font-size: var(--text-label);
     font-weight: 600;
     line-height: var(--text-label-lh);
@@ -243,7 +251,7 @@
   .input {
     width: 100%;
     padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-lg, 12px);
     font-size: var(--text-body);
     line-height: var(--text-body-lh);
     background: var(--bg-surface);
@@ -305,7 +313,7 @@
   .skeleton {
     background: linear-gradient(90deg, var(--bg-surface) 25%, rgba(128,128,128,0.05) 50%, var(--bg-surface) 75%);
     background-size: 200% 100%;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-lg, 12px);
     animation: shimmer 1.5s ease-in-out infinite;
   }
 

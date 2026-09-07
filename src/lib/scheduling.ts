@@ -1,7 +1,7 @@
 // Transit buffer: minimum minutes between consecutive walk sessions
 export const TRANSIT_BUFFER_MINUTES = 15
 
-// Walk durations by service name (minutes) — must match SERVICES in lib/services.ts
+// Walk durations by service name (minutes) — must match SERVICES in lib/walkServices.ts
 export const WALK_DURATIONS: Record<string, number> = {
   'Paseo Individual': 30,
   'Paseo Extendido': 60,

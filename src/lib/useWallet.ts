@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { doc, onSnapshot } from 'firebase/firestore'
+import { collection, doc, getDocs, limit as firestoreLimit, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { auth } from '@/firebase/config'
-import { getFunctions, httpsCallable } from 'firebase/functions'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 export interface WalletData {
   balance: number
@@ -25,7 +25,9 @@ export interface WalletTransaction {
   createdAt: { seconds: number; nanoseconds: number } | null
 }
 
-const functions = getFunctions()
+export type WalletTransactionsResult =
+  | { status: 'success'; transactions: WalletTransaction[] }
+  | { status: 'unavailable' | 'permission-denied' | 'network-error'; transactions: null }
 
 export function useWallet() {
   const [wallet, setWallet] = useState<WalletData | null>(null)
@@ -52,31 +54,41 @@ export function useWallet() {
       },
       () => {
         setLoading(false)
-        setError('Error al cargar billetera')
+        setError('No pudimos consultar tus Créditos PET')
       }
     )
 
     return unsub
   }, [])
 
-  const getTransactions = useCallback(async (limit = 20): Promise<WalletTransaction[]> => {
+  const getTransactions = useCallback(async (maxResults = 20): Promise<WalletTransactionsResult> => {
+    const user = auth.currentUser
+    if (!user) return { status: 'permission-denied', transactions: null }
     try {
-      const fn = httpsCallable(functions, 'getWalletTransactions')
-      const result = await fn({ limit })
-      return (result.data as { transactions: WalletTransaction[] }).transactions
-    } catch {
-      return []
+      const snapshot = await getDocs(query(
+        collection(db, 'wallets', user.uid, 'transactions'),
+        orderBy('createdAt', 'desc'),
+        firestoreLimit(Math.min(Math.max(maxResults, 1), 50))
+      ))
+      return {
+        status: 'success',
+        transactions: snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as WalletTransaction)),
+      }
+    } catch (cause) {
+      const code = typeof cause === 'object' && cause && 'code' in cause ? String(cause.code) : ''
+      return {
+        status: code.includes('permission-denied') ? 'permission-denied' : code.includes('unavailable') ? 'network-error' : 'unavailable',
+        transactions: null,
+      }
     }
   }, [])
 
   const deduct = useCallback(async (amount: number, concept: string, reservationId?: string): Promise<boolean> => {
-    try {
-      const fn = httpsCallable(functions, 'deductFromWallet')
-      const result = await fn({ amount, concept, reservationId: reservationId || '' })
-      return (result.data as { success: boolean }).success
-    } catch {
-      return false
-    }
+    void amount
+    void concept
+    void reservationId
+    if (!FEATURE_FLAGS.WALLET_MUTATIONS_ENABLED) return false
+    throw new Error('Wallet mutations require a trusted backend')
   }, [])
 
   return { wallet, loading, error, getTransactions, deduct }
