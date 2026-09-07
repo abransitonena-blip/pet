@@ -102,7 +102,7 @@ export default function AdminRutasPage() {
         ].map((s, i) => {
           const Icon = s.icon
           return (
-            <div key={i} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div key={i} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
               <Icon size={14} className="mb-2" style={{ color: 'var(--text-muted)' }} />
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
               <p className="text-lg font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{s.value}</p>
@@ -133,8 +133,7 @@ export default function AdminRutasPage() {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={() => setSelectedRoute(selectedRoute?.id === route.id ? null : route)}
-                className="rounded-xl p-4 cursor-pointer transition-all hover:bg-ink/5"
-                style={{ background: 'var(--bg-card)', border: `1px solid ${selectedRoute?.id === route.id ? 'var(--primary)' : 'var(--border)'}` }}
+                className={`rounded-xl border bg-surface p-4 shadow-sm cursor-pointer transition-all hover:bg-ink/5 ${selectedRoute?.id === route.id ? 'border-primary' : 'border-ink/10'}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

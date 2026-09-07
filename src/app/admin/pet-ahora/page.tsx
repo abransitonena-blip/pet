@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, Timestamp, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
 import { Zap, Ban, CheckCircle2, Loader2, Dog, Search } from 'lucide-react'
 import type { PetAhoraRequest } from '@/types'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
-import Link from 'next/link'
+import { Button, Card, EmptyState } from '@/components/ui'
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente',
@@ -46,6 +47,7 @@ function statusStyle(status: string) {
 }
 
 export default function AdminPetAhoraPage() {
+  const router = useRouter()
   const [requests, setRequests] = useState<PetAhoraRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -65,14 +67,22 @@ export default function AdminPetAhoraPage() {
   const handleCancel = async (id: string) => {
     if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return
     setActionLoading(id)
-    await updateDoc(doc(db, 'petAhoraRequests', id), { status: 'cancelled', cancelledAt: Timestamp.now(), cancellationReason: 'admin' })
+    try {
+      await updateDoc(doc(db, 'petAhoraRequests', id), { status: 'cancelled', cancelledAt: Timestamp.now(), cancellationReason: 'admin' })
+    } catch (err) {
+      console.error('Error cancelling PET Ahora request:', err)
+    }
     setActionLoading(null)
   }
 
   const handleForceComplete = async (id: string) => {
     if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return
     setActionLoading(id)
-    await updateDoc(doc(db, 'petAhoraRequests', id), { status: 'completed', completedAt: Timestamp.now() })
+    try {
+      await updateDoc(doc(db, 'petAhoraRequests', id), { status: 'completed', completedAt: Timestamp.now() })
+    } catch (err) {
+      console.error('Error force-completing PET Ahora request:', err)
+    }
     setActionLoading(null)
   }
 
@@ -95,12 +105,12 @@ export default function AdminPetAhoraPage() {
 
   if (!FEATURE_FLAGS.PET_AHORA_ENABLED) {
     return (
-      <div className="rounded-2xl p-8 text-center" data-testid="admin-pet-ahora-unavailable" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+      <Card className="p-8 text-center" data-testid="admin-pet-ahora-unavailable">
         <Zap className="mx-auto mb-3 text-secondary" size={28} />
         <h1 className="text-xl font-bold">PET Ahora está temporalmente en preparación</h1>
         <p className="text-sm text-muted mt-2 mb-4">No se crearán solicitudes, ofertas, leases ni asignaciones mientras el backend seguro no esté disponible.</p>
-        <Link href="/admin/reservas" className="btn-primary inline-flex">Ver paseos programados</Link>
-      </div>
+        <Button onClick={() => router.push('/admin/reservas')}>Ver paseos programados</Button>
+      </Card>
     )
   }
 
@@ -131,12 +141,9 @@ export default function AdminPetAhoraPage() {
           <button
             key={s.key}
             onClick={() => setFilter(s.key)}
-            className="rounded-xl p-3 text-center transition-all"
-            style={{
-              background: filter === s.key ? 'var(--color-primary)' : 'var(--bg-card)',
-              border: filter === s.key ? 'none' : '1px solid var(--border)',
-              color: filter === s.key ? 'white' : 'var(--text-primary)',
-            }}
+            className={`rounded-xl p-3 text-center transition-all ${
+              filter === s.key ? 'bg-primary text-white' : 'border border-ink/10 bg-surface text-ink shadow-sm'
+            }`}
           >
             <p className="text-lg font-bold">{s.count}</p>
             <p className="text-2xs opacity-80">{s.label}</p>
@@ -160,10 +167,9 @@ export default function AdminPetAhoraPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="animate-spin" size={20} style={{ color: 'var(--text-muted)' }} /></div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <Zap className="text-3xl mx-auto mb-3 opacity-30" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay solicitudes</p>
-        </div>
+        <Card className="p-8">
+          <EmptyState icon={<Zap size={28} />} title="No hay solicitudes" />
+        </Card>
       ) : (
         <div className="space-y-2">
           {filtered.map((r, i) => (
@@ -172,8 +178,7 @@ export default function AdminPetAhoraPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: i * 0.02 }}
-              className="rounded-xl p-3 flex items-center gap-3"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="rounded-xl border border-ink/10 bg-surface p-3 shadow-sm flex items-center gap-3"
             >
               <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: statusStyle(r.status).bg }}>
                 {r.status === 'completed' ? <CheckCircle2 size={13} style={{ color: statusStyle(r.status).text }} /> :
@@ -198,26 +203,26 @@ export default function AdminPetAhoraPage() {
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {['accepted', 'en_camino', 'paseando'].includes(r.status) && (
-                  <button
+                  <Button
+                    variant="icon"
                     onClick={() => handleForceComplete(r.id)}
-                    disabled={actionLoading === r.id}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                    style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}
-                    title="Forzar completado"
+                    isLoading={actionLoading === r.id}
+                    className="bg-success-500/10 text-success-600 hover:bg-success-500/20"
+                    aria-label="Forzar completado"
                   >
-                    {actionLoading === r.id ? <Loader2 className="animate-spin" size={10} /> : <CheckCircle2 size={10} />}
-                  </button>
+                    <CheckCircle2 size={10} />
+                  </Button>
                 )}
                 {!['completed', 'cancelled', 'expired'].includes(r.status) && (
-                  <button
+                  <Button
+                    variant="icon"
                     onClick={() => handleCancel(r.id)}
-                    disabled={actionLoading === r.id}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                    style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}
-                    title="Cancelar"
+                    isLoading={actionLoading === r.id}
+                    className="bg-danger-500/10 text-danger-400 hover:bg-danger-500/20"
+                    aria-label="Cancelar"
                   >
-                    {actionLoading === r.id ? <Loader2 className="animate-spin" size={10} /> : <Ban size={10} />}
-                  </button>
+                    <Ban size={10} />
+                  </Button>
                 )}
               </div>
             </motion.div>

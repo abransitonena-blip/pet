@@ -4,9 +4,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { motion } from 'framer-motion'
-import { UserPlus, Plus, Trash2, Copy, Check, Loader2 } from 'lucide-react'
+import { UserPlus, Plus, Trash2, Copy, Check } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
+import { Button, Card, EmptyState, Input } from '@/components/ui'
 import { brand } from '@/lib/brand'
 import { useToast } from '@/context/ToastContext'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -121,9 +122,9 @@ export default function AdminReferidosPage() {
         title="Referidos"
         description="Programa de referidos y recompensas"
         actions={
-          <button onClick={() => setShowAdd(!showAdd)} className="btn-primary text-xs flex items-center gap-2">
-            <Plus size={10} /> Nuevo referido
-          </button>
+          <Button size="sm" onClick={() => setShowAdd(!showAdd)} leftIcon={<Plus size={10} />}>
+            Nuevo referido
+          </Button>
         }
       />
 
@@ -135,7 +136,7 @@ export default function AdminReferidosPage() {
           { label: 'Pendientes', value: stats.pending, color: 'brand' },
           { label: 'Recompensas', value: `$${stats.totalRewards}`, color: 'accent' },
         ].map((s, i) => (
-          <div key={i} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div key={i} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
             <p className="text-xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{s.value}</p>
           </div>
@@ -143,7 +144,7 @@ export default function AdminReferidosPage() {
       </div>
 
       {/* Conversion rate */}
-      <div className="rounded-xl p-4 mb-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+      <div className="rounded-xl border border-ink/10 bg-surface p-4 mb-6 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Tasa de conversión</span>
           <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{stats.conversionRate}%</span>
@@ -155,31 +156,30 @@ export default function AdminReferidosPage() {
 
       {/* Add form */}
       {showAdd && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl p-4 mb-6 space-y-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl border border-ink/10 bg-surface p-4 mb-6 shadow-sm space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs mb-1 block" style={{ color: 'var(--text-muted)' }}>Nombre referente</label>
-              <input value={newRef.referrerName} onChange={(e) => setNewRef({ ...newRef, referrerName: e.target.value })} className="w-full px-3 py-2 rounded-lg text-sm" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              <Input value={newRef.referrerName} onChange={(e) => setNewRef({ ...newRef, referrerName: e.target.value })} className="text-sm" />
             </div>
             <div>
               <label className="text-xs mb-1 block" style={{ color: 'var(--text-muted)' }}>Teléfono referente</label>
-              <input value={newRef.referrerPhone} onChange={(e) => setNewRef({ ...newRef, referrerPhone: e.target.value })} className="w-full px-3 py-2 rounded-lg text-sm" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              <Input value={newRef.referrerPhone} onChange={(e) => setNewRef({ ...newRef, referrerPhone: e.target.value })} className="text-sm" />
             </div>
             <div>
               <label className="text-xs mb-1 block" style={{ color: 'var(--text-muted)' }}>Nombre referido</label>
-              <input value={newRef.refereeName} onChange={(e) => setNewRef({ ...newRef, refereeName: e.target.value })} className="w-full px-3 py-2 rounded-lg text-sm" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              <Input value={newRef.refereeName} onChange={(e) => setNewRef({ ...newRef, refereeName: e.target.value })} className="text-sm" />
             </div>
             <div>
               <label className="text-xs mb-1 block" style={{ color: 'var(--text-muted)' }}>Teléfono referido</label>
-              <input value={newRef.refereePhone} onChange={(e) => setNewRef({ ...newRef, refereePhone: e.target.value })} className="w-full px-3 py-2 rounded-lg text-sm" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              <Input value={newRef.refereePhone} onChange={(e) => setNewRef({ ...newRef, refereePhone: e.target.value })} className="text-sm" />
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowAdd(false)} className="btn-secondary text-xs">Cancelar</button>
-            <button onClick={handleAdd} disabled={saving || !FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED} className="btn-primary text-xs flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-40" title={FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED ? undefined : 'La automatización de referidos está desactivada'}>
-              {saving ? <Loader2 className="animate-spin" size={10} /> : <Plus size={10} />}
+            <Button size="sm" variant="secondary" onClick={() => setShowAdd(false)}>Cancelar</Button>
+            <Button size="sm" onClick={handleAdd} disabled={!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED} isLoading={saving} leftIcon={<Plus size={10} />} title={FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED ? undefined : 'La automatización de referidos está desactivada'}>
               Guardar
-            </button>
+            </Button>
           </div>
         </motion.div>
       )}
@@ -188,14 +188,13 @@ export default function AdminReferidosPage() {
       {loading ? (
         <LoadingState rows={3} height="h-16" />
       ) : referrals.length === 0 ? (
-        <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <UserPlus className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin referidos aún</p>
-        </div>
+        <Card className="p-8">
+          <EmptyState icon={<UserPlus size={28} />} title="Sin referidos aún" />
+        </Card>
       ) : (
         <div className="space-y-2">
           {referrals.map((r) => (
-            <div key={r.id} className="rounded-xl p-4 flex items-center justify-between gap-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div key={r.id} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm flex items-center justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{r.referrerName}</span>

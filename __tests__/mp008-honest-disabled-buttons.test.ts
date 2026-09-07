@@ -10,7 +10,7 @@ describe('MP-008: buttons never look active while silently failing on a disabled
 
   test('admin/referidos: add/complete/delete actions are gated by AUTOMATIC_REFERRALS_ENABLED', () => {
     const source = readFileSync('src/app/admin/referidos/page.tsx', 'utf8')
-    expect(source).toContain('disabled={saving || !FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED}')
+    expect(source).toContain('disabled={!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED} isLoading={saving}')
     expect(source).toContain("disabled={!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED} className=\"w-7 h-7 rounded-lg flex items-center justify-center hover:bg-success-500/10")
     expect(source).toContain("disabled={!FEATURE_FLAGS.AUTOMATIC_REFERRALS_ENABLED} className=\"w-7 h-7 rounded-lg flex items-center justify-center hover:bg-danger-500/10")
   })
