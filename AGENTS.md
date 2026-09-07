@@ -239,4 +239,19 @@ Notar: -- Ejemplo de `scripts/check-forbidden.mjs` bloquea tokens legacy "Quebra
 - Gates: typecheck/lint PASS, 457/457 suite (5 nuevas focales en `__tests__/t3-identity-check.test.ts`), build 55/55.
 - Preview `dpl_3pAwfKyxE2LEvGadwnhWPVnPtDBx`: sin token `401`, token inválido `403`. El intercambio OIDC real (camino feliz) solo es verificable en Production por el diseño restringido a `environment:production`; queda pendiente esa verificación autenticada post-promoción.
 - Cero pagos, ledger, comisiones o precios creados. No inventado ningún contrato financiero — sigue pendiente autorización de negocio explícita para T3 más allá de esta plomería de identidad.
-- Commit: `1589235` (rama `backup/pre-auth-ui-migration-2026-08-05`). No se hizo push ni promoción a Production.
+- Commit: `1589235` (rama `backup/pre-auth-ui-migration-2026-08-05`). No se hizo push ni promoción a Production en ese momento.
+
+## Producción T3 y consolidación (7-sep-2026)
+
+- El usuario promovió manualmente a Production (`vercel deploy --prod`, tras el bloqueo del clasificador de permisos para acciones de este tipo). Production actual: `dpl_3sqzwmJt6Hizs7Cm8VEjsVKqedrC`. Smoke test en vivo: `/` 200, `/admin/galeria` 307 a login, `/robots.txt` 200, `/api/admin/finance/t3-identity-check` sin token → 401 (confirmado en Production real).
+
+## F2-F4, M1, N1 — plomería fail-closed (7-sep-2026)
+
+- Decisión del propietario: construir F2-F4/M1/N1 como plomería real (sin invertir cifras ni contenido) detrás de feature flags apagados.
+- **F2/F3**: `POST /api/admin/finance/payments` (registro, monto/método del Admin) y `POST /api/admin/finance/payments/confirm` (único camino a un movimiento de ledger, deriva el monto del pago ya registrado, transacción atómica). Flag nuevo `FINANCE_PAYMENTS_ENABLED` (false).
+- **F4**: `GET /api/admin/finance/tickets/{sessionId}/financial-snapshot`, solo lectura; T2 (`src/lib/tickets.ts`) sin tocar, tickets siguen inmutables.
+- **M1**: `POST /api/media/private/signature`, Cloudinary `type=authenticated`, Walker solo firma para su sesión asignada (verificado server-side), `public_id` opaco. Flag `PRIVATE_MEDIA_UPLOADS_ENABLED` sigue false.
+- **N1**: `POST /api/admin/notifications/send`, FCM HTTP v1 vía identidad T3 (ampliado con `roles/firebasecloudmessaging.admin`, mismo alcance restringido). No requiere Cloud Functions/Blaze. Flag `FCM_ENABLED` sigue false; falta el registro cliente de tokens.
+- Identidad compartida refactorizada a `src/lib/finance/serverIdentity.ts`.
+- Gates acumulados: typecheck/lint PASS, 484/484 suite, build 59/59, 6 commits separados (uno por fase) en `backup/pre-auth-ui-migration-2026-08-05`.
+- Cero dinero movido, cero notificaciones enviadas, cero contenido inventado. Pendiente: decisión de negocio para activar flags + QA manual antes de cualquier uso real.

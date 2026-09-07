@@ -47,6 +47,19 @@ Decisión del propietario: Workload Identity Federation (OIDC Vercel → GCP), s
 - Verificado en Preview `dpl_3pAwfKyxE2LEvGadwnhWPVnPtDBx`: sin token → `401`; token inválido → `403` (antes de intentar la identidad privilegiada). El intercambio OIDC real solo puede confirmarse en Production, porque el IAM está restringido a `environment:production` por diseño — pendiente esa verificación autenticada tras la promoción.
 - No se crearon pagos, ledger, comisiones ni precios. Sigue pendiente autorización de negocio explícita antes de escribir cualquier endpoint financiero real.
 
+## F2-F4, M1, N1 — plomería fail-closed (7-sep-2026)
+
+Decisión del propietario: construir solo plomería sin montos/reglas de negocio reales.
+
+- **F2** (`POST /api/admin/finance/payments`): registra un pago con monto/método provistos por el Admin (nunca inventados), validado por `validatePayment` (F1). Detrás de `FINANCE_PAYMENTS_ENABLED` (nuevo flag, `false`).
+- **F3** (`POST /api/admin/finance/payments/confirm`): único camino a un movimiento de `financialMovements` — no existe endpoint para publicar un movimiento arbitrario. Deriva el monto del pago ya registrado, valida la transición (`assertPaymentTransition`) y escribe pago+movimiento+contador+idempotencia en una sola transacción Firestore. Mismo flag que F2.
+- **F4** (`GET /api/admin/finance/tickets/{sessionId}/financial-snapshot`): solo lectura, suma pagos confirmados y arma un `TemporaryTicketFinancialSnapshot`. No toca ningún documento de `tickets` — la creación T2 (`src/lib/tickets.ts`) sigue exactamente igual, tickets siguen inmutables.
+- **M1** (`POST /api/media/private/signature`): firma de subida Cloudinary `type=authenticated` (nunca pública) para fotos operativas. Un Walker solo puede firmar para una sesión verificada server-side como suya (`walkSessions.walkerId`). `public_id` es un UUID opaco, sin datos identificables en la ruta. Detrás de `PRIVATE_MEDIA_UPLOADS_ENABLED` (`false`), sin tocar los llamadores existentes (WalkSessionModal, PetAhoraPhotoModal).
+- **N1** (`POST /api/admin/notifications/send`): envío push vía FCM HTTP v1 API usando la identidad T3 — no requiere Cloud Functions ni el plan Blaze (ya rechazado por el propietario). Se amplió el service account `vercel-t3-finance` con `roles/firebasecloudmessaging.admin` (rol mínimo, mismo alcance restringido a `pet-euhz`+`production`). Detrás de `FCM_ENABLED` (`false`) — falta el flujo de registro cliente (permiso + almacenar token), que no se construyó en esta pasada.
+- Refactor: la identidad OIDC→GCP compartida vive ahora en `src/lib/finance/serverIdentity.ts` (usada por Firestore y FCM).
+- Gates en cada pieza: typecheck/lint PASS, 484/484 suite, build 59/59.
+- Cero pagos, comisiones, precios o notificaciones reales enviados. Todo sigue apagado hasta autorización de negocio explícita.
+
 ## Cierre operativo G1 legacy — 31-ago-2026
 
 | ID | Área | Problema | Evidencia | Prioridad | Dependencia | Solución propuesta | Criterio de aceptación | Estado |
