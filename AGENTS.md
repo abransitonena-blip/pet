@@ -229,3 +229,14 @@ Notar: -- Ejemplo de `scripts/check-forbidden.mjs` bloquea tokens legacy "Quebra
 - Evidencia: `__tests__/reservation-flow-p0.test.tsx`, 18/18 focal PASS (incluye "una zona desactivada falla antes de crear IDs, referencias o batches", que confirma `mockWriteBatch` nunca se invoca).
 - No se modificó código de producto; solo se corrigió el estado documentado en `documentacion/08-mejoras-pendientes.md`.
 - No se desplegó nada nuevo para esto: ya vive en el mismo Preview `dpl_5Z7Zom7noWC8TykNVGvH5kZ1NxPQ` publicado junto con el commit de consolidación (rama `backup/pre-auth-ui-migration-2026-08-05`, commit `a117aa8`).
+
+## T3 — Workload Identity Federation (7-sep-2026)
+
+- Bloqueador `T3-001` resuelto: identidad server-only vía OIDC Vercel → GCP (decisión del propietario), sin secreto de larga vida almacenado en ningún lado.
+- GCP (`pet-1cb0b`): pool `vercel` + provider `vercel-provider`; service account `vercel-t3-finance@pet-1cb0b.iam.gserviceaccount.com` con solo `roles/datastore.user`; impersonación restringida a `principal://.../workloadIdentityPools/vercel/subject/owner:abraham9:project:pet-euhz:environment:production` — un único proyecto y ambiente, verificado con `gcloud iam service-accounts get-iam-policy`.
+- Vercel: variables `GCP_PROJECT_ID/PROJECT_NUMBER/SERVICE_ACCOUNT_EMAIL/WORKLOAD_IDENTITY_POOL_ID/WORKLOAD_IDENTITY_POOL_PROVIDER_ID/AUDIENCE` en Production únicamente.
+- Código: `src/lib/finance/serverFirestore.ts` (`@google-cloud/firestore` + `ExternalAccountClient` de `google-auth-library` + `@vercel/oidc`; falla cerrado sin variables) y `src/app/api/admin/finance/t3-identity-check/route.ts` (Admin-only, idempotente vía `src/lib/finance/domain/idempotency.ts`, escribe solo `financeAudit`).
+- Gates: typecheck/lint PASS, 457/457 suite (5 nuevas focales en `__tests__/t3-identity-check.test.ts`), build 55/55.
+- Preview `dpl_3pAwfKyxE2LEvGadwnhWPVnPtDBx`: sin token `401`, token inválido `403`. El intercambio OIDC real (camino feliz) solo es verificable en Production por el diseño restringido a `environment:production`; queda pendiente esa verificación autenticada post-promoción.
+- Cero pagos, ledger, comisiones o precios creados. No inventado ningún contrato financiero — sigue pendiente autorización de negocio explícita para T3 más allá de esta plomería de identidad.
+- Commit: `1589235` (rama `backup/pre-auth-ui-migration-2026-08-05`). No se hizo push ni promoción a Production.

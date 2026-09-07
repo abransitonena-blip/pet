@@ -35,10 +35,22 @@ Actualizado: 1 de septiembre de 2026. Este backlog usa como evidencia el runtime
 
 Ninguna comisión, publicidad, cobro o cifra de monetización está activa por este documento.
 
+## T3 — identidad server-only (7-sep-2026)
+
+Decisión del propietario: Workload Identity Federation (OIDC Vercel → GCP), sin secreto de larga vida.
+
+- Workload Identity Pool `vercel`, provider `vercel-provider` (issuer `https://oidc.vercel.com/abraham9`), proyecto GCP `pet-1cb0b` (núm. `766966870438`).
+- Service account `vercel-t3-finance@pet-1cb0b.iam.gserviceaccount.com` con únicamente `roles/datastore.user` (el rol built-in mínimo para Firestore; no hay granularidad por colección a nivel IAM — la restricción de qué se puede escribir sigue viviendo en el código del endpoint).
+- Impersonación restringida a un único principal: proyecto Vercel `pet-euhz`, ambiente `production` exclusivamente. Ningún otro proyecto ni ningún Preview puede usar esta identidad — verificado con `gcloud iam service-accounts get-iam-policy`.
+- Variables `GCP_PROJECT_ID`, `GCP_PROJECT_NUMBER`, `GCP_SERVICE_ACCOUNT_EMAIL`, `GCP_WORKLOAD_IDENTITY_POOL_ID`, `GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID`, `GCP_AUDIENCE` agregadas solo al ambiente Production de Vercel.
+- Código: `src/lib/finance/serverFirestore.ts` (falla cerrado a `null` si falta cualquier variable) y `src/app/api/admin/finance/t3-identity-check/route.ts` (Admin-only, idempotente, escribe únicamente en `financeAudit`, cero campos financieros).
+- Verificado en Preview `dpl_3pAwfKyxE2LEvGadwnhWPVnPtDBx`: sin token → `401`; token inválido → `403` (antes de intentar la identidad privilegiada). El intercambio OIDC real solo puede confirmarse en Production, porque el IAM está restringido a `environment:production` por diseño — pendiente esa verificación autenticada tras la promoción.
+- No se crearon pagos, ledger, comisiones ni precios. Sigue pendiente autorización de negocio explícita antes de escribir cualquier endpoint financiero real.
+
 ## Cierre operativo G1 legacy — 31-ago-2026
 
 | ID | Área | Problema | Evidencia | Prioridad | Dependencia | Solución propuesta | Criterio de aceptación | Estado |
 |---|---|---|---|---|---|---|---|---|
 | G1-002 | Galería Admin | Un documento legacy sin `format` cerraba toda la vista. | Contrato real `createdAt,dog,title,url`; regresión focal 8/8; Security sin hallazgos. | P0 | Ninguna migración necesaria para operar. | Parser defensivo y estados `compatible/legacy/invalid`; mutaciones solo compatibles. | Legacy visible en solo lectura, inválidos aislados y G1 compatible administrable. | PRODUCTION |
 | O1-001 | Shells / navegación | La ruta raíz del panel quedaba activa en subrutas y Admin carecía de jerarquía móvil consistente. | Security `cb61738a-138b-468b-829e-be2ae3456d01`; Preview `dpl_6PXCey3Swi3vULMFLT4cC18uw2gB`; Production `dpl_Gzys5ZJwnN9Rta2dTZgktvCX11L1`. | P1 | Ninguna ampliación de permisos. | Helper único de rutas, grupos Admin, `Link`, drawer accesible, 44 px, foco y movimiento reducido. | 434/434, build 54/54, QA cinco tamaños, consola/logs/SW PASS. | VERIFIED |
-| T3-001 | Backend privilegiado | Pagos/ledger no pueden mutarse con autoridad del navegador. | Spark sin Cloud Functions; Vercel Functions existe, pero falta identidad server-only aprobada con acceso mínimo. | P0 | Decisión IAM/identidad o secreto del propietario. | Preparar verificación de Firebase ID token, claims/capabilities, origen estricto, idempotencia persistente, transacción y auditoría; fail-closed sin credencial. | Ninguna mutación funciona sin identidad server-only válida; tokens/secretos ausentes de bundles/logs; emulador y threat model PASS. | BLOCKED_OWNER |
+| T3-001 | Backend privilegiado | Pagos/ledger no pueden mutarse con autoridad del navegador. | Spark sin Cloud Functions; Vercel Functions existe, pero falta identidad server-only aprobada con acceso mínimo. | P0 | Decisión IAM/identidad o secreto del propietario. | Preparar verificación de Firebase ID token, claims/capabilities, origen estricto, idempotencia persistente, transacción y auditoría; fail-closed sin credencial. | Ninguna mutación funciona sin identidad server-only válida; tokens/secretos ausentes de bundles/logs; emulador y threat model PASS. | IN_PROGRESS (7-sep-2026): identidad server-only resuelta vía Workload Identity Federation (Vercel OIDC → GCP), decisión del propietario. Sin secreto de larga vida almacenado. Ver sección "T3 — identidad server-only" abajo. Falta: contratos financieros reales (montos/comisiones) requieren autorización de negocio explícita antes de escribir endpoints de pago/ledger; aún NO hay pagos ni ledger reales. |
