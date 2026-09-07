@@ -10,6 +10,7 @@ import Badge from '@/components/ui/Badge'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
+import Button from '@/components/ui/Button'
 import type { Reservation } from '@/types'
 import { confirmWhatsAppShare } from '@/lib/utils'
 
@@ -180,7 +181,7 @@ export default function AdminClientesPage() {
           { label: 'Activos mes', value: stats.activeClients, icon: CalendarDays, color: '#3b82f6' },
           { label: 'VIP', value: stats.vipClients, icon: Crown, color: '#F59E0B' },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div key={s.label} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
             <s.icon size={14} style={{ color: s.color }} className="mb-2" />
             <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{s.value}</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
@@ -233,8 +234,7 @@ export default function AdminClientesPage() {
                 key={c.phone}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl p-4 transition-all hover:bg-ink/5 cursor-pointer"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm transition-all hover:bg-ink/5 cursor-pointer"
                 onClick={() => setSelectedClient(selectedClient?.phone === c.phone ? null : c)}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -260,13 +260,14 @@ export default function AdminClientesPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <button
+                    <Button
+                      variant="icon"
                       onClick={(e) => { e.stopPropagation(); openWhatsApp(c.phone) }}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-success-500/10 text-success-400"
-                      title="WhatsApp"
+                      className="text-success-400 hover:bg-success-500/10"
+                      aria-label="WhatsApp"
                     >
                       <WhatsAppIcon width={13} height={13} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </motion.div>
@@ -291,8 +292,7 @@ export default function AdminClientesPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg rounded-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="w-full max-w-lg rounded-xl border border-ink/10 bg-surface p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-elevated"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between">
@@ -300,9 +300,9 @@ export default function AdminClientesPage() {
                   <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>{selectedClient.name}</h2>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>📞 {selectedClient.phone}</p>
                 </div>
-                <button onClick={() => setSelectedClient(null)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+                <Button variant="icon" onClick={() => setSelectedClient(null)} aria-label="Cerrar">
                   <X size={14} />
-                </button>
+                </Button>
               </div>
 
               {/* Client KPIs */}

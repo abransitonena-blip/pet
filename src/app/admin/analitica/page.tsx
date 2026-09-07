@@ -165,7 +165,7 @@ export default function AdminAnaliticaPage() {
               { label: 'Clientes nuevos', value: analytics.uniqueClientsThisMonth, trend: `${analytics.growthClients >= 0 ? '+' : ''}${analytics.growthClients}%`, trendUp: analytics.growthClients > 0, color: '#3b82f6', icon: Users },
               { label: 'Calificación', value: `${analytics.avgRating} ★`, trend: `${analytics.totalReviews} reseñas`, trendUp: true, color: '#7C3AED', icon: Star },
             ].map((kpi) => (
-              <div key={kpi.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div key={kpi.label} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
                 <kpi.icon size={14} style={{ color: kpi.color }} className="mb-2" />
                 <p className="text-2xs mb-1" style={{ color: 'var(--text-muted)' }}>{kpi.label}</p>
                 <p className="text-2xl font-bold" style={{ color: kpi.color }}>{kpi.value}</p>
@@ -177,7 +177,7 @@ export default function AdminAnaliticaPage() {
           </div>
 
           {/* Monthly Revenue Chart */}
-          <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
             <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Ingresos mensuales (6 meses)</p>
             <div className="flex items-end gap-2 h-40">
               {analytics.monthlyRevenue.map((m) => (
@@ -202,7 +202,7 @@ export default function AdminAnaliticaPage() {
           {/* Retention + Service Mix */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Retention */}
-            <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
               <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Retención de clientes</p>
               <div className="flex items-center gap-4 mb-2">
                 <div className="flex-1">
@@ -220,7 +220,7 @@ export default function AdminAnaliticaPage() {
             </div>
 
             {/* Service Mix */}
-            <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
               <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Mix de servicios (este mes)</p>
               <div className="space-y-2">
                 {analytics.serviceMix.map(([service, revenue], i) => (
@@ -246,7 +246,7 @@ export default function AdminAnaliticaPage() {
 
           {/* Top Services + Day of Week */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
               <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Servicios más populares</p>
               <div className="space-y-2">
                 {analytics.topServices.map(([service, count]) => (
@@ -263,7 +263,7 @@ export default function AdminAnaliticaPage() {
               </div>
             </div>
 
-            <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
               <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Reservas por día de la semana</p>
               <div className="flex items-end gap-1 h-32">
                 {Object.entries(analytics.dayOfWeekCounts).map(([day, count]) => (
@@ -279,7 +279,7 @@ export default function AdminAnaliticaPage() {
 
           {/* Walker Performance */}
           {analytics.walkerPerformance.length > 0 && (
-            <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <PersonStanding size={14} className="text-blue-400" />
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Rendimiento de paseadores</p>
