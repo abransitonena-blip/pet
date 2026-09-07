@@ -221,3 +221,11 @@ Notar: -- Ejemplo de `scripts/check-forbidden.mjs` bloquea tokens legacy "Quebra
 - Smoke test sin credenciales: `GET https://pet-euhz.vercel.app/admin/galeria` → `307` a `/equipo` (login), sin error 500.
 - No se tocó Firestore, no hubo escrituras, no se subieron imágenes, no hubo commit/push.
 - Siguiente fase concreta: T3 backend privilegiado.
+
+## Verificación de continuidad — MP-001/MP-002 (7-sep-2026)
+
+- `documentacion/08-mejoras-pendientes.md` marcaba MP-001 (zona inválida rompe el batch de reserva) como "en progreso". Verificación directa del código mostró que ya está resuelto: `ReservationFlow.tsx`/`StepV2Address.tsx` deshabilitan direcciones con zona inactiva y explican el problema, `validateAddressBeforeConfirmation` revalida antes de Confirmar, y `submitReservation.ts` revalida contra Firestore y falla con `BOOKING_ZONE_UNAVAILABLE` antes de construir cualquier referencia o `writeBatch`.
+- MP-002 (selector de zona en direcciones) también verificado resuelto: `<select>` poblado solo con `zones` activas, sin texto libre, `required`.
+- Evidencia: `__tests__/reservation-flow-p0.test.tsx`, 18/18 focal PASS (incluye "una zona desactivada falla antes de crear IDs, referencias o batches", que confirma `mockWriteBatch` nunca se invoca).
+- No se modificó código de producto; solo se corrigió el estado documentado en `documentacion/08-mejoras-pendientes.md`.
+- No se desplegó nada nuevo para esto: ya vive en el mismo Preview `dpl_5Z7Zom7noWC8TykNVGvH5kZ1NxPQ` publicado junto con el commit de consolidación (rama `backup/pre-auth-ui-migration-2026-08-05`, commit `a117aa8`).

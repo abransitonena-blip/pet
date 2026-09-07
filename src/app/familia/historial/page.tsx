@@ -14,14 +14,17 @@ import {
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
 import CanonicalFamilyHistory from '@/components/family/CanonicalFamilyHistory'
+import { ErrorState } from '@/components/ui'
 
 export default function HistorialPage() {
   const router = useRouter()
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [customerId, setCustomerId] = useState('')
   const [loading, setLoading] = useState(true)
+  const [legacyError, setLegacyError] = useState('')
   const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled'>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     let unsubRes: (() => void) | undefined
@@ -30,6 +33,7 @@ export default function HistorialPage() {
       if (unsubRes) { unsubRes(); unsubRes = undefined }
       if (!user) { setCustomerId(''); router.push('/login'); return }
       setCustomerId(user.uid)
+      setLegacyError('')
 
       const q = query(collection(db, 'reservations'), where('uid', '==', user.uid), limit(50))
       unsubRes = onSnapshot(q, (snap) => {
@@ -43,10 +47,16 @@ export default function HistorialPage() {
         })
         setReservations(docs)
         setLoading(false)
-      }, () => setLoading(false))
+      }, (cause) => {
+        const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
+        setLegacyError(code.includes('permission-denied')
+          ? 'Tu sesión no tiene permiso para consultar el historial anterior.'
+          : 'No pudimos consultar el historial anterior. Revisa tu conexión.')
+        setLoading(false)
+      })
     })
     return () => { unsubRes?.(); unsubAuth() }
-  }, [router])
+  }, [router, retryKey])
 
   const filtered = filter === 'all' ? reservations : reservations.filter((r) => r.status === filter)
   const completedCount = reservations.filter((r) => r.status === 'completed').length
@@ -116,7 +126,9 @@ export default function HistorialPage() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {legacyError ? (
+        <ErrorState description={legacyError} onRetry={() => setRetryKey((value) => value + 1)} />
+      ) : filtered.length === 0 ? (
         <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <History className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
