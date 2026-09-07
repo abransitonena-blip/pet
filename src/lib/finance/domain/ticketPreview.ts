@@ -115,7 +115,7 @@ function unknownFinancialSnapshot(): TemporaryTicketFinancialSnapshot {
   })
 }
 
-function cloneFinancialSnapshot(value?: TemporaryTicketFinancialSnapshot | null): TemporaryTicketFinancialSnapshot {
+export function cloneFinancialSnapshot(value?: TemporaryTicketFinancialSnapshot | null): TemporaryTicketFinancialSnapshot {
   if (!value || !value.reliable) {
     if (value && (
       value.subtotal !== null || value.discount !== null || value.tip !== null || value.total !== null
