@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
 import Button from '@/components/ui/Button'
 
 interface ErrorStateProps {
@@ -16,8 +17,15 @@ export default function ErrorState({
   onRetry,
   retryLabel = 'Reintentar',
 }: ErrorStateProps) {
+  const reducedMotion = useReducedMotion()
   return (
-    <div className="text-center py-10" role="alert">
+    <motion.div
+      className="text-center py-10"
+      role="alert"
+      initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+    >
       <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-danger-500/10">
         <AlertTriangle size={22} style={{ color: 'var(--color-error)' }} />
       </div>
@@ -32,6 +40,6 @@ export default function ErrorState({
           {retryLabel}
         </Button>
       )}
-    </div>
+    </motion.div>
   )
 }

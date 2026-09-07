@@ -1,5 +1,7 @@
 'use client'
 
+import { motion, useReducedMotion } from 'framer-motion'
+
 interface LoadingStateProps {
   message?: string
   rows?: number
@@ -7,8 +9,15 @@ interface LoadingStateProps {
 }
 
 export default function LoadingState({ message = 'Cargando...', rows = 3, height = 'h-14' }: LoadingStateProps) {
+  const reducedMotion = useReducedMotion()
   return (
-    <div aria-busy="true" role="status">
+    <motion.div
+      aria-busy="true"
+      role="status"
+      initial={reducedMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+    >
       <div className="space-y-3">
         {Array.from({ length: rows }).map((_, i) => (
           <div key={i} className={`skeleton ${height} rounded-xl`} />
@@ -16,6 +25,6 @@ export default function LoadingState({ message = 'Cargando...', rows = 3, height
       </div>
       <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>{message}</p>
       <span className="sr-only">{message}</span>
-    </div>
+    </motion.div>
   )
 }
