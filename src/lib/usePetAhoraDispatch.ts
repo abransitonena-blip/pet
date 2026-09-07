@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc, Timestamp } from 'firebase/firestore'
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc, limit, Timestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { selectBestWalker } from './dispatch'
 import type { Walker, PetAhoraRequest, Address } from '@/types'
@@ -81,7 +81,7 @@ export function usePetAhoraDispatch() {
 
       await updateDoc(requestRef, { status: 'searching' })
 
-      const walkersSnap = await getDocs(query(collection(db, 'walkers'), where('status', '==', 'active'), where('zones', 'array-contains', params.zoneId)))
+      const walkersSnap = await getDocs(query(collection(db, 'walkers'), where('status', '==', 'active'), where('zones', 'array-contains', params.zoneId), limit(50)))
       const walkers = walkersSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Walker))
 
       const best = selectBestWalker(walkers, params.zoneId, dayOfWeek(), nowStr())
@@ -110,7 +110,7 @@ export function usePetAhoraDispatch() {
       const req = { id: reqSnap.id, ...reqSnap.data() } as PetAhoraRequest
       if (req.status !== 'offer_sent') return false
 
-      const walkersSnap = await getDocs(query(collection(db, 'walkers'), where('status', '==', 'active'), where('zones', 'array-contains', req.zoneId)))
+      const walkersSnap = await getDocs(query(collection(db, 'walkers'), where('status', '==', 'active'), where('zones', 'array-contains', req.zoneId), limit(50)))
       const walkers = walkersSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Walker))
 
       const best = selectBestWalker(walkers, req.zoneId, dayOfWeek(), nowStr())

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { onAuthStateChanged } from 'firebase/auth'
-import { collection, query, where, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs, limit } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import { usePetAhoraDispatch } from '@/lib/usePetAhoraDispatch'
 import { useConfig } from '@/context/ConfigContext'
@@ -34,8 +34,8 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
       setUser({ uid: u.uid, name: u.displayName || '', phone: u.phoneNumber || '' })
       try {
         const [petsSnap, addrSnap] = await Promise.all([
-          getDocs(query(collection(db, 'dogs'), where('ownerId', '==', u.uid))),
-          getDocs(query(collection(db, 'addresses'), where('ownerId', '==', u.uid))),
+          getDocs(query(collection(db, 'dogs'), where('ownerId', '==', u.uid), limit(50))),
+          getDocs(query(collection(db, 'addresses'), where('ownerId', '==', u.uid), limit(50))),
         ])
         setPets(petsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Pet)))
         setAddresses(addrSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Address)))
