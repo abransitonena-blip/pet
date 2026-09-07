@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   Bot, CalendarDays, Dog, Users, Clock,
@@ -21,9 +22,11 @@ interface Insight {
   color: string
   priority: 'high' | 'medium' | 'low'
   action?: string
+  actionHref?: string
 }
 
 export default function AdminIAPage() {
+  const router = useRouter()
   const { reservations, loading } = useReservations()
   const { prices, hasIncompletePricing } = usePrices()
   const { config } = useConfig()
@@ -103,12 +106,12 @@ export default function AdminIAPage() {
     if (revenueGrowth > 10) {
       result.push({ id: 'rev_up', title: 'Ingresos en alza', description: `Los ingresos subieron ${revenueGrowth}% vs el periodo anterior. Tendencia positiva.`, icon: ArrowUp, color: '#059669', priority: 'high' })
     } else if (revenueGrowth < -10) {
-      result.push({ id: 'rev_down', title: 'Ingresos bajando', description: `Los ingresos bajaron ${Math.abs(revenueGrowth)}%. Considera promociones para reactivar.`, icon: ArrowDown, color: '#DC2626', priority: 'high', action: 'Crear cupón de descuento' })
+      result.push({ id: 'rev_down', title: 'Ingresos bajando', description: `Los ingresos bajaron ${Math.abs(revenueGrowth)}%. Considera promociones para reactivar.`, icon: ArrowDown, color: '#DC2626', priority: 'high', action: 'Crear cupón de descuento', actionHref: '/admin/cupones' })
     }
 
     // Pending alerts
     if (pendingToday.length > 0) {
-      result.push({ id: 'pending', title: `${pendingToday.length} reserva${pendingToday.length !== 1 ? 's' : ''} pendiente${pendingToday.length !== 1 ? 's' : ''} hoy`, description: 'Reservas sin asignar o confirmar para hoy. Asigna paseadores o confirma con el cliente.', icon: AlertTriangle, color: '#F59E0B', priority: 'high', action: 'Ir a reservas' })
+      result.push({ id: 'pending', title: `${pendingToday.length} reserva${pendingToday.length !== 1 ? 's' : ''} pendiente${pendingToday.length !== 1 ? 's' : ''} hoy`, description: 'Reservas sin asignar o confirmar para hoy. Asigna paseadores o confirma con el cliente.', icon: AlertTriangle, color: '#F59E0B', priority: 'high', action: 'Ir a reservas', actionHref: '/admin/reservas' })
     }
 
     // Peak day
@@ -123,7 +126,7 @@ export default function AdminIAPage() {
 
     // Retention
     if (retentionRate < 30 && totalClients > 5) {
-      result.push({ id: 'low_retention', title: 'Retención baja', description: `Solo ${retentionRate}% de tus clientes repiten. Usa el sistema de lealtad y referidos para mejorar.`, icon: Users, color: '#F59E0B', priority: 'high', action: 'Revisar lealtad' })
+      result.push({ id: 'low_retention', title: 'Retención baja', description: `Solo ${retentionRate}% de tus clientes repiten. Usa el sistema de lealtad y referidos para mejorar.`, icon: Users, color: '#F59E0B', priority: 'high' })
     } else if (retentionRate > 50) {
       result.push({ id: 'good_retention', title: 'Buena retención', description: `${retentionRate}% de tus clientes son recurrentes. ¡Excelente relación con ellos!`, icon: Star, color: '#059669', priority: 'low' })
     }
@@ -219,7 +222,7 @@ export default function AdminIAPage() {
           { label: 'Ingresos', value: `$${metrics.revenue.toLocaleString()}`, icon: Banknote, color: '#3b82f6' },
           { label: 'Cancelaciones', value: `${metrics.cancelRate}%`, icon: AlertTriangle, color: metrics.cancelRate > 15 ? '#DC2626' : '#059669' },
         ].map((m) => (
-          <div key={m.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div key={m.label} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
             <m.icon size={14} style={{ color: m.color }} className="mb-2" />
             <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{m.value}</p>
             <p className="text-2xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
@@ -240,7 +243,7 @@ export default function AdminIAPage() {
         {loading ? (
           <LoadingState rows={3} height="h-20" />
         ) : insights.length === 0 ? (
-          <div className="rounded-xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div className="rounded-xl border border-ink/10 bg-surface p-8 text-center shadow-sm">
             <Bot className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay insights para este periodo</p>
           </div>
@@ -254,8 +257,7 @@ export default function AdminIAPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.22, delay: i * 0.05 }}
-                  className="rounded-xl p-4 flex items-start gap-3"
-                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                  className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm flex items-start gap-3"
                 >
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${insight.color}15` }}>
                     <Icon size={16} style={{ color: insight.color }} />
@@ -268,8 +270,8 @@ export default function AdminIAPage() {
                       )}
                     </div>
                     <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{insight.description}</p>
-                    {insight.action && (
-                      <button className="text-2xs font-medium mt-2 flex items-center gap-1 transition-colors hover:opacity-80" style={{ color: 'var(--color-primary)' }}>
+                    {insight.action && insight.actionHref && (
+                      <button onClick={() => router.push(insight.actionHref!)} className="text-2xs font-medium mt-2 flex items-center gap-1 transition-colors hover:opacity-80" style={{ color: 'var(--color-primary)' }}>
                         {insight.action} <ArrowRight size={8} />
                       </button>
                     )}
@@ -288,15 +290,15 @@ export default function AdminIAPage() {
             <Percent size={14} className="text-brand-600" />
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Análisis de margen por servicio</h3>
           </div>
-          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <div className="grid grid-cols-5 gap-2 px-4 py-2 text-2xs font-medium" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
+          <div className="rounded-xl border border-ink/10 bg-surface shadow-sm overflow-hidden">
+            <div className="grid grid-cols-5 gap-2 border-b border-ink/10 px-4 py-2 text-2xs font-medium" style={{ color: 'var(--text-muted)' }}>
               <span className="col-span-2">Servicio</span>
               <span className="text-right">Paseos</span>
               <span className="text-right">Ingresos</span>
               <span className="text-right">Descuento %</span>
             </div>
             {serviceMargins.map((s) => (
-              <div key={s.name} className="grid grid-cols-5 gap-2 px-4 py-3 text-xs" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div key={s.name} className="grid grid-cols-5 gap-2 border-b border-ink/10 px-4 py-3 text-xs">
                 <span className="col-span-2 font-medium truncate" style={{ color: 'var(--text-primary)' }}>{s.name}</span>
                 <span className="text-right" style={{ color: 'var(--text-secondary)' }}>{s.count}</span>
                 <span className="text-right font-medium" style={{ color: 'var(--text-primary)' }}>${s.revenue.toLocaleString()}</span>

@@ -15,6 +15,7 @@ import DataCard from '@/components/ui/DataCard'
 import StatusBadge from '@/components/ui/StatusBadge'
 import EmptyState from '@/components/ui/EmptyState'
 import LoadingState from '@/components/ui/LoadingState'
+import Button from '@/components/ui/Button'
 import type { Reservation } from '@/types'
 import { confirmWhatsAppShare } from '@/lib/utils'
 
@@ -107,8 +108,7 @@ export default function AdminDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-5 sm:p-6 relative overflow-hidden"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        className="rounded-xl border border-ink/10 bg-surface p-5 sm:p-6 relative overflow-hidden shadow-sm"
       >
         <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative">
@@ -161,8 +161,7 @@ export default function AdminDashboard() {
               <a
                 key={action.label}
                 href={action.href}
-                className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:bg-ink/5 hover:scale-[1.03]"
-                style={{ border: '1px solid var(--border)' }}
+                className="flex flex-col items-center gap-2 p-3 rounded-xl border border-ink/10 transition-all hover:bg-ink/5 hover:scale-[1.03]"
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${action.color}15` }}>
                   <Icon size={16} style={{ color: action.color }} />
@@ -202,8 +201,7 @@ export default function AdminDashboard() {
                 {upcomingReservations.slice(0, 5).map((res) => (
                   <div
                     key={res.id}
-                    className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-ink/5"
-                    style={{ border: '1px solid var(--border)' }}
+                    className="flex items-center justify-between p-3 rounded-xl border border-ink/10 transition-colors hover:bg-ink/5"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand-500/10">
@@ -221,14 +219,14 @@ export default function AdminDashboard() {
                     <div className="flex items-center gap-2">
                       <StatusBadge status={res.status} />
                       {res.phone && (
-                        <button
-                          type="button"
+                        <Button
+                          variant="icon"
                           onClick={() => confirmWhatsAppShare(`521${res.phone}`, `Solicitud PET ${res.id}: solicito ponerme en contacto sobre la fecha ${res.date}.`)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-success-400 hover:bg-success-500/10 transition-colors"
+                          className="text-success-400 hover:bg-success-500/10"
                           aria-label="Revisar mensaje antes de abrir WhatsApp"
                         >
                           <WhatsAppIcon width={12} height={12} />
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
