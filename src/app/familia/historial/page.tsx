@@ -14,7 +14,7 @@ import {
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
 import CanonicalFamilyHistory from '@/components/family/CanonicalFamilyHistory'
-import { ErrorState } from '@/components/ui'
+import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 
 export default function HistorialPage() {
   const router = useRouter()
@@ -129,18 +129,14 @@ export default function HistorialPage() {
       {legacyError ? (
         <ErrorState description={legacyError} onRetry={() => setRetryKey((value) => value + 1)} />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <History className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
-            {filter === 'all' ? 'No hay reservas en tu historial' : `No hay reservas ${filter === 'completed' ? 'completadas' : 'canceladas'}`}
-          </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-            Tu historial se actualizará automáticamente
-          </p>
-          <button onClick={() => router.push('/familia/nueva-reserva')} className="btn-primary text-xs inline-flex">
-            Reservar un paseo
-          </button>
-        </div>
+        <Card className="p-8">
+          <EmptyState
+            icon={<History size={28} />}
+            title={filter === 'all' ? 'No hay reservas en tu historial' : `No hay reservas ${filter === 'completed' ? 'completadas' : 'canceladas'}`}
+            description="Tu historial se actualizará automáticamente"
+            action={<Button size="sm" onClick={() => router.push('/familia/nueva-reserva')}>Reservar un paseo</Button>}
+          />
+        </Card>
       ) : (
         <div className="space-y-2">
           {filtered.map((res, i) => {
@@ -152,8 +148,7 @@ export default function HistorialPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, delay: i * 0.03 }}
-                className="rounded-xl overflow-hidden"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                className="rounded-xl border border-ink/10 bg-surface shadow-sm overflow-hidden"
               >
                 <div
                   className="p-4 flex items-start gap-3 transition-all hover:bg-ink/5"

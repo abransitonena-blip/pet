@@ -13,6 +13,7 @@ import {
   MapPin, Plus, Pencil, Trash2, X, Check, Loader2, Home, Building2, Star,
 } from 'lucide-react'
 import type { Address } from '@/types'
+import { Button, Card, ConfirmDialog, EmptyState } from '@/components/ui'
 
 const ALIAS_OPTIONS = [
   { value: 'Casa', icon: Home },
@@ -51,6 +52,7 @@ export default function DireccionesPage() {
   const [saveError, setSaveError] = useState('')
   const [zones, setZones] = useState<Array<{ id: string; name: string }>>([])
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
@@ -150,8 +152,17 @@ export default function DireccionesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    await deleteDoc(doc(db, 'addresses', id))
-    setConfirmDelete(null)
+    setDeleting(true)
+    try {
+      await deleteDoc(doc(db, 'addresses', id))
+      setConfirmDelete(null)
+    } catch (err) {
+      const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: unknown }).code) : ''
+      setSaveError(code.includes('permission-denied')
+        ? 'Tu sesión no tiene permiso para eliminar esta dirección.'
+        : 'No pudimos eliminar la dirección. Intenta nuevamente.')
+    }
+    setDeleting(false)
   }
 
   const setDefault = async (id: string) => {
@@ -184,27 +195,26 @@ export default function DireccionesPage() {
             {addresses.length} dirección{addresses.length !== 1 ? 'es' : ''} guardada{addresses.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button onClick={openCreate} className="btn-primary !text-xs flex items-center gap-1.5">
-          <Plus size={12} /> Agregar
-        </button>
+        <Button size="sm" onClick={openCreate} leftIcon={<Plus size={12} />}>
+          Agregar
+        </Button>
       </div>
 
       {addresses.length === 0 ? (
-        <div className="text-center py-12 rounded-2xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <MapPin className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Aún no tienes direcciones guardadas</p>
-          <button onClick={openCreate} className="btn-primary !text-xs">
-            Agregar primera dirección
-          </button>
-        </div>
+        <Card className="py-12">
+          <EmptyState
+            icon={<MapPin size={28} />}
+            title="Aún no tienes direcciones guardadas"
+            action={<Button size="sm" onClick={openCreate}>Agregar primera dirección</Button>}
+          />
+        </Card>
       ) : (
         <div className="space-y-3">
           {addresses.map((addr) => (
             <motion.div
               key={addr.id}
               layout
-              className="rounded-xl p-4"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -484,38 +494,16 @@ export default function DireccionesPage() {
       </AnimatePresence>
 
       {/* Delete Confirmation */}
-      <AnimatePresence>
-        {confirmDelete && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-            onClick={() => setConfirmDelete(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="rounded-2xl p-5 max-w-sm w-full text-center"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Trash2 className="text-danger-400 text-2xl mx-auto mb-3" />
-              <p className="text-sm font-medium mb-4" style={{ color: 'var(--text-primary)' }}>¿Eliminar esta dirección?</p>
-              <div className="flex gap-3">
-                <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl text-sm border hover:bg-ink/5" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
-                  Cancelar
-                </button>
-                <button onClick={() => handleDelete(confirmDelete)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-danger-500 text-white hover:opacity-90">
-                  Eliminar
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog
+        open={Boolean(confirmDelete)}
+        title="¿Eliminar esta dirección?"
+        confirmLabel="Eliminar"
+        danger
+        loading={deleting}
+        icon={<Trash2 size={18} />}
+        onConfirm={() => confirmDelete && handleDelete(confirmDelete)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   )
 }

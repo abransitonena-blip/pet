@@ -57,8 +57,7 @@ export default function ConfirmDialog({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 10 }}
             transition={{ duration: 0.18 }}
-            className="w-full max-w-sm rounded-2xl p-5 shadow-elevated sm:p-6"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            className="w-full max-w-sm rounded-xl border border-ink/10 bg-surface p-5 shadow-elevated sm:p-6"
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-dialog-title"
