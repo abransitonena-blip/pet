@@ -10,12 +10,13 @@ import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  PawPrint, Plus, Pencil, Trash2, ArrowLeft, X, Check, Loader2,
+  PawPrint, Plus, Pencil, Trash2, ArrowLeft, X, Check,
   Brain, HeartPulse, SlidersHorizontal,
   Weight, Ruler, Venus, Mars,
   Syringe, Phone, AlertTriangle,
 } from 'lucide-react'
 import { Pet } from '@/types'
+import { Button, Card, EmptyState } from '@/components/ui'
 
 type PetTab = 'basico' | 'personalidad' | 'salud' | 'preferencias'
 
@@ -131,6 +132,8 @@ export default function MisPerrosPage() {
   const [activeTab, setActiveTab] = useState<PetTab>('basico')
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [saveError, setSaveError] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   useEffect(() => {
@@ -195,6 +198,7 @@ export default function MisPerrosPage() {
     if (!user) return
 
     setSaving(true)
+    setSaveError('')
     try {
       const data = {
         name: form.name.trim(),
@@ -236,14 +240,26 @@ export default function MisPerrosPage() {
       setEditingPet(null)
       setForm(EMPTY_FORM)
     } catch (err) {
-      console.error('Error saving pet:', err)
+      const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: unknown }).code) : ''
+      setSaveError(code.includes('permission-denied')
+        ? 'Tu sesión no tiene permiso para guardar esta mascota.'
+        : 'No pudimos guardar la mascota. Revisa tu conexión e intenta nuevamente.')
     }
     setSaving(false)
   }
 
   const handleDelete = async (petId: string) => {
-    await deleteDoc(doc(db, 'dogs', petId))
-    setConfirmDelete(null)
+    setDeleting(true)
+    try {
+      await deleteDoc(doc(db, 'dogs', petId))
+      setConfirmDelete(null)
+    } catch (err) {
+      const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: unknown }).code) : ''
+      setSaveError(code.includes('permission-denied')
+        ? 'Tu sesión no tiene permiso para eliminar esta mascota.'
+        : 'No pudimos eliminar la mascota. Intenta nuevamente.')
+    }
+    setDeleting(false)
   }
 
   const setField = <K extends keyof PetForm>(key: K, val: PetForm[K]) => {
@@ -315,22 +331,20 @@ export default function MisPerrosPage() {
             </p>
           </div>
         </div>
-        <button onClick={openCreate} className="btn-primary text-xs inline-flex gap-2">
-          <Plus size={12} /> Agregar
-        </button>
+        <Button size="sm" onClick={openCreate} leftIcon={<Plus size={12} />}>
+          Agregar
+        </Button>
       </div>
 
       {pets.length === 0 ? (
-        <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <PawPrint className="text-4xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Aún no tienes mascotas registradas</p>
-          <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-            Registra a tu peludo para agilizar tus reservas y guardar su información
-          </p>
-          <button onClick={openCreate} className="btn-primary text-xs inline-flex gap-2">
-            <Plus size={12} /> Registrar primer mascota
-          </button>
-        </div>
+        <Card className="p-8">
+          <EmptyState
+            icon={<PawPrint size={28} />}
+            title="Aún no tienes mascotas registradas"
+            description="Registra a tu peludo para agilizar tus reservas y guardar su información"
+            action={<Button size="sm" onClick={openCreate} leftIcon={<Plus size={12} />}>Registrar primer mascota</Button>}
+          />
+        </Card>
       ) : (
         <div className="space-y-3">
           {pets.map((pet, i) => (
@@ -339,8 +353,7 @@ export default function MisPerrosPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: i * 0.05 }}
-              className="rounded-2xl p-4"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm"
             >
               <div className="flex items-start gap-3">
                 <div className="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0 text-xl">
@@ -412,11 +425,11 @@ export default function MisPerrosPage() {
               <AnimatePresence>
                 {confirmDelete === pet.id && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                    <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: '1px solid var(--border)' }}>
+                    <div className="mt-3 border-t border-ink/10 pt-3 flex items-center justify-between">
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>¿Eliminar a {pet.name}?</p>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => setConfirmDelete(null)} className="text-xs px-3 py-1.5 rounded-lg transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>Cancelar</button>
-                        <button onClick={() => handleDelete(pet.id)} className="text-xs px-3 py-1.5 rounded-lg bg-danger-500/10 text-red-700 transition-colors hover:bg-danger-500/20">Eliminar</button>
+                        <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(null)} disabled={deleting}>Cancelar</Button>
+                        <Button size="sm" variant="danger" onClick={() => handleDelete(pet.id)} isLoading={deleting}>Eliminar</Button>
                       </div>
                     </div>
                   </motion.div>
@@ -443,8 +456,7 @@ export default function MisPerrosPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-md rounded-2xl space-y-0 max-h-[88vh] overflow-hidden flex flex-col"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="w-full max-w-md space-y-0 max-h-[88vh] overflow-hidden flex flex-col rounded-xl border border-ink/10 bg-surface shadow-elevated"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -452,9 +464,9 @@ export default function MisPerrosPage() {
                 <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                   {editingPet ? `Editar ${editingPet.name}` : 'Nueva mascota'}
                 </h2>
-                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+                <Button variant="icon" onClick={() => setShowForm(false)} aria-label="Cerrar formulario">
                   <X size={14} />
-                </button>
+                </Button>
               </div>
 
               {/* Tabs */}
@@ -684,14 +696,16 @@ export default function MisPerrosPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 px-5 pb-5 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
-                  Cancelar
-                </button>
-                <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2">
-                  {saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
-                  {editingPet ? 'Guardar cambios' : 'Agregar mascota'}
-                </button>
+              <div className="border-t border-ink/10 px-5 pb-5 pt-3 space-y-3">
+                {saveError && <p role="alert" className="text-xs text-danger">{saveError}</p>}
+                <div className="flex gap-3">
+                  <Button variant="secondary" className="flex-1" onClick={() => setShowForm(false)}>
+                    Cancelar
+                  </Button>
+                  <Button className="flex-1" onClick={handleSave} isLoading={saving} leftIcon={<Check size={14} />}>
+                    {editingPet ? 'Guardar cambios' : 'Agregar mascota'}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
