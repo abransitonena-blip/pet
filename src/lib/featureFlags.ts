@@ -11,6 +11,7 @@ export const FEATURE_FLAG_NAMES = [
   'CLOUD_FUNCTIONS_ENABLED',
   'LEGACY_RESERVATION_WRITES_ENABLED',
   'WALK_REPORTS_ENABLED',
+  'FINANCE_PAYMENTS_ENABLED',
 ] as const
 
 export type FeatureFlagName = (typeof FEATURE_FLAG_NAMES)[number]
@@ -31,6 +32,7 @@ export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
   CLOUD_FUNCTIONS_ENABLED: false,
   LEGACY_RESERVATION_WRITES_ENABLED: false,
   WALK_REPORTS_ENABLED: true,
+  FINANCE_PAYMENTS_ENABLED: false,
 })
 
 export function isFeatureEnabled(flag: FeatureFlagName): boolean {
