@@ -7,11 +7,13 @@ import {
 import { db } from '@/firebase/config'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  MapPinned, Plus, Pencil, Trash2, X, Check, Loader2,
+  MapPinned, Plus, Pencil, Trash2, X, Check,
   Eye, EyeOff, Search,
 } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import EmptyState from '@/components/ui/EmptyState'
+import { Button, ConfirmDialog } from '@/components/ui'
+import { useToast } from '@/context/ToastContext'
 import { Zone } from '@/types'
 
 interface ZoneForm {
@@ -41,7 +43,9 @@ export default function AdminZonasPage() {
   const [form, setForm] = useState<ZoneForm>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [search, setSearch] = useState('')
+  const { toast } = useToast()
 
   useEffect(() => {
     const q = query(collection(db, 'zones'), limit(100))
@@ -109,19 +113,34 @@ export default function AdminZonasPage() {
       setShowForm(false)
       setEditing(null)
       setForm(EMPTY_FORM)
+      toast(editing ? 'Zona actualizada' : 'Zona creada')
     } catch (err) {
       console.error('Error saving zone:', err)
+      toast('No pudimos guardar la zona', 'error')
     }
     setSaving(false)
   }
 
   const handleDelete = async (id: string) => {
-    await deleteDoc(doc(db, 'zones', id))
-    setConfirmDelete(null)
+    setDeleting(true)
+    try {
+      await deleteDoc(doc(db, 'zones', id))
+      setConfirmDelete(null)
+      toast('Zona eliminada')
+    } catch (err) {
+      console.error('Error deleting zone:', err)
+      toast('No pudimos eliminar la zona', 'error')
+    }
+    setDeleting(false)
   }
 
   const toggleActive = async (zone: Zone) => {
-    await updateDoc(doc(db, 'zones', zone.id), { active: !zone.active })
+    try {
+      await updateDoc(doc(db, 'zones', zone.id), { active: !zone.active })
+    } catch (err) {
+      console.error('Error toggling zone active state:', err)
+      toast('No pudimos actualizar la zona', 'error')
+    }
   }
 
   if (loading) {
@@ -139,9 +158,9 @@ export default function AdminZonasPage() {
         title="Zonas"
         description={`${zones.length} zona${zones.length !== 1 ? 's' : ''} · ${zones.filter((z) => z.active).length} activa${zones.filter((z) => z.active).length !== 1 ? 's' : ''}`}
         actions={
-          <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
-            <Plus size={12} /> Agregar zona
-          </button>
+          <Button size="sm" onClick={openCreate} leftIcon={<Plus size={12} />}>
+            Agregar zona
+          </Button>
         }
       />
 
@@ -162,9 +181,9 @@ export default function AdminZonasPage() {
           icon={<MapPinned size={24} />}
           title={search ? 'Sin resultados' : 'No hay zonas configuradas'}
           action={!search ? (
-            <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
-              <Plus size={12} /> Crear primera zona
-            </button>
+            <Button size="sm" onClick={openCreate} leftIcon={<Plus size={12} />}>
+              Crear primera zona
+            </Button>
           ) : undefined}
         />
       ) : (
@@ -175,8 +194,8 @@ export default function AdminZonasPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: i * 0.03 }}
-              className="rounded-2xl p-4 transition-all hover:bg-ink/5"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', opacity: zone.active ? 1 : 0.6 }}
+              className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm transition-all hover:bg-ink/5"
+              style={{ opacity: zone.active ? 1 : 0.6 }}
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
@@ -191,15 +210,15 @@ export default function AdminZonasPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => toggleActive(zone)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }} title={zone.active ? 'Desactivar' : 'Activar'}>
+                  <Button variant="icon" onClick={() => toggleActive(zone)} aria-label={zone.active ? 'Desactivar' : 'Activar'}>
                     {zone.active ? <Eye size={12} /> : <EyeOff size={12} />}
-                  </button>
-                  <button onClick={() => openEdit(zone)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+                  </Button>
+                  <Button variant="icon" onClick={() => openEdit(zone)} aria-label="Editar zona">
                     <Pencil size={12} />
-                  </button>
-                  <button onClick={() => setConfirmDelete(zone.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-danger-500/10 hover:text-danger-400" style={{ color: 'var(--text-muted)' }}>
+                  </Button>
+                  <Button variant="icon" onClick={() => setConfirmDelete(zone.id)} className="hover:bg-danger-500/10 hover:text-danger-400" aria-label="Eliminar zona">
                     <Trash2 size={12} />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -238,17 +257,16 @@ export default function AdminZonasPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-md rounded-2xl p-5 space-y-4"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="w-full max-w-md rounded-xl border border-ink/10 bg-surface p-5 space-y-4 shadow-elevated"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                   {editing ? `Editar ${editing.name}` : 'Nueva zona'}
                 </h2>
-                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+                <Button variant="icon" onClick={() => setShowForm(false)} aria-label="Cerrar formulario">
                   <X size={14} />
-                </button>
+                </Button>
               </div>
 
               <div>
@@ -303,7 +321,7 @@ export default function AdminZonasPage() {
                 />
               </div>
 
-              <div className="border-t pt-4 space-y-3" style={{ borderColor: 'var(--border)' }}>
+              <div className="border-t border-ink/10 pt-4 space-y-3">
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Precios por zona</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -358,13 +376,12 @@ export default function AdminZonasPage() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                <Button variant="secondary" className="flex-1" onClick={() => setShowForm(false)}>
                   Cancelar
-                </button>
-                <button onClick={handleSave} disabled={saving || !form.name.trim()} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-40">
-                  {saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
+                </Button>
+                <Button className="flex-1" onClick={handleSave} disabled={!form.name.trim()} isLoading={saving} leftIcon={<Check size={14} />}>
                   {editing ? 'Guardar' : 'Crear zona'}
-                </button>
+                </Button>
               </div>
             </motion.div>
           </motion.div>
@@ -372,20 +389,16 @@ export default function AdminZonasPage() {
       </AnimatePresence>
 
       {/* Delete Confirmation */}
-      <AnimatePresence>
-        {confirmDelete && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="rounded-2xl p-6 w-full max-w-sm" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Eliminar zona</h3>
-              <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Esta acción no se puede deshacer.</p>
-              <div className="flex gap-3">
-                <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl text-sm font-medium" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Cancelar</button>
-                <button onClick={() => confirmDelete && handleDelete(confirmDelete)} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-danger-500 hover:bg-danger-600 transition-colors">Eliminar</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog
+        open={Boolean(confirmDelete)}
+        title="Eliminar zona"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        danger
+        loading={deleting}
+        onConfirm={() => confirmDelete && handleDelete(confirmDelete)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   )
 }

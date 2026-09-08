@@ -9,7 +9,7 @@ import {
   limit as fsLimit,
 } from 'firebase/firestore'
 import { Search, Dog, Pencil, Trash2,
-  Camera, Download, Loader2, X,
+  Camera, Download, X,
   ArrowRight, Undo2, PersonStanding, Sparkles, Package, ChevronDown, ChevronRight } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { SessionStatus } from '@/types'
@@ -21,6 +21,8 @@ import Badge from '@/components/ui/Badge'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
+import Button from '@/components/ui/Button'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import EditReservationModal from '@/components/EditReservationModal'
 import WalkSessionModal from '@/components/WalkSessionModal'
 import { logChange } from '@/lib/audit'
@@ -40,6 +42,7 @@ export default function AdminReservas() {
   const [dateTo, setDateTo] = useState('')
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [deletingReservation, setDeletingReservation] = useState(false)
   const [historyReservations, setHistoryReservations] = useState<Reservation[]>([])
   const [historyPhone, setHistoryPhone] = useState('')
   const [showHistory, setShowHistory] = useState(false)
@@ -109,12 +112,14 @@ export default function AdminReservas() {
       toast('Las reservas legacy no se eliminan desde el navegador.', 'error')
       return
     }
+    setDeletingReservation(true)
     try {
       logChange('delete', confirmDelete, { col: 'reservations' })
       await deleteDoc(doc(db, 'reservations', confirmDelete))
       setConfirmDelete(null)
       toast('Reserva eliminada')
     } catch { toast('Error al eliminar reserva', 'error') }
+    setDeletingReservation(false)
   }
 
   const openWhatsApp = (phone: string, name: string) => {
@@ -300,13 +305,12 @@ export default function AdminReservas() {
           : `${stats.total} reservas legacy · ${stats.pending} pendientes · ${stats.today} hoy`}
         actions={viewTab === 'reservations' ? (
           <>
-            <button onClick={autoAssign} disabled={autoAssigning || stats.pending === 0 || !FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className="btn-secondary !text-xs flex items-center gap-1.5 disabled:opacity-40">
-              {autoAssigning ? <Loader2 className="animate-spin" size={12} /> : <Sparkles size={12} />}
+            <Button size="sm" variant="secondary" onClick={autoAssign} disabled={stats.pending === 0 || !FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} isLoading={autoAssigning} leftIcon={<Sparkles size={12} />}>
               Auto-asignar
-            </button>
-            <button onClick={exportCSV} className="btn-secondary !text-xs flex items-center gap-1.5">
-              <Download size={12} /> Exportar
-            </button>
+            </Button>
+            <Button size="sm" variant="secondary" onClick={exportCSV} leftIcon={<Download size={12} />}>
+              Exportar
+            </Button>
           </>
         ) : undefined}
       />
@@ -320,7 +324,7 @@ export default function AdminReservas() {
           { label: 'Hoy', value: stats.today, color: '#059669' },
           { label: 'Completadas', value: stats.completed, color: '#7C3AED' },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div key={s.label} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
             <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{s.value}</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
           </div>
@@ -440,8 +444,7 @@ export default function AdminReservas() {
           {filtered.map((res) => (
             <div
               key={res.id}
-              className="rounded-xl p-4 transition-all hover:bg-ink/5"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm transition-all hover:bg-ink/5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -531,7 +534,7 @@ export default function AdminReservas() {
               const scheduledSessions = order.sessions.filter((s) => s.sessionStatus !== 'cancelled')
               const completedSessions = order.sessions.filter((s) => s.sessionStatus === 'completed')
               return (
-                <div key={order.id} className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div key={order.id} className="rounded-xl border border-ink/10 bg-surface shadow-sm overflow-hidden">
                   <button
                     onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
                     className="w-full flex items-center justify-between p-4 text-left hover:bg-ink/5 transition-colors"
@@ -559,7 +562,7 @@ export default function AdminReservas() {
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }} className="overflow-hidden">
-                        <div className="px-4 pb-4 space-y-2" style={{ borderTop: '1px solid var(--border)' }}>
+                        <div className="border-t border-ink/10 px-4 pb-4 space-y-2">
                           {order.sessions.map((session) => (
                             <div key={session.id} className="flex items-center justify-between py-2 px-3 rounded-lg text-xs" style={{ background: 'var(--glass-bg)' }}>
                               <div className="flex items-center gap-3">
@@ -596,27 +599,16 @@ export default function AdminReservas() {
       />
 
       {/* Delete Confirmation */}
-      <AnimatePresence>
-        {confirmDelete && (
-                     <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60" onClick={() => setConfirmDelete(null)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative rounded-2xl p-6 w-full max-w-sm"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-            >
-              <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Eliminar reserva</h3>
-              <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Esta acción no se puede deshacer.</p>
-              <div className="flex gap-3">
-                <button onClick={() => setConfirmDelete(null)} className="flex-1 btn-secondary !text-xs">Cancelar</button>
-                <button onClick={handleDelete} className="flex-1 btn-primary !text-xs !bg-danger-500 hover:!bg-danger-600">Eliminar</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog
+        open={Boolean(confirmDelete)}
+        title="Eliminar reserva"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        danger
+        loading={deletingReservation}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
 
       {/* History Modal */}
       <AnimatePresence>
@@ -627,21 +619,20 @@ export default function AdminReservas() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative rounded-2xl p-6 w-full max-w-lg max-h-[70vh] overflow-y-auto"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="relative rounded-xl border border-ink/10 bg-surface p-6 w-full max-w-lg max-h-[70vh] overflow-y-auto shadow-elevated"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Historial · {historyPhone}</h3>
-                <button onClick={() => setShowHistory(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+                <Button variant="icon" onClick={() => setShowHistory(false)} aria-label="Cerrar historial">
                   <X size={14} />
-                </button>
+                </Button>
               </div>
               {historyReservations.length === 0 ? (
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin historial</p>
               ) : (
                 <div className="space-y-2">
                   {historyReservations.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+                    <div key={r.id} className="flex items-center justify-between rounded-xl border border-ink/10 bg-[var(--glass-bg)] p-3">
                       <div>
                         <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{r.service} · {r.petName}</p>
                         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.date} {r.arrivalWindowStart ? `${r.arrivalWindowStart}${r.arrivalWindowEnd ? `-${r.arrivalWindowEnd}` : ''}` : r.time}</p>

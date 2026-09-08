@@ -14,6 +14,7 @@ import { useToast } from '@/context/ToastContext'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
+import Button from '@/components/ui/Button'
 import type { Zone } from '@/types'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { confirmWhatsAppShare } from '@/lib/utils'
@@ -239,9 +240,9 @@ export default function AdminPaseadoresPage() {
         title="Gestión de Paseadores"
         description={`${(config.walkers || []).length} paseadores · ${unassignedToday} sin asignar hoy · ${todayTotal} reservas hoy`}
         actions={
-          <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
-            <Plus size={12} /> Agregar paseador
-          </button>
+          <Button size="sm" onClick={openCreate} leftIcon={<Plus size={12} />}>
+            Agregar paseador
+          </Button>
         }
       />
 
@@ -254,9 +255,9 @@ export default function AdminPaseadoresPage() {
           icon={<PersonStanding size={24} />}
           title="No hay paseadores registrados"
           action={
-            <button onClick={openCreate} className="btn-primary !text-xs inline-flex gap-2">
-              <Plus size={12} /> Agregar primer paseador
-            </button>
+            <Button size="sm" onClick={openCreate} leftIcon={<Plus size={12} />}>
+              Agregar primer paseador
+            </Button>
           }
         />
       ) : (
@@ -274,8 +275,7 @@ export default function AdminPaseadoresPage() {
             return (
               <div
                 key={w.uid || `legacy-${w.name}`}
-                className="rounded-xl overflow-hidden transition-all"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                className="rounded-xl border border-ink/10 bg-surface shadow-sm overflow-hidden transition-all"
               >
                 {/* Main Row */}
                 <div className="p-4">
@@ -382,7 +382,7 @@ export default function AdminPaseadoresPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-4 pb-4 pt-2 space-y-3" style={{ borderTop: '1px solid var(--border)' }}>
+                      <div className="border-t border-ink/10 px-4 pb-4 pt-2 space-y-3">
                         {/* Schedule */}
                         {walkerConfig?.schedule && Object.keys(walkerConfig.schedule).length > 0 ? (
                           <div>
@@ -446,17 +446,16 @@ export default function AdminPaseadoresPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-md rounded-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="w-full max-w-md rounded-xl border border-ink/10 bg-surface p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-elevated"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                   {editing !== null ? 'Editar paseador' : 'Nuevo paseador'}
                 </h2>
-                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink/5" style={{ color: 'var(--text-muted)' }}>
+                <Button variant="icon" onClick={() => setShowForm(false)} aria-label="Cerrar formulario">
                   <X size={14} />
-                </button>
+                </Button>
               </div>
 
               {/* Name, Phone & Email */}
@@ -538,13 +537,12 @@ export default function AdminPaseadoresPage() {
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                <Button variant="secondary" className="flex-1" onClick={() => setShowForm(false)}>
                   Cancelar
-                </button>
-                <button onClick={handleSave} disabled={saving || !form.name.trim() || !form.phone.trim()} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-all btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-40">
-                  {saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
+                </Button>
+                <Button className="flex-1" onClick={handleSave} disabled={!form.name.trim() || !form.phone.trim()} isLoading={saving} leftIcon={<Check size={14} />}>
                   {editing !== null ? 'Guardar' : 'Agregar'}
-                </button>
+                </Button>
               </div>
             </motion.div>
           </motion.div>
@@ -566,8 +564,7 @@ export default function AdminPaseadoresPage() {
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
-              className="w-full max-w-sm rounded-2xl p-5 space-y-4"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              className="w-full max-w-sm rounded-xl border border-ink/10 bg-surface p-5 space-y-4 shadow-elevated"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center">
@@ -579,7 +576,7 @@ export default function AdminPaseadoresPage() {
                   Comparte estas credenciales con el paseador de forma segura
                 </p>
               </div>
-              <div className="rounded-xl p-3 space-y-2" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+              <div className="rounded-xl border border-ink/10 bg-[var(--color-surface-soft)] p-3 space-y-2">
                 <div>
                   <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>Correo</p>
                   <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -596,12 +593,9 @@ export default function AdminPaseadoresPage() {
               <p className="text-2xs text-center" style={{ color: 'var(--text-muted)' }}>
                 El paseador deberá cambiar esta contraseña en su primer inicio de sesión
               </p>
-              <button
-                onClick={() => setTempPassword(null)}
-                className="w-full py-2.5 rounded-xl text-sm font-medium btn-primary"
-              >
+              <Button className="w-full" onClick={() => setTempPassword(null)}>
                 Entendido
-              </button>
+              </Button>
             </motion.div>
           </motion.div>
         )}
