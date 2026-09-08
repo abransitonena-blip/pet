@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ChevronDown, Mail,
+import { ArrowLeft, ChevronDown, Mail, Search,
   CalendarDays, Dog, CreditCard, PawPrint, HelpCircle } from 'lucide-react'
 import { confirmWhatsAppShare, WHATSAPP_NUMBER } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
@@ -101,8 +101,19 @@ const FAQ_ITEMS = [
 export default function AyudaPage() {
   const router = useRouter()
   const [openIndex, setOpenIndex] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   const toggle = (key: string) => setOpenIndex((prev) => prev === key ? null : key)
+
+  const normalizedSearch = search.trim().toLowerCase()
+  const visibleSections = normalizedSearch
+    ? FAQ_ITEMS.map((section) => ({
+        ...section,
+        questions: section.questions.filter((item) =>
+          item.q.toLowerCase().includes(normalizedSearch) || item.a.toLowerCase().includes(normalizedSearch)
+        ),
+      })).filter((section) => section.questions.length > 0)
+    : FAQ_ITEMS
 
   return (
     <div className="space-y-6">
@@ -139,8 +150,29 @@ export default function AyudaPage() {
         </a>
       </div>
 
+      {/* FAQ Search */}
+      <label htmlFor="faq-search" className="relative block">
+        <span className="sr-only">Buscar en preguntas frecuentes</span>
+        <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
+        <input
+          id="faq-search"
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar una pregunta…"
+          className="w-full rounded-xl border py-2.5 pl-9 pr-3 text-sm"
+          style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+        />
+      </label>
+
+      {normalizedSearch && visibleSections.length === 0 && (
+        <p role="status" className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+          Sin resultados para &quot;{search.trim()}&quot;. Escríbenos por WhatsApp si no encuentras tu respuesta.
+        </p>
+      )}
+
       {/* FAQ Sections */}
-      {FAQ_ITEMS.map((section) => {
+      {visibleSections.map((section) => {
         const Icon = section.icon
         return (
           <div key={section.category}>

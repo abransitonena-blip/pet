@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useConfig } from '@/context/ConfigContext'
 import { getActiveAnnouncements } from '@/lib/announcements'
+import { Events } from '@/lib/analytics'
 
 const DISMISS_KEY_PREFIX = 'petap-announcement-dismissed-'
 
@@ -32,6 +33,7 @@ export default function AnnouncementBanner() {
 
   const dismiss = (id: string) => {
     setDismissed((current) => new Set(current).add(id))
+    Events.announcementDismissed(id)
     try {
       window.localStorage.setItem(DISMISS_KEY_PREFIX + id, '1')
     } catch {

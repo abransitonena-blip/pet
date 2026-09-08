@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { MessageSquareHeart } from 'lucide-react'
 import { auth } from '@/firebase/config'
 import { Button, Card } from '@/components/ui'
+import { Events } from '@/lib/analytics'
 
 const CATEGORIES = [
   { value: 'sugerencia', label: 'Sugerencia' },
@@ -35,6 +36,7 @@ export default function FeedbackWidget() {
       if (!response.ok) throw new Error('submit-failed')
       setMessage('')
       setStatus('sent')
+      Events.feedbackSubmitted(category)
     } catch {
       setStatus('error')
     } finally {

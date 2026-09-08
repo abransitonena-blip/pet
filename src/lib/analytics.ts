@@ -43,4 +43,8 @@ export const Events = {
     trackEvent({ action: 'loyalty_redeem', category: 'lealtad' }),
   walkerView: () =>
     trackEvent({ action: 'page_view', category: 'navegacion', label: 'walker_perfil' }),
+  announcementDismissed: (id: string) =>
+    trackEvent({ action: 'announcement_dismissed', category: 'anuncios', label: id }),
+  feedbackSubmitted: (category: string) =>
+    trackEvent({ action: 'feedback_submitted', category: 'feedback', label: category }),
 }
