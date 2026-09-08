@@ -58,7 +58,8 @@ No mover, renombrar, fusionar ni migrar esos directorios automáticamente.
 | Production G1 documentado | dpl_sozWckpcWDftmUEqXpQv8DLB9zhV |
 | Production anterior documentado | dpl_AXch6xnpxekrUzLGWRr5bgR2CyPT |
 | Build G1 | 54/54 páginas |
-| Ruleset G1 | 92037591-177a-4f8f-a1b0-db4add3dcab4 |
+| Ruleset G1 (histórico) | 92037591-177a-4f8f-a1b0-db4add3dcab4 |
+| Ruleset activo (8-sep-2026) | 77754f6a-efc2-4059-8ad3-d6c08cd1d46f, SHA a389a167d4764c656e35dfbe636826140eeb8254c7d4bc3db582a832bc37f07b — cierre DR-09 (reviews create → false, server-only) |
 | SHA de reglas | d4ea2e63cb7b1033f919b378f5dc9e35dc901dc8e3865402b4d363b1ed03a95d |
 | firestore.rules local | Mismo SHA verificado al crear este archivo |
 | Índices remotos | 12/12 READY en la última verificación documentada |
