@@ -403,28 +403,22 @@ describe('reviews, promotions, notifications and privileged logs', () => {
     await assertSucceeds(getDoc(doc(dbFor('supervisor-1', 'supervisor'), 'reviews', 'pending-review')))
   })
 
-  test('review requires own completed paid session and deterministic id', async () => {
+  // DR-09: reviews are server-only now (POST /api/reviews/submit, verified via
+  // the T3 privileged Firestore client against a real completed walkSessions
+  // doc). Firestore rules just close the browser path entirely -- no shape,
+  // session, or rating check happens here anymore, because none of it can be
+  // trusted from the client. See __tests__/dr09-review-eligibility.test.ts.
+  test('review create is server-only: no client write succeeds regardless of shape or session', async () => {
     await seed(async (db) => {
       await setDoc(doc(db, 'serviceOrders', 'order-1'), { ...order, paymentStatus: 'confirmed' })
       await setDoc(doc(db, 'walkSessions', 'session-1'), { ...assignedSession, status: 'completed' })
     })
     const customer = dbFor('customer-1', 'customer')
     const review = { authorUid: 'customer-1', walkSessionId: 'session-1', rating: 5, text: 'Excelente paseo', createdAt: NOW }
-    await assertSucceeds(setDoc(doc(customer, 'reviews', 'session-1'), review))
-    await assertFails(setDoc(doc(customer, 'reviews', 'different-id'), review))
+    await assertFails(setDoc(doc(customer, 'reviews', 'session-1'), review))
+    await assertFails(setDoc(doc(customer, 'reviews', 'auto-id'), { name: 'Cliente', rating: 5, text: 'Texto', createdAt: NOW }))
+    await assertFails(setDoc(doc(dbFor('admin-1', 'admin'), 'reviews', 'session-1'), review))
     await assertFails(updateDoc(doc(customer, 'reviews', 'session-1'), { rating: 1 }))
-    await assertFails(setDoc(doc(dbFor('customer-2', 'customer'), 'reviews', 'session-1'), { ...review, authorUid: 'customer-2' }))
-  })
-
-  test('review fails for unpaid session and invalid rating', async () => {
-    await seed(async (db) => {
-      await setDoc(doc(db, 'serviceOrders', 'order-1'), order)
-      await setDoc(doc(db, 'walkSessions', 'session-1'), { ...assignedSession, status: 'completed' })
-    })
-    const customer = dbFor('customer-1', 'customer')
-    await assertFails(setDoc(doc(customer, 'reviews', 'session-1'), {
-      authorUid: 'customer-1', walkSessionId: 'session-1', rating: 6, text: 'Texto', createdAt: NOW,
-    }))
   })
 
   test('credits, loyalty, coupon and referral rewards cannot be mutated by customer', async () => {

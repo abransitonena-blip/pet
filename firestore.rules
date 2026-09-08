@@ -1072,10 +1072,7 @@ service cloud.firestore {
 
     match /reviews/{docId} {
       allow read: if true;
-      allow create: if isAuthenticated()
-        && isActiveAccount()
-        && isValidReview()
-        && noRoleField();
+      allow create: if false; // server-only, see /api/reviews/submit (DR-09 eligibility)
       allow delete: if isAdmin();
       allow update: if false;
     }
