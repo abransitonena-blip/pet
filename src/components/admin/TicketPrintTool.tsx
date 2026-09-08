@@ -12,7 +12,8 @@ import { useSessionRole } from '@/lib/useSessionRole'
 import { getReservationServiceDefinitions } from '@/lib/walkServices'
 import { buildPetApTicket } from '@/lib/printing/petApTicketBuilder'
 import { buildTicketSnapshotFromSession, type TicketSourceSession } from '@/lib/printing/ticketSnapshotBuilder'
-import { ManualHexTransport } from '@/lib/printing/transports'
+import { ManualHexTransport, WebBluetoothTransport, isWebBluetoothAvailable } from '@/lib/printing/transports'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { TemporaryReportStatus, TemporaryTicketSnapshot } from '@/lib/finance/domain/ticketPreview'
 import { createPersistentTicket, TicketOperationError } from '@/lib/tickets'
 import PetApDogMark from '@/components/tickets/PetApDogMark'
@@ -128,6 +129,8 @@ export default function TicketPrintTool() {
   const [message, setMessage] = useState('')
   const [generating, setGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [bluetoothSending, setBluetoothSending] = useState(false)
+  const [bluetoothMessage, setBluetoothMessage] = useState('')
   const [persisting, setPersisting] = useState(false)
   const [persistentTicketId, setPersistentTicketId] = useState('')
 
@@ -191,6 +194,32 @@ export default function TicketPrintTool() {
       setGenerating(false)
     }
   }, [selected])
+
+  /**
+   * Sends the already-generated payload straight to the BLE printer. Never claims
+   * the ticket printed: FF02 is write-without-response, so a clean write only
+   * proves the bytes left the browser. The operator still confirms the paper.
+   */
+  const sendOverBluetooth = useCallback(async () => {
+    if (!FEATURE_FLAGS.BLUETOOTH_PRINTING_ENABLED || !payload || payload.byteLength === 0) return
+    setBluetoothSending(true)
+    setBluetoothMessage('')
+    const transport = new WebBluetoothTransport()
+    try {
+      await transport.connect()
+      await transport.write(payload)
+      const status = await transport.getStatus()
+      setBluetoothMessage(status.message ?? 'Payload enviado. Confirma el papel impreso.')
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setBluetoothMessage(code === 'web-bluetooth-unavailable'
+        ? 'Este navegador no permite Bluetooth. Usa Chrome o Edge, o copia el HEX.'
+        : 'No pudimos enviar a la impresora. Revisa el emparejamiento e inténtalo otra vez.')
+    } finally {
+      await transport.disconnect().catch(() => {})
+      setBluetoothSending(false)
+    }
+  }, [payload])
 
   const generateDevelopmentFixture = useCallback(async () => {
     if (process.env.NODE_ENV === 'production') return
@@ -335,8 +364,22 @@ export default function TicketPrintTool() {
                   <Button type="button" disabled={snapshot.reportStatus !== 'submitted' || source !== 'production-read' || Boolean(persistentTicketId)} onClick={() => void persistTicket()} isLoading={persisting} leftIcon={<Save className="h-4 w-4" aria-hidden="true" />}>Crear ticket</Button>
                   <Button type="button" variant="secondary" onClick={() => void copyHex()} leftIcon={copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Clipboard className="h-4 w-4" aria-hidden="true" />}>{copied ? 'HEX copiado' : 'Copiar HEX'}</Button>
                   <Button type="button" variant="secondary" onClick={downloadBinary} leftIcon={<Download className="h-4 w-4" aria-hidden="true" />}>Descargar .bin</Button>
+                  {FEATURE_FLAGS.BLUETOOTH_PRINTING_ENABLED && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => void sendOverBluetooth()}
+                      isLoading={bluetoothSending}
+                      disabled={!isWebBluetoothAvailable()}
+                      title={isWebBluetoothAvailable() ? undefined : 'Este navegador no permite Bluetooth'}
+                      leftIcon={<Printer className="h-4 w-4" aria-hidden="true" />}
+                    >
+                      Enviar por Bluetooth
+                    </Button>
+                  )}
                   {persistentTicketId && <Link href={`/admin/tickets/${encodeURIComponent(persistentTicketId)}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]">Abrir ticket persistente</Link>}
                 </div>
+                {bluetoothMessage && <p role="status" className="rounded-xl bg-primary/10 px-4 py-3 text-sm text-ink">{bluetoothMessage}</p>}
                 <details className="rounded-xl border border-ink/10 bg-surface p-4">
                   <summary className="min-h-11 cursor-pointer select-none py-2 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]">Panel técnico</summary>
                   <dl className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-2">
