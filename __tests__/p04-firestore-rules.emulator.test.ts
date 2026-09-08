@@ -455,6 +455,30 @@ describe('reviews, promotions, notifications and privileged logs', () => {
   test('browser cannot create an administrative audit log, even as admin', async () => {
     await assertFails(setDoc(doc(dbFor('admin-1', 'admin'), 'audit-logs', 'fake-log'), { action: 'admin_action' }))
   })
+
+  test('backup runs are admin-readable and server-only: no client, admin included, can write', async () => {
+    await seed((db) => setDoc(doc(db, 'backupRuns', 'run-1'), { status: 'success', startedAt: NOW, finishedAt: NOW }))
+    await assertSucceeds(getDoc(doc(dbFor('admin-1', 'admin'), 'backupRuns', 'run-1')))
+    await assertFails(getDoc(doc(dbFor('customer-1', 'customer'), 'backupRuns', 'run-1')))
+    await assertFails(setDoc(doc(dbFor('admin-1', 'admin'), 'backupRuns', 'fake-run'), { status: 'success' }))
+    await assertFails(updateDoc(doc(dbFor('admin-1', 'admin'), 'backupRuns', 'run-1'), { status: 'failed' }))
+  })
+
+  test('error logs are admin-readable and server-only: no client, admin included, can write', async () => {
+    await seed((db) => setDoc(doc(db, 'errorLogs', 'log-1'), { message: 'boom', uid: 'customer-1', createdAt: NOW }))
+    await assertSucceeds(getDoc(doc(dbFor('admin-1', 'admin'), 'errorLogs', 'log-1')))
+    await assertFails(getDoc(doc(dbFor('customer-1', 'customer'), 'errorLogs', 'log-1')))
+    await assertFails(setDoc(doc(dbFor('admin-1', 'admin'), 'errorLogs', 'fake-log'), { message: 'fake' }))
+    await assertFails(updateDoc(doc(dbFor('admin-1', 'admin'), 'errorLogs', 'log-1'), { message: 'edited' }))
+  })
+
+  test('customer feedback is admin-readable and server-only: no client, admin included, can write', async () => {
+    await seed((db) => setDoc(doc(db, 'feedback', 'fb-1'), { message: 'hola', category: 'sugerencia', customerId: 'customer-1', createdAt: NOW }))
+    await assertSucceeds(getDoc(doc(dbFor('admin-1', 'admin'), 'feedback', 'fb-1')))
+    await assertFails(getDoc(doc(dbFor('customer-1', 'customer'), 'feedback', 'fb-1')))
+    await assertFails(setDoc(doc(dbFor('customer-1', 'customer'), 'feedback', 'fake-fb'), { message: 'fake' }))
+    await assertFails(updateDoc(doc(dbFor('admin-1', 'admin'), 'feedback', 'fb-1'), { message: 'edited' }))
+  })
 })
 
 describe('P0.6 gallery consent and private privacy requests', () => {

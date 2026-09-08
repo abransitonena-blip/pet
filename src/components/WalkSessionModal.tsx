@@ -266,10 +266,11 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
 
           {mode === 'check_out' && (
             <div>
-              <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              <label htmlFor="walk-session-notes" className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-muted)' }}>
                 Notas del paseo
               </label>
               <textarea
+                id="walk-session-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}

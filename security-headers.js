@@ -25,7 +25,7 @@ const directives = [
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
   "img-src 'self' data: blob: https://res.cloudinary.com",
-  `connect-src 'self' ${authOrigin} https://accounts.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com`,
+  `connect-src 'self' ${authOrigin} https://accounts.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com https://api.cloudinary.com`,
   `frame-src https://accounts.google.com ${authOrigin}`,
   "worker-src 'self' blob:",
 ]
@@ -39,11 +39,20 @@ const GLOBAL_SECURITY_HEADERS = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()' },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
-  { key: 'Content-Security-Policy-Report-Only', value: REPORT_ONLY_CSP },
 ]
+
+// Enforced in production and Preview builds (both run `next build`, NODE_ENV=production).
+// Only `next dev` locally stays Report-Only, so a genuinely new external
+// resource fails loud in dev instead of quietly failing in Preview.
+function cspHeader(isProduction) {
+  return isProduction
+    ? { key: 'Content-Security-Policy', value: PRODUCTION_CSP }
+    : { key: 'Content-Security-Policy-Report-Only', value: REPORT_ONLY_CSP }
+}
 
 module.exports = {
   GLOBAL_SECURITY_HEADERS,
+  cspHeader,
   PRODUCTION_CSP,
   REPORT_ONLY_CSP,
   firebaseAuthOrigin,

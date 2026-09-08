@@ -55,3 +55,23 @@ export const termsSections = [
       .join(' y ')}. Fuera de horario puedes dejarnos un mensaje y te responderemos en cuanto abramos. Tu opinión nos ayuda a mejorar — después de cada paseo puedes calificar el servicio y dejar tus comentarios.`,
   },
 ]
+
+export interface EditableTextSection {
+  title: string
+  content: string
+}
+
+/**
+ * Icons stay code-defined (Firestore can't hold a component); an admin edit
+ * only ever overrides title/content, matched by position. A mismatched
+ * length (an override array from an older section count) is ignored, not
+ * partially applied, so a section can never show the wrong icon.
+ */
+export function mergeTermsSections(overrides?: EditableTextSection[] | null) {
+  if (!overrides || overrides.length !== termsSections.length) return termsSections
+  return termsSections.map((section, index) => ({
+    ...section,
+    title: overrides[index]?.title?.trim() || section.title,
+    content: overrides[index]?.content?.trim() || section.content,
+  }))
+}

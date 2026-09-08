@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const { GLOBAL_SECURITY_HEADERS } = require('./security-headers')
+const { GLOBAL_SECURITY_HEADERS, cspHeader } = require('./security-headers')
 
 const isProduction = process.env.NODE_ENV === 'production'
 const privateHeaders = [
@@ -25,7 +25,7 @@ const nextConfig = {
     return [
       {
         source: '/(.*)',
-        headers: [...GLOBAL_SECURITY_HEADERS, ...hsts],
+        headers: [...GLOBAL_SECURITY_HEADERS, cspHeader(isProduction), ...hsts],
       },
       ...[
         '/admin/:path*', '/familia/:path*', '/walker/:path*', '/supervisor/:path*',

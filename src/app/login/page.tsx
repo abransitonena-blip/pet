@@ -423,10 +423,11 @@ const handleEmailLogin = async () => {
               {familiaMode === 'register' && (
                 <>
                   <div>
-                    <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
+                    <label htmlFor="login-name" className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                       <input
+                        id="login-name"
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -437,10 +438,11 @@ const handleEmailLogin = async () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>WhatsApp (opcional)</label>
+                    <label htmlFor="login-phone" className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>WhatsApp (opcional)</label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                       <input
+                        id="login-phone"
                         type="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
@@ -454,10 +456,11 @@ const handleEmailLogin = async () => {
               )}
 
               <div>
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo</label>
+                <label htmlFor="login-email" className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Correo</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                   <input
+                    id="login-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -470,10 +473,11 @@ const handleEmailLogin = async () => {
               </div>
 
               <div>
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
+                <label htmlFor="login-password" className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
                   <input
+                    id="login-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

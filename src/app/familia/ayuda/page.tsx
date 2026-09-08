@@ -9,6 +9,7 @@ import { confirmWhatsAppShare, WHATSAPP_NUMBER } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
 import { Button, Card } from '@/components/ui'
 import { WhatsAppIcon } from '@/components/ui/SocialIcons'
+import FeedbackWidget from '@/components/family/FeedbackWidget'
 
 const FAQ_ITEMS = [
   {
@@ -205,6 +206,8 @@ export default function AyudaPage() {
           Escribirnos por WhatsApp
         </Button>
       </Card>
+
+      <FeedbackWidget />
     </div>
   )
 }

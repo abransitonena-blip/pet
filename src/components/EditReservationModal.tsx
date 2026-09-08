@@ -116,8 +116,9 @@ export default function EditReservationModal({
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-muted mb-1">Fecha</label>
+                  <label htmlFor="edit-res-date" className="block text-xs text-muted mb-1">Fecha</label>
                   <input
+                    id="edit-res-date"
                     type="date"
                     min={new Date().toISOString().split("T")[0]}
                     value={form.date}
@@ -126,8 +127,9 @@ export default function EditReservationModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-muted mb-1">Hora</label>
+                  <label htmlFor="edit-res-time" className="block text-xs text-muted mb-1">Hora</label>
                   <input
+                    id="edit-res-time"
                     type="time"
                     value={form.time}
                     onChange={(e) => setForm({ ...form, time: e.target.value })}
@@ -137,8 +139,9 @@ export default function EditReservationModal({
               </div>
 
               <div>
-                <label className="block text-xs text-muted mb-1">Servicio</label>
+                <label htmlFor="edit-res-service" className="block text-xs text-muted mb-1">Servicio</label>
                 <select
+                  id="edit-res-service"
                   value={form.service}
                   onChange={(e) => setForm({ ...form, service: e.target.value })}
                   className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
@@ -157,8 +160,9 @@ export default function EditReservationModal({
               )}
 
               <div>
-                <label className="block text-xs text-muted mb-1">Estado</label>
+                <label htmlFor="edit-res-status" className="block text-xs text-muted mb-1">Estado</label>
                 <select
+                  id="edit-res-status"
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}
                   className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
@@ -171,8 +175,9 @@ export default function EditReservationModal({
               </div>
 
               <div>
-                <label className="block text-xs text-muted mb-1">Notas del cliente</label>
+                <label htmlFor="edit-res-notes" className="block text-xs text-muted mb-1">Notas del cliente</label>
                 <textarea
+                  id="edit-res-notes"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   rows={2}
@@ -183,8 +188,9 @@ export default function EditReservationModal({
               <div className="border-t border-ink/10 pt-4">
                 <p className="text-xs text-primary mb-3 font-medium">🔒 Solo administrador</p>
                 <div>
-                  <label className="block text-xs text-muted mb-1">Notas internas</label>
+                  <label htmlFor="edit-res-internal-notes" className="block text-xs text-muted mb-1">Notas internas</label>
                   <textarea
+                    id="edit-res-internal-notes"
                     value={form.internalNotes}
                     onChange={(e) => setForm({ ...form, internalNotes: e.target.value })}
                     rows={2}
@@ -193,8 +199,9 @@ export default function EditReservationModal({
                   />
                 </div>
                 <div className="mt-3">
-                  <label className="block text-xs text-muted mb-1">Paseador asignado</label>
+                  <label htmlFor="edit-res-walker" className="block text-xs text-muted mb-1">Paseador asignado</label>
                   <select
+                    id="edit-res-walker"
                     value={form.assignedWalker}
                     onChange={(e) => setForm({ ...form, assignedWalker: e.target.value })}
                     className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"

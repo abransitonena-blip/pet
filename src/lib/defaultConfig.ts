@@ -46,6 +46,16 @@ export function getDayOfWeek(dateStr: string): string {
   return days[date.getDay()]
 }
 
+export interface Announcement {
+  id: string
+  title: string
+  message: string
+  icon: string
+  startDate: string
+  endDate: string
+  active: boolean
+}
+
 export interface SiteConfig {
   schemaVersion?: number
   brandName?: string
@@ -68,12 +78,14 @@ export interface SiteConfig {
   availableSlots: Record<string, string[]>
   walkTips: { title: string; text: string; icon: string }[]
   faq: { question: string; answer: string }[]
-  termsContent: string
+  termsSections?: { title: string; content: string }[]
+  privacySections?: { title: string; content: string }[]
   walkers: { name: string; phone: string; email?: string; uid?: string; status?: string; zones?: string[]; maxDaily?: number; maxWeekly?: number; schedule?: Record<string, Array<{ start: string; end: string }>> }[]
   maintenance: boolean
   features: {
     petAhoraEnabled: boolean
   }
+  announcements: Announcement[]
 }
 
 export const DEFAULT_CONFIG: SiteConfig = {
@@ -117,22 +129,8 @@ export const DEFAULT_CONFIG: SiteConfig = {
     { question: '¿Cómo pago?', answer: 'Aceptamos efectivo, transferencia bancaria y depósito. El pago se acuerda al momento de agendar.' },
     { question: '¿Mi perro necesita estar vacunado?', answer: 'Sí, pedimos que los perros estén al día con sus vacunas (múltiple y antirrábica) para la seguridad de todos los peludos.' },
   ],
-  termsContent: `TÉRMINOS Y CONDICIONES
-
-1. SERVICIOS
-PET Ap ofrece servicios de paseo canino. Los paseos son supervisados por personal capacitado.
-
-2. HORARIOS
-Los paseos se realizan de lunes a viernes de 7:00 AM a 7:00 PM, y sábados de 8:00 AM a 6:00 PM. Domingo no hay servicio.
-
-3. CANCELACIONES
-Puedes cancelar tu reserva sin costo hasta 2 horas antes del paseo. Cancelaciones tardías pueden generar cargos.
-
-4. RESPONSABILIDAD
-PET Ap se compromete a cuidar de tu perro durante el paseo. No nos hacemos responsables por condiciones preexistentes de salud.
-
-5. PAGOS
-Los pagos se realizan en efectivo o transferencia el día del paseo.`,
+  termsSections: undefined,
+  privacySections: undefined,
   walkers: [
     { name: 'Efrain', phone: '5538231235' },
   ],
@@ -140,4 +138,5 @@ Los pagos se realizan en efectivo o transferencia el día del paseo.`,
   features: {
     petAhoraEnabled: false,
   },
+  announcements: [],
 }

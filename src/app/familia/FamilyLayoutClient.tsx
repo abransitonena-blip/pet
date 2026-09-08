@@ -10,6 +10,7 @@ import { getFamilyOnboardingStep, loadFamilyOnboardingSnapshot } from '@/lib/fam
 import { useSessionRole } from '@/lib/useSessionRole'
 import { ROLES, ROLE_HOME } from '@/lib/roles'
 import AppShell from '@/components/layout/AppShell'
+import AnnouncementBanner from '@/components/AnnouncementBanner'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 import {
   Dog, Calendar, PawPrint, Camera, Users, MapPin,
@@ -119,6 +120,7 @@ export default function FamilyLayoutClient({ children }: { children: React.React
       mobileNavigation
       showLogoutLabel
     >
+      <AnnouncementBanner />
       {children || (
         <Card className="p-8">
           <EmptyState

@@ -101,9 +101,13 @@ describe('P0.7 CSP, headers and private caching', () => {
 
   test('retired hosts are absent from active hosting and security configuration', () => {
     const config = `${security}\n${nextConfig}\n${read('vercel.json')}`
-    for (const host of ['placedog.net', 'pravatar', 'cloudfunctions.net', 'api.cloudinary.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'firebase-messaging-sw.js']) {
+    // api.cloudinary.com is NOT retired: G1's signed gallery upload (AdminGalleryManager.tsx)
+    // uploads straight from the browser to Cloudinary on purpose, to avoid Vercel's function
+    // body-size limit on a proxied route. It belongs in connect-src, not in this list.
+    for (const host of ['placedog.net', 'pravatar', 'cloudfunctions.net', 'fonts.googleapis.com', 'fonts.gstatic.com', 'firebase-messaging-sw.js']) {
       expect(config).not.toContain(host)
     }
+    expect(security).toContain('https://api.cloudinary.com')
   })
 
   test('security headers and production-only HSTS are configured', () => {
@@ -174,8 +178,8 @@ describe('P0.7 routes, active content and PWA', () => {
       `${read('src/app/HomeClient.tsx')}\n${read('src/components/Hero.tsx')}`,
       read('src/app/nosotros/page.tsx'),
       `${read('src/app/preguntas-frecuentes/page.tsx')}\n${read('src/app/preguntas-frecuentes/PublicFAQ.tsx')}`,
-      read('src/app/privacidad/page.tsx'),
-      read('src/app/terminos/page.tsx'),
+      read('src/app/privacidad/PrivacidadContent.tsx'),
+      read('src/app/terminos/TerminosContent.tsx'),
     ]
     for (const source of publicEntrySources) expect(source.match(/<h1\b|<motion\.h1\b/g)).toHaveLength(1)
     const rootLayout = read('src/app/layout.tsx')

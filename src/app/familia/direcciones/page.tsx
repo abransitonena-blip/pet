@@ -316,8 +316,9 @@ export default function DireccionesPage() {
 
               {/* Street */}
               <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Calle *</label>
+                <label htmlFor="addr-street" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Calle *</label>
                 <input
+                  id="addr-street"
                   type="text"
                   value={form.street}
                   onChange={(e) => setForm({ ...form, street: e.target.value })}
@@ -330,8 +331,9 @@ export default function DireccionesPage() {
               {/* Numbers */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Núm. Exterior</label>
+                  <label htmlFor="addr-exterior" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Núm. Exterior</label>
                   <input
+                    id="addr-exterior"
                     type="text"
                     value={form.exterior}
                     onChange={(e) => setForm({ ...form, exterior: e.target.value })}
@@ -341,8 +343,9 @@ export default function DireccionesPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Núm. Interior</label>
+                  <label htmlFor="addr-interior" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Núm. Interior</label>
                   <input
+                    id="addr-interior"
                     type="text"
                     value={form.interior}
                     onChange={(e) => setForm({ ...form, interior: e.target.value })}
@@ -356,8 +359,9 @@ export default function DireccionesPage() {
               {/* Colony + City */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Colonia *</label>
+                  <label htmlFor="addr-colony" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Colonia *</label>
                   <input
+                    id="addr-colony"
                     type="text"
                     value={form.colony}
                     onChange={(e) => setForm({ ...form, colony: e.target.value })}
@@ -367,8 +371,9 @@ export default function DireccionesPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ciudad *</label>
+                  <label htmlFor="addr-city" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ciudad *</label>
                   <input
+                    id="addr-city"
                     type="text"
                     value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })}
@@ -382,8 +387,9 @@ export default function DireccionesPage() {
               {/* State + Zip */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Estado</label>
+                  <label htmlFor="addr-state" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Estado</label>
                   <input
+                    id="addr-state"
                     type="text"
                     value={form.state}
                     onChange={(e) => setForm({ ...form, state: e.target.value })}
@@ -393,8 +399,9 @@ export default function DireccionesPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Código Postal</label>
+                  <label htmlFor="addr-zip" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Código Postal</label>
                   <input
+                    id="addr-zip"
                     type="text"
                     value={form.zip}
                     onChange={(e) => setForm({ ...form, zip: e.target.value })}
@@ -407,8 +414,9 @@ export default function DireccionesPage() {
 
               {/* References */}
               <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Referencias</label>
+                <label htmlFor="addr-references" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Referencias</label>
                 <textarea
+                  id="addr-references"
                   value={form.references}
                   onChange={(e) => setForm({ ...form, references: e.target.value })}
                   rows={2}
@@ -423,8 +431,9 @@ export default function DireccionesPage() {
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Contacto en la dirección</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
+                    <label htmlFor="addr-contact-name" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
                     <input
+                      id="addr-contact-name"
                       type="text"
                       value={form.contactName}
                       onChange={(e) => setForm({ ...form, contactName: e.target.value })}
@@ -434,8 +443,9 @@ export default function DireccionesPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Teléfono</label>
+                    <label htmlFor="addr-contact-phone" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Teléfono</label>
                     <input
+                      id="addr-contact-phone"
                       type="tel"
                       value={form.contactPhone}
                       onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
@@ -451,8 +461,9 @@ export default function DireccionesPage() {
               <div className="border-t pt-4 space-y-3" style={{ borderColor: 'var(--border)' }}>
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Instrucciones</p>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Indicaciones de recolección</label>
+                  <label htmlFor="addr-pickup-instructions" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Indicaciones de recolección</label>
                   <textarea
+                    id="addr-pickup-instructions"
                     value={form.pickupInstructions}
                     onChange={(e) => setForm({ ...form, pickupInstructions: e.target.value })}
                     rows={2}
@@ -462,8 +473,9 @@ export default function DireccionesPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Indicaciones de entrega</label>
+                  <label htmlFor="addr-delivery-instructions" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Indicaciones de entrega</label>
                   <textarea
+                    id="addr-delivery-instructions"
                     value={form.deliveryInstructions}
                     onChange={(e) => setForm({ ...form, deliveryInstructions: e.target.value })}
                     rows={2}

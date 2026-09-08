@@ -141,12 +141,13 @@ export default function TeamLoginForm() {
       </div>
 
       <div>
-        <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>
+        <label htmlFor="team-login-email" className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>
           Correo del equipo
         </label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
           <input
+            id="team-login-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -159,10 +160,11 @@ export default function TeamLoginForm() {
       </div>
 
       <div>
-        <label className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
+        <label htmlFor="team-login-password" className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
           <input
+            id="team-login-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

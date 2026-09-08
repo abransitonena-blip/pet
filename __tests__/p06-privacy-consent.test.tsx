@@ -107,11 +107,14 @@ describe('P0.6 separated photo consent and minimization', () => {
   })
 
   test('privacy notice renders the canonical retention and storage inventories', () => {
-    const privacyPage = read('src/app/privacidad/page.tsx')
+    // Content lives in PrivacidadContent.tsx (client component, reads config.privacySections
+    // via useConfig for admin-editable overrides); page.tsx is just the server metadata shell.
+    const privacyContent = read('src/app/privacidad/PrivacidadContent.tsx')
+    const privacyStaticText = read('src/lib/privacyContent.ts')
     expect(RETENTION_MATRIX.length).toBeGreaterThanOrEqual(14)
     expect(STORAGE_INVENTORY.map((item) => item.name)).toEqual(expect.arrayContaining(['__session', 'petap_consent_v1', 'pet-ap-static-v3']))
-    expect(privacyPage).toContain('RETENTION_MATRIX.map')
-    expect(privacyPage).toContain('STORAGE_INVENTORY.map')
-    expect(privacyPage).toContain('borrador operativo')
+    expect(privacyContent).toContain('RETENTION_MATRIX.map')
+    expect(privacyContent).toContain('STORAGE_INVENTORY.map')
+    expect(privacyStaticText).toContain('borrador operativo')
   })
 })

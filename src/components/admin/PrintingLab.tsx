@@ -288,10 +288,10 @@ export default function PrintingLab() {
               Imprimir logo ({customLogo ? 'personalizado' : 'marca PET Ap'})
             </label>
             <div className="flex flex-wrap items-center gap-2">
-              <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={onLogoFile} className="block min-h-11 flex-1 rounded-lg border border-border bg-canvas p-2 text-xs text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:font-semibold file:text-primary" />
+              <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={onLogoFile} aria-label="Subir logo personalizado" className="block min-h-11 flex-1 rounded-lg border border-border bg-canvas p-2 text-xs text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:font-semibold file:text-primary" />
               {customLogo && <Button type="button" size="sm" variant="secondary" onClick={clearCustomLogo}>Quitar logo</Button>}
             </div>
-            {logoMessage && <p className="text-xs text-muted">{logoMessage}</p>}
+            {logoMessage && <p role="status" className="text-xs text-muted">{logoMessage}</p>}
           </div>
 
           <p className="text-xs text-muted">

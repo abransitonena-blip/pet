@@ -2,6 +2,7 @@
   "name": "pet-ap-push-functions",
   "description": "Push notifications for PET Ap",
   "dependencies": {
+    "@google-cloud/firestore": "^7.0.0",
     "firebase-admin": "^11.0.0",
     "firebase-functions": "^4.0.0"
   },

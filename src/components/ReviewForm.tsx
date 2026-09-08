@@ -100,10 +100,11 @@ export default function ReviewForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="review-name" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               Tu nombre *
             </label>
             <input
+              id="review-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -113,10 +114,11 @@ export default function ReviewForm() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="review-pet-name" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               Nombre de tu perro
             </label>
             <input
+              id="review-pet-name"
               type="text"
               value={petName}
               onChange={(e) => setPetName(e.target.value)}
@@ -160,10 +162,11 @@ export default function ReviewForm() {
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+          <label htmlFor="review-text" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
             Tu reseña *
           </label>
           <textarea
+            id="review-text"
             value={text}
             onChange={(e) => setText(e.target.value)}
             required

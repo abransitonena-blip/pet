@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
-import type { SiteConfig } from '@/lib/defaultConfig'
+import type { SiteConfig, Announcement } from '@/lib/defaultConfig'
+import { mexicanObservanceShortcuts, type DateShortcut } from '@/lib/announcements'
+import { mergeTermsSections } from '@/lib/termsContent'
+import { mergePrivacySections } from '@/lib/privacyContent'
 
 type EditorProps = {
   config: SiteConfig
@@ -23,7 +26,7 @@ import AdminServicePricing from '@/components/AdminServicePricing'
 import AdminBookingSchedule from '@/components/AdminBookingSchedule'
 import { BRAND } from '@/lib/brand'
 
-type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'terms' | 'walkers' | 'features' | 'maintenance' | 'brand'
+type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'walkers' | 'features' | 'maintenance' | 'brand'
 
 const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'prices', label: 'Precios de servicios', icon: 'MXN' },
@@ -33,7 +36,9 @@ const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'social', label: 'Redes sociales', icon: '📱' },
   { id: 'tips', label: 'Walk Tips', icon: '💡' },
   { id: 'faq', label: 'FAQ', icon: '❓' },
-  { id: 'terms', label: 'Términos', icon: '📄' },
+  { id: 'announcements', label: 'Anuncios y festividades', icon: '🎉' },
+  { id: 'terms', label: 'Términos y condiciones', icon: '📄' },
+  { id: 'privacy', label: 'Aviso de privacidad', icon: '🔒' },
   { id: 'walkers', label: 'Paseadores', icon: '🦮' },
   { id: 'features', label: 'Funcionalidades', icon: '🚀' },
   { id: 'maintenance', label: 'Mantenimiento', icon: '⚠️' },
@@ -105,8 +110,12 @@ function SectionContent({
       return <TipsEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'faq':
       return <FAQEditor config={config} updateConfig={updateConfig} saving={saving} />
+    case 'announcements':
+      return <AnnouncementsEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'terms':
       return <TermsEditor config={config} updateConfig={updateConfig} saving={saving} />
+    case 'privacy':
+      return <PrivacyEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'walkers':
       return <WalkersEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'features':
@@ -316,17 +325,127 @@ function FAQEditor({ config, updateConfig, saving }: EditorProps) {
   )
 }
 
-function TermsEditor({ config, updateConfig, saving }: EditorProps) {
-  const [content, setContent] = useState(config.termsContent)
+function AnnouncementsEditor({ config, updateConfig, saving }: EditorProps) {
+  const [items, setItems] = useState(config.announcements)
+  const [shortcutTarget, setShortcutTarget] = useState<number | null>(null)
 
-  useEffect(() => { setContent(config.termsContent) }, [config.termsContent])
-  const save = () => updateConfig({ termsContent: content })
+  useEffect(() => { setItems(config.announcements) }, [config.announcements])
+
+  const save = () => updateConfig({ announcements: items })
+  const addItem = () => setItems([...items, {
+    id: `announcement-${Date.now()}`, title: '', message: '', icon: '🎉',
+    startDate: '', endDate: '', active: false,
+  }])
+  const removeItem = (i: number) => setItems(items.filter((_: unknown, idx: number) => idx !== i))
+  const updateItem = (i: number, field: keyof Announcement, value: string | boolean) => {
+    const updated = [...items]
+    updated[i] = { ...updated[i], [field]: value }
+    setItems(updated)
+  }
+  const applyShortcut = (i: number, shortcut: DateShortcut) => {
+    updateItem(i, 'startDate', shortcut.startDate)
+    updateItem(i, 'endDate', shortcut.endDate)
+    setShortcutTarget(null)
+  }
 
   return (
     <div className="space-y-3">
-      <textarea aria-label="Términos y condiciones" value={content} onChange={(e) => setContent(e.target.value)} rows={12}
-        className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-xs font-mono resize-none focus:outline-none focus:border-primary"
-      />
+      <p className="text-xs text-muted">Anuncios visibles en la página pública y en Familia PET mientras estén activos y la fecha de hoy caiga dentro del rango.</p>
+      {items.map((item, i) => (
+        <div key={item.id} className="space-y-2 bg-ink/5 p-3 rounded-lg">
+          <div className="flex gap-2 items-start">
+            <input value={item.icon} onChange={(e) => updateItem(i, 'icon', e.target.value)} className="w-12 bg-white border border-ink/15 rounded px-2 py-1 text-ink text-sm text-center" aria-label="Ícono" maxLength={4} />
+            <input value={item.title} onChange={(e) => updateItem(i, 'title', e.target.value)} className="flex-1 bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" aria-label="Título del anuncio" placeholder="Título" />
+            <button onClick={() => removeItem(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><Trash2 size={10} /></button>
+          </div>
+          <textarea value={item.message} onChange={(e) => updateItem(i, 'message', e.target.value)} rows={2} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs resize-none" aria-label="Mensaje del anuncio" placeholder="Mensaje" />
+          <div className="flex flex-wrap items-end gap-2">
+            <div>
+              <label htmlFor={`announcement-start-${i}`} className="block text-2xs text-muted mb-1">Desde</label>
+              <input id={`announcement-start-${i}`} type="date" value={item.startDate} onChange={(e) => updateItem(i, 'startDate', e.target.value)} className="bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" />
+            </div>
+            <div>
+              <label htmlFor={`announcement-end-${i}`} className="block text-2xs text-muted mb-1">Hasta</label>
+              <input id={`announcement-end-${i}`} type="date" value={item.endDate} onChange={(e) => updateItem(i, 'endDate', e.target.value)} className="bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" />
+            </div>
+            <div className="relative">
+              <button type="button" onClick={() => setShortcutTarget(shortcutTarget === i ? null : i)} className="text-2xs text-primary hover:text-primary/80 transition-all px-2 py-1.5">Fecha rápida ▾</button>
+              {shortcutTarget === i && (
+                <div className="absolute z-10 mt-1 w-64 rounded-lg border border-ink/15 bg-white shadow-lg">
+                  {mexicanObservanceShortcuts().map((shortcut) => (
+                    <button key={shortcut.label} type="button" onClick={() => applyShortcut(i, shortcut)} className="block w-full text-left px-3 py-2 text-2xs text-ink hover:bg-ink/5">{shortcut.label}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <label className="flex items-center gap-1.5 text-2xs text-ink ml-auto">
+              <input type="checkbox" checked={item.active} onChange={(e) => updateItem(i, 'active', e.target.checked)} />
+              Activo
+            </label>
+          </div>
+        </div>
+      ))}
+      <button onClick={addItem} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
+        <Plus size={8} /> Agregar anuncio
+      </button>
+      <SaveButton onClick={save} saving={saving} />
+    </div>
+  )
+}
+
+function TermsEditor({ config, updateConfig, saving }: EditorProps) {
+  const defaults = mergeTermsSections(null)
+  const [items, setItems] = useState(() => mergeTermsSections(config.termsSections).map((s) => ({ title: s.title, content: s.content })))
+
+  useEffect(() => {
+    setItems(mergeTermsSections(config.termsSections).map((s) => ({ title: s.title, content: s.content })))
+  }, [config.termsSections])
+
+  const save = () => updateConfig({ termsSections: items })
+  const updateItem = (i: number, field: 'title' | 'content', value: string) => {
+    const updated = [...items]
+    updated[i] = { ...updated[i], [field]: value }
+    setItems(updated)
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted">Edita el texto de cada sección de /terminos. No puede agregarse ni quitarse secciones (el ícono de cada una está fijo por posición).</p>
+      {items.map((item, i) => (
+        <div key={defaults[i].title} className="space-y-2 bg-ink/5 p-3 rounded-lg">
+          <input value={item.title} onChange={(e) => updateItem(i, 'title', e.target.value)} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs font-semibold" aria-label={`Título: ${defaults[i].title}`} />
+          <textarea value={item.content} onChange={(e) => updateItem(i, 'content', e.target.value)} rows={3} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs resize-none" aria-label={`Contenido: ${defaults[i].title}`} />
+        </div>
+      ))}
+      <SaveButton onClick={save} saving={saving} />
+    </div>
+  )
+}
+
+function PrivacyEditor({ config, updateConfig, saving }: EditorProps) {
+  const defaults = mergePrivacySections(null)
+  const [items, setItems] = useState(() => mergePrivacySections(config.privacySections).map((s) => ({ title: s.title, content: s.content })))
+
+  useEffect(() => {
+    setItems(mergePrivacySections(config.privacySections).map((s) => ({ title: s.title, content: s.content })))
+  }, [config.privacySections])
+
+  const save = () => updateConfig({ privacySections: items })
+  const updateItem = (i: number, field: 'title' | 'content', value: string) => {
+    const updated = [...items]
+    updated[i] = { ...updated[i], [field]: value }
+    setItems(updated)
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted">Edita el texto de cada sección de /privacidad. La tabla de proveedores, retención y cookies no es editable aquí — son datos técnicos, no redacción.</p>
+      {items.map((item, i) => (
+        <div key={defaults[i].title} className="space-y-2 bg-ink/5 p-3 rounded-lg">
+          <input value={item.title} onChange={(e) => updateItem(i, 'title', e.target.value)} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs font-semibold" aria-label={`Título: ${defaults[i].title}`} />
+          <textarea value={item.content} onChange={(e) => updateItem(i, 'content', e.target.value)} rows={3} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs resize-none" aria-label={`Contenido: ${defaults[i].title}`} />
+        </div>
+      ))}
       <SaveButton onClick={save} saving={saving} />
     </div>
   )
@@ -434,16 +553,26 @@ function MaintenanceEditor({ config, updateConfig, saving }: EditorProps) {
   )
 }
 
-function InputField({ label, value, onChange, multiline }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean }) {
+function slugifyFieldId(label: string): string {
+  return `admin-config-${label
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')}`
+}
+
+function InputField({ label, value, onChange, multiline, id }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean; id?: string }) {
+  const fieldId = id || slugifyFieldId(label)
   return (
     <div>
-      <label className="block text-xs text-muted mb-1">{label}</label>
+      <label htmlFor={fieldId} className="block text-xs text-muted mb-1">{label}</label>
       {multiline ? (
-        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3}
+        <textarea id={fieldId} value={value} onChange={(e) => onChange(e.target.value)} rows={3}
           className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm resize-none focus:outline-none focus:border-primary"
         />
       ) : (
-        <input value={value} onChange={(e) => onChange(e.target.value)}
+        <input id={fieldId} value={value} onChange={(e) => onChange(e.target.value)}
           className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
         />
       )}

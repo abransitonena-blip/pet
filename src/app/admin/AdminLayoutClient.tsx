@@ -12,7 +12,7 @@ import {
   Dog, Gauge, Calendar, Users, PawPrint, Footprints,
   MapPin, DollarSign, Tag, Star,
   TrendingUp, Settings, ClipboardList, Bot,
-  MessageSquare, Image, Zap, Printer, Ticket, FlaskConical,
+  MessageSquare, Image, Zap, Printer, Ticket, FlaskConical, AlertOctagon, MessageSquareHeart,
 } from 'lucide-react'
 import AdminShell from '@/components/layout/AdminShell'
 
@@ -32,12 +32,14 @@ const NAV_ITEMS = [
   { id: 'cupones', label: 'Cupones', icon: Tag, href: '/admin/cupones', group: 'Contenido' },
   { id: 'referidos', label: 'Referidos', icon: Users, href: '/admin/referidos', group: 'Contenido' },
   { id: 'resenas', label: 'Reseñas', icon: Star, href: '/admin/resenas', group: 'Contenido' },
+  { id: 'comentarios', label: 'Comentarios de familias', icon: MessageSquareHeart, href: '/admin/comentarios', group: 'Contenido' },
   { id: 'galeria', label: 'Galería', icon: Image, href: '/admin/galeria', group: 'Contenido' },
   { id: 'chat', label: 'Chat', icon: MessageSquare, href: '/admin/chat', group: 'Contenido' },
   { id: 'zonas', label: 'Zonas', icon: MapPin, href: '/admin/zonas', group: 'Configuración' },
   { id: 'config', label: 'Configuración', icon: Settings, href: '/admin/config', group: 'Configuración' },
   { id: 'analitica', label: 'Analítica', icon: TrendingUp, href: '/admin/analitica', group: 'Sistema' },
   { id: 'logs', label: 'Logs', icon: ClipboardList, href: '/admin/logs', group: 'Sistema' },
+  { id: 'errores', label: 'Errores de aplicación', icon: AlertOctagon, href: '/admin/errores', group: 'Sistema' },
   { id: 'ia', label: 'Insights', icon: Bot, href: '/admin/ia', group: 'Sistema' },
 ]
 

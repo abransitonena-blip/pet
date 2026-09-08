@@ -142,8 +142,8 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
         </div>
       ) : (
         <div className="space-y-3 mb-4">
-          <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>¿Quién sale a pasear?</label>
-          <select value={selectedPet} onChange={(e) => setSelectedPet(e.target.value)} className="input-field">
+          <label htmlFor="petahora-pet" className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>¿Quién sale a pasear?</label>
+          <select id="petahora-pet" value={selectedPet} onChange={(e) => setSelectedPet(e.target.value)} className="input-field">
             {pets.map((p) => <option key={p.id} value={p.id}>{p.name} {p.breed ? `(${p.breed})` : ''}</option>)}
           </select>
         </div>
@@ -157,8 +157,8 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
         </div>
       ) : (
         <div className="space-y-3 mb-4">
-          <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Dirección de recogida</label>
-          <select value={selectedAddress} onChange={(e) => setSelectedAddress(e.target.value)} className="input-field">
+          <label htmlFor="petahora-address" className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Dirección de recogida</label>
+          <select id="petahora-address" value={selectedAddress} onChange={(e) => setSelectedAddress(e.target.value)} className="input-field">
             {addresses.map((a) => <option key={a.id} value={a.id}>{a.alias || a.street}</option>)}
           </select>
         </div>

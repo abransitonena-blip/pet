@@ -508,20 +508,20 @@ export default function MisPerrosPage() {
 
                     {/* Name */}
                     <div>
-                      <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+                      <label htmlFor="dog-name" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
                         Nombre <span style={{ color: 'var(--color-danger)' }}>*</span>
                       </label>
-                      <input type="text" value={form.name} onChange={(e) => setField('name', e.target.value)} placeholder="Ej: Max, Luna, Toby..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: errors.name ? 'var(--color-error)' : 'var(--border)', color: 'var(--text-primary)' }} />
-                      {errors.name && <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>{errors.name}</p>}
+                      <input id="dog-name" type="text" value={form.name} onChange={(e) => setField('name', e.target.value)} placeholder="Ej: Max, Luna, Toby..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: errors.name ? 'var(--color-error)' : 'var(--border)', color: 'var(--text-primary)' }} />
+                      {errors.name && <p role="alert" className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>{errors.name}</p>}
                     </div>
 
                     {/* Breed */}
                     <div>
-                      <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+                      <label htmlFor="dog-breed" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
                         Raza <span style={{ color: 'var(--color-danger)' }}>*</span>
                       </label>
-                      <input type="text" value={form.breed} onChange={(e) => setField('breed', e.target.value)} placeholder="Ej: Labrador, Mestizo, Pastor Alemán..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: errors.breed ? 'var(--color-error)' : 'var(--border)', color: 'var(--text-primary)' }} />
-                      {errors.breed && <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>{errors.breed}</p>}
+                      <input id="dog-breed" type="text" value={form.breed} onChange={(e) => setField('breed', e.target.value)} placeholder="Ej: Labrador, Mestizo, Pastor Alemán..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: errors.breed ? 'var(--color-error)' : 'var(--border)', color: 'var(--text-primary)' }} />
+                      {errors.breed && <p role="alert" className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>{errors.breed}</p>}
                     </div>
 
                     {/* Size */}
@@ -558,21 +558,21 @@ export default function MisPerrosPage() {
                     {/* Age & Weight */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Edad</label>
-                        <input type="text" value={form.age} onChange={(e) => setField('age', e.target.value)} placeholder="Ej: 2 años" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                        <label htmlFor="dog-age" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Edad</label>
+                        <input id="dog-age" type="text" value={form.age} onChange={(e) => setField('age', e.target.value)} placeholder="Ej: 2 años" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                       </div>
                       <div>
-                        <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Peso</label>
-                        <input type="text" value={form.weight} onChange={(e) => setField('weight', e.target.value)} placeholder="Ej: 15 kg" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                        <label htmlFor="dog-weight" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Peso</label>
+                        <input id="dog-weight" type="text" value={form.weight} onChange={(e) => setField('weight', e.target.value)} placeholder="Ej: 15 kg" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                       </div>
                     </div>
 
                     {/* Notes */}
                     <div>
-                      <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+                      <label htmlFor="dog-notes" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
                         Notas <span className="font-normal" style={{ color: 'var(--text-muted)' }}>(opcional)</span>
                       </label>
-                      <textarea value={form.notes} onChange={(e) => setField('notes', e.target.value)} rows={2} placeholder="Ej: Alergia al pollo, nervioso con perros grandes..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                      <textarea id="dog-notes" value={form.notes} onChange={(e) => setField('notes', e.target.value)} rows={2} placeholder="Ej: Alergia al pollo, nervioso con perros grandes..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                     </div>
                   </>
                 )}
@@ -650,7 +650,8 @@ export default function MisPerrosPage() {
                         <div key={i} className="flex items-center gap-2 mb-2 p-2 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
                           <Syringe size={12} className="text-brand-600 shrink-0" />
                           <input type="text" value={vac.name} onChange={(e) => updateVaccine(i, 'name', e.target.value)} placeholder="Nombre" className="flex-1 text-xs bg-transparent border-none outline-none" style={{ color: 'var(--text-primary)' }} />
-                          <input type="date" value={vac.date} onChange={(e) => updateVaccine(i, 'date', e.target.value)} className="text-2xs bg-transparent outline-none" style={{ color: 'var(--text-muted)' }} />
+                          <label htmlFor={`dog-vaccine-date-${i}`} className="sr-only">Fecha de la vacuna</label>
+                          <input id={`dog-vaccine-date-${i}`} type="date" value={vac.date} onChange={(e) => updateVaccine(i, 'date', e.target.value)} className="text-2xs bg-transparent outline-none" style={{ color: 'var(--text-muted)' }} />
                           <button type="button" onClick={() => removeVaccine(i)} className="text-danger-400 hover:opacity-80"><X size={10} /></button>
                         </div>
                       ))}
@@ -686,10 +687,10 @@ export default function MisPerrosPage() {
 
                     {/* Special Needs */}
                     <div>
-                      <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+                      <label htmlFor="dog-special-needs" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
                         Necesidades especiales <span className="font-normal" style={{ color: 'var(--text-muted)' }}>(opcional)</span>
                       </label>
-                      <textarea value={form.preferences.specialNeeds} onChange={(e) => setField('preferences', { ...form.preferences, specialNeeds: e.target.value })} rows={3} placeholder="Ej: Miedo a los truenos, necesita rampa para subirse al coche, no puede comer ciertos alimentos..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                      <textarea id="dog-special-needs" value={form.preferences.specialNeeds} onChange={(e) => setField('preferences', { ...form.preferences, specialNeeds: e.target.value })} rows={3} placeholder="Ej: Miedo a los truenos, necesita rampa para subirse al coche, no puede comer ciertos alimentos..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                     </div>
                   </>
                 )}

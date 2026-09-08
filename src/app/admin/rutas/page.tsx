@@ -82,6 +82,7 @@ export default function AdminRutasPage() {
             <select
               value={filterWalker}
               onChange={(e) => setFilterWalker(e.target.value)}
+              aria-label="Filtrar por paseador"
               className="text-xs px-3 py-1.5 rounded-lg"
               style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             >

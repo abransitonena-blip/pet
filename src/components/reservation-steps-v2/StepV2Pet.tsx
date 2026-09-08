@@ -99,6 +99,7 @@ export default function StepV2Pet({ form, updateForm, userPets, onNext }: StepV2
           <select
             value={newPetType}
             onChange={(e) => setNewPetType(e.target.value)}
+            aria-label="Tipo de mascota"
             className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
           >

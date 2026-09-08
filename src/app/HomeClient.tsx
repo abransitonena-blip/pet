@@ -11,6 +11,7 @@ import HowItWorks from '@/components/HowItWorks'
 import Services from '@/components/Services'
 import Preloader from '@/components/Preloader'
 import BannerDisplay from '@/components/BannerDisplay'
+import AnnouncementBanner from '@/components/AnnouncementBanner'
 import Link from 'next/link'
 import { User, ArrowRight } from 'lucide-react'
 
@@ -49,6 +50,7 @@ function HomeContent() {
   return (
     <>
       <BannerDisplay />
+      <AnnouncementBanner />
       <Preloader onComplete={() => setLoaded(true)} />
       <div className="relative min-h-screen">
         <Header />

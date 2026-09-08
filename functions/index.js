@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
+const { v1: firestoreAdminV1 } = require('@google-cloud/firestore');
 admin.initializeApp();
 
 const db = admin.firestore();
@@ -566,6 +567,115 @@ exports.createWalkerAccount = functions.https.onCall(async (data, context) => {
     throw error;
   }
 });
+
+// ═══════════════════════════════════════════
+// 11. FIRESTORE BACKUPS (scheduled export + honest status)
+// Mirrors the ticket-printing pattern: never claim success at kick-off time.
+// scheduledFirestoreBackup only starts the export and records 'started'.
+// checkFirestoreBackupStatus polls until the long-running operation actually
+// finishes, then records 'success' or 'failed'. Admin/config reads this, no
+// client (Admin included) ever writes to backupRuns — see firestore.rules.
+// ═══════════════════════════════════════════
+
+const firestoreAdminClient = new firestoreAdminV1.FirestoreAdminClient();
+
+function backupOutputUriPrefix(bucket, when = new Date()) {
+  return `${bucket}/${when.toISOString().slice(0, 10)}`;
+}
+
+// Bucket must live in northamerica-south1 — Firestore export requires the
+// destination bucket to share the database's exact location (confirmed via
+// `gcloud firestore databases describe`), cross-region exports are rejected.
+exports.scheduledFirestoreBackup = functions.pubsub
+  .schedule('0 3 * * *')
+  .timeZone('America/Mexico_City')
+  .onRun(async () => {
+    const bucket = process.env.FIRESTORE_BACKUP_BUCKET;
+    const runRef = db.collection('backupRuns').doc();
+
+    if (!bucket) {
+      await runRef.set({
+        startedAt: admin.firestore.FieldValue.serverTimestamp(),
+        finishedAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'failed',
+        errorMessage: 'FIRESTORE_BACKUP_BUCKET is not configured',
+      });
+      console.error('scheduledFirestoreBackup: FIRESTORE_BACKUP_BUCKET is not configured');
+      return;
+    }
+
+    const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+    const outputUriPrefix = backupOutputUriPrefix(bucket);
+
+    try {
+      const [operation] = await firestoreAdminClient.exportDocuments({
+        name: firestoreAdminClient.databasePath(projectId, '(default)'),
+        outputUriPrefix,
+        collectionIds: [], // empty = export every collection
+      });
+
+      await runRef.set({
+        startedAt: admin.firestore.FieldValue.serverTimestamp(),
+        finishedAt: null,
+        status: 'started',
+        outputUriPrefix,
+        operationName: operation.name,
+      });
+      console.log(`scheduledFirestoreBackup: export started (${operation.name})`);
+    } catch (error) {
+      await runRef.set({
+        startedAt: admin.firestore.FieldValue.serverTimestamp(),
+        finishedAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'failed',
+        outputUriPrefix,
+        errorMessage: String((error && error.message) || error),
+      });
+      console.error('scheduledFirestoreBackup failed to start:', error);
+    }
+  });
+
+exports.checkFirestoreBackupStatus = functions.pubsub
+  .schedule('every 15 minutes')
+  .timeZone('America/Mexico_City')
+  .onRun(async () => {
+    const pending = await db.collection('backupRuns').where('status', '==', 'started').get();
+    if (pending.empty) return;
+
+    for (const doc of pending.docs) {
+      const { operationName } = doc.data();
+      if (!operationName) {
+        await doc.ref.update({
+          status: 'failed',
+          finishedAt: admin.firestore.FieldValue.serverTimestamp(),
+          errorMessage: 'Missing operationName on a started backup run',
+        });
+        continue;
+      }
+
+      try {
+        const [operation] = await firestoreAdminClient.operationsClient.getOperation({ name: operationName });
+        if (!operation.done) continue; // still exporting, check again next run
+
+        if (operation.error) {
+          await doc.ref.update({
+            status: 'failed',
+            finishedAt: admin.firestore.FieldValue.serverTimestamp(),
+            errorMessage: operation.error.message || 'Export operation reported an error',
+          });
+        } else {
+          await doc.ref.update({
+            status: 'success',
+            finishedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (error) {
+        console.error(`checkFirestoreBackupStatus: could not check ${operationName}:`, error);
+        // Leave status as 'started' — a transient lookup failure is not an export failure. It
+        // will be re-checked on the next run; a stuck run only becomes visible as "atrasado" in
+        // the Admin panel, it never silently reports success.
+      }
+    }
+  });
 
 exports.cleanupPetAhoraStale = functions.pubsub
   .schedule('*/5 * * * *')

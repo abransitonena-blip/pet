@@ -39,4 +39,14 @@ describe('DR-09 closed: reviews require a real completed walk, not just a shape 
     expect(rulesFragment).toContain('Do not deploy this file by itself')
     expect(rulesFragment).toContain('allow create: if false')
   })
+
+  test('rate limits per uid before checking the flag or eligibility, after authentication', () => {
+    expect(route).toContain('checkRateLimit(')
+    expect(route).toContain("status: 429")
+    const authIndex = route.indexOf("status: 401")
+    const rateLimitIndex = route.indexOf('checkRateLimit(')
+    const flagIndex = route.indexOf('FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED')
+    expect(authIndex).toBeLessThan(rateLimitIndex)
+    expect(rateLimitIndex).toBeLessThan(flagIndex)
+  })
 })

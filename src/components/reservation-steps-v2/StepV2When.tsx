@@ -101,6 +101,7 @@ export default function StepV2When({ form, updateForm, onNext, onBack }: StepV2W
                       time: keepEnd ? `${windowStart}-${form.windowEnd}` : '',
                     })
                   }}
+                  aria-label="Hora de inicio"
                   className="px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                   style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 >
@@ -113,6 +114,7 @@ export default function StepV2When({ form, updateForm, onNext, onBack }: StepV2W
                     const windowEnd = e.target.value
                     updateForm({ windowEnd, time: form.windowStart && windowEnd ? `${form.windowStart}-${windowEnd}` : '' })
                   }}
+                  aria-label="Hora de fin"
                   className="px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                   style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 >

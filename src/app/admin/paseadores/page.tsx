@@ -461,20 +461,20 @@ export default function AdminPaseadoresPage() {
               {/* Name, Phone & Email */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
-                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre completo" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                  <label htmlFor="walker-name" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
+                  <input id="walker-name" type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre completo" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Teléfono</label>
-                  <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="10 dígitos" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                  <label htmlFor="walker-phone" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Teléfono</label>
+                  <input id="walker-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="10 dígitos" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+                <label htmlFor="walker-email" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
                   <Mail size={10} className="inline mr-1" />
                   Correo electrónico (para acceso)
                 </label>
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="paseador@petap.com" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                <input id="walker-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="paseador@petap.com" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                 {!editing && <p className="text-2xs mt-1" style={{ color: 'var(--text-muted)' }}>Se usará para crear la cuenta de acceso del paseador</p>}
               </div>
 
@@ -501,12 +501,12 @@ export default function AdminPaseadoresPage() {
               {/* Capacity */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Máx. diario</label>
-                  <input type="number" min="1" max="20" value={form.maxDaily} onChange={(e) => setForm({ ...form, maxDaily: parseInt(e.target.value) || 8 })} className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                  <label htmlFor="walker-max-daily" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Máx. diario</label>
+                  <input id="walker-max-daily" type="number" min="1" max="20" value={form.maxDaily} onChange={(e) => setForm({ ...form, maxDaily: parseInt(e.target.value) || 8 })} className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Máx. semanal</label>
-                  <input type="number" min="1" max="100" value={form.maxWeekly} onChange={(e) => setForm({ ...form, maxWeekly: parseInt(e.target.value) || 40 })} className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                  <label htmlFor="walker-max-weekly" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Máx. semanal</label>
+                  <input id="walker-max-weekly" type="number" min="1" max="100" value={form.maxWeekly} onChange={(e) => setForm({ ...form, maxWeekly: parseInt(e.target.value) || 40 })} className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                 </div>
               </div>
 
@@ -523,9 +523,11 @@ export default function AdminPaseadoresPage() {
                         </button>
                         {isActive && form.schedule[day]?.map((slot, idx) => (
                           <div key={idx} className="flex items-center gap-1 flex-1">
-                            <input type="time" value={slot.start} onChange={(e) => updateScheduleTime(day, idx, 'start', e.target.value)} className="flex-1 text-xs px-2 py-1.5 rounded-lg border bg-transparent" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                            <label htmlFor={`walker-slot-start-${day}-${idx}`} className="sr-only">Hora de inicio</label>
+                            <input id={`walker-slot-start-${day}-${idx}`} type="time" value={slot.start} onChange={(e) => updateScheduleTime(day, idx, 'start', e.target.value)} className="flex-1 text-xs px-2 py-1.5 rounded-lg border bg-transparent" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                             <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>—</span>
-                            <input type="time" value={slot.end} onChange={(e) => updateScheduleTime(day, idx, 'end', e.target.value)} className="flex-1 text-xs px-2 py-1.5 rounded-lg border bg-transparent" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                            <label htmlFor={`walker-slot-end-${day}-${idx}`} className="sr-only">Hora de fin</label>
+                            <input id={`walker-slot-end-${day}-${idx}`} type="time" value={slot.end} onChange={(e) => updateScheduleTime(day, idx, 'end', e.target.value)} className="flex-1 text-xs px-2 py-1.5 rounded-lg border bg-transparent" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                           </div>
                         ))}
                         {!isActive && <span className="text-2xs flex-1" style={{ color: 'var(--text-muted)' }}>No disponible</span>}

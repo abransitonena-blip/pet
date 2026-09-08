@@ -3,11 +3,13 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Dog } from 'lucide-react'
 import { useEscapeKey } from '@/lib/useEscapeKey'
-import { termsSections, TERMS_LAST_UPDATED } from '@/lib/termsContent'
+import { mergeTermsSections, TERMS_LAST_UPDATED } from '@/lib/termsContent'
+import { useConfig } from '@/context/ConfigContext'
 
 export default function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   useEscapeKey(onClose, isOpen)
-  const sections = termsSections
+  const { config } = useConfig()
+  const sections = mergeTermsSections(config.termsSections)
   return (
     <AnimatePresence>
       {isOpen && (

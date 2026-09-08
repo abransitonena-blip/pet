@@ -55,6 +55,7 @@ export default function AdminGalleryManager() {
   const [rights, setRights] = useState(false)
   const [busy, setBusy] = useState('')
   const [message, setMessage] = useState('')
+  const [diagnosticsMessage, setDiagnosticsMessage] = useState('')
   const [editingId, setEditingId] = useState('')
   const [editingAltText, setEditingAltText] = useState('')
   const [editingConsent, setEditingConsent] = useState(false)
@@ -147,6 +148,21 @@ export default function AdminGalleryManager() {
     } finally { setBusy('') }
   }
 
+  const runDiagnostics = async () => {
+    setDiagnosticsMessage('Probando…')
+    try {
+      const token = await auth.currentUser?.getIdToken(true)
+      if (!token) throw new Error('auth-required')
+      const response = await fetch('/api/admin/gallery/diagnostics', { headers: { Authorization: `Bearer ${token}` } })
+      const result = await response.json() as { ok?: boolean; message?: string }
+      setDiagnosticsMessage(response.ok && result.ok
+        ? 'Credenciales de Cloudinary válidas. El problema no es la contraseña/clave — revisa la firma de subida.'
+        : `Cloudinary rechazó las credenciales: ${result.message ?? 'sin detalle'}.`)
+    } catch {
+      setDiagnosticsMessage('No pudimos ejecutar la prueba (revisa tu sesión).')
+    }
+  }
+
   const beginEditing = (record: CompatibleGalleryRecord) => {
     setEditingId(record.id)
     setEditingAltText(record.altText)
@@ -226,12 +242,13 @@ export default function AdminGalleryManager() {
       <section className="space-y-4 rounded-2xl bg-surface p-4 sm:p-5" aria-labelledby="secure-gallery-upload">
         <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-primary" size={20} aria-hidden="true" /><div><h2 id="secure-gallery-upload" className="font-semibold text-ink">Carga firmada</h2><p className="mt-1 text-sm text-muted">Solo Admin. Los secretos permanecen en servidor y Cloudinary elimina el perfil de metadata mediante transformación firmada.</p></div></div>
         {!canWrite ? <p className="text-sm text-muted">Supervisor: consulta de solo lectura.</p> : <>
-          <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} className="block min-h-11 w-full rounded-xl border border-border bg-canvas p-2 text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:font-semibold file:text-primary" />
+          <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} aria-label="Seleccionar imagen para cargar" className="block min-h-11 w-full rounded-xl border border-border bg-canvas p-2 text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:font-semibold file:text-primary" />
           <label className="block text-sm font-semibold text-ink">Texto alternativo<textarea value={altText} maxLength={240} onChange={(event) => setAltText(event.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-border bg-canvas px-4 py-3 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" /></label>
           <div className="grid gap-2 sm:grid-cols-2"><label className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm text-ink"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="h-5 w-5 accent-primary" />Consentimiento registrado</label><label className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm text-ink"><input type="checkbox" checked={rights} onChange={(event) => setRights(event.target.checked)} className="h-5 w-5 accent-primary" />Derechos para galería pública</label></div>
-          <div className="flex flex-wrap gap-2"><Button onClick={() => void uploadDraft()} disabled={!file || busy === 'upload'} isLoading={busy === 'upload'} leftIcon={<Upload size={16} aria-hidden="true" />}>Cargar como borrador</Button><Button variant="secondary" onClick={clearDraft} disabled={busy === 'upload'} leftIcon={<X size={16} aria-hidden="true" />}>Cancelar</Button></div>
+          <div className="flex flex-wrap gap-2"><Button onClick={() => void uploadDraft()} disabled={!file || busy === 'upload'} isLoading={busy === 'upload'} leftIcon={<Upload size={16} aria-hidden="true" />}>Cargar como borrador</Button><Button variant="secondary" onClick={clearDraft} disabled={busy === 'upload'} leftIcon={<X size={16} aria-hidden="true" />}>Cancelar</Button><Button variant="secondary" onClick={() => void runDiagnostics()}>Probar credenciales de Cloudinary</Button></div>
         </>}
         {message && <p role="status" className="rounded-xl bg-primary/10 px-4 py-3 text-sm text-ink">{message}</p>}
+        {diagnosticsMessage && <p role="status" className="rounded-xl bg-ink/5 px-4 py-3 text-sm text-ink">{diagnosticsMessage}</p>}
       </section>
 
       <section aria-labelledby="gallery-records-title">
@@ -245,7 +262,7 @@ export default function AdminGalleryManager() {
               </p>
             ) : null}
           </div>
-          <select value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)} className="min-h-11 rounded-xl border border-border bg-surface px-3 text-sm text-ink">
+          <select value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)} aria-label="Filtrar por estado de publicación" className="min-h-11 rounded-xl border border-border bg-surface px-3 text-sm text-ink">
             <option value="all">Todas</option>
             <option value="draft">Borradores</option>
             <option value="published">Publicadas</option>

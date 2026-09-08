@@ -270,8 +270,9 @@ export default function AdminZonasPage() {
               </div>
 
               <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
+                <label htmlFor="zone-name" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Nombre</label>
                 <input
+                  id="zone-name"
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -283,8 +284,9 @@ export default function AdminZonasPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Latitud</label>
+                  <label htmlFor="zone-lat" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Latitud</label>
                   <input
+                    id="zone-lat"
                     type="number"
                     step="any"
                     value={form.centerLat}
@@ -295,8 +297,9 @@ export default function AdminZonasPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Longitud</label>
+                  <label htmlFor="zone-lng" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Longitud</label>
                   <input
+                    id="zone-lng"
                     type="number"
                     step="any"
                     value={form.centerLng}
@@ -309,8 +312,9 @@ export default function AdminZonasPage() {
               </div>
 
               <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Radio (km)</label>
+                <label htmlFor="zone-radius" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Radio (km)</label>
                 <input
+                  id="zone-radius"
                   type="number"
                   step="0.5"
                   value={form.radius}
@@ -325,8 +329,9 @@ export default function AdminZonasPage() {
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Precios por zona</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ajuste fijo ($)</label>
+                    <label htmlFor="zone-fixed-adjustment" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ajuste fijo ($)</label>
                     <input
+                      id="zone-fixed-adjustment"
                       type="number"
                       step="1"
                       value={form.fixedAdjustment}
@@ -337,8 +342,9 @@ export default function AdminZonasPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ajuste %</label>
+                    <label htmlFor="zone-percent-adjustment" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ajuste %</label>
                     <input
+                      id="zone-percent-adjustment"
                       type="number"
                       step="1"
                       value={form.percentAdjustment}
@@ -351,8 +357,9 @@ export default function AdminZonasPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Cobertura mínima ($)</label>
+                    <label htmlFor="zone-min-order" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Cobertura mínima ($)</label>
                     <input
+                      id="zone-min-order"
                       type="number"
                       step="1"
                       value={form.minOrder}

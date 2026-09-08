@@ -2,12 +2,15 @@ import { NextResponse } from 'next/server'
 import { verifyAuthenticatedToken } from '@/lib/serverAuth'
 import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs'
 
 const noStore = { 'Cache-Control': 'private, no-store, max-age=0' }
 const MAX_TEXT_LENGTH = 500
 const MAX_NAME_LENGTH = 120
+const RATE_LIMIT_MAX = 5
+const RATE_LIMIT_WINDOW_MS = 10 * 60_000
 
 /**
  * Closes DR-09: the reviews collection previously accepted a create from any
@@ -30,6 +33,11 @@ export async function POST(request: Request) {
   if (!token) return NextResponse.json({ code: 'auth-required' }, { status: 401, headers: noStore })
   const uid = await verifyAuthenticatedToken(token)
   if (!uid) return NextResponse.json({ code: 'invalid-token' }, { status: 401, headers: noStore })
+
+  const rateLimit = checkRateLimit(`reviews-submit:${uid}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)
+  if (!rateLimit.allowed) {
+    return NextResponse.json({ code: 'rate-limited' }, { status: 429, headers: { ...noStore, 'Retry-After': String(rateLimit.retryAfterSeconds) } })
+  }
 
   if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) {
     return NextResponse.json({ code: 'reviews-not-enabled' }, { status: 503, headers: noStore })

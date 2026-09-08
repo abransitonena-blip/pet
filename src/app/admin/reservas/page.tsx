@@ -346,6 +346,7 @@ export default function AdminReservas() {
         <select
           value={walkerFilter}
           onChange={(e) => setWalkerFilter(e.target.value)}
+          aria-label="Filtrar por paseador"
           className="input-field !w-auto"
         >
           <option value="">Todos los paseadores</option>
