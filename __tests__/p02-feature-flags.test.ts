@@ -19,7 +19,16 @@ describe('P0.2 safe feature defaults', () => {
       'PRIVATE_MEDIA_UPLOADS_ENABLED',
       'WALK_REPORTS_ENABLED',
     ]))
-    expect(Object.entries(FEATURE_FLAGS).every(([name, enabled]) => name === 'WALK_REPORTS_ENABLED' ? enabled : enabled === false)).toBe(true)
+    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED'])
+    expect(Object.entries(FEATURE_FLAGS).every(([name, enabled]) => enabledByDesign.has(name) ? enabled : enabled === false)).toBe(true)
+  })
+
+  it('PUBLIC_REVIEWS_ENABLED may only be true alongside a real server-side eligibility check (DR-09)', () => {
+    if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) return
+    const route = read('src/app/api/reviews/submit/route.ts')
+    expect(route).toContain("collection('walkSessions')")
+    expect(route).toContain("where('status', '==', 'completed')")
+    expect(read('src/components/ReviewForm.tsx')).not.toContain("addDoc(collection(db, 'reviews')")
   })
 
   it('does not ship callable invocations in application source', () => {
