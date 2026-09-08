@@ -12,7 +12,7 @@ import {
   Dog, Gauge, Calendar, Users, PawPrint, Footprints,
   MapPin, DollarSign, Tag, Star,
   TrendingUp, Settings, ClipboardList, Bot,
-  MessageSquare, Image, Zap, Printer, Ticket,
+  MessageSquare, Image, Zap, Printer, Ticket, FlaskConical,
 } from 'lucide-react'
 import AdminShell from '@/components/layout/AdminShell'
 
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { id: 'paseadores', label: 'Paseadores', icon: Footprints, href: '/admin/paseadores', group: 'Personas' },
   { id: 'tickets', label: 'Tickets internos', icon: Ticket, href: '/admin/tickets', group: 'Cobros' },
   { id: 'printing-test', label: 'Prueba de impresión', icon: Printer, href: '/admin/printing/test', group: 'Cobros' },
+  { id: 'printing-lab', label: 'Laboratorio de impresión', icon: FlaskConical, href: '/admin/printing/lab', group: 'Cobros' },
   { id: 'finanzas', label: 'Finanzas', icon: DollarSign, href: '/admin/finanzas', group: 'Cobros' },
   { id: 'cupones', label: 'Cupones', icon: Tag, href: '/admin/cupones', group: 'Contenido' },
   { id: 'referidos', label: 'Referidos', icon: Users, href: '/admin/referidos', group: 'Contenido' },
