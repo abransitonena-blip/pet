@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { db, auth } from '@/firebase/config'
+import { auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { Star, PawPrint, Loader2, CheckCircle2, User } from 'lucide-react'
 import Link from 'next/link'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -34,18 +33,25 @@ export default function ReviewForm() {
       setError('Las reseñas se habilitarán en Familia PET cuando podamos verificar el paseo.')
       return
     }
-    if (rating === 0) return
+    if (rating === 0 || !user) return
     setSending(true)
 
     try {
-      await addDoc(collection(db, 'reviews'), {
-        name,
-        petName: petName || '',
-        rating,
-        text,
-        date: new Date().toISOString().split('T')[0],
-        createdAt: serverTimestamp(),
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) throw new Error('auth-required')
+      const response = await fetch('/api/reviews/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name, petName, rating, text }),
       })
+      const result = await response.json() as { code?: string }
+      if (!response.ok) {
+        setError(result.code === 'not-eligible'
+          ? 'Solo puedes reseñar después de completar un paseo pagado. Si ya completaste uno, escríbenos.'
+          : 'Error al enviar. Intenta de nuevo.')
+        setSending(false)
+        return
+      }
     } catch {
       setError("Error al enviar. Intenta de nuevo.")
       setSending(false)

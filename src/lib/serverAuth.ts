@@ -54,6 +54,21 @@ export async function verifyAdminToken(idToken: string): Promise<string | null> 
   }
 }
 
+/**
+ * Verifies any authenticated customer (no role restriction) for
+ * customer-facing endpoints, e.g. review eligibility. Still fails closed:
+ * an invalid/expired token returns null, never a guessed uid.
+ */
+export async function verifyAuthenticatedToken(idToken: string): Promise<string | null> {
+  if (!idToken) return null
+  try {
+    const decoded = await getAuth(adminApp()).verifyIdToken(idToken)
+    return decoded.uid
+  } catch {
+    return null
+  }
+}
+
 export function getServerFirestore() {
   return getFirestore(adminApp())
 }

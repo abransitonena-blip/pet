@@ -1,0 +1,18 @@
+// Candidate fragment only. Do not deploy this file by itself.
+// Expected base ruleset: 92037591-177a-4f8f-a1b0-db4add3dcab4
+// Expected base SHA-256: d4ea2e63cb7b1033f919b378f5dc9e35dc901dc8e3865402b4d363b1ed03a95d
+// Replace only the existing reviews block after re-verifying that base.
+//
+// Closes DR-09: client `create` previously only checked shape (isValidReview),
+// never that the author actually completed a paid walk. Real eligibility is now
+// enforced server-side in POST /api/reviews/submit (T3 privileged Firestore,
+// checks walkSessions.customerId+status=='completed'). Once that endpoint is
+// the only path, client `create` must be closed here too -- otherwise the old
+// unverified path is still reachable.
+
+match /reviews/{docId} {
+  allow read: if true;
+  allow create: if false; // server-only, see /api/reviews/submit
+  allow delete: if isAdmin();
+  allow update: if false;
+}
