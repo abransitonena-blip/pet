@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { collection, query, where, onSnapshot, getDocs, limit } from 'firebase/firestore'
+import { collection, query, getDocs, limit } from 'firebase/firestore'
 import { db } from '@/firebase/config'
+import { useCanonicalReservations, type CanonicalReservationView } from '@/lib/useCanonicalReservations'
+import type { WalkSessionStatus } from '@/lib/domainStates'
 import { motion } from 'framer-motion'
 import { CalendarDays,
   Dog, Clock, PersonStanding,
@@ -16,8 +18,14 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import EmptyState from '@/components/ui/EmptyState'
 import LoadingState from '@/components/ui/LoadingState'
 import Button from '@/components/ui/Button'
-import type { Reservation } from '@/types'
 import { confirmWhatsAppShare } from '@/lib/utils'
+
+/** Awaiting a dispatch decision. */
+const PENDING_STATUSES: WalkSessionStatus[] = ['requested', 'pending_assignment']
+/** Anything still in flight today — not finished, cancelled or missed. */
+const ACTIVE_STATUSES: WalkSessionStatus[] = [
+  'requested', 'pending_assignment', 'assigned', 'confirmed', 'on_the_way', 'arrived', 'in_progress',
+]
 
 interface Stats {
   todayReservations: number
@@ -37,46 +45,47 @@ export default function AdminDashboard() {
     totalClients: 0,
     completedToday: 0,
   })
-  const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([])
+  const [upcomingReservations, setUpcomingReservations] = useState<CanonicalReservationView[]>([])
   const [loading, setLoading] = useState(true)
 
+  const { monthStartStr, today } = useMemo(() => {
+    const now = new Date()
+    return {
+      today: now.toISOString().split('T')[0],
+      monthStartStr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0],
+    }
+  }, [])
+
+  const { reservations, loading: sessionsLoading } = useCanonicalReservations({
+    fromDate: monthStartStr,
+    toDate: today,
+  })
+
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
-    const todayDate = new Date()
-    const monthStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
-    const monthStartStr = monthStart.toISOString().split('T')[0]
+    const todayDocs = reservations.filter((item) => item.date === today)
+    const pendingDocs = reservations
+      .filter((item) => PENDING_STATUSES.includes(item.status))
+      .sort((a, b) => (a.date > b.date ? 1 : -1))
 
-    // Single listener for ALL month's reservations — derives today, week, pending, walker stats
-    const monthQ = query(
-      collection(db, 'reservations'),
-      where('date', '>=', monthStartStr),
-      where('date', '<=', today),
-    )
-    const unsubMonth = onSnapshot(monthQ, (snap) => {
-      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-      const todayDocs = docs.filter((d) => d.date === today)
-      const pendingDocs = docs.filter((d) => d.status === 'pending').sort((a, b) => (a.date > b.date ? 1 : -1))
-      const revenue = docs.reduce((sum, d) => sum + (d.finalPrice || 0), 0)
-      const completed = docs.filter((d) => d.status === 'completed').length
+    setStats((prev) => ({
+      ...prev,
+      todayReservations: todayDocs.filter((item) => ACTIVE_STATUSES.includes(item.status)).length,
+      pendingReservations: pendingDocs.length,
+      monthReservations: reservations.length,
+      // Canonical walkSessions carry no price; revenue stays unavailable until
+      // payments exist rather than showing a fabricated zero.
+      totalRevenue: 0,
+      completedToday: todayDocs.filter((item) => item.status === 'completed').length,
+    }))
+    setUpcomingReservations(pendingDocs.slice(0, 10))
+    setLoading(sessionsLoading)
+  }, [reservations, sessionsLoading, today])
 
-      setStats((prev) => ({
-        ...prev,
-        todayReservations: todayDocs.filter((d) => ['pending', 'on_the_way', 'in_progress'].includes(d.status)).length,
-        pendingReservations: pendingDocs.length,
-        monthReservations: snap.size,
-        totalRevenue: revenue,
-        completedToday: completed,
-      }))
-      setUpcomingReservations(pendingDocs.slice(0, 10))
-      setLoading(false)
-    })
-
+  useEffect(() => {
     // One-shot clients count (no real-time needed for a counter)
     getDocs(query(collection(db, 'customerProfiles'), limit(100))).then((snap) => {
       setStats((prev) => ({ ...prev, totalClients: snap.size }))
     }).catch(() => {})
-
-    return unsubMonth
   }, [])
 
   const statCards = [

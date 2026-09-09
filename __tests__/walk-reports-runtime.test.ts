@@ -30,11 +30,13 @@ describe('walk report runtime containment', () => {
     expect(admin).toContain('onRetry=')
   })
 
-  test('family history is canonical-first and keeps legacy explicitly read-only', () => {
+  test('family history reads canonical sessions only, with reports linked per session', () => {
     const history = read('src/app/familia/historial/page.tsx')
     const canonical = read('src/components/family/CanonicalFamilyHistory.tsx')
     expect(history).toContain('<CanonicalFamilyHistory customerId={customerId} />')
-    expect(history).toContain('Reservas anteriores · solo lectura')
+    expect(history).toContain('useCanonicalReservations')
+    expect(history).not.toContain("collection(db, 'reservations')")
+    expect(history).toContain('/familia/reportes/')
     expect(canonical).toContain('useCustomerWalkSessions(customerId)')
     expect(canonical).toContain('/familia/reportes/')
     expect(canonical).not.toContain("collection(db, 'walkReports')")

@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, query, where, onSnapshot, limit } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import {
@@ -16,9 +15,16 @@ import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
 import WalletCard from '@/components/WalletCard'
 import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
-import type { Reservation } from '@/types'
 import CanonicalFamilyRequests from '@/components/family/CanonicalFamilyRequests'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
+import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
+import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
+import type { WalkSessionStatus } from '@/lib/domainStates'
+
+/** Requested through confirmed — still ahead of the customer, not yet walked. */
+const UPCOMING_STATUSES: WalkSessionStatus[] = [
+  'requested', 'pending_assignment', 'assigned', 'confirmed',
+]
 
 interface UserProfile {
   name: string
@@ -28,21 +34,16 @@ interface UserProfile {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [reservations, setReservations] = useState<Reservation[]>([])
   const [customerId, setCustomerId] = useState('')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [activePetAhoraId, setActivePetAhoraId] = useState<string | null>(null)
   const [petAhoraRequested, setPetAhoraRequested] = useState(false)
   const [loadError, setLoadError] = useState('')
-  const [retryKey, setRetryKey] = useState(0)
   const { request: petAhoraRequest } = usePetAhoraClientRequest(activePetAhoraId)
 
   useEffect(() => {
-    let unsubRes: (() => void) | undefined
-
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
-      if (unsubRes) { unsubRes(); unsubRes = undefined }
       if (!user) { setCustomerId(''); router.push('/login'); return }
       setCustomerId(user.uid)
 
@@ -51,31 +52,22 @@ export default function DashboardPage() {
         setProfile(profile as UserProfile)
       }
 
-      setLoadError('')
-      const q = query(collection(db, 'reservations'), where('uid', '==', user.uid), limit(50))
-      unsubRes = onSnapshot(q, (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-        docs.sort((a, b) => {
-          const ca = a.createdAt as string | { seconds?: number } | undefined
-          const cb = b.createdAt as string | { seconds?: number } | undefined
-          const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
-          const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
-          return tb - ta
-        })
-        setReservations(docs)
-        setLoading(false)
-      }, (cause) => {
-        setLoadError(cause.code.includes('permission-denied')
-          ? 'Tu sesión no tiene permiso para consultar tus reservas.'
-          : 'No pudimos consultar tus reservas. Revisa tu conexión.')
-        setLoading(false)
-      })
     })
-    return () => { unsubRes?.(); unsubAuth() }
-  }, [router, retryKey])
+    return () => { unsubAuth() }
+  }, [router])
 
-  const upcoming = reservations.filter((r) => r.status === 'pending' || r.status === 'assigned')
-  const completed = reservations.filter((r) => r.status === 'completed')
+  const { reservations, loading: sessionsLoading, error: sessionsError, retry } = useCanonicalReservations({
+    customerId,
+    max: 50,
+  })
+
+  useEffect(() => {
+    setLoadError(sessionsError ? canonicalReadErrorMessage(sessionsError) : '')
+    setLoading(!customerId || sessionsLoading)
+  }, [customerId, sessionsLoading, sessionsError])
+
+  const upcoming = reservations.filter((item) => UPCOMING_STATUSES.includes(item.status))
+  const completed = reservations.filter((item) => item.status === 'completed')
 
   if (loading) {
     return (
@@ -123,8 +115,8 @@ export default function DashboardPage() {
 
       {/* Quick Stats */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Historial anterior</p>
-        <p className="mt-1 text-xs text-muted">Estas cifras provienen de reservas legacy de solo lectura durante la transición.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Tu actividad</p>
+        <p className="mt-1 text-xs text-muted">Cifras tomadas de tus paseos registrados.</p>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <motion.div
@@ -233,7 +225,7 @@ export default function DashboardPage() {
         </div>
 
         {loadError ? (
-          <ErrorState description={loadError} onRetry={() => setRetryKey((value) => value + 1)} />
+          <ErrorState description={loadError} onRetry={retry} />
         ) : reservations.length === 0 ? (
           <Card>
             <EmptyState

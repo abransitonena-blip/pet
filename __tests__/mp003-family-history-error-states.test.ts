@@ -1,19 +1,23 @@
 import { readFileSync } from 'node:fs'
 
-describe('MP-003 familia/historial: legacy list distinguishes error from empty', () => {
+describe('MP-003 familia/historial: the list distinguishes error from empty', () => {
   const historialPage = readFileSync('src/app/familia/historial/page.tsx', 'utf8')
   const canonicalHistory = readFileSync('src/components/family/CanonicalFamilyHistory.tsx', 'utf8')
 
-  test('the legacy reservations listener sets a permission/network error instead of silently emptying', () => {
-    expect(historialPage).toContain('setLegacyError')
-    expect(historialPage).toContain("permission-denied")
-    expect(historialPage).toContain('No pudimos consultar el historial anterior')
+  test('reads the canonical walkSessions source, not the frozen legacy collection', () => {
+    expect(historialPage).toContain('useCanonicalReservations')
+    expect(historialPage).not.toContain("collection(db, 'reservations')")
+  })
+
+  test('a read failure surfaces as an error state instead of silently emptying the list', () => {
+    expect(historialPage).toContain('sessionsError')
+    expect(historialPage).toContain('canonicalReadErrorMessage')
     expect(historialPage).toContain('<ErrorState')
-    expect(historialPage).toContain('onRetry={() => setRetryKey((value) => value + 1)}')
+    expect(historialPage).toContain('onRetry={retry}')
   })
 
   test('the error branch is checked before the empty-state branch so a real error is never shown as "sin reservas"', () => {
-    const errorBranchIndex = historialPage.indexOf('legacyError ? (')
+    const errorBranchIndex = historialPage.indexOf('sessionsError ? (')
     const emptyBranchIndex = historialPage.indexOf('No hay reservas en tu historial')
     expect(errorBranchIndex).toBeGreaterThan(-1)
     expect(emptyBranchIndex).toBeGreaterThan(-1)

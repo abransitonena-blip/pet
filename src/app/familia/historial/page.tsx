@@ -2,62 +2,42 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { collection, query, where, onSnapshot, limit } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
 import {
-  History, Dog, CheckCircle2, CalendarDays, Clock, ArrowLeft,
-  ChevronDown, MapPin, StickyNote, Camera, Redo2,
+  History, Dog, CheckCircle2, CalendarDays, Clock, ArrowLeft, Camera, Redo2,
 } from 'lucide-react'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
-import type { Reservation } from '@/types'
+import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
+import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
 import CanonicalFamilyHistory from '@/components/family/CanonicalFamilyHistory'
 import ReviewForm from '@/components/ReviewForm'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 
 export default function HistorialPage() {
   const router = useRouter()
-  const [reservations, setReservations] = useState<Reservation[]>([])
   const [customerId, setCustomerId] = useState('')
   const [loading, setLoading] = useState(true)
-  const [legacyError, setLegacyError] = useState('')
   const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled'>('all')
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
-    let unsubRes: (() => void) | undefined
-
     const unsubAuth = onAuthStateChanged(auth, (user) => {
-      if (unsubRes) { unsubRes(); unsubRes = undefined }
       if (!user) { setCustomerId(''); router.push('/login'); return }
       setCustomerId(user.uid)
-      setLegacyError('')
-
-      const q = query(collection(db, 'reservations'), where('uid', '==', user.uid), limit(50))
-      unsubRes = onSnapshot(q, (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation))
-        docs.sort((a, b) => {
-          const ca = a.createdAt as string | { seconds?: number } | undefined
-          const cb = b.createdAt as string | { seconds?: number } | undefined
-          const ta = typeof ca === 'string' ? new Date(ca).getTime() : ca?.seconds ? ca.seconds * 1000 : 0
-          const tb = typeof cb === 'string' ? new Date(cb).getTime() : cb?.seconds ? cb.seconds * 1000 : 0
-          return tb - ta
-        })
-        setReservations(docs)
-        setLoading(false)
-      }, (cause) => {
-        const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
-        setLegacyError(code.includes('permission-denied')
-          ? 'Tu sesión no tiene permiso para consultar el historial anterior.'
-          : 'No pudimos consultar el historial anterior. Revisa tu conexión.')
-        setLoading(false)
-      })
     })
-    return () => { unsubRes?.(); unsubAuth() }
-  }, [router, retryKey])
+    return () => { unsubAuth() }
+  }, [router])
+
+  const { reservations, loading: sessionsLoading, error: sessionsError, retry } = useCanonicalReservations({
+    customerId,
+    max: 50,
+  })
+
+  useEffect(() => {
+    setLoading(!customerId || sessionsLoading)
+  }, [customerId, sessionsLoading])
 
   const filtered = filter === 'all' ? reservations : reservations.filter((r) => r.status === filter)
   const completedCount = reservations.filter((r) => r.status === 'completed').length
@@ -85,9 +65,9 @@ export default function HistorialPage() {
             <ArrowLeft size={14} />
           </button>
           <div>
-            <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Historial anterior</h1>
+            <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Mi historial</h1>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Solo lectura · {completedCount} paseo{completedCount !== 1 ? 's' : ''} completado{completedCount !== 1 ? 's' : ''}
+              {completedCount} paseo{completedCount !== 1 ? 's' : ''} completado{completedCount !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
@@ -110,7 +90,7 @@ export default function HistorialPage() {
       </section>
 
       <div className="border-t border-ink/10 pt-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Reservas anteriores · solo lectura</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Todos tus paseos</p>
       </div>
 
       {/* Filters */}
@@ -135,8 +115,8 @@ export default function HistorialPage() {
         ))}
       </div>
 
-      {legacyError ? (
-        <ErrorState description={legacyError} onRetry={() => setRetryKey((value) => value + 1)} />
+      {sessionsError ? (
+        <ErrorState description={canonicalReadErrorMessage(sessionsError)} onRetry={retry} />
       ) : filtered.length === 0 ? (
         <Card className="p-8">
           <EmptyState
@@ -149,8 +129,6 @@ export default function HistorialPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((res, i) => {
-            const hasWalkData = !!(res.walkCheckIn || res.walkCheckOut)
-            const isExpanded = expandedId === res.id
             return (
               <motion.div
                 key={res.id}
@@ -161,8 +139,6 @@ export default function HistorialPage() {
               >
                 <div
                   className="p-4 flex items-start gap-3 transition-all hover:bg-ink/5"
-                  onClick={() => hasWalkData && setExpandedId(isExpanded ? null : res.id)}
-                  style={{ cursor: hasWalkData ? 'pointer' : undefined }}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[res.status]?.bg || 'bg-brand-500/10'}`}>
                     {res.status === 'completed' ? <CheckCircle2 size={14} className="text-success-400" /> :
@@ -185,9 +161,15 @@ export default function HistorialPage() {
                             <Redo2 size={8} /> Repetir
                           </button>
                         )}
-                        {hasWalkData && (
-                          <Camera size={10} className="text-success-400" />
-                        )}
+                    {res.status === 'completed' && (
+                      <Link
+                        href={`/familia/reportes/${res.id}`}
+                        onClick={(event) => event.stopPropagation()}
+                        className="mt-1.5 inline-flex items-center gap-1 text-2xs text-brand-600 hover:underline"
+                      >
+                        <Camera size={8} /> Ver reporte del paseo
+                      </Link>
+                    )}
                         <span className={`text-2xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[res.status]?.bg || 'bg-ink/10'} ${STATUS_COLORS[res.status]?.text || 'text-[var(--text-muted)]'}`}>
                           {STATUS_LABELS[res.status] || res.status}
                         </span>
@@ -198,95 +180,9 @@ export default function HistorialPage() {
                       <span className="flex items-center gap-1"><CalendarDays size={10} /> {res.date}</span>
                       {res.time && <span className="flex items-center gap-1"><Clock size={10} /> {res.arrivalWindowStart ? `${res.arrivalWindowStart}${res.arrivalWindowEnd ? `-${res.arrivalWindowEnd}` : ''}` : res.time}</span>}
                     </div>
-                    {hasWalkData && (
-                      <div className="flex items-center gap-1 mt-1.5 text-2xs" style={{ color: 'var(--text-muted)' }}>
-                        <ChevronDown
-                          size={8}
-                          className="transition-transform"
-                          style={{ transform: isExpanded ? 'rotate(180deg)' : undefined }}
-                        />
-                        {isExpanded ? 'Ocultar detalles del paseo' : 'Ver detalles del paseo'}
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                {/* Walk Log Details */}
-                <AnimatePresence>
-                  {isExpanded && hasWalkData && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.22 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-4 pb-4 space-y-3" style={{ borderTop: '1px solid var(--border)' }}>
-                        {/* Check-in */}
-                        {res.walkCheckIn && (
-                          <div className="pt-3">
-                            <p className="text-2xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-                              <span className="w-2 h-2 rounded-full bg-success-400" />
-                              Inicio del paseo
-                            </p>
-                            {res.walkCheckIn.photo && (
-                              <div className="relative rounded-xl overflow-hidden mb-2">
-                                <Image
-                                  src={res.walkCheckIn.photo}
-                                  alt="Check-in"
-                                  width={400}
-                                  height={160}
-                                  className="w-full h-40 object-cover"
-                                />
-                              </div>
-                            )}
-                            <div className="flex items-center gap-3 text-2xs" style={{ color: 'var(--text-muted)' }}>
-                              <span className="flex items-center gap-1">
-                                <MapPin size={9} className="text-success-400" />
-                                {res.walkCheckIn.lat.toFixed(4)}, {res.walkCheckIn.lng.toFixed(4)}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Check-out */}
-                        {res.walkCheckOut && (
-                          <div>
-                            <p className="text-2xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-                              <span className="w-2 h-2 rounded-full bg-brand-400" />
-                              Fin del paseo
-                            </p>
-                            {res.walkCheckOut.photo && (
-                              <div className="relative rounded-xl overflow-hidden mb-2">
-                                <Image
-                                  src={res.walkCheckOut.photo}
-                                  alt="Check-out"
-                                  width={400}
-                                  height={160}
-                                  className="w-full h-40 object-cover"
-                                />
-                              </div>
-                            )}
-                            <div className="flex items-center gap-3 text-2xs" style={{ color: 'var(--text-muted)' }}>
-                              <span className="flex items-center gap-1">
-                                <MapPin size={9} className="text-brand-600" />
-                                {res.walkCheckOut.lat.toFixed(4)}, {res.walkCheckOut.lng.toFixed(4)}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Walk Notes */}
-                        {res.walkNotes && (
-                          <div className="flex items-start gap-2 p-2.5 rounded-lg text-xs" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-                            <StickyNote size={10} className="text-pink-400 mt-0.5 shrink-0" />
-                            <span style={{ color: 'var(--text-secondary)' }}>{res.walkNotes}</span>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             )
           })}

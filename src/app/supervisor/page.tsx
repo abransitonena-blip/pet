@@ -1,34 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore'
-import { db } from '@/firebase/config'
-import { PageHeader, DataCard, StatusBadge, EmptyState, LoadingState } from '@/components/ui'
+import { PageHeader, DataCard, StatusBadge, EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import { LayoutDashboard } from 'lucide-react'
-import type { Reservation } from '@/types'
+import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
+import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
+import type { WalkSessionStatus } from '@/lib/domainStates'
 
-interface SupervisedReservation extends Reservation {
-  id: string
-}
+const ACTIVE_STATUSES: WalkSessionStatus[] = [
+  'assigned', 'confirmed', 'on_the_way', 'arrived', 'in_progress',
+]
 
 export default function SupervisorOverview() {
-  const [loading, setLoading] = useState(true)
-  const [reservations, setReservations] = useState<SupervisedReservation[]>([])
-
-  useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'), limit(20))
-    const unsub = onSnapshot(q, (snap) => {
-      setReservations(
-        snap.docs.map((d) => ({ id: d.id, ...d.data() }) as SupervisedReservation)
-      )
-      setLoading(false)
-    })
-    return unsub
-  }, [])
+  const { reservations, loading, error, retry } = useCanonicalReservations({ max: 20 })
 
   const total = reservations.length
-  const active = reservations.filter((r) => r.status === 'assigned' || r.status === 'walker_confirmed' || r.status === 'on_the_way' || r.status === 'arrived' || r.status === 'in_progress').length
-  const completed = reservations.filter((r) => r.status === 'completed').length
+  const active = reservations.filter((item) => ACTIVE_STATUSES.includes(item.status)).length
+  const completed = reservations.filter((item) => item.status === 'completed').length
 
   return (
     <div className="space-y-6">
@@ -39,35 +26,37 @@ export default function SupervisorOverview() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <DataCard title="Reservas recientes">
+        <DataCard title="Paseos recientes">
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{total}</p>
         </DataCard>
-        <DataCard title="En curso / programadas">
+        <DataCard title="En curso / programados">
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{active}</p>
         </DataCard>
-        <DataCard title="Completadas">
+        <DataCard title="Completados">
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{completed}</p>
         </DataCard>
       </div>
 
-      <DataCard title="Últimas reservas" padded={false}>
+      <DataCard title="Últimos paseos" padded={false}>
         {loading ? (
           <LoadingState message="Cargando operación..." rows={4} />
+        ) : error ? (
+          <ErrorState description={canonicalReadErrorMessage(error)} onRetry={retry} />
         ) : reservations.length === 0 ? (
-          <EmptyState icon={<LayoutDashboard size={20} />} title="Sin reservas" description="No hay reservas para supervisar todavía." />
+          <EmptyState icon={<LayoutDashboard size={20} />} title="Sin paseos" description="No hay paseos para supervisar todavía." />
         ) : (
           <ul className="divide-y" style={{ borderColor: 'var(--border)' }}>
-            {reservations.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
+            {reservations.map((item) => (
+              <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                    {r.name || r.customer?.name || 'Reserva'}
+                    {item.name || 'Paseo'}
                   </p>
                   <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
-                    {r.service} · {r.date}
+                    {item.service} · {item.date}
                   </p>
                 </div>
-                <StatusBadge status={r.status} />
+                <StatusBadge status={item.status} />
               </li>
             ))}
           </ul>
