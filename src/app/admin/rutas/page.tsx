@@ -75,7 +75,7 @@ export default function AdminRutasPage() {
     <div>
       <PageHeader
         title="Mapa de Rutas"
-        description="Rutas de paseo con datos GPS"
+        description="Archivo histórico de rutas con GPS"
         actions={
           <div className="flex items-center gap-2">
             <Filter size={12} style={{ color: 'var(--text-muted)' }} />
@@ -92,6 +92,11 @@ export default function AdminRutasPage() {
           </div>
         }
       />
+
+      <p className="mb-4 rounded-xl bg-warning/10 px-4 py-3 text-sm text-amber-800" role="status">
+        Solo rutas anteriores: las coordenadas GPS se guardaban en las reservas legacy. Los paseos nuevos
+        registran su reporte en <code>walkReports</code>, que no captura ubicación, así que aquí no aparecerán.
+      </p>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
