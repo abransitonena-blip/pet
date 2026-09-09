@@ -12,6 +12,7 @@ import {
   walkerSessionStatus,
   walkerTimelinePosition,
 } from '@/lib/walkerPanel'
+import { formatWalkPoint } from '@/lib/walkLocation'
 
 interface WalkerSessionCardProps {
   session: WalkSession
@@ -83,6 +84,21 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
               </Button>
             </div>
           )}
+          {!compact && (session.startLocation || session.endLocation) && (
+            <dl className="mt-3 grid gap-1 rounded-xl bg-ink/[0.03] px-3 py-2 text-xs sm:grid-cols-2">
+              <div className="flex items-center gap-1.5">
+                <MapPin size={12} className="shrink-0 text-muted" aria-hidden="true" />
+                <dt className="text-muted">Inicio:</dt>
+                <dd className="text-ink">{formatWalkPoint(session.startLocation)}</dd>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MapPin size={12} className="shrink-0 text-muted" aria-hidden="true" />
+                <dt className="text-muted">Fin:</dt>
+                <dd className="text-ink">{formatWalkPoint(session.endLocation)}</dd>
+              </div>
+            </dl>
+          )}
+
           {status === 'completed' && (
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <Link href={`/walker/reportes/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary/10 px-4 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto">

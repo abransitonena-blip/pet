@@ -21,7 +21,11 @@ export type FeatureFlags = Readonly<Record<FeatureFlagName, boolean>>
 // MVP containment defaults. These flags are intentionally static and public-safe:
 // enabling one requires a reviewed code change and a tested trusted backend.
 export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
-  PET_AHORA_ENABLED: false,
+  // Encendido por decisión del dueño. El interruptor operativo sigue siendo
+  // `config.features.petAhoraEnabled` en Configuración → Funcionalidades: el
+  // código está listo, pero mostrar reserva inmediata a las familias sin
+  // paseadores activos en zona produce solicitudes que expiran solas.
+  PET_AHORA_ENABLED: true,
   WALLET_MUTATIONS_ENABLED: false,
   LOYALTY_REDEMPTION_ENABLED: false,
   AUTOMATIC_REFERRALS_ENABLED: false,

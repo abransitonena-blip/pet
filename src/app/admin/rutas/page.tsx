@@ -1,21 +1,64 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot, limit as fsLimit, type FirestoreError } from 'firebase/firestore'
 import { db } from '@/firebase/config'
-import { motion } from 'framer-motion'
-import { MapPinned, Dog, User, Navigation, Camera, Filter, Check } from 'lucide-react'
+import { MapPinned, Dog, User, Navigation, Filter } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
-import type { Reservation, WalkMedia } from '@/types'
+import ErrorState from '@/components/ui/ErrorState'
+import Card from '@/components/ui/Card'
+import { formatWalkPoint, mapsUrlForPoint } from '@/lib/walkLocation'
+import { canonicalReadErrorMessage, classifyCanonicalReadError, type CanonicalReadError } from '@/lib/useCanonicalWalkSessions'
+import type { WalkPoint } from '@/types'
 
-function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+/**
+ * Dónde empezó y terminó cada paseo.
+ *
+ * This page used to read GPS coordinates off the legacy `reservations`
+ * documents, a collection nothing writes to anymore, so it only ever showed
+ * walks from before the migration. The canonical sessions now carry a start
+ * and an end point, captured by the walker's phone when they press "Iniciar
+ * paseo" and "Completar paseo".
+ *
+ * There is no route line: only those two points are recorded, so drawing a
+ * path between them would show a journey nobody measured.
+ */
+
+const MAX_SESSIONS = 200
+
+interface RouteRow {
+  id: string
+  walkerId: string
+  scheduledDate: string
+  startLocation?: WalkPoint
+  endLocation?: WalkPoint
+  startedAt?: { seconds: number }
+  completedAt?: { seconds: number }
+}
+
+function point(value: unknown): WalkPoint | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const data = value as Record<string, unknown>
+  return typeof data.lat === 'number' && typeof data.lng === 'number'
+    ? { lat: data.lat, lng: data.lng, accuracy: typeof data.accuracy === 'number' ? data.accuracy : 0 }
+    : undefined
+}
+
+function seconds(value: unknown): { seconds: number } | undefined {
+  return value && typeof value === 'object' && typeof (value as { seconds?: unknown }).seconds === 'number'
+    ? { seconds: (value as { seconds: number }).seconds }
+    : undefined
+}
+
+function straightLineDistance(from: WalkPoint, to: WalkPoint): number {
   const R = 6371e3
-  const toRad = (d: number) => (d * Math.PI) / 180
-  const dLat = toRad(lat2 - lat1)
-  const dLng = toRad(lng2 - lng1)
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  const toRad = (degrees: number) => (degrees * Math.PI) / 180
+  const dLat = toRad(to.lat - from.lat)
+  const dLng = toRad(to.lng - from.lng)
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.sin(dLng / 2) ** 2
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
@@ -23,206 +66,156 @@ function formatDistance(meters: number): string {
   return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${Math.round(meters)} m`
 }
 
-function formatDuration(checkIn: WalkMedia, checkOut: WalkMedia): string {
-  if (!checkIn.timestamp || !checkOut.timestamp) return '—'
-  const ms = (checkOut.timestamp.seconds - checkIn.timestamp.seconds) * 1000
-  const mins = Math.floor(ms / 60000)
-  if (mins < 60) return `${mins} min`
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`
+function formatDuration(row: RouteRow): string {
+  if (!row.startedAt || !row.completedAt) return '—'
+  const minutes = Math.floor((row.completedAt.seconds - row.startedAt.seconds) / 60)
+  if (minutes < 0) return '—'
+  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`
 }
 
 export default function AdminRutasPage() {
-  const [routes, setRoutes] = useState<Reservation[]>([])
+  const [rows, setRows] = useState<RouteRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<CanonicalReadError | null>(null)
   const [filterWalker, setFilterWalker] = useState('all')
-  const [selectedRoute, setSelectedRoute] = useState<Reservation | null>(null)
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'reservations'),
-      where('walkCheckIn', '!=', null),
-      orderBy('walkCheckIn'),
+    const sessionsQuery = query(
+      collection(db, 'walkSessions'),
+      orderBy('scheduledDate', 'desc'),
+      fsLimit(MAX_SESSIONS),
     )
-    const unsub = onSnapshot(q, (snap) => {
-      setRoutes(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reservation)))
+    return onSnapshot(sessionsQuery, (snapshot) => {
+      setRows(snapshot.docs.flatMap((item) => {
+        const data = item.data()
+        const startLocation = point(data.startLocation)
+        const endLocation = point(data.endLocation)
+        // A session without either point has nothing to show on this page.
+        if (!startLocation && !endLocation) return []
+        return [{
+          id: item.id,
+          walkerId: typeof data.walkerId === 'string' ? data.walkerId : '',
+          scheduledDate: typeof data.scheduledDate === 'string' ? data.scheduledDate : '',
+          startLocation,
+          endLocation,
+          startedAt: seconds(data.startedAt),
+          completedAt: seconds(data.completedAt),
+        }]
+      }))
+      setError(null)
       setLoading(false)
-    }, () => setLoading(false))
-    return unsub
+    }, (cause: FirestoreError) => {
+      setError(classifyCanonicalReadError(cause))
+      setLoading(false)
+    })
   }, [])
 
-  const walkers = useMemo(() => {
-    const set = new Set(routes.map((r) => r.assignedWalker).filter(Boolean))
-    return Array.from(set)
-  }, [routes])
+  const walkers = useMemo(
+    () => Array.from(new Set(rows.map((row) => row.walkerId).filter(Boolean))),
+    [rows],
+  )
 
-  const filtered = useMemo(() => {
-    if (filterWalker === 'all') return routes
-    return routes.filter((r) => r.assignedWalker === filterWalker)
-  }, [routes, filterWalker])
-
-  const stats = useMemo(() => {
-    const total = filtered.length
-    const completed = filtered.filter((r) => r.walkCheckOut).length
-    const distances = filtered
-      .filter((r) => r.walkCheckIn && r.walkCheckOut)
-      .map((r) => getDistance(r.walkCheckIn!.lat, r.walkCheckIn!.lng, r.walkCheckOut!.lat, r.walkCheckOut!.lng))
-    const avgDistance = distances.length > 0 ? distances.reduce((a, b) => a + b, 0) / distances.length : 0
-    const totalDistance = distances.reduce((a, b) => a + b, 0)
-    return { total, completed, avgDistance, totalDistance }
-  }, [filtered])
+  const filtered = useMemo(
+    () => (filterWalker === 'all' ? rows : rows.filter((row) => row.walkerId === filterWalker)),
+    [rows, filterWalker],
+  )
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title="Mapa de Rutas"
-        description="Archivo histórico de rutas con GPS"
-        actions={
-          <div className="flex items-center gap-2">
-            <Filter size={12} style={{ color: 'var(--text-muted)' }} />
-            <select
-              value={filterWalker}
-              onChange={(e) => setFilterWalker(e.target.value)}
-              aria-label="Filtrar por paseador"
-              className="text-xs px-3 py-1.5 rounded-lg"
-              style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            >
-              <option value="all">Todos los paseadores</option>
-              {walkers.map((w) => <option key={w} value={w}>{w}</option>)}
-            </select>
-          </div>
-        }
+        title="Ubicación de los paseos"
+        description={`${rows.length} paseos con ubicación registrada · inicio y fin, sin recorrido intermedio`}
       />
 
-      <p className="mb-4 rounded-xl bg-warning/10 px-4 py-3 text-sm text-amber-800" role="status">
-        Solo rutas anteriores: las coordenadas GPS se guardaban en las reservas legacy. Los paseos nuevos
-        registran su reporte en <code>walkReports</code>, que no captura ubicación, así que aquí no aparecerán.
-      </p>
+      {walkers.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Filter size={13} className="text-muted" aria-hidden="true" />
+          <button
+            onClick={() => setFilterWalker('all')}
+            className={`min-h-9 rounded-lg px-3 text-xs font-medium transition-colors ${filterWalker === 'all' ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted'}`}
+          >
+            Todos
+          </button>
+          {walkers.map((walkerId) => (
+            <button
+              key={walkerId}
+              onClick={() => setFilterWalker(walkerId)}
+              className={`min-h-9 rounded-lg px-3 font-mono text-2xs transition-colors ${filterWalker === walkerId ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted'}`}
+            >
+              {walkerId.slice(0, 8)}…
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        {[
-          { label: 'Rutas registradas', value: stats.total, icon: MapPinned },
-          { label: 'Completadas', value: stats.completed, icon: Check },
-          { label: 'Distancia promedio', value: formatDistance(stats.avgDistance), icon: Navigation },
-          { label: 'Distancia total', value: formatDistance(stats.totalDistance), icon: Dog },
-        ].map((s, i) => {
-          const Icon = s.icon
-          return (
-            <div key={i} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
-              <Icon size={14} className="mb-2" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
-              <p className="text-lg font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{s.value}</p>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Routes list */}
-      {loading ? (
-        <LoadingState rows={3} height="h-20" />
+      {error ? (
+        <Card className="p-4 shadow-none">
+          <ErrorState description={canonicalReadErrorMessage(error)} />
+        </Card>
+      ) : loading ? (
+        <LoadingState rows={3} height="h-24" />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<MapPinned size={24} />}
-          title="Sin rutas registradas"
-          description="Las rutas aparecen cuando un paseador registra check-in con GPS"
+          title="Todavía no hay paseos con ubicación"
+          description="La ubicación se guarda cuando el paseador marca «Iniciar paseo» y «Completar paseo» desde su teléfono, y solo si concede el permiso de ubicación."
         />
       ) : (
-        <div className="space-y-2">
-          {filtered.map((route) => {
-            const hasBoth = route.walkCheckIn && route.walkCheckOut
-            const distance = hasBoth
-              ? getDistance(route.walkCheckIn!.lat, route.walkCheckIn!.lng, route.walkCheckOut!.lat, route.walkCheckOut!.lng)
+        <div className="space-y-3">
+          {filtered.map((row) => {
+            const distance = row.startLocation && row.endLocation
+              ? straightLineDistance(row.startLocation, row.endLocation)
               : null
+
             return (
-              <motion.div
-                key={route.id}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                onClick={() => setSelectedRoute(selectedRoute?.id === route.id ? null : route)}
-                className={`rounded-xl border bg-surface p-4 shadow-sm cursor-pointer transition-all hover:bg-ink/5 ${selectedRoute?.id === route.id ? 'border-primary' : 'border-ink/10'}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center">
-                      <Dog size={16} className="text-brand-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                        {route.petName} — {route.service}
-                      </p>
-                      <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {route.assignedWalker && (
-                          <span className="flex items-center gap-1"><User size={9} /> {route.assignedWalker}</span>
-                        )}
-                        <span>{route.date}</span>
-                        {distance !== null && <span>{formatDistance(distance)}</span>}
-                      </div>
-                    </div>
+              <Card key={row.id} className="p-4 shadow-none">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Dog size={14} className="text-muted" aria-hidden="true" />
+                    <span className="font-semibold text-ink">{row.scheduledDate || 'Sin fecha'}</span>
+                    <span className="flex items-center gap-1 text-xs text-muted">
+                      <User size={11} aria-hidden="true" />
+                      <span className="font-mono">{row.walkerId ? `${row.walkerId.slice(0, 8)}…` : 'Sin paseador'}</span>
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {hasBoth && (
-                      <span className="text-2xs px-2 py-0.5 rounded-full bg-success-500/15 text-success-400 font-medium">
-                        {formatDuration(route.walkCheckIn!, route.walkCheckOut!)}
-                      </span>
-                    )}
-                    {!hasBoth && route.walkCheckIn && (
-                      <span className="text-2xs px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-medium">
-                        En curso
+                  <div className="flex items-center gap-3 text-xs text-muted">
+                    <span>Duración: {formatDuration(row)}</span>
+                    {/* Straight-line, and labelled as such: with only two points
+                        the real walked distance is unknown. */}
+                    {distance !== null && (
+                      <span className="flex items-center gap-1">
+                        <Navigation size={11} aria-hidden="true" />
+                        {formatDistance(distance)} en línea recta
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Expanded details */}
-                {selectedRoute?.id === route.id && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4 pt-4 space-y-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <div className="grid grid-cols-2 gap-3">
-                      {route.walkCheckIn && (
-                        <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
-                          <p className="text-2xs font-medium mb-1 text-success-400 flex items-center gap-1">
-                            <Navigation size={8} /> Check-in
-                          </p>
-                          <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                            {route.walkCheckIn.lat.toFixed(6)}, {route.walkCheckIn.lng.toFixed(6)}
-                          </p>
-                          {route.walkCheckIn.photo && (
-                            <a href={route.walkCheckIn.photo} target="_blank" rel="noopener noreferrer" className="text-2xs text-brand-400 flex items-center gap-1 mt-1">
-                              <Camera size={8} /> Ver foto
+                <dl className="grid gap-2 sm:grid-cols-2">
+                  {(['startLocation', 'endLocation'] as const).map((field) => {
+                    const value = row[field]
+                    return (
+                      <div key={field} className="rounded-xl bg-ink/[0.03] px-3 py-2">
+                        <dt className="text-2xs font-medium uppercase tracking-wide text-muted">
+                          {field === 'startLocation' ? 'Inicio' : 'Fin'}
+                        </dt>
+                        <dd className="mt-0.5 text-xs text-ink">
+                          {value ? (
+                            <a
+                              href={mapsUrlForPoint(value)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline decoration-dotted underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                              {formatWalkPoint(value)}
                             </a>
-                          )}
-                        </div>
-                      )}
-                      {route.walkCheckOut && (
-                        <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
-                          <p className="text-2xs font-medium mb-1 text-red-700 flex items-center gap-1">
-                            <Navigation size={8} /> Check-out
-                          </p>
-                          <p className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                            {route.walkCheckOut.lat.toFixed(6)}, {route.walkCheckOut.lng.toFixed(6)}
-                          </p>
-                          {route.walkCheckOut.photo && (
-                            <a href={route.walkCheckOut.photo} target="_blank" rel="noopener noreferrer" className="text-2xs text-brand-400 flex items-center gap-1 mt-1">
-                              <Camera size={8} /> Ver foto
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {route.walkNotes && (
-                      <div className="rounded-lg p-3" style={{ background: 'var(--glass-bg)' }}>
-                        <p className="text-2xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Notas del paseo</p>
-                        <p className="text-xs" style={{ color: 'var(--text-primary)' }}>{route.walkNotes}</p>
+                          ) : 'Sin ubicación registrada'}
+                        </dd>
                       </div>
-                    )}
-                    {distance !== null && (
-                      <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                        <span>Distancia: <strong>{formatDistance(distance)}</strong></span>
-                        <span>Duración: <strong>{formatDuration(route.walkCheckIn!, route.walkCheckOut!)}</strong></span>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </motion.div>
+                    )
+                  })}
+                </dl>
+              </Card>
             )
           })}
         </div>
@@ -230,4 +223,3 @@ export default function AdminRutasPage() {
     </div>
   )
 }
-

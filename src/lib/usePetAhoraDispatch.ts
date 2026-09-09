@@ -7,6 +7,16 @@ import { selectBestWalker } from './dispatch'
 import type { Walker, PetAhoraRequest, Address } from '@/types'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
+/**
+ * Fuente canónica de paseadores: `walkerProfiles`.
+ *
+ * These queries used to read a `walkers` collection that nothing in the app
+ * has ever written to -- every read came back empty, so dispatch could never
+ * find anybody and each request expired by itself. `walkerProfiles` is the
+ * document the rules actually check for `status == 'active'` before allowing
+ * an assignment, and it is what the admin panel writes.
+ */
+
 const OFFER_TIMEOUT_SECONDS = 30
 const REQUEST_TIMEOUT_SECONDS = 120
 
@@ -81,7 +91,7 @@ export function usePetAhoraDispatch() {
 
       await updateDoc(requestRef, { status: 'searching' })
 
-      const walkersSnap = await getDocs(query(collection(db, 'walkers'), where('status', '==', 'active'), where('zones', 'array-contains', params.zoneId), limit(50)))
+      const walkersSnap = await getDocs(query(collection(db, 'walkerProfiles'), where('status', '==', 'active'), where('zones', 'array-contains', params.zoneId), limit(50)))
       const walkers = walkersSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Walker))
 
       const best = selectBestWalker(walkers, params.zoneId, dayOfWeek(), nowStr())
@@ -110,7 +120,7 @@ export function usePetAhoraDispatch() {
       const req = { id: reqSnap.id, ...reqSnap.data() } as PetAhoraRequest
       if (req.status !== 'offer_sent') return false
 
-      const walkersSnap = await getDocs(query(collection(db, 'walkers'), where('status', '==', 'active'), where('zones', 'array-contains', req.zoneId), limit(50)))
+      const walkersSnap = await getDocs(query(collection(db, 'walkerProfiles'), where('status', '==', 'active'), where('zones', 'array-contains', req.zoneId), limit(50)))
       const walkers = walkersSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Walker))
 
       const best = selectBestWalker(walkers, req.zoneId, dayOfWeek(), nowStr())

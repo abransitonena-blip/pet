@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore'
 import type { ServiceOrder, WalkSession } from '@/types'
 import { classifyWalkerReadError, getWalkerTransition, type WalkerReadError } from '@/lib/walkerPanel'
+import { captureWalkPoint, locationFieldForTransition } from '@/lib/walkLocation'
 
 export interface ServiceOrderWithSessions extends ServiceOrder {
   sessions: WalkSession[]
@@ -138,6 +139,14 @@ export async function advanceWalkerSession(session: WalkSession): Promise<void> 
   const transition = getWalkerTransition(status)
   if (!transition) throw new Error('walker-transition-not-allowed')
 
+  // Starting and finishing a walk also record where it happened. The read runs
+  // before the transaction because geolocation can take seconds and a
+  // Firestore transaction must not be held open waiting on a device sensor.
+  // It is best-effort: null means the walk advances without a location rather
+  // than not advancing at all (see walkLocation.ts).
+  const locationField = locationFieldForTransition(transition.to)
+  const point = locationField ? await captureWalkPoint() : null
+
   const sessionRef = doc(db, 'walkSessions', session.id)
   await runTransaction(db, async (transaction) => {
     const snapshot = await transaction.get(sessionRef)
@@ -152,6 +161,7 @@ export async function advanceWalkerSession(session: WalkSession): Promise<void> 
     transaction.update(sessionRef, {
       status: transition.to,
       [transition.timestampField]: timestamp,
+      ...(locationField && point ? { [locationField]: point } : {}),
       updatedAt: timestamp,
     })
   })

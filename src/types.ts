@@ -68,6 +68,13 @@ export interface ServiceOrder {
   createdAt?: { seconds: number; nanoseconds: number }
 }
 
+export interface WalkPoint {
+  lat: number
+  lng: number
+  accuracy: number
+  capturedAt?: { seconds: number; nanoseconds: number }
+}
+
 export interface WalkSession {
   id: string
   orderId: string
@@ -99,6 +106,10 @@ export interface WalkSession {
   internalNotes: string
   walkCheckIn?: WalkMedia
   walkCheckOut?: WalkMedia
+  // Dónde empezó y terminó el paseo. Solo esos dos puntos: no hay rastreo
+  // continuo, así que una sesión nunca guarda un recorrido completo.
+  startLocation?: WalkPoint
+  endLocation?: WalkPoint
   walkNotes?: string
   photos?: string[]
   history?: { status: string; timestamp: string }[]

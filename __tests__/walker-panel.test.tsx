@@ -183,9 +183,17 @@ describe('Walker panel — asignación y transiciones', () => {
 })
 
 describe('Walker panel — presencia contenida', () => {
-  it('con PET Ahora apagado muestra estado honesto y no escribe presencia', () => {
-    render(<WalkerHeartbeat walkerId="walker-1" walkerName="Abraham" />)
+  it('sin UID de paseador no escribe presencia y lo dice', () => {
+    // PET Ahora is on now, so the containment that still matters is the
+    // identity one: without a walker UID there is nothing to write presence
+    // for, and the badge must say so instead of claiming to be live.
+    render(<WalkerHeartbeat walkerId="" walkerName="Abraham" />)
     expect(screen.getByTitle(/presencia automática se activará/i)).toBeInTheDocument()
     expect(setDoc).not.toHaveBeenCalled()
+  })
+
+  it('con PET Ahora encendido reporta el estado de presencia', () => {
+    render(<WalkerHeartbeat walkerId="walker-1" walkerName="Abraham" />)
+    expect(screen.getByRole('status')).toHaveTextContent(/Presencia activa|Sin GPS/)
   })
 })

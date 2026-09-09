@@ -253,6 +253,24 @@ service cloud.firestore {
         || (from == 'in_progress' && to == 'completed');
     }
 
+    // Ubicación de inicio y fin del paseo. Solo esos dos momentos se
+    // registran: no hay rastreo continuo, así que la sesión nunca guarda un
+    // recorrido. El campo es opcional -- un teléfono sin GPS, o alguien que
+    // niegue el permiso, debe poder terminar su paseo igual.
+    function validWalkPoint(point) {
+      return point is map
+        && point.keys().hasOnly(['lat', 'lng', 'accuracy', 'capturedAt'])
+        && point.lat is number && point.lat >= -90 && point.lat <= 90
+        && point.lng is number && point.lng >= -180 && point.lng <= 180
+        && point.accuracy is number && point.accuracy >= 0 && point.accuracy <= 100000
+        && point.capturedAt is timestamp;
+    }
+
+    function validOptionalWalkPoint(field) {
+      return !request.resource.data.keys().hasAny([field])
+        || validWalkPoint(request.resource.data[field]);
+    }
+
     function validWalkerTransitionFields(from, to) {
       return (from == 'assigned' && to == 'confirmed'
           && request.resource.data.confirmedAt is timestamp
@@ -265,10 +283,12 @@ service cloud.firestore {
           && onlyAllowedFieldsChanged(['status', 'arrivedAt', 'updatedAt']))
         || (from == 'arrived' && to == 'in_progress'
           && request.resource.data.startedAt is timestamp
-          && onlyAllowedFieldsChanged(['status', 'startedAt', 'updatedAt']))
+          && validOptionalWalkPoint('startLocation')
+          && onlyAllowedFieldsChanged(['status', 'startedAt', 'startLocation', 'updatedAt']))
         || (from == 'in_progress' && to == 'completed'
           && request.resource.data.completedAt is timestamp
-          && onlyAllowedFieldsChanged(['status', 'completedAt', 'updatedAt']));
+          && validOptionalWalkPoint('endLocation')
+          && onlyAllowedFieldsChanged(['status', 'completedAt', 'endLocation', 'updatedAt']));
     }
 
     function validPublicServicePrice(price, id, name, expectedDuration) {

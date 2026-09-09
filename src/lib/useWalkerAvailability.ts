@@ -11,6 +11,16 @@ export interface WalkerAvailabilityResult {
   totalWalkers: number
 }
 
+/**
+ * Fuente canónica de paseadores: `walkerProfiles`.
+ *
+ * These queries used to read a `walkers` collection that nothing in the app
+ * has ever written to -- every read came back empty, so dispatch could never
+ * find anybody and each request expired by itself. `walkerProfiles` is the
+ * document the rules actually check for `status == 'active'` before allowing
+ * an assignment, and it is what the admin panel writes.
+ */
+
 export function useWalkerAvailability(zoneId?: string, date?: string): WalkerAvailabilityResult {
   const [result, setResult] = useState<WalkerAvailabilityResult>({
     loading: true, available: [], totalWalkers: 0,
@@ -22,7 +32,7 @@ export function useWalkerAvailability(zoneId?: string, date?: string): WalkerAva
     const constraints = [where('status', '==', 'active')]
     if (zoneId) constraints.push(where('zones', 'array-contains', zoneId))
 
-    const q = query(collection(db, 'walkers'), ...constraints)
+    const q = query(collection(db, 'walkerProfiles'), ...constraints)
 
     const unsub = onSnapshot(q, (snap) => {
       if (cancelled) return

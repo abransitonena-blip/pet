@@ -9,7 +9,10 @@ describe('MP-007: secondary modules never download a full collection', () => {
 
   test('usePetAhoraDispatch bounds both walker-candidate lookups', () => {
     const source = readFileSync('src/lib/usePetAhoraDispatch.ts', 'utf8')
-    const matches = source.match(/collection\(db, 'walkers'\).*?limit\(50\)\)\)/g) || []
+    // Source is walkerProfiles, not the `walkers` collection this used to
+    // read: nothing ever wrote to that one, so dispatch always came back empty.
+    const matches = source.match(/collection\(db, 'walkerProfiles'\).*?limit\(50\)\)\)/g) || []
     expect(matches.length).toBe(2)
+    expect(source).not.toContain("collection(db, 'walkers')")
   })
 })
