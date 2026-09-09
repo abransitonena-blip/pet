@@ -79,7 +79,7 @@ export default function WalkerDashboard() {
       <section aria-labelledby="walker-greeting" className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Mi jornada</p>
-          <h1 id="walker-greeting" className="mt-1 text-2xl font-bold tracking-tight text-ink">Hola, {profile.name}</h1>
+          <h1 id="walker-greeting" className="mt-1 text-2xl font-bold tracking-tight text-ink">{profile.name}</h1>
           <p className="mt-1 text-sm text-muted">Aquí aparecen únicamente los paseos asignados a tu UID.</p>
         </div>
         <Link

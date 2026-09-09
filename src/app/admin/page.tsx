@@ -40,13 +40,6 @@ export default function AdminDashboard() {
   const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
 
-  const greeting = (() => {
-    const h = new Date().getHours()
-    if (h < 12) return 'Buenos días'
-    if (h < 19) return 'Buenas tardes'
-    return 'Buenas noches'
-  })()
-
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
     const todayDate = new Date()
@@ -113,7 +106,7 @@ export default function AdminDashboard() {
         <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative">
           <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            {greeting} 👋
+            Resumen operativo
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             {stats.todayReservations > 0

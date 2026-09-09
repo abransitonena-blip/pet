@@ -76,12 +76,6 @@ export default function DashboardPage() {
 
   const upcoming = reservations.filter((r) => r.status === 'pending' || r.status === 'assigned')
   const completed = reservations.filter((r) => r.status === 'completed')
-  const greeting = (() => {
-    const h = new Date().getHours()
-    if (h < 12) return 'Buenos días'
-    if (h < 19) return 'Buenas tardes'
-    return 'Buenas noches'
-  })()
 
   if (loading) {
     return (
@@ -105,9 +99,9 @@ export default function DashboardPage() {
       >
         <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative">
-          <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>{greeting}</p>
+          <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>Cuenta</p>
           <h1 className="text-xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
-            {profile?.name || 'Familia PET'} 🐾
+            {profile?.name || 'Familia PET'}
           </h1>
           <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
             <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0">

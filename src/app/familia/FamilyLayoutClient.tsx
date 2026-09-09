@@ -125,7 +125,7 @@ export default function FamilyLayoutClient({ children }: { children: React.React
         <Card className="p-8">
           <EmptyState
             icon={<Dog size={28} />}
-            title={`Bienvenido, ${userName}`}
+            title={userName}
             description="Selecciona una opción del menú para comenzar."
             action={<Button onClick={() => router.push('/familia/nueva-reserva')}>Solicitar paseo</Button>}
           />
