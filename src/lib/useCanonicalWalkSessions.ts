@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import type { WalkSessionStatus } from '@/lib/domainStates'
+import type { WalkPoint } from '@/types'
 
 export type CanonicalReadError = 'permission-denied' | 'network-error' | 'unavailable'
 
@@ -33,6 +34,9 @@ export interface CanonicalWalkSession {
   arrivalWindowEnd?: string
   status: WalkSessionStatus
   walkerId?: string
+  // Solo los dos extremos del paseo; no hay recorrido intermedio.
+  startLocation?: WalkPoint
+  endLocation?: WalkPoint
 }
 
 export interface ActiveWalkerOption {
@@ -63,6 +67,13 @@ export function canonicalReadErrorMessage(error: CanonicalReadError): string {
   return 'No pudimos consultar las solicitudes. Revisa tu conexión e inténtalo nuevamente.'
 }
 
+function walkPoint(value: unknown): WalkPoint | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const data = value as Record<string, unknown>
+  if (typeof data.lat !== 'number' || typeof data.lng !== 'number') return undefined
+  return { lat: data.lat, lng: data.lng, accuracy: typeof data.accuracy === 'number' ? data.accuracy : 0 }
+}
+
 function sessionFromSnapshot(id: string, data: Record<string, unknown>): CanonicalWalkSession {
   return {
     id,
@@ -77,6 +88,8 @@ function sessionFromSnapshot(id: string, data: Record<string, unknown>): Canonic
     arrivalWindowEnd: typeof data.arrivalWindowEnd === 'string' ? data.arrivalWindowEnd : undefined,
     status: String(data.status ?? 'requested') as WalkSessionStatus,
     walkerId: typeof data.walkerId === 'string' ? data.walkerId : undefined,
+    startLocation: walkPoint(data.startLocation),
+    endLocation: walkPoint(data.endLocation),
   }
 }
 
