@@ -23,11 +23,11 @@ describe('P0.2 safe feature defaults', () => {
     expect(Object.entries(FEATURE_FLAGS).every(([name, enabled]) => enabledByDesign.has(name) ? enabled : enabled === false)).toBe(true)
   })
 
-  it('PUBLIC_REVIEWS_ENABLED may only be true alongside a real server-side eligibility check (DR-09)', () => {
+  it('PUBLIC_REVIEWS_ENABLED may only be true alongside a real server-side write path (auth + rate limit)', () => {
     if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) return
     const route = read('src/app/api/reviews/submit/route.ts')
-    expect(route).toContain("collection('walkSessions')")
-    expect(route).toContain("where('status', '==', 'completed')")
+    expect(route).toContain('verifyAuthenticatedToken')
+    expect(route).toContain('checkRateLimit(')
     expect(read('src/components/ReviewForm.tsx')).not.toContain("addDoc(collection(db, 'reviews')")
   })
 

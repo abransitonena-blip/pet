@@ -13,19 +13,15 @@ const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000
 
 /**
- * Closes DR-09: the reviews collection previously accepted a create from any
- * authenticated customer (firestore.rules only checked shape, not history),
- * so anyone could post a review without ever completing a paid walk. This
- * endpoint checks the canonical walkSessions collection (never legacy
- * reservations) for at least one status=='completed' session belonging to
- * the caller, via the T3 privileged Firestore client -- a real server-side
- * eligibility check the client cannot forge. The review write itself also
- * happens here, not from the browser.
+ * By explicit product decision, reviews do not require a verified completed
+ * walk (DR-09's eligibility check was intentionally removed) -- any
+ * authenticated Familia PET account can post one, kept honest only by
+ * requiring login and by the rate limit below. The write still happens
+ * server-side, never from the browser, so the client can't forge fields
+ * like customerId.
  *
  * Fails closed behind PUBLIC_REVIEWS_ENABLED (stays false) and behind T3
- * identity availability. Firestore rules for `reviews` still need tightening
- * to `allow create: if false` before this is the only path -- see
- * artifacts/rules/reviews-server-only.fragment.rules (not deployed).
+ * identity availability.
  */
 export async function POST(request: Request) {
   const authorization = request.headers.get('authorization') ?? ''
@@ -67,17 +63,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const completedSessions = await firestore
-      .collection('walkSessions')
-      .where('customerId', '==', uid)
-      .where('status', '==', 'completed')
-      .limit(1)
-      .get()
-
-    if (completedSessions.empty) {
-      return NextResponse.json({ code: 'not-eligible', reason: 'no-completed-walk' }, { status: 403, headers: noStore })
-    }
-
     const reviewRef = firestore.collection('reviews').doc()
     await reviewRef.set({
       name,
@@ -87,7 +72,6 @@ export async function POST(request: Request) {
       date: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString(),
       customerId: uid,
-      verifiedEligible: true,
     })
 
     return NextResponse.json({ code: 'ok', reviewId: reviewRef.id }, { headers: noStore })

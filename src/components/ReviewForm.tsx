@@ -11,7 +11,6 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 export default function ReviewForm() {
   const [user, setUser] = useState<{ uid: string; displayName: string | null } | null>(null)
   const [name, setName] = useState('')
-  const [petName, setPetName] = useState('')
   const [rating, setRating] = useState(0)
   const [text, setText] = useState('')
   const [hover, setHover] = useState(0)
@@ -30,7 +29,7 @@ export default function ReviewForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) {
-      setError('Las reseñas se habilitarán en Familia PET cuando podamos verificar el paseo.')
+      setError('Las reseñas están temporalmente desactivadas.')
       return
     }
     if (rating === 0 || !user) return
@@ -42,13 +41,10 @@ export default function ReviewForm() {
       const response = await fetch('/api/reviews/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, petName, rating, text }),
+        body: JSON.stringify({ name, rating, text }),
       })
-      const result = await response.json() as { code?: string }
       if (!response.ok) {
-        setError(result.code === 'not-eligible'
-          ? 'Solo puedes reseñar después de completar un paseo pagado. Si ya completaste uno, escríbenos.'
-          : 'Error al enviar. Intenta de nuevo.')
+        setError('Error al enviar. Intenta de nuevo.')
         setSending(false)
         return
       }
@@ -62,7 +58,6 @@ export default function ReviewForm() {
     setSent(true)
     setError("")
     setName('')
-    setPetName('')
     setRating(0)
     setText('')
     setTimeout(() => setSent(false), 4000)
@@ -70,20 +65,18 @@ export default function ReviewForm() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="glass-card p-6 sm:p-8"
+      className="glass-card p-5 sm:p-6 max-w-md mx-auto"
     >
       {!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED ? (
-        <div className="text-center py-8" data-testid="public-reviews-unavailable">
-          <PawPrint className="mx-auto mb-3 text-muted" size={24} />
-          <p className="text-sm font-semibold text-ink">Las reseñas públicas están temporalmente desactivadas</p>
-          <p className="text-xs text-muted mt-2 mb-4">La futura reseña se solicitará desde Familia PET después de verificar un paseo pagado y completado.</p>
-          <Link href="/familia" className="btn-primary inline-flex min-h-11 items-center">Ir a Familia PET</Link>
+        <div className="text-center py-6" data-testid="public-reviews-unavailable">
+          <PawPrint className="mx-auto mb-3 text-muted" size={22} />
+          <p className="text-sm font-semibold text-ink">Las reseñas están temporalmente desactivadas</p>
         </div>
       ) : !user ? (
-        <div className="text-center py-8">
+        <div className="text-center py-6">
           <User className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
           <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Inicia sesión para dejar tu reseña</p>
           <Link href="/login" className="btn-primary inline-flex items-center gap-2 text-sm">
@@ -92,40 +85,25 @@ export default function ReviewForm() {
         </div>
       ) : (
       <>
-      <div className="flex items-center gap-3 mb-6">
-        <PawPrint className="text-primary text-xl" />
-        <h3 className="text-xl font-bold">Deja tu reseña</h3>
+      <div className="flex items-center gap-2 mb-4">
+        <PawPrint className="text-primary" size={18} />
+        <h3 className="text-base font-bold">Deja tu reseña</h3>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label htmlFor="review-name" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              Tu nombre *
-            </label>
-            <input
-              id="review-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Ej: María"
-              className="input-field"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="review-pet-name" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              Nombre de tu perro
-            </label>
-            <input
-              id="review-pet-name"
-              type="text"
-              value={petName}
-              onChange={(e) => setPetName(e.target.value)}
-              placeholder="Ej: Max"
-              className="input-field"
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="space-y-1">
+          <label htmlFor="review-name" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            Tu nombre *
+          </label>
+          <input
+            id="review-name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            placeholder="Ej: María"
+            className="input-field"
+          />
         </div>
 
         <div className="space-y-1">

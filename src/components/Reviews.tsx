@@ -9,7 +9,6 @@ import {
   orderBy,
   limit,
   getDocs,
-  where,
 } from 'firebase/firestore'
 import { Star, Quote, PawPrint } from 'lucide-react'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -35,8 +34,6 @@ export default function Reviews() {
       try {
         const q = query(
           collection(db, 'reviews'),
-          where('moderationStatus', '==', 'published'),
-          where('verified', '==', true),
           orderBy('date', 'desc'),
           limit(20)
         )

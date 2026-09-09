@@ -45,10 +45,11 @@ export default function Header() {
   }, [mobileOpen])
 
   return (
-    <motion.header
-      initial={reduceMotion ? false : { y: -100 }}
-      animate={{ y: 0 }}
-      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 100, damping: 20 }}
+    // No entrance transform here on purpose: this header carries the only nav on the
+    // page, so it must be fully in place and clickable from the very first frame,
+    // never mid-animation. A stalled/interrupted slide-in previously left it (and its
+    // links) offset and unreliable to click.
+    <header
       className="fixed top-0 left-0 right-0 z-sticky transition-all duration-200 motion-reduce:transition-none"
       style={{
         background: scrolled ? 'var(--glass-bg)' : 'transparent',
@@ -107,12 +108,14 @@ export default function Header() {
 
       <AnimatePresence>
         {mobileOpen && (
+          // Navigation must never be invisible-but-present: animate the slide only,
+          // never opacity, so a stalled/skipped transition still leaves the menu usable.
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
+            exit={{ y: -10 }}
             transition={{ duration: reduceMotion ? 0 : 0.16 }}
-            className="absolute top-full left-0 right-0 md:hidden"
+            className="absolute top-full left-0 right-0 opacity-100 md:hidden"
             style={{
               background: 'var(--bg-surface)',
               borderBottom: '1px solid var(--border)',
@@ -142,6 +145,6 @@ export default function Header() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </header>
   )
 }

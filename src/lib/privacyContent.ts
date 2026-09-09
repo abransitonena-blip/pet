@@ -22,7 +22,7 @@ export const privacySections: PrivacySection[] = [
   },
   {
     title: '2. Categorías de datos',
-    content: 'Podemos tratar identificadores de cuenta, nombre, correo, teléfono, perfiles de perros, dirección de recogida, agenda, órdenes, sesiones, pagos confirmados, reportes, reseñas verificadas, reportes de errores técnicos y comunicaciones. Información de salud o conducta del perro solo debe proporcionarse cuando sea necesaria para realizar el paseo de forma segura. No solicitamos diagnósticos médicos de personas.',
+    content: 'Podemos tratar identificadores de cuenta, nombre, correo, teléfono, perfiles de perros, dirección de recogida, agenda, órdenes, sesiones, pagos confirmados, reportes, reseñas, reportes de errores técnicos y comunicaciones. Información de salud o conducta del perro solo debe proporcionarse cuando sea necesaria para realizar el paseo de forma segura. No solicitamos diagnósticos médicos de personas.',
   },
   {
     title: '3. Finalidades necesarias',
@@ -30,7 +30,7 @@ export const privacySections: PrivacySection[] = [
   },
   {
     title: '4. Finalidades opcionales y consentimientos separados',
-    content: 'Son opcionales y no condicionan el servicio: Analytics, marketing, comunicaciones promocionales, testimonios públicos (reseñas), publicación en galería y publicación en redes sociales. Una reseña solo puede publicarse tras completar un paseo pagado y verificado; permitir capturar una foto para un reporte privado no equivale a autorizar su publicación. Las cargas operativas y la publicación automática permanecen desactivadas durante el MVP.',
+    content: 'Son opcionales y no condicionan el servicio: Analytics, marketing, comunicaciones promocionales, testimonios públicos (reseñas), publicación en galería y publicación en redes sociales. Una reseña puede publicarse desde cualquier cuenta de Familia PET con sesión iniciada; permitir capturar una foto para un reporte privado no equivale a autorizar su publicación. Las cargas operativas y la publicación automática permanecen desactivadas durante el MVP.',
   },
   {
     title: '5. Proveedores y comunicaciones',
