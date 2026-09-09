@@ -19,12 +19,26 @@ describe('marca y contacto canónicos', () => {
   })
 
   test('Logo, favicon, PWA y notificaciones consumen el mismo perrito', () => {
-    expect(read('src/components/ui/Logo.tsx')).toContain('src={BRAND.logoPath}')
-    expect(read('src/components/ui/Logo.tsx')).not.toContain('<ellipse')
+    // On-page the mark is drawn as a CSS mask so it takes the brand colour,
+    // which needs the alpha-channel copy of the very same silhouette; the
+    // favicon, PWA icon and notification icon still use the original file.
+    const logo = read('src/components/ui/Logo.tsx')
+    expect(logo).toContain('maskImage: `url(${BRAND.markPath})`')
+    expect(logo).toContain('backgroundColor: \'currentColor\'')
+    expect(logo).not.toContain('<ellipse')
+    expect(BRAND.markPath).toBe('/brand/pet-ap-dog-mark.png')
+    expect(existsSync(path.join(root, 'public/brand/pet-ap-dog-mark.png'))).toBe(true)
     expect(read('src/app/layout.tsx')).toContain(BRAND.logoPath)
     expect(read('src/components/PWARegister.tsx')).toContain(BRAND.logoPath)
     expect(read('public/manifest.json')).toContain(BRAND.logoPath)
     expect(read('public/sw.js')).toContain(BRAND.logoPath)
+  })
+
+  test('la marca en pantalla ya no vive dentro de una caja blanca', () => {
+    // The complaint was that the dog read as a sticker: a black silhouette on
+    // a white bordered tile. No container, no border, no forced background.
+    const logo = read('src/components/ui/Logo.tsx')
+    expect(logo).not.toMatch(/bg-white|border border-ink|shadow-sm/)
   })
 
   test('contacto público usa un número único y no revive la configuración anterior', () => {
