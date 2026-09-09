@@ -14,6 +14,7 @@ import {
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { Reservation } from '@/types'
 import CanonicalFamilyHistory from '@/components/family/CanonicalFamilyHistory'
+import ReviewForm from '@/components/ReviewForm'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 
 export default function HistorialPage() {
@@ -98,6 +99,14 @@ export default function HistorialPage() {
           <h2 id="canonical-history-title" className="mt-1 text-base font-bold text-ink">Solicitudes y paseos actuales</h2>
         </div>
         {customerId && <CanonicalFamilyHistory customerId={customerId} />}
+      </section>
+
+      <section aria-labelledby="familia-review-title" className="space-y-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Tu opinión</p>
+          <h2 id="familia-review-title" className="mt-1 text-base font-bold text-ink">Deja tu reseña</h2>
+        </div>
+        <ReviewForm />
       </section>
 
       <div className="border-t border-ink/10 pt-5">

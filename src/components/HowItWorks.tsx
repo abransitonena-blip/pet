@@ -12,7 +12,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section aria-label="Cómo funciona" id="como-funciona" className="relative py-24 sm:py-32">
+    <section aria-label="Cómo funciona" id="como-funciona" className="relative scroll-mt-20 py-24 sm:py-32">
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 40 }}

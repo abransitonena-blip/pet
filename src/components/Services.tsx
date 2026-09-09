@@ -19,7 +19,7 @@ export default function Services() {
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
   return (
-    <section aria-label="Servicios" id="servicios" className="relative py-24 sm:py-32" ref={ref}>
+    <section aria-label="Servicios" id="servicios" className="relative scroll-mt-20 py-24 sm:py-32" ref={ref}>
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 40 }}

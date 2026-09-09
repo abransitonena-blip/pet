@@ -25,7 +25,7 @@ export default function ContactSection() {
   ]
 
   return (
-    <section aria-label="Contacto" id="contacto" className="relative py-24 sm:py-32">
+    <section aria-label="Contacto" id="contacto" className="relative scroll-mt-20 py-24 sm:py-32">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 40 }}

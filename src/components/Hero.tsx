@@ -21,7 +21,7 @@ export default function Hero() {
   const { avgRating, happyDogs, loading: statsLoading } = usePublicStats()
 
   return (
-    <section aria-label="Hero" id="hero" className="relative flex min-h-[34rem] items-center justify-center overflow-hidden pb-12 pt-20 sm:min-h-[38rem]">
+    <section aria-label="Hero" id="hero" className="relative flex min-h-[34rem] scroll-mt-20 items-center justify-center overflow-hidden pb-12 pt-20 sm:min-h-[38rem]">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/4 -right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
         <div className="absolute -bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-trust/10 rounded-full blur-[80px]" />
