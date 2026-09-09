@@ -479,13 +479,6 @@ service cloud.firestore {
         && request.resource.data.keys().size() <= 30;
     }
 
-    // Rate limiting: review fields validation
-    function isValidReview() {
-      return request.resource.data.keys().size() <= 10
-        && request.resource.data.rating >= 1
-        && request.resource.data.rating <= 5;
-    }
-
     // ═══════════════════════════════════════════
     // USERS (profile/state mirror — role only via Admin SDK)
     // ═══════════════════════════════════════════
