@@ -22,6 +22,7 @@ export default function ReviewForm() {
     if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) return
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u ? { uid: u.uid, displayName: u.displayName } : null)
+      if (u?.displayName) setName(u.displayName)
     })
     return unsub
   }, [])
@@ -44,7 +45,10 @@ export default function ReviewForm() {
         body: JSON.stringify({ name, rating, text }),
       })
       if (!response.ok) {
-        setError('Error al enviar. Intenta de nuevo.')
+        const result = await response.json().catch(() => ({})) as { code?: string }
+        setError(result.code === 'privileged-identity-rejected'
+          ? 'El servidor no pudo guardar tu reseña (identidad no autorizada en este entorno). Ya lo estamos revisando.'
+          : 'Error al enviar. Intenta de nuevo.')
         setSending(false)
         return
       }
@@ -91,20 +95,22 @@ export default function ReviewForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="space-y-1">
-          <label htmlFor="review-name" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            Tu nombre *
-          </label>
-          <input
-            id="review-name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            placeholder="Ej: María"
-            className="input-field"
-          />
-        </div>
+        {!user?.displayName && (
+          <div className="space-y-1">
+            <label htmlFor="review-name" className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              Tu nombre *
+            </label>
+            <input
+              id="review-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Ej: María"
+              className="input-field"
+            />
+          </div>
+        )}
 
         <div className="space-y-1">
           <label className="text-xs" style={{ color: 'var(--text-secondary)' }}>

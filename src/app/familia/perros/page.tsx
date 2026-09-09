@@ -166,14 +166,17 @@ export default function MisPerrosPage() {
 
   const openEdit = (pet: Pet) => {
     setEditingPet(pet)
+    // Records created before these fields existed come back undefined; the form
+    // is all controlled inputs and validate() calls .trim(), so every field has
+    // to land as a real value or editing an older pet crashes on save.
     setForm({
-      name: pet.name,
-      breed: pet.breed,
-      size: pet.size,
+      name: pet.name || '',
+      breed: pet.breed || '',
+      size: pet.size || 'mediano',
       sex: pet.sex || '',
       age: String(pet.age || ''),
       weight: String(pet.weight || ''),
-      petType: pet.petType,
+      petType: pet.petType || 'perro',
       notes: pet.notes || '',
       personality: pet.personality || { energyLevel: 'medio', temperament: [] },
       health: pet.health || { allergies: [], medications: [], vaccines: [], vetName: '', vetPhone: '' },
@@ -186,8 +189,8 @@ export default function MisPerrosPage() {
 
   const validate = () => {
     const e: Record<string, string> = {}
-    if (!form.name.trim()) e.name = 'Escribe el nombre de tu mascota'
-    if (!form.breed.trim()) e.breed = 'Escribe la raza'
+    if (!form.name?.trim()) e.name = 'Escribe el nombre de tu mascota'
+    if (!form.breed?.trim()) e.breed = 'Escribe la raza'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -379,7 +382,8 @@ export default function MisPerrosPage() {
                     </div>
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                    {pet.breed} · {SIZE_OPTIONS.find((s) => s.value === pet.size)?.label}
+                    {[pet.breed, SIZE_OPTIONS.find((s) => s.value === pet.size)?.label]
+                      .filter(Boolean).join(' · ') || 'Sin datos todavía'}
                   </p>
                   <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                     {pet.age && (

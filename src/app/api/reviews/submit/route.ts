@@ -75,7 +75,17 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({ code: 'ok', reviewId: reviewRef.id }, { headers: noStore })
-  } catch {
-    return NextResponse.json({ code: 'submit-failed' }, { status: 500, headers: noStore })
+  } catch (error) {
+    // A bare catch here turned every failure into an opaque 500. The most likely
+    // cause is the Vercel OIDC -> GCP exchange being rejected (the workload
+    // identity binding is scoped to one Vercel environment), which is worth
+    // telling apart from a genuine Firestore write error.
+    const detail = error instanceof Error ? error.message : String(error)
+    console.error('reviews/submit failed:', detail)
+    const isIdentityFailure = /oidc|token|credential|permission|unauthenticated|denied/i.test(detail)
+    return NextResponse.json(
+      { code: isIdentityFailure ? 'privileged-identity-rejected' : 'submit-failed', detail },
+      { status: isIdentityFailure ? 503 : 500, headers: noStore },
+    )
   }
 }

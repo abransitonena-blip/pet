@@ -54,8 +54,6 @@ export default function Reviews() {
     fetchReviews()
   }, [])
 
-  if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) return null
-
   useEffect(() => {
     if (reviews.length === 0) return
     const interval = setInterval(() => {
@@ -64,11 +62,15 @@ export default function Reviews() {
     return () => clearInterval(interval)
   }, [reviews.length])
 
-  const visibleReviews = []
-  for (let i = 0; i < 3; i++) {
-    const idx = (currentIndex + i) % reviews.length
-    if (reviews[idx]) visibleReviews.push(reviews[idx])
-  }
+  // Every hook has to run before this bails out, or toggling the flag off
+  // changes the hook count between renders and React throws.
+  if (!FEATURE_FLAGS.PUBLIC_REVIEWS_ENABLED) return null
+
+  // Show at most one card per review: with fewer than three reviews the modulo
+  // window used to wrap around and repeat the same one two or three times.
+  const visibleReviews = reviews.length === 0
+    ? []
+    : Array.from({ length: Math.min(3, reviews.length) }, (_, i) => reviews[(currentIndex + i) % reviews.length])
 
   return (
     <section aria-label="Reseñas" id="resenas" className="relative scroll-mt-20 py-24 sm:py-32" ref={ref}>

@@ -26,6 +26,33 @@ export default function Header() {
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
+  /**
+   * Two things used to break tapping a section from the open menu: the menu sets
+   * `body { overflow: hidden }` and React only clears it on the next render, so
+   * the browser's anchor jump was blocked; and the jump itself relied on smooth
+   * scrolling, which is paused whenever the page is not visible. So: clear the
+   * lock synchronously, then scroll ourselves, instantly, offset by the fixed
+   * header. Nothing here depends on an animation completing.
+   */
+  const HEADER_OFFSET = 80
+
+  const goToSection = useCallback((event: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    document.body.style.overflow = ''
+    closeMobile()
+    const id = href.split('#')[1]
+    const target = id ? document.getElementById(id) : null
+    if (!target) return
+    event.preventDefault()
+    const top = target.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET
+    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' })
+    window.history.replaceState(null, '', href)
+  }, [closeMobile, reduceMotion])
+
+  const releaseScrollLock = useCallback(() => {
+    document.body.style.overflow = ''
+    closeMobile()
+  }, [closeMobile])
+
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden'
@@ -72,6 +99,7 @@ export default function Header() {
             <a
               key={link.href}
               href={link.href}
+              onClick={(event) => goToSection(event, link.href)}
               className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-primary/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none"
             >
               {link.label}
@@ -126,7 +154,7 @@ export default function Header() {
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={closeMobile}
+                  onClick={(event) => goToSection(event, link.href)}
                   className="flex min-h-11 items-center rounded-lg px-4 text-sm font-medium text-muted transition-colors hover:bg-primary/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none"
                 >
                   {link.label}
@@ -135,7 +163,7 @@ export default function Header() {
               <div className="pt-2 border-t border-border">
                 <a
                   href="/login"
-                  onClick={closeMobile}
+                  onClick={releaseScrollLock}
                   className="flex min-h-11 items-center rounded-lg px-4 text-sm font-medium text-muted transition-colors hover:bg-primary/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none"
                 >
                   Iniciar sesión
