@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import type { Address } from '@/types'
 import { Button, Card, ConfirmDialog, EmptyState } from '@/components/ui'
+import { usePostalCodeLookup } from '@/lib/usePostalCodeLookup'
 
 const ALIAS_OPTIONS = [
   { value: 'Casa', icon: Home },
@@ -53,6 +54,20 @@ export default function DireccionesPage() {
   const [zones, setZones] = useState<Array<{ id: string; name: string }>>([])
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const { suggestion: postalSuggestion, loading: postalLoading } = usePostalCodeLookup(form.zip)
+
+  // Only fills what is still blank: a postal code lookup must never overwrite
+  // an address the person already typed by hand.
+  useEffect(() => {
+    if (!postalSuggestion) return
+    setForm((current) => {
+      const state = current.state.trim() ? current.state : postalSuggestion.state
+      const colony = current.colony.trim() || postalSuggestion.places.length !== 1
+        ? current.colony
+        : postalSuggestion.places[0]
+      return state === current.state && colony === current.colony ? current : { ...current, state, colony }
+    })
+  }, [postalSuggestion])
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
@@ -369,6 +384,20 @@ export default function DireccionesPage() {
                     className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
                     style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                   />
+                  {postalSuggestion && postalSuggestion.places.length > 1 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {postalSuggestion.places.map((place) => (
+                        <button
+                          key={place}
+                          type="button"
+                          onClick={() => setForm({ ...form, colony: place })}
+                          className={`min-h-9 rounded-full border px-2.5 text-2xs font-medium transition-colors ${form.colony === place ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted hover:text-primary'}`}
+                        >
+                          {place}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="addr-city" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Ciudad *</label>
@@ -406,9 +435,18 @@ export default function DireccionesPage() {
                     value={form.zip}
                     onChange={(e) => setForm({ ...form, zip: e.target.value })}
                     placeholder="03100"
+                    inputMode="numeric"
+                    maxLength={5}
                     className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
                     style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                   />
+                  <p className="mt-1.5 text-2xs" style={{ color: 'var(--text-muted)' }} role="status">
+                    {postalLoading
+                      ? 'Buscando colonias…'
+                      : postalSuggestion
+                        ? `${postalSuggestion.places.length} colonia${postalSuggestion.places.length === 1 ? '' : 's'} encontrada${postalSuggestion.places.length === 1 ? '' : 's'}`
+                        : 'Escribe 5 dígitos para sugerir colonia y estado'}
+                  </p>
                 </div>
               </div>
 

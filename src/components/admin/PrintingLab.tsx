@@ -305,8 +305,12 @@ export default function PrintingLab() {
         </section>
 
         <aside className="space-y-4">
-          <div className="mx-auto w-full max-w-[384px] overflow-hidden rounded-sm bg-white px-6 py-8 font-mono text-[12px] leading-relaxed text-black shadow-[0_14px_40px_rgba(15,23,42,0.14)]">
-            <pre className="whitespace-pre-wrap break-words">{preview}</pre>
+          {/* The ticket is 32 columns wide, so size the paper by characters
+              rather than by the printer's 384 dots: at 12px monospace those
+              dots rendered a strip far wider than the text it holds, which is
+              what made the preview look oversized on a phone. */}
+          <div className="mx-auto w-fit max-w-full overflow-x-auto rounded-sm bg-white px-3 py-4 font-mono text-[11px] leading-snug text-black shadow-[0_14px_40px_rgba(15,23,42,0.14)]">
+            <pre className="w-[32ch] whitespace-pre-wrap break-words">{preview}</pre>
           </div>
 
           {payload && (

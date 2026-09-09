@@ -117,7 +117,14 @@ export default function AdminGalleryManager() {
       body.set('overwrite', 'false')
       const upload = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(String(signed.cloudName))}/image/upload`, { method: 'POST', body })
       const result = await upload.json()
-      if (!upload.ok || !isCloudinaryResult(result)) throw new Error('upload-failed')
+      if (!upload.ok) {
+        // Cloudinary's own text says far more than a generic failure -- most
+        // often "Upload preset must be specified", which means it could not
+        // match the api_key to this cloud, not that a preset is missing.
+        const detail = (result as { error?: { message?: unknown } })?.error?.message
+        throw new Error(`cloudinary:${typeof detail === 'string' ? detail : `HTTP ${upload.status}`}`)
+      }
+      if (!isCloudinaryResult(result)) throw new Error('upload-rejected-shape')
       const reference = doc(collection(db, 'gallery-images'))
       await setDoc(reference, {
         schemaVersion: 1,
@@ -144,7 +151,12 @@ export default function AdminGalleryManager() {
       await load()
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      setMessage(code === 'signed-upload-not-configured' ? 'Carga segura no configurada.' : code.includes('permission') ? 'No tienes permiso para registrar esta imagen.' : 'No pudimos completar la carga segura.')
+      setMessage(
+        code === 'signed-upload-not-configured' ? 'Carga segura no configurada.'
+        : code.startsWith('cloudinary:') ? `Cloudinary rechazó la carga: ${code.slice('cloudinary:'.length)}. Usa "Probar credenciales de Cloudinary" para ver cuál variable falla.`
+        : code === 'upload-rejected-shape' ? 'Cloudinary respondió con un formato inesperado y la imagen no se registró.'
+        : code.includes('permission') ? 'No tienes permiso para registrar esta imagen.'
+        : 'No pudimos completar la carga segura.')
     } finally { setBusy('') }
   }
 
@@ -154,10 +166,26 @@ export default function AdminGalleryManager() {
       const token = await auth.currentUser?.getIdToken(true)
       if (!token) throw new Error('auth-required')
       const response = await fetch('/api/admin/gallery/diagnostics', { headers: { Authorization: `Bearer ${token}` } })
-      const result = await response.json() as { ok?: boolean; message?: string }
-      setDiagnosticsMessage(response.ok && result.ok
-        ? 'Credenciales de Cloudinary válidas. El problema no es la contraseña/clave — revisa la firma de subida.'
-        : `Cloudinary rechazó las credenciales: ${result.message ?? 'sin detalle'}.`)
+      const result = await response.json() as {
+        ok?: boolean
+        hint?: string
+        message?: string
+        config?: { cloudName?: string; cloudNameConfigured?: boolean; apiKeyConfigured?: boolean; apiSecretConfigured?: boolean }
+      }
+      if (response.ok && result.ok) {
+        setDiagnosticsMessage(`Credenciales válidas para el cloud "${result.config?.cloudName ?? '—'}". El problema no son las llaves; revisa la firma de subida.`)
+        return
+      }
+      // Which of the three variables is missing is the actionable part, so
+      // name them instead of reporting a single opaque failure.
+      const missing = [
+        result.config?.cloudNameConfigured === false && 'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME',
+        result.config?.apiKeyConfigured === false && 'CLOUDINARY_API_KEY',
+        result.config?.apiSecretConfigured === false && 'CLOUDINARY_API_SECRET',
+      ].filter(Boolean)
+      setDiagnosticsMessage(missing.length > 0
+        ? `Faltan variables en este entorno: ${missing.join(', ')}.`
+        : `${result.hint ?? 'Cloudinary rechazó las credenciales.'} Detalle: ${result.message ?? 'sin detalle'}.`)
     } catch {
       setDiagnosticsMessage('No pudimos ejecutar la prueba (revisa tu sesión).')
     }

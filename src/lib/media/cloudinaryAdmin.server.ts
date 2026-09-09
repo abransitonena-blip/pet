@@ -15,6 +15,32 @@ function getCloudinaryAdminConfig() {
   return { cloudName, apiKey, apiSecret }
 }
 
+export interface CloudinaryConfigReport {
+  readonly cloudNameConfigured: boolean
+  readonly apiKeyConfigured: boolean
+  readonly apiSecretConfigured: boolean
+  /** Public value: it already ships to the browser as NEXT_PUBLIC_. */
+  readonly cloudName: string
+}
+
+/**
+ * Which Cloudinary variables exist in this deployment -- never their values.
+ *
+ * Uploads fail with Cloudinary's "Upload preset must be specified" whenever it
+ * cannot match the api_key to the cloud in the URL, which looks identical to a
+ * missing key from the browser's side. Reporting presence per variable, plus
+ * the cloud name, separates "not configured here" from "key does not belong to
+ * this cloud" without ever exposing a secret.
+ */
+export function describeCloudinaryConfig(): CloudinaryConfigReport {
+  return {
+    cloudNameConfigured: Boolean(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME),
+    apiKeyConfigured: Boolean(process.env.CLOUDINARY_API_KEY),
+    apiSecretConfigured: Boolean(process.env.CLOUDINARY_API_SECRET),
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? '',
+  }
+}
+
 export interface CloudinarySignedUpload {
   cloudName: string
   apiKey: string
