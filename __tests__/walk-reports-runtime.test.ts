@@ -42,10 +42,30 @@ describe('walk report runtime containment', () => {
     expect(canonical).not.toContain("collection(db, 'walkReports')")
   })
 
-  test('does not expose automatic account creation when Cloud Functions are disabled', () => {
+  test('provisions team roles without Cloud Functions and without handling passwords', () => {
+    // The Cloud Function that set role claims can never be deployed (no billing
+    // account), so provisioning moved to /api/admin/team, which writes the claim
+    // through the Identity Toolkit REST API. Accounts are still created by the
+    // person signing up -- this panel must never mint one or show a password.
     const walkers = read('src/app/admin/paseadores/page.tsx')
-    expect(walkers).toContain('FEATURE_FLAGS.CLOUD_FUNCTIONS_ENABLED &&')
-    expect(walkers).toContain('h-11 w-11')
+    const panel = read('src/components/admin/TeamProvisionPanel.tsx')
+    const route = read('src/app/api/admin/team/route.ts')
+
+    expect(walkers).toContain('<TeamProvisionPanel zones={zones} />')
+    expect(walkers).not.toMatch(/tempPassword|CLOUD_FUNCTIONS_ENABLED/)
+    expect(panel).toContain("fetch('/api/admin/team'")
+    // The panel may *mention* passwords in its copy ("no se crean contraseñas
+    // desde este panel"); what it must never do is collect or display one.
+    expect(panel).not.toMatch(/type="password"|tempPassword|setPassword/)
+    expect(route).toContain('verifyAdminToken')
+    expect(route).toContain('self-demotion-blocked')
+    expect(route).not.toMatch(/accounts:signUp|createUser|body\.password/)
+  })
+
+  test('walker activation is a plain admin write, not a privileged endpoint', () => {
+    const helper = read('src/lib/adminWalkers.ts')
+    expect(helper).toContain("doc(db, 'walkerProfiles', uid)")
+    expect(helper).toContain('status, updatedAt: serverTimestamp()')
   })
 
   test('prevents concurrent submissions and keeps financial fields out', () => {

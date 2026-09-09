@@ -16,7 +16,13 @@ interface StepV2ServiceProps {
 }
 
 export default function StepV2Service({ form, updateForm, prices, priceStatus, onNext, onBack }: StepV2ServiceProps) {
-  const services = getReservationServiceOptions(prices)
+  const allServices = getReservationServiceOptions(prices)
+  // Showing a plan the customer cannot actually book reads as a broken app, not
+  // as information: a greyed-out row with "precio no configurado" is an
+  // internal admin problem leaking into the booking flow. Only offer what can
+  // be requested; if nothing can, say so plainly instead of listing dead rows.
+  const services = allServices.filter((service) => service.isRequestable)
+  const hiddenCount = allServices.length - services.length
   const selectedOption = services.find((service) => service.id === form.serviceId)
 
   return (
@@ -34,6 +40,13 @@ export default function StepV2Service({ form, updateForm, prices, priceStatus, o
             : priceStatus === 'invalid'
               ? 'La configuración de servicios no es válida. Ninguna opción fue habilitada.'
             : 'No pudimos consultar la configuración de servicios. Revisa tu conexión.'}
+        </p>
+      )}
+
+      {priceStatus === 'ready' && services.length === 0 && (
+        <p className="flex items-start gap-2 rounded-xl bg-warning/10 px-3 py-3 text-sm text-amber-900" role="status">
+          <AlertCircle className="mt-0.5 shrink-0" size={16} />
+          Todavía no hay servicios con tarifa publicada. Escríbenos por WhatsApp y te confirmamos disponibilidad.
         </p>
       )}
 
@@ -88,9 +101,11 @@ export default function StepV2Service({ form, updateForm, prices, priceStatus, o
         })}
       </div>
 
-      <p className="text-xs text-muted">
-        Las opciones sin tarifa válida no pueden solicitarse. El equipo PET debe configurar el precio antes de habilitarlas.
-      </p>
+      {hiddenCount > 0 && services.length > 0 && (
+        <p className="text-xs text-muted">
+          {hiddenCount === 1 ? 'Hay 1 servicio más' : `Hay ${hiddenCount} servicios más`} que aún no tienen tarifa publicada y por eso no aparecen aquí.
+        </p>
+      )}
 
       <div className="flex justify-between pt-2">
         {onBack ? <Button variant="secondary" className="min-h-11 rounded-xl" onClick={onBack}>← Atrás</Button> : <span />}

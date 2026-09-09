@@ -183,7 +183,14 @@ export default function AdminChat() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium truncate">{conv.customerName || 'Cliente'}</span>
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate text-sm font-medium">{conv.customerName || 'Cliente'}</span>
+                      {/* Walkers and families share this inbox; without the tag
+                          an operator cannot tell whose message they are reading. */}
+                      <span className={`text-2xs shrink-0 rounded-full px-1.5 py-0.5 font-medium ${conv.participantRole === 'walker' ? 'bg-blue-500/15 text-blue-700' : 'bg-ink/5 text-muted'}`}>
+                        {conv.participantRole === 'walker' ? 'Paseador' : 'Familia'}
+                      </span>
+                    </span>
                     <span className="text-2xs shrink-0" style={{ color: 'var(--text-muted)' }}>
                       {formatTime(conv.lastTimestamp)}
                     </span>

@@ -46,7 +46,11 @@ describe('catálogo de reserva', () => {
     expect(options.find((item) => item.name === 'Paseo Esencial')).toMatchObject({ amountCents: 0, isRequestable: false })
   })
 
-  test('muestra opciones sin precio como deshabilitadas y conserva una selección válida', () => {
+  // Deliberate product change: a plan the customer cannot book is no longer
+  // listed as a greyed-out row. The catalog helper above still reports every
+  // service with its isRequestable flag -- what changed is only what the
+  // booking step renders.
+  test('oculta las opciones sin precio y conserva una selección válida', () => {
     const updateForm = jest.fn()
     const prices = configuredPrices({ 'paseo-individual': { amountCents: 18_000, active: true, version: 3 } })
     const form = { serviceId: '', serviceName: '', servicePackageType: '' as const, serviceAmountCents: null, serviceVersion: null, serviceComplimentary: false, serviceDurationMinutes: null }
@@ -54,8 +58,9 @@ describe('catálogo de reserva', () => {
       <StepV2Service form={form} updateForm={updateForm} prices={prices} priceStatus="ready" onNext={jest.fn()} onBack={jest.fn()} />,
     )
 
-    expect(screen.getAllByText('Precio no configurado').length).toBeGreaterThan(0)
-    expect(screen.getByRole('radio', { name: /Paseo Extendido/ }).hasAttribute('disabled')).toBe(true)
+    expect(screen.queryByText('Precio no configurado')).toBeNull()
+    expect(screen.queryByRole('radio', { name: /Paseo Extendido/ })).toBeNull()
+    expect(screen.getByText(/no tienen tarifa publicada/)).toBeTruthy()
     fireEvent.click(screen.getByRole('radio', { name: /Paseo Individual/ }))
     expect(updateForm).toHaveBeenCalledWith({
       serviceId: 'paseo-individual',

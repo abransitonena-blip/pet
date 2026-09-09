@@ -14,7 +14,7 @@ import AnnouncementBanner from '@/components/AnnouncementBanner'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 import {
   Dog, Calendar, PawPrint, Camera, Users, MapPin,
-  Settings, Gift, Home, History, BookOpen, Bell, ShieldCheck,
+  Settings, Gift, Home, History, BookOpen, Bell, ShieldCheck, MessagesSquare,
 } from 'lucide-react'
 
 const ACCOUNT_ITEMS = [
@@ -28,6 +28,7 @@ const ACCOUNT_ITEMS = [
   { id: 'billetera', label: 'Créditos PET', icon: Dog, color: '#0F766E', href: '/familia/billetera' },
   { id: 'referir', label: 'Referir amigo', icon: Users, color: '#EC4899', href: '/familia/referir' },
   { id: 'lealtad', label: 'Mi lealtad', icon: Gift, color: '#F59E0B', href: '/familia/lealtad' },
+  { id: 'mensajes', label: 'Mensajes', icon: MessagesSquare, color: '#0EA5E9', href: '/familia/mensajes' },
   { id: 'ayuda', label: 'Centro de ayuda', icon: BookOpen, color: '#64748B', href: '/familia/ayuda' },
   { id: 'config', label: 'Configuración', icon: Settings, color: '#64748B', href: '/familia/config' },
   { id: 'privacidad', label: 'Privacidad y ARCO', icon: ShieldCheck, color: '#0F766E', href: '/familia/privacidad' },

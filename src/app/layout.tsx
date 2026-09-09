@@ -4,6 +4,7 @@ import './globals.css'
 import Providers from '@/components/Providers'
 import ConfigErrorBanner from '@/components/ConfigErrorBanner'
 import PWARegister from '@/components/PWARegister'
+import GlobalErrorReporter from '@/components/GlobalErrorReporter'
 import { SITE_URL } from '@/lib/siteUrl'
 
 const manrope = Manrope({
@@ -99,6 +100,7 @@ export default function RootLayout({
         <Providers>
           <ConfigErrorBanner />
           <PWARegister />
+          <GlobalErrorReporter />
           <main id="main-content">{children}</main>
         </Providers>
       </body>

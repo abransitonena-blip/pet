@@ -162,6 +162,10 @@ export interface Reservation {
 
 export interface Conversation {
   id: string
+  // UIDs authorised to read this thread by the Firestore rules. An admin is
+  // authorised by their role claim instead, so they are never listed here.
+  participants?: string[]
+  participantRole?: 'customer' | 'walker'
   customerId: string
   customerName: string
   customerPhone?: string

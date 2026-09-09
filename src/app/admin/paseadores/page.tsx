@@ -6,8 +6,8 @@ import {
   collection, query, onSnapshot, where, limit,
 } from 'firebase/firestore'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PersonStanding, Phone, Loader2, Plus, X,
-  CalendarDays, MapPinned, ChartBar, Pencil, Check, Mail, Key } from 'lucide-react'
+import { PersonStanding, Phone, Plus, X,
+  CalendarDays, MapPinned, ChartBar, Pencil, Check, Mail } from 'lucide-react'
 import { useConfig } from '@/context/ConfigContext'
 import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
@@ -15,8 +15,9 @@ import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
 import Button from '@/components/ui/Button'
+import TeamProvisionPanel from '@/components/admin/TeamProvisionPanel'
+import { setWalkerStatus } from '@/lib/adminWalkers'
 import type { Zone } from '@/types'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { confirmWhatsAppShare } from '@/lib/utils'
 
 const DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
@@ -70,8 +71,7 @@ export default function AdminPaseadoresPage() {
   const [walkerProfiles, setWalkerProfiles] = useState<Array<{ uid: string; name: string; email: string; phone: string; status: string }>>([])
   const [profileError, setProfileError] = useState('')
   const [expandedWalker, setExpandedWalker] = useState<string | null>(null)
-  const [creatingAccount, setCreatingAccount] = useState<number | null>(null)
-  const [tempPassword, setTempPassword] = useState<{ index: number; password: string } | null>(null)
+  const [changingStatus, setChangingStatus] = useState<string | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -176,17 +176,22 @@ export default function AdminPaseadoresPage() {
     }
   }
 
-  const handleCreateAccount = async (index: number) => {
-    if (!FEATURE_FLAGS.CLOUD_FUNCTIONS_ENABLED) {
-      toast('La creación automática de cuentas está desactivada. Usa el proceso administrativo manual seguro.', 'error')
-      return
+  /**
+   * Activar o suspender un paseador ya vinculado. Las reglas de Firestore
+   * exigen `walkerProfiles/{uid}.status == 'active'` tanto para asignarle un
+   * paseo como para que él mueva su estado, así que este interruptor es lo
+   * que realmente habilita a la persona para trabajar.
+   */
+  const handleStatusChange = async (uid: string, status: 'active' | 'inactive' | 'suspended') => {
+    setChangingStatus(uid)
+    try {
+      await setWalkerStatus(uid, status)
+      toast(status === 'active' ? 'Paseador activado' : status === 'suspended' ? 'Paseador suspendido' : 'Paseador desactivado')
+    } catch {
+      toast('No pudimos cambiar el estado del paseador', 'error')
+    } finally {
+      setChangingStatus(null)
     }
-    const walker = (config.walkers || [])[index] as WalkerConfig | undefined
-    if (!walker?.email) {
-      toast('El paseador necesita un correo electrónico', 'error')
-      return
-    }
-    setCreatingAccount(null)
   }
 
   const handleRemove = async (index: number) => {
@@ -247,6 +252,8 @@ export default function AdminPaseadoresPage() {
       />
 
       {profileError && <p className="rounded-xl bg-danger/10 p-3 text-sm text-danger" role="alert">{profileError}</p>}
+
+      <TeamProvisionPanel zones={zones} />
 
       {loading ? (
         <LoadingState rows={3} height="h-32" />
@@ -325,15 +332,18 @@ export default function AdminPaseadoresPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {!walkerConfig?.uid && walkerConfig?.email && FEATURE_FLAGS.CLOUD_FUNCTIONS_ENABLED && (
-                        <button
-                          onClick={() => handleCreateAccount(i)}
-                          disabled={creatingAccount === i}
-                          className="flex h-11 w-11 items-center justify-center rounded-xl text-brand-600 transition-colors hover:bg-brand-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                          title="Crear cuenta de acceso"
+                      {w.uid && (
+                        <select
+                          value={w.status === 'legacy-invited' ? 'inactive' : w.status}
+                          onChange={(event) => void handleStatusChange(w.uid as string, event.target.value as 'active' | 'inactive' | 'suspended')}
+                          disabled={changingStatus === w.uid}
+                          aria-label={`Estado operativo de ${w.name}`}
+                          className="h-11 rounded-xl border border-ink/10 bg-surface px-2 text-2xs font-medium text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         >
-                          {creatingAccount === i ? <Loader2 className="animate-spin" size={12} /> : <Key size={12} />}
-                        </button>
+                          <option value="active">Activo</option>
+                          <option value="inactive">Inactivo</option>
+                          <option value="suspended">Suspendido</option>
+                        </select>
                       )}
                       <button onClick={() => setExpandedWalker(isExpanded ? null : w.name)} className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" style={{ color: 'var(--text-muted)' }} title="Detalles" aria-label={`Ver detalles de ${w.name}`}>
                         <ChartBar size={13} />
@@ -546,58 +556,6 @@ export default function AdminPaseadoresPage() {
                   {editing !== null ? 'Guardar' : 'Agregar'}
                 </Button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Temp Password Modal */}
-      <AnimatePresence>
-        {tempPassword && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-            onClick={() => setTempPassword(null)}
-          >
-            <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
-              className="w-full max-w-sm rounded-xl border border-ink/10 bg-surface p-5 space-y-4 shadow-elevated"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl bg-success-500/10 flex items-center justify-center mx-auto mb-3">
-                  <Key size={20} className="text-success-400" />
-                </div>
-                <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Cuenta creada</h3>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Comparte estas credenciales con el paseador de forma segura
-                </p>
-              </div>
-              <div className="rounded-xl border border-ink/10 bg-[var(--color-surface-soft)] p-3 space-y-2">
-                <div>
-                  <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>Correo</p>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {(config.walkers || [])[tempPassword.index]?.email}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>Contraseña temporal</p>
-                  <p className="text-sm font-mono font-bold" style={{ color: 'var(--color-primary)' }}>
-                    {tempPassword.password}
-                  </p>
-                </div>
-              </div>
-              <p className="text-2xs text-center" style={{ color: 'var(--text-muted)' }}>
-                El paseador deberá cambiar esta contraseña en su primer inicio de sesión
-              </p>
-              <Button className="w-full" onClick={() => setTempPassword(null)}>
-                Entendido
-              </Button>
             </motion.div>
           </motion.div>
         )}

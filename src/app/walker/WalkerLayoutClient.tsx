@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
-import { AlertTriangle, Dog, History, Home, UserRound } from 'lucide-react'
+import { AlertTriangle, Dog, History, Home, MessagesSquare, UserRound } from 'lucide-react'
 import { auth, db } from '@/firebase/config'
 import { accessPathWithRedirect, clearSessionCookie } from '@/lib/auth'
 import { useSessionRole } from '@/lib/useSessionRole'
@@ -20,6 +20,7 @@ import {
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Mis paseos', icon: Home, href: '/walker' },
   { id: 'historial', label: 'Historial', icon: History, href: '/walker/historial' },
+  { id: 'chat', label: 'Mensajes', icon: MessagesSquare, href: '/walker/chat' },
   { id: 'perfil', label: 'Mi perfil', icon: UserRound, href: '/walker/perfil' },
 ]
 
