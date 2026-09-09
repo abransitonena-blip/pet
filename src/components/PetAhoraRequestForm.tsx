@@ -63,7 +63,6 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
       address: addr,
       zoneId: addr.zoneId || '',
       zoneName: '',
-      price: 35,
     })
     if (id) {
       setRequestId(id)

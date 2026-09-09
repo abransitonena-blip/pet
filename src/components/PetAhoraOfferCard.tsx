@@ -15,12 +15,14 @@ export default function PetAhoraOfferCard({ offer, onDone }: Props) {
   const { acceptOffer, declineOffer } = usePetAhoraDispatch()
 
   const handleAccept = async () => {
-    const ok = await acceptOffer(offer.id, offer.requestId, offer.walkerId)
+    // The server reads the request and walker off the stored offer, so the
+    // card no longer passes them -- a browser must not get to choose them.
+    const ok = await acceptOffer(offer.id)
     if (ok) onDone()
   }
 
   const handleDecline = async () => {
-    await declineOffer(offer.id, offer.requestId)
+    await declineOffer(offer.id)
     onDone()
   }
 

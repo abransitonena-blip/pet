@@ -1,78 +1,65 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc, limit, Timestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
-import { selectBestWalker } from './dispatch'
-import type { Walker, PetAhoraRequest, Address } from '@/types'
+import { collection, addDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
+import { auth, db } from '@/firebase/config'
+import type { Address } from '@/types'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 /**
- * Fuente canónica de paseadores: `walkerProfiles`.
+ * PET Ahora desde el navegador: crear la solicitud y pedir el despacho.
  *
- * These queries used to read a `walkers` collection that nothing in the app
- * has ever written to -- every read came back empty, so dispatch could never
- * find anybody and each request expired by itself. `walkerProfiles` is the
- * document the rules actually check for `status == 'active'` before allowing
- * an assignment, and it is what the admin panel writes.
+ * Everything except creating the request now goes through /api/pet-ahora/*.
+ * This module used to do the whole dispatch client-side, which could never
+ * have worked: the Firestore rules let a customer create their own request and
+ * nothing more -- not move it to `searching`, and certainly not mint an offer
+ * addressed to a walker, since `petAhoraOffers` create requires
+ * `walkerId == request.auth.uid`. Every request would have been created and
+ * then stranded until it expired. Confirmed against the emulator before this
+ * was rewritten.
  */
 
-const OFFER_TIMEOUT_SECONDS = 30
 const REQUEST_TIMEOUT_SECONDS = 120
 
-function nowStr() {
-  return `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
+export interface PetAhoraRequestInput {
+  clientId: string
+  clientName: string
+  clientPhone: string
+  petId: string
+  petName: string
+  petType: string
+  addressId: string
+  address: Address
+  zoneId: string
+  zoneName: string
 }
 
-function dayOfWeek() {
-  const dayMap = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
-  return dayMap[new Date().getDay()]
+async function authorizedFetch(path: string, payload: unknown): Promise<{ ok: boolean; code: string }> {
+  const token = await auth.currentUser?.getIdToken()
+  if (!token) return { ok: false, code: 'auth-required' }
+  const response = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  })
+  const result = await response.json().catch(() => ({})) as { code?: string }
+  return { ok: response.ok, code: result.code ?? 'unknown-error' }
 }
 
-async function sendOffer(
-  requestId: string,
-  walkerId: string,
-  walkerName: string,
-): Promise<boolean> {
-  if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
-  try {
-    const now = Timestamp.now()
-    await addDoc(collection(db, 'petAhoraOffers'), {
-      requestId,
-      walkerId,
-      walkerName,
-      status: 'pending',
-      sentAt: now,
-      expiresAt: new Timestamp(now.seconds + OFFER_TIMEOUT_SECONDS, 0),
-    })
-    await updateDoc(doc(db, 'petAhoraRequests', requestId), {
-      status: 'offer_sent',
-      walkerId,
-      walkerName,
-    })
-    return true
-  } catch {
-    return false
-  }
+function messageForDispatchCode(code: string): string {
+  if (code === 'no-walkers-available') return 'No hay paseadores disponibles en tu zona en este momento.'
+  if (code === 'pet-ahora-not-enabled') return 'PET Ahora está temporalmente desactivado.'
+  if (code === 'privileged-identity-not-configured') return 'El servicio de despacho no está configurado en este entorno.'
+  if (code === 'rate-limited') return 'Has hecho varias solicitudes seguidas. Espera un momento antes de intentar otra vez.'
+  if (code === 'request-not-dispatchable') return 'Esta solicitud ya no puede asignarse.'
+  return 'No pudimos buscar un paseador. Revisa tu conexión e inténtalo de nuevo.'
 }
 
 export function usePetAhoraDispatch() {
   const [dispatching, setDispatching] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const createRequest = useCallback(async (params: {
-    clientId: string
-    clientName: string
-    clientPhone: string
-    petId: string
-    petName: string
-    petType: string
-    addressId: string
-    address: Address
-    zoneId: string
-    zoneName: string
-    price: number
-  }): Promise<string | null> => {
+  const createRequest = useCallback(async (params: PetAhoraRequestInput): Promise<string | null> => {
     if (!FEATURE_FLAGS.PET_AHORA_ENABLED) {
       setError('PET Ahora está temporalmente en preparación')
       return null
@@ -82,6 +69,8 @@ export function usePetAhoraDispatch() {
 
     try {
       const now = Timestamp.now()
+      // The customer writes their own request -- the one PET Ahora document the
+      // rules let a browser create. Matching happens on the server.
       const requestRef = await addDoc(collection(db, 'petAhoraRequests'), {
         ...params,
         status: 'pending',
@@ -89,24 +78,19 @@ export function usePetAhoraDispatch() {
         expiresAt: new Timestamp(now.seconds + REQUEST_TIMEOUT_SECONDS, 0),
       })
 
-      await updateDoc(requestRef, { status: 'searching' })
-
-      const walkersSnap = await getDocs(query(collection(db, 'walkerProfiles'), where('status', '==', 'active'), where('zones', 'array-contains', params.zoneId), limit(50)))
-      const walkers = walkersSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Walker))
-
-      const best = selectBestWalker(walkers, params.zoneId, dayOfWeek(), nowStr())
-      if (!best) {
-        await updateDoc(requestRef, { status: 'expired' })
-        setError('No hay paseadores disponibles ahora')
+      const result = await authorizedFetch('/api/pet-ahora/dispatch', { requestId: requestRef.id })
+      if (!result.ok) {
+        setError(messageForDispatchCode(result.code))
         setDispatching(false)
-        return null
+        // The request document stays: the customer can retry, and an admin can
+        // see that somebody asked and nobody was available.
+        return result.code === 'no-walkers-available' ? requestRef.id : null
       }
 
-      await sendOffer(requestRef.id, best.walker.id, best.walker.name)
       setDispatching(false)
       return requestRef.id
     } catch {
-      setError('Error al crear solicitud')
+      setError('No pudimos crear tu solicitud. Revisa tu conexión e inténtalo de nuevo.')
       setDispatching(false)
       return null
     }
@@ -114,69 +98,29 @@ export function usePetAhoraDispatch() {
 
   const retryDispatch = useCallback(async (requestId: string): Promise<boolean> => {
     if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
-    try {
-      const reqSnap = await getDoc(doc(db, 'petAhoraRequests', requestId))
-      if (!reqSnap.exists()) return false
-      const req = { id: reqSnap.id, ...reqSnap.data() } as PetAhoraRequest
-      if (req.status !== 'offer_sent') return false
-
-      const walkersSnap = await getDocs(query(collection(db, 'walkerProfiles'), where('status', '==', 'active'), where('zones', 'array-contains', req.zoneId), limit(50)))
-      const walkers = walkersSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Walker))
-
-      const best = selectBestWalker(walkers, req.zoneId, dayOfWeek(), nowStr())
-      if (!best) {
-        await updateDoc(doc(db, 'petAhoraRequests', requestId), { status: 'expired' })
-        return false
-      }
-
-      return await sendOffer(requestId, best.walker.id, best.walker.name)
-    } catch {
-      return false
-    }
+    const result = await authorizedFetch('/api/pet-ahora/dispatch', { requestId })
+    if (!result.ok) setError(messageForDispatchCode(result.code))
+    return result.ok
   }, [])
 
-  const acceptOffer = useCallback(async (offerId: string, requestId: string, walkerId: string): Promise<boolean> => {
+  const acceptOffer = useCallback(async (offerId: string): Promise<boolean> => {
     if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
-    try {
-      const now = Timestamp.now()
-
-      await updateDoc(doc(db, 'petAhoraOffers', offerId), {
-        status: 'accepted',
-        respondedAt: now,
-      })
-
-      await updateDoc(doc(db, 'petAhoraRequests', requestId), {
-        status: 'accepted',
-        acceptedAt: now,
-        walkerId,
-      })
-
-      await addDoc(collection(db, 'petAhoraLeases'), {
-        requestId,
-        offerId,
-        walkerId,
-        status: 'active',
-        lockedAt: now,
-      })
-
-      return true
-    } catch {
-      return false
-    }
+    const result = await authorizedFetch('/api/pet-ahora/respond', { offerId, accept: true })
+    if (!result.ok) setError('No pudimos aceptar la oferta. Puede que ya la haya tomado alguien más.')
+    return result.ok
   }, [])
 
-  const declineOffer = useCallback(async (offerId: string, requestId: string): Promise<boolean> => {
+  const declineOffer = useCallback(async (offerId: string): Promise<boolean> => {
     if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
-    try {
-      const now = Timestamp.now()
-      await updateDoc(doc(db, 'petAhoraOffers', offerId), { status: 'declined', respondedAt: now })
-      retryDispatch(requestId)
-      return true
-    } catch {
-      return false
-    }
-  }, [retryDispatch])
+    const result = await authorizedFetch('/api/pet-ahora/respond', { offerId, accept: false })
+    if (!result.ok) setError('No pudimos registrar tu respuesta.')
+    return result.ok
+  }, [])
 
+  /**
+   * Progreso del paseo en curso. Lo escribe el paseador, a quien las reglas
+   * sí autorizan sobre una solicitud ya asignada a su UID.
+   */
   const updateRequestStatus = useCallback(async (requestId: string, status: string, extra?: Record<string, unknown>): Promise<boolean> => {
     if (!FEATURE_FLAGS.PET_AHORA_ENABLED) return false
     try {
