@@ -1,3 +1,5 @@
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+
 export const WALK_REPORT_SCHEMA_VERSION = 1 as const
 export const WALK_REPORT_TEXT_LIMITS = Object.freeze({
   summary: 1200,
@@ -5,6 +7,15 @@ export const WALK_REPORT_TEXT_LIMITS = Object.freeze({
   bathroomNotes: 500,
   incidentsSummary: 800,
 })
+
+/** Fotos privadas por reporte; the Firestore rules check the same six positions. */
+export const MAX_WALK_PHOTOS = 6
+const WALK_PHOTO_REFERENCE = /^pet-ap-private\/walk-reports\/[a-f0-9-]{36}$/
+
+/** An opaque private asset id under the walk-reports prefix -- never a URL. */
+export function isWalkPhotoReference(value: unknown): value is string {
+  return typeof value === 'string' && WALK_PHOTO_REFERENCE.test(value)
+}
 
 export type WalkReportStatus = 'draft' | 'submitted'
 
@@ -38,6 +49,8 @@ export type WalkReportValidationError =
   | 'bathroom-too-long'
   | 'incidents-too-long'
   | 'media-disabled'
+  | 'media-invalid'
+  | 'too-many-photos'
 
 export function walkReportId(walkSessionId: string): string {
   const id = walkSessionId.trim()
@@ -52,7 +65,11 @@ export function validateWalkReportContent(content: WalkReportContent, mode: 'dra
   if (content.behaviorNotes.length > WALK_REPORT_TEXT_LIMITS.behaviorNotes) errors.push('behavior-too-long')
   if (content.bathroomNotes.length > WALK_REPORT_TEXT_LIMITS.bathroomNotes) errors.push('bathroom-too-long')
   if (content.incidentsSummary.length > WALK_REPORT_TEXT_LIMITS.incidentsSummary) errors.push('incidents-too-long')
-  if (content.mediaReferences.length > 0) errors.push('media-disabled')
+  if (content.mediaReferences.length > 0) {
+    if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) errors.push('media-disabled')
+    else if (content.mediaReferences.length > MAX_WALK_PHOTOS) errors.push('too-many-photos')
+    else if (!content.mediaReferences.every(isWalkPhotoReference)) errors.push('media-invalid')
+  }
   return errors
 }
 

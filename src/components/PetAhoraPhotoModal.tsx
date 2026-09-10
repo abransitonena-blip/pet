@@ -6,7 +6,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { uploadToCloudinary, getCurrentPosition } from '@/lib/cloudinary'
 import { Camera, X, Check, Loader2 } from 'lucide-react'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { PET_AHORA_PHOTOS_ENABLED } from '@/lib/media/mediaPolicy'
 
 interface Props {
   isOpen: boolean
@@ -45,7 +45,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
   }
 
   const handleSave = async () => {
-    if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
+    if (!PET_AHORA_PHOTOS_ENABLED) {
       setError('La carga de fotos operativas está temporalmente desactivada.')
       return
     }
@@ -99,7 +99,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
           </button>
         </div>
 
-        {!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED ? (
+        {!PET_AHORA_PHOTOS_ENABLED ? (
           <div className="mb-4 rounded-xl border border-border p-5 text-center text-sm text-muted">
             Las fotos operativas privadas no están disponibles mientras no exista almacenamiento privado seguro.
           </div>
@@ -122,7 +122,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
 
         {error && <p className="text-xs mb-3" style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
-        {FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED && <div className="flex gap-2">
+        {PET_AHORA_PHOTOS_ENABLED && <div className="flex gap-2">
           {photo && (
             <button onClick={() => { setPhoto(null); setPhotoFile(null) }} className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all" style={{ background: 'var(--glass-bg)', color: 'var(--text-muted)' }}>
               Retomar

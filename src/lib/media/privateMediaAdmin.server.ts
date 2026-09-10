@@ -41,11 +41,15 @@ export function createCloudinaryPrivateUploadSignature(folder: string, now = Dat
   }
   const { cloudName, apiKey, apiSecret } = getCloudinaryAdminConfig()
   const timestamp = Math.floor(now / 1000)
-  const publicId = randomUUID()
+  // The folder travels inside public_id rather than as a separate `folder`
+  // parameter: on Cloudinary accounts with dynamic folders, `folder` only sets
+  // the display folder and the returned public_id would be the bare UUID,
+  // failing every check that expects the private prefix.
+  const publicId = `${folder}/${randomUUID()}`
   const type = 'authenticated' as const
   const transformation = 'fl_strip_profile' as const
   const overwrite = false as const
-  const canonical = `folder=${folder}&overwrite=false&public_id=${publicId}&timestamp=${timestamp}&transformation=${transformation}&type=${type}${apiSecret}`
+  const canonical = `overwrite=false&public_id=${publicId}&timestamp=${timestamp}&transformation=${transformation}&type=${type}${apiSecret}`
   const signature = createHash('sha1').update(canonical).digest('hex')
   return { cloudName, apiKey, timestamp, signature, publicId, folder, type, transformation, overwrite }
 }
@@ -68,4 +72,39 @@ export function isAllowedCloudinaryPrivateResult(value: unknown): value is {
     && Number.isSafeInteger(data.width) && Number(data.width) > 0 && Number(data.width) <= 12000
     && Number.isSafeInteger(data.height) && Number(data.height) > 0 && Number(data.height) <= 12000
     && ['jpg', 'jpeg', 'png', 'webp'].includes(String(data.format))
+}
+
+const DEFAULT_DOWNLOAD_TTL_SECONDS = 600
+
+/**
+ * Time-limited link to one authenticated asset, through Cloudinary's private
+ * download API. An authenticated asset cannot be fetched by its plain URL, and
+ * a classic signed delivery URL never expires; this one stops working after
+ * `ttlSeconds`, so a copied link does not keep exposing a family's photo.
+ */
+export function createPrivateDownloadUrl(
+  publicId: string,
+  options: { format?: 'jpg' | 'png' | 'webp'; ttlSeconds?: number; now?: number } = {},
+): string {
+  if (!/^pet-ap-private\/[a-z0-9-]{1,64}\/[a-f0-9-]{36}$/.test(publicId)) {
+    throw new Error('INVALID_PRIVATE_MEDIA_ID')
+  }
+  const { cloudName, apiKey, apiSecret } = getCloudinaryAdminConfig()
+  const timestamp = Math.floor((options.now ?? Date.now()) / 1000)
+  const expiresAt = timestamp + (options.ttlSeconds ?? DEFAULT_DOWNLOAD_TTL_SECONDS)
+  const format = options.format ?? 'jpg'
+  const deliveryType = 'authenticated'
+  const signature = createHash('sha1')
+    .update(`expires_at=${expiresAt}&format=${format}&public_id=${publicId}&timestamp=${timestamp}&type=${deliveryType}${apiSecret}`)
+    .digest('hex')
+  const params = new URLSearchParams({
+    api_key: apiKey,
+    expires_at: String(expiresAt),
+    format,
+    public_id: publicId,
+    signature,
+    timestamp: String(timestamp),
+    type: deliveryType,
+  })
+  return `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/download?${params.toString()}`
 }

@@ -90,7 +90,8 @@ export async function persistWalkReport(input: {
     const status: 'draft' | 'submitted' = input.mode === 'submit' ? 'submitted' : 'draft'
     const mutable = {
       ...input.content,
-      mediaReferences: [],
+      // Validated above: private walk-photo ids only, at most MAX_WALK_PHOTOS.
+      mediaReferences: [...input.content.mediaReferences],
       status,
       updatedAt: timestamp,
       submittedAt: input.mode === 'submit' ? timestamp : null,

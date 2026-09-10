@@ -23,7 +23,8 @@ describe('P0.2 safe feature defaults', () => {
     // double-gated: the code flag below plus config.features.petAhoraEnabled,
     // the operational switch an admin controls from Configuración.
     // BLUETOOTH_PRINTING_ENABLED: owner decision, to test with the physical printer.
-    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED', 'PET_AHORA_ENABLED', 'BLUETOOTH_PRINTING_ENABLED'])
+    // PRIVATE_MEDIA_UPLOADS_ENABLED: owner decision for walk photos, private and behind expiring links.
+    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED', 'PET_AHORA_ENABLED', 'BLUETOOTH_PRINTING_ENABLED', 'PRIVATE_MEDIA_UPLOADS_ENABLED'])
     expect(Object.entries(FEATURE_FLAGS).every(([name, enabled]) => enabledByDesign.has(name) ? enabled : enabled === false)).toBe(true)
   })
 
@@ -90,6 +91,8 @@ describe('P0.2 safe feature defaults', () => {
     expect(FEATURE_FLAGS.WALK_REPORTS_ENABLED).toBe(true)
     expect(read('src/lib/useWalkReport.ts')).toContain("if (!FEATURE_FLAGS.WALK_REPORTS_ENABLED)")
     expect(read('src/components/walker/WalkReportEditor.tsx')).toContain('Fotos privadas no disponibles todavía')
+    // Photos are on now, but the upload UI still hangs off the flag.
+    expect(read('src/components/walker/WalkReportEditor.tsx')).toContain('FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED ?')
   })
 
   it('distinguishes an empty credit history from a query failure', () => {

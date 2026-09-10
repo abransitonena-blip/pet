@@ -3,7 +3,9 @@
 ## Separación obligatoria
 
 - **Galería pública:** únicamente recursos propios o con licencia documentada. Una fotografía de un cliente requiere consentimiento previo y verificable, `publicationStatus: published`, `publicGalleryAllowed: true`, `consentVerified: true`, `consentRecordedAt` válido, `usageRights: public-gallery`, sin revocación y sin eliminación pendiente. El marcador derivado nunca sustituye la evidencia.
-- **Fotos operativas:** reportes de paseo, PET Ahora e incidencias son privadas. Durante el MVP sus uploads permanecen desactivados y nunca deben reutilizarse como galería pública.
+- **Fotos operativas:** reportes de paseo, PET Ahora e incidencias son privadas y nunca deben reutilizarse como galería pública.
+  - **Fotos del paseo — activas** por decisión del dueño (2026-09-10). Se suben como assets `type=authenticated` bajo `pet-ap-private/walk-reports/<uuid>`, máximo seis por reporte. Solo las ven la familia de ese paseo (una vez enviado el reporte), el paseador asignado y staff, mediante enlaces de descarga que caducan a los 10 minutos. Quitar una foto del reporte no borra el archivo en Cloudinary.
+  - **PET Ahora e incidencias:** sus uploads siguen desactivados hasta pasar la misma revisión.
 
 ## Datos prohibidos en rutas y URLs
 

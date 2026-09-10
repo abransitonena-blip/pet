@@ -676,7 +676,26 @@ service cloud.firestore {
         && data.bathroomNotes is string && data.bathroomNotes.size() <= 500
         && data.waterProvided is bool
         && data.incidentsSummary is string && data.incidentsSummary.size() <= 800
-        && data.mediaReferences is list && data.mediaReferences.size() == 0;
+        && validWalkPhotoReferences(data.mediaReferences);
+    }
+
+    // Fotos del paseo: hasta seis referencias a assets privados (Cloudinary
+    // type=authenticated) bajo el prefijo fijo de reportes. Rules cannot
+    // loop, so each of the six positions is checked explicitly; a public URL,
+    // a foreign path or a seventh photo fails.
+    function validWalkPhotoReference(reference) {
+      return reference is string
+        && reference.matches('^pet-ap-private/walk-reports/[a-f0-9-]{36}$');
+    }
+
+    function validWalkPhotoReferences(references) {
+      return references is list && references.size() <= 6
+        && (references.size() < 1 || validWalkPhotoReference(references[0]))
+        && (references.size() < 2 || validWalkPhotoReference(references[1]))
+        && (references.size() < 3 || validWalkPhotoReference(references[2]))
+        && (references.size() < 4 || validWalkPhotoReference(references[3]))
+        && (references.size() < 5 || validWalkPhotoReference(references[4]))
+        && (references.size() < 6 || validWalkPhotoReference(references[5]));
     }
 
     function reportSession(sessionId) {

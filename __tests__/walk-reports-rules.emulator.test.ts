@@ -105,6 +105,13 @@ describe('canonical walk report rules', () => {
     await assertFails(setDoc(doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-completed'), { ...report('session-completed'), customerId: 'customer-2' }))
   })
 
+  test('a draft takes up to six private walk photos, never a public path or a seventh', async () => {
+    const photo = (index: number) => `pet-ap-private/walk-reports/${String(index).padStart(8, '0')}-0000-4000-8000-000000000000`
+    await assertSucceeds(setDoc(doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-active'), { ...report('session-active'), mediaReferences: [photo(1), photo(2)] }))
+    await assertFails(setDoc(doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-completed'), { ...report('session-completed'), mediaReferences: Array.from({ length: 7 }, (_, index) => photo(index)) }))
+    await assertFails(setDoc(doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-completed'), { ...report('session-completed'), mediaReferences: ['pet-ap-public/00000001-0000-4000-8000-000000000000'] }))
+  })
+
   test('customer reads only own submitted report; staff reads operationally', async () => {
     const walkerRef = doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-completed')
     await assertSucceeds(setDoc(walkerRef, report('session-completed', 'submitted')))

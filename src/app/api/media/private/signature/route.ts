@@ -8,7 +8,10 @@ import { isAssignedToWalker } from '@/lib/walkerPanel'
 export const runtime = 'nodejs'
 
 const noStore = { 'Cache-Control': 'private, no-store, max-age=0' }
-const ALLOWED_FOLDERS = new Set(['pet-ap-private/walk-reports', 'pet-ap-private/pet-ahora', 'pet-ap-private/incidents'])
+// Walk-report photos are the only operational photos switched on (owner
+// decision, 2026-09-10; see MEDIA_POLICY.md). PET Ahora and incident photos
+// stay off until they get the same review.
+const ALLOWED_FOLDERS = new Set(['pet-ap-private/walk-reports'])
 
 /**
  * M1 signed upload for operational (private) photos. Unlike the public

@@ -142,12 +142,15 @@ export default function WalkSessionModal({ isOpen, onClose, reservation, mode }:
 
   if (!isOpen) return null
 
-  if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
+  // Legacy check-in flow: it writes to `reservations`, which stays read-only.
+  // With photos switched on for walk reports, the flag alone no longer keeps
+  // this modal honest -- it would offer a save that does nothing.
+  if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED || !FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED) {
     return (
       <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }} role="dialog" aria-modal="true">
         <div className="card max-w-sm p-6 text-center">
           <h3 className="font-semibold text-ink">Fotos operativas temporalmente desactivadas</h3>
-          <p className="text-sm text-muted mt-2 mb-4">No subiremos fotos mientras no exista almacenamiento privado seguro.</p>
+          <p className="text-sm text-muted mt-2 mb-4">Este registro de reservas anteriores ya no admite cambios. Las fotos del paseo ahora se suben desde la bitácora del paseador.</p>
           <button onClick={onClose} className="btn-secondary">Cerrar</button>
         </div>
       </div>

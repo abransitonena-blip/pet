@@ -90,7 +90,7 @@ export default function FamilyReportPage() {
   }
   return (
     <div>
-      <ReportReadOnly report={report} />
+      <ReportReadOnly report={report} sessionId={params.sessionId} />
       <WalkLocations sessionId={params.sessionId} />
     </div>
   )

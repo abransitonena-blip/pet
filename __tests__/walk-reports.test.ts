@@ -24,9 +24,9 @@ describe('canonical walk report contract', () => {
     expect(validateWalkReportContent({ ...empty, summary: 'Paseo completado' }, 'submit')).toEqual([])
   })
 
-  test('enforces text limits and keeps private media disabled', () => {
+  test('enforces text limits and accepts only private walk-photo ids', () => {
     expect(validateWalkReportContent({ ...empty, summary: 'x'.repeat(WALK_REPORT_TEXT_LIMITS.summary + 1) }, 'draft')).toContain('summary-too-long')
-    expect(validateWalkReportContent({ ...empty, mediaReferences: ['https://public.example/photo'] }, 'draft')).toContain('media-disabled')
+    expect(validateWalkReportContent({ ...empty, mediaReferences: ['https://public.example/photo'] }, 'draft')).toContain('media-invalid')
   })
 
   test('ticket adapter accepts only a submitted report and invents no payment data', () => {

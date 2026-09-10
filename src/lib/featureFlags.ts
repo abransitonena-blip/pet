@@ -33,7 +33,9 @@ export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
   AUTOMATED_REMINDERS_ENABLED: false,
   PUBLIC_REVIEWS_ENABLED: true,
   PUBLIC_PHONE_CANCELLATION_ENABLED: false,
-  PRIVATE_MEDIA_UPLOADS_ENABLED: false,
+  // Encendido por decisión del dueño para las fotos del paseo: privadas
+  // (type=authenticated), visibles con enlaces que caducan. Ver MEDIA_POLICY.md.
+  PRIVATE_MEDIA_UPLOADS_ENABLED: true,
   CLOUD_FUNCTIONS_ENABLED: false,
   LEGACY_RESERVATION_WRITES_ENABLED: false,
   WALK_REPORTS_ENABLED: true,

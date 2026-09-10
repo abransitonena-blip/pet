@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CalendarDays, Check, Clock, Dog, FileText, MapPin } from 'lucide-react'
+import { CalendarDays, Check, ClipboardList, Clock, Dog, FileText, MapPin } from 'lucide-react'
 import { Button, Card, StatusBadge } from '@/components/ui'
 import type { WalkSession } from '@/types'
 import {
@@ -97,6 +97,14 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
                 <dd className="text-ink">{formatWalkPoint(session.endLocation)}</dd>
               </div>
             </dl>
+          )}
+
+          {(status === 'arrived' || status === 'in_progress') && (
+            <div className="mt-3 flex justify-end">
+              <Link href={`/walker/reportes/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-primary/10 px-5 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto">
+                <ClipboardList size={16} aria-hidden="true" /> Bitácora del paseo
+              </Link>
+            </div>
           )}
 
           {status === 'completed' && (
