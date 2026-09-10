@@ -2,6 +2,7 @@ import 'server-only'
 
 import { Timestamp, type Firestore } from '@google-cloud/firestore'
 import { businessClock, selectBestWalker } from '@/lib/dispatch'
+import { notifyUser } from '@/lib/push/pushServer'
 import type { Walker } from '@/types'
 
 /**
@@ -91,6 +92,16 @@ export async function dispatchRequest(
     offerExpiresAt: expiresAt,
     updatedAt: Timestamp.fromDate(now),
   })
+
+  // The walker has OFFER_TIMEOUT_SECONDS to answer; without a push they only
+  // see the offer if their panel happens to be open. A failed push must never
+  // undo a dispatch that already happened. No-op while FCM_ENABLED is off.
+  await notifyUser(firestore, best.walker.id, {
+    title: 'Nueva solicitud PET Ahora',
+    body: `Tienes ${OFFER_TIMEOUT_SECONDS} segundos para aceptarla.`,
+    url: '/walker',
+    tag: `pet-ahora-${requestId}`,
+  }).catch(() => undefined)
 
   return { ok: true, offerId: offerRef.id, walkerId: best.walker.id, walkerName: best.walker.name ?? '' }
 }

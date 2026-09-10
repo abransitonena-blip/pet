@@ -9,6 +9,7 @@ import { auth, db } from '@/firebase/config'
 import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { Button, Card, Input, LoadingState } from '@/components/ui'
 import { daySlots, type DaySlot } from '@/lib/dispatch'
+import PushOptIn from '@/components/PushOptIn'
 
 const WEEKDAYS = [
   ['monday', 'Lunes'], ['tuesday', 'Martes'], ['wednesday', 'Miércoles'],
@@ -318,6 +319,8 @@ export default function WalkerProfilePage() {
           {saveStatus === 'error' && <p className="text-sm text-red-700" role="alert">No pudimos guardar. Revisa tu conexión o permisos.</p>}
         </div>
       </Card>
+
+      <PushOptIn description="Recibe asignaciones y solicitudes de PET Ahora en este teléfono, aunque la app esté cerrada." />
 
       <Card className="p-4 shadow-none sm:p-5">
         <div className="mb-2 flex items-center gap-2"><LockKeyhole size={17} className="text-primary" /><h2 className="font-bold text-ink">Método de acceso</h2></div>

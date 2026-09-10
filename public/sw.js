@@ -44,4 +44,39 @@ self.addEventListener('fetch', (e) => {
   )
 })
 
-// Push/FCM handlers remain intentionally absent while FCM_ENABLED is false.
+// Push (FCM). Nothing can subscribe this worker until push is switched on in
+// the app (FCM_ENABLED plus a VAPID key) and the person grants permission.
+// Everything shown comes from the message the server composed.
+self.addEventListener('push', (e) => {
+  let payload = {}
+  try {
+    payload = e.data ? e.data.json() : {}
+  } catch {
+    payload = {}
+  }
+  const data = payload.data || {}
+  const notification = payload.notification || {}
+  e.waitUntil(self.registration.showNotification(data.title || notification.title || 'PET Ap', {
+    body: data.body || notification.body || '',
+    icon: '/brand/pet-ap-dog-logo.png',
+    badge: '/brand/pet-ap-dog-mark.png',
+    tag: data.tag || undefined,
+    data: { url: data.url || '/' },
+  }))
+})
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  const target = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin)
+  // A notification only ever opens this app's own pages.
+  if (target.origin !== self.location.origin) return
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((client) => new URL(client.url).origin === target.origin && 'focus' in client)
+      if (!open) return self.clients.openWindow(target.href)
+      return open.focus()
+        .then((client) => (client && 'navigate' in client ? client.navigate(target.href) : undefined))
+        .catch(() => self.clients.openWindow(target.href))
+    })
+  )
+})

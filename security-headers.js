@@ -14,6 +14,13 @@ function firebaseAuthOrigin(value) {
 
 const authOrigin = firebaseAuthOrigin(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN)
 
+// Push notifications (FCM) need two Google endpoints to register a device.
+// They only open once a VAPID key is configured -- that is, once push is
+// actually switched on. Until then the policy stays exactly as tight as before.
+const pushConnectHosts = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
+  ? ' https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com'
+  : ''
+
 const directives = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -25,7 +32,7 @@ const directives = [
   "style-src 'self' 'unsafe-inline' https://accounts.google.com",
   "font-src 'self'",
   "img-src 'self' data: blob: https://res.cloudinary.com",
-  `connect-src 'self' ${authOrigin} https://accounts.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com https://api.cloudinary.com`,
+  `connect-src 'self' ${authOrigin} https://accounts.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com https://api.cloudinary.com${pushConnectHosts}`,
   `frame-src https://accounts.google.com ${authOrigin}`,
   "worker-src 'self' blob:",
 ]
@@ -37,7 +44,11 @@ const GLOBAL_SECURITY_HEADERS = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()' },
+  // geolocation=(self): the walker's phone records where a walk starts and
+  // ends, and PET Ahora presence reads it too. `geolocation=()` denied the API
+  // to this origin as well, so every reading failed silently and no walk ever
+  // got a location. Third-party frames remain blocked.
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self), payment=(), usb=(), browsing-topics=()' },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
 ]
 

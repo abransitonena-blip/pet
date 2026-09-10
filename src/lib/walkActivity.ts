@@ -35,6 +35,11 @@ const COPY: Record<SessionStep, (dog: string) => { title: string; message: strin
   }),
 }
 
+/** Title and message for one step, shared by the in-app feed and push. */
+export function walkStepCopy(step: SessionStep, dog: string): { title: string; message: string } {
+  return COPY[step](dog)
+}
+
 export function deriveWalkActivity(
   sessions: CanonicalWalkSession[],
   dogNames: Record<string, string>,

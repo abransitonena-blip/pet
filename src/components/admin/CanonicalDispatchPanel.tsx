@@ -13,6 +13,7 @@ import {
   useRequestedWalkSessions,
   type CanonicalWalkSession,
 } from '@/lib/useCanonicalWalkSessions'
+import { notifySessionEvent } from '@/lib/push/pushClient'
 
 type PendingAction =
   | { type: 'assign'; session: CanonicalWalkSession; walkerId: string }
@@ -50,6 +51,7 @@ export default function CanonicalDispatchPanel() {
     try {
       if (pendingAction.type === 'assign') {
         await assignCanonicalWalkSession(pendingAction.session.id, pendingAction.walkerId)
+        notifySessionEvent(pendingAction.session.id)
         setMessage({ tone: 'success', text: 'Paseador asignado. La sesión ya puede aparecer en su panel.' })
       } else {
         await reprogramCanonicalWalkSession(pendingAction.session.id, {

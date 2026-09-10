@@ -10,6 +10,7 @@ import {
   MessagesSquare, Send, User, ChevronLeft,
 } from 'lucide-react'
 import type { Conversation, ChatMessage } from '@/types'
+import { notifyChatReply } from '@/lib/push/pushClient'
 
 export default function AdminChat() {
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -63,6 +64,7 @@ export default function AdminChat() {
         lastTimestamp: serverTimestamp(),
         unreadClient: increment(1),
       }).catch(() => {})
+      notifyChatReply(selectedId)
     } catch (e) { console.error('Error sending message:', e) }
   }
 

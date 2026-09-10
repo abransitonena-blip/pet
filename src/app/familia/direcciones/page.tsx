@@ -62,10 +62,13 @@ export default function DireccionesPage() {
     if (!postalSuggestion) return
     setForm((current) => {
       const state = current.state.trim() ? current.state : postalSuggestion.state
+      const city = current.city.trim() ? current.city : postalSuggestion.city
       const colony = current.colony.trim() || postalSuggestion.places.length !== 1
         ? current.colony
         : postalSuggestion.places[0]
-      return state === current.state && colony === current.colony ? current : { ...current, state, colony }
+      return state === current.state && city === current.city && colony === current.colony
+        ? current
+        : { ...current, state, city, colony }
     })
   }, [postalSuggestion])
 

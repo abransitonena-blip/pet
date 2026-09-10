@@ -34,15 +34,23 @@ describe('P0.5 media, privacy and service-worker containment', () => {
     expect(provider).toContain('TRUSTED_MEDIA_DELETE_BACKEND_REQUIRED')
   })
 
-  test('only the canonical offline worker is registered while FCM stays disabled', () => {
+  test('only the canonical offline worker is registered, and nothing can subscribe to push while FCM stays disabled', () => {
     const register = read('src/components/PWARegister.tsx')
     const offlineWorker = read('public/sw.js')
     const legacyMessagingWorker = read('public/firebase-messaging-sw.js')
+    const pushClient = read('src/lib/push/pushClient.ts')
     expect(register).toContain("register('/sw.js', { scope: '/' })")
     expect(register).not.toContain('firebase-messaging-sw.js')
-    expect(offlineWorker).not.toContain("addEventListener('push'")
-    expect(offlineWorker).not.toContain("addEventListener('notificationclick'")
     expect(legacyMessagingWorker).not.toContain('importScripts(')
+    // Deliberate change: push handlers now ship in /sw.js so push is ready
+    // the moment it is switched on, but they are dormant. A push can only
+    // arrive through a subscription, and the only way to create one --
+    // enablePush -- returns 'off' before asking for permission until both
+    // FCM_ENABLED and a VAPID key exist. The worker still loads no remote code.
+    expect(offlineWorker).not.toContain('importScripts(')
+    expect(pushClient).toContain("if (!FEATURE_FLAGS.FCM_ENABLED || !VAPID_KEY) return 'off'")
+    expect(pushClient.indexOf('return { ok: false, reason: availability }'))
+      .toBeLessThan(pushClient.indexOf('Notification.requestPermission()'))
   })
 
   test('brand fonts are bundled by next/font without a runtime Google stylesheet', () => {

@@ -15,6 +15,7 @@ const POSTAL_CODE_PATTERN = /^\d{5}$/
 const DEBOUNCE_MS = 400
 
 export interface PostalCodeSuggestion {
+  readonly city: string
   readonly state: string
   readonly places: readonly string[]
 }
@@ -39,13 +40,17 @@ export function usePostalCodeLookup(postalCode: string): {
     const timer = setTimeout(() => {
       fetch(`/api/postal-code?cp=${normalized}`)
         .then((response) => (response.ok ? response.json() : null))
-        .then((data: { state?: unknown; places?: unknown } | null) => {
+        .then((data: { city?: unknown; state?: unknown; places?: unknown } | null) => {
           if (cancelled) return
           const places = Array.isArray(data?.places)
             ? data.places.filter((place): place is string => typeof place === 'string')
             : []
           setSuggestion(places.length > 0 || typeof data?.state === 'string'
-            ? { state: typeof data?.state === 'string' ? data.state : '', places }
+            ? {
+              city: typeof data?.city === 'string' ? data.city : '',
+              state: typeof data?.state === 'string' ? data.state : '',
+              places,
+            }
             : null)
         })
         .catch(() => { if (!cancelled) setSuggestion(null) })

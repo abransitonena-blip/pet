@@ -69,6 +69,20 @@ export async function verifyAuthenticatedToken(idToken: string): Promise<string 
   }
 }
 
+/**
+ * Verifies any ID token and returns its role claim with the uid, for endpoints
+ * that serve more than one role and must decide per caller. Fails closed.
+ */
+export async function verifyTokenRole(idToken: string): Promise<{ uid: string; role: string | null } | null> {
+  if (!idToken) return null
+  try {
+    const decoded = await getAuth(adminApp()).verifyIdToken(idToken)
+    return { uid: decoded.uid, role: typeof decoded.role === 'string' ? decoded.role : null }
+  } catch {
+    return null
+  }
+}
+
 export function getServerFirestore() {
   return getFirestore(adminApp())
 }

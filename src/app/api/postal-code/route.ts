@@ -51,13 +51,18 @@ export async function GET(request: Request) {
     const places = (data.places ?? [])
       .map((place) => (typeof place['place name'] === 'string' ? place['place name'] : ''))
       .filter((name): name is string => name.length > 0)
-    const state = data.places?.map((place) => place.state).find((value): value is string => typeof value === 'string') ?? ''
+    const rawState = data.places?.map((place) => place.state).find((value): value is string => typeof value === 'string') ?? ''
+    // The dataset still uses the pre-2016 name for the capital. An address
+    // should carry the current official one, and for the capital the city is
+    // the entity itself, so it can be filled without guessing.
+    const isCapital = rawState === 'Distrito Federal' || rawState === 'Ciudad de México'
+    const state = isCapital ? 'Ciudad de México' : rawState
 
     const result: PostalCodeLookup = {
       postalCode,
-      // Zippopotam returns colonias in `place name` for Mexico; the municipio
-      // is not a separate field, so we do not invent one.
-      city: '',
+      // Zippopotam returns colonias in `place name` for Mexico; outside the
+      // capital the municipio is not a separate field, so we do not invent one.
+      city: isCapital ? 'Ciudad de México' : '',
       state,
       places,
     }

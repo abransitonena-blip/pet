@@ -10,6 +10,7 @@ import { ArrowLeft, Bell, Dog, CalendarCheck, Star, Gift, MessagesSquare } from 
 import { Button, EmptyState, ErrorState } from '@/components/ui'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import { deriveWalkActivity } from '@/lib/walkActivity'
+import PushOptIn from '@/components/PushOptIn'
 
 /**
  * Notificaciones de la familia.
@@ -221,6 +222,8 @@ export default function NotificacionesPage() {
           <p className="text-xs text-muted">{unreadCount === 0 ? 'Sin novedades' : `${unreadCount} sin revisar`}</p>
         </div>
       </div>
+
+      <PushOptIn description="Recibe en este teléfono cada avance de tus paseos, aunque la app esté cerrada." />
 
       {sessionsError && (
         <ErrorState description={canonicalReadErrorMessage(sessionsError)} onRetry={retrySessions} />

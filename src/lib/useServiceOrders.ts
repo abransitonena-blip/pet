@@ -9,6 +9,7 @@ import {
 import type { ServiceOrder, WalkSession } from '@/types'
 import { classifyWalkerReadError, getWalkerTransition, type WalkerReadError } from '@/lib/walkerPanel'
 import { captureWalkPoint, locationFieldForTransition } from '@/lib/walkLocation'
+import { notifySessionEvent } from '@/lib/push/pushClient'
 
 export interface ServiceOrderWithSessions extends ServiceOrder {
   sessions: WalkSession[]
@@ -178,4 +179,8 @@ export async function advanceWalkerSession(session: WalkSession): Promise<void> 
     if (!point || !code.includes('permission-denied')) throw cause
     await commit(false)
   }
+
+  // Tell the family. A no-op while FCM_ENABLED is off, and fire-and-forget:
+  // the walk has already advanced and a failed push must never undo that.
+  notifySessionEvent(session.id)
 }
