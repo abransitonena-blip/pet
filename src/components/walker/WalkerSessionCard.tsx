@@ -104,7 +104,9 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
               <Link href={`/walker/reportes/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary/10 px-4 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto">
                 <FileText size={16} aria-hidden="true" /> Reporte del paseo
               </Link>
-              <Link href={`/walker/tickets/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto">
+              {/* Kept reachable for operations, but demoted to a plain text link:
+                  the report is the walker's job, the ticket is back-office. */}
+              <Link href={`/walker/tickets/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 items-center px-2 text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 Ticket interno
               </Link>
             </div>

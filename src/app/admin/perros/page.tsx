@@ -22,7 +22,9 @@ import type { CanonicalReservationView } from '@/lib/useCanonicalReservations'
  * canonical sessions, and a dog with no walks shows as exactly that.
  */
 
+// The family form stores "pequeño" with the ñ; older records may not have it.
 const SIZE_LABELS: Record<string, string> = {
+  'pequeño': 'Pequeño',
   pequeno: 'Pequeño',
   mediano: 'Mediano',
   grande: 'Grande',

@@ -37,6 +37,40 @@ export interface CanonicalWalkSession {
   // Solo los dos extremos del paseo; no hay recorrido intermedio.
   startLocation?: WalkPoint
   endLocation?: WalkPoint
+  /** Epoch ms of each step the session went through, when it was recorded. */
+  transitions?: Partial<Record<SessionStep, number>>
+}
+
+/**
+ * Which session field records each step. These are the exact fields the
+ * Firestore rules require on each transition, so a step with a timestamp is a
+ * step that really happened.
+ */
+const STEP_FIELDS = {
+  requested: 'createdAt',
+  assigned: 'assignedAt',
+  confirmed: 'confirmedAt',
+  on_the_way: 'onTheWayAt',
+  arrived: 'arrivedAt',
+  in_progress: 'startedAt',
+  completed: 'completedAt',
+} as const
+
+export type SessionStep = keyof typeof STEP_FIELDS
+
+function millis(value: unknown): number | undefined {
+  return value && typeof value === 'object' && typeof (value as { seconds?: unknown }).seconds === 'number'
+    ? (value as { seconds: number }).seconds * 1000
+    : undefined
+}
+
+function transitionsFrom(data: Record<string, unknown>): Partial<Record<SessionStep, number>> {
+  const result: Partial<Record<SessionStep, number>> = {}
+  for (const [step, field] of Object.entries(STEP_FIELDS) as [SessionStep, string][]) {
+    const at = millis(data[field])
+    if (at !== undefined) result[step] = at
+  }
+  return result
 }
 
 export interface ActiveWalkerOption {
@@ -90,7 +124,14 @@ function sessionFromSnapshot(id: string, data: Record<string, unknown>): Canonic
     walkerId: typeof data.walkerId === 'string' ? data.walkerId : undefined,
     startLocation: walkPoint(data.startLocation),
     endLocation: walkPoint(data.endLocation),
+    ...withTransitions(transitionsFrom(data)),
   }
+}
+
+// Only present when there is something to say, so sessions without any
+// recorded step keep the exact shape they had before.
+function withTransitions(transitions: Partial<Record<SessionStep, number>>) {
+  return Object.keys(transitions).length > 0 ? { transitions } : {}
 }
 
 export function useCustomerWalkSessions(customerId: string) {

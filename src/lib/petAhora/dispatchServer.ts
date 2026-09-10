@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { Timestamp, type Firestore } from '@google-cloud/firestore'
-import { selectBestWalker } from '@/lib/dispatch'
+import { businessClock, selectBestWalker } from '@/lib/dispatch'
 import type { Walker } from '@/types'
 
 /**
@@ -26,14 +26,6 @@ const MAX_CANDIDATES = 50
 export type DispatchOutcome =
   | { readonly ok: true; readonly offerId: string; readonly walkerId: string; readonly walkerName: string }
   | { readonly ok: false; readonly reason: 'no-walkers-available' | 'request-not-dispatchable' }
-
-function dayOfWeek(now: Date): string {
-  return ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'][now.getDay()]
-}
-
-function clockTime(now: Date): string {
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-}
 
 /**
  * Walkers already offered this request, so a retry moves on to the next
@@ -75,7 +67,8 @@ export async function dispatchRequest(
     .filter((item) => !excluded.has(item.id))
     .map((item) => ({ id: item.id, ...item.data() } as Walker))
 
-  const best = selectBestWalker(candidates, zoneId, dayOfWeek(now), clockTime(now))
+  const clock = businessClock(now)
+  const best = selectBestWalker(candidates, zoneId, clock.day, clock.time)
   if (!best) {
     await requestRef.update({ status: 'expired', updatedAt: Timestamp.fromDate(now) })
     return { ok: false, reason: 'no-walkers-available' }

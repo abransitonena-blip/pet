@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { db } from '@/firebase/config'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import type { Walker } from '@/types'
+import { daySlots } from '@/lib/dispatch'
 
 export interface WalkerAvailabilityResult {
   loading: boolean
@@ -45,7 +46,7 @@ export function useWalkerAvailability(zoneId?: string, date?: string): WalkerAva
         const dayOfWeek = dayMap[new Date(date + 'T12:00:00').getDay()]
 
         available = walkers.filter((w) => {
-          if (!w.schedule?.[dayOfWeek]?.length) return false
+          if (daySlots(w.schedule, dayOfWeek).length === 0) return false
           const load = w.currentLoad?.todayAssigned ?? 0
           const max = w.capacity?.maxDaily ?? 8
           return load < max

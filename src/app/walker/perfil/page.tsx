@@ -4,24 +4,65 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { updatePassword } from 'firebase/auth'
 import { collection, doc, documentId, getDocs, limit, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
-import { ArrowLeft, CheckCircle2, Clock3, LockKeyhole, MapPin, Save, ShieldCheck, UserRound } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Clock3, LockKeyhole, MapPin, Plus, Save, ShieldCheck, UserRound, X } from 'lucide-react'
 import { auth, db } from '@/firebase/config'
 import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { Button, Card, Input, LoadingState } from '@/components/ui'
+import { daySlots, type DaySlot } from '@/lib/dispatch'
 
 const WEEKDAYS = [
   ['monday', 'Lunes'], ['tuesday', 'Martes'], ['wednesday', 'Miércoles'],
   ['thursday', 'Jueves'], ['friday', 'Viernes'], ['saturday', 'Sábado'], ['sunday', 'Domingo'],
 ] as const
 
-interface DaySchedule { active: boolean; start: string; end: string }
+/**
+ * Several blocks per day, not one.
+ *
+ * The schedule has been stored as a list of ranges per day from the start,
+ * but this editor only ever read and wrote the first one. A walker available
+ * 7–10 and again 17–20 had to declare 7–20, and dispatch then offered them
+ * walks in the middle of a day they had never agreed to.
+ */
+const MAX_RANGES_PER_DAY = 4
+const DEFAULT_RANGE: DaySlot = { start: '08:00', end: '18:00' }
+
+interface DaySchedule { active: boolean; ranges: DaySlot[] }
 type ScheduleState = Record<string, DaySchedule>
 
-function scheduleFromProfile(schedule: Record<string, { start: string; end: string }[]>): ScheduleState {
+function scheduleFromProfile(schedule: Record<string, DaySlot[]>): ScheduleState {
   return Object.fromEntries(WEEKDAYS.map(([key]) => {
-    const range = schedule[key]?.[0]
-    return [key, { active: Boolean(range), start: range?.start || '08:00', end: range?.end || '18:00' }]
+    // daySlots also finds the Spanish keys older admin tooling wrote.
+    const ranges = daySlots(schedule, key).map((range) => ({ start: range.start, end: range.end }))
+    return [key, { active: ranges.length > 0, ranges: ranges.length > 0 ? ranges : [{ ...DEFAULT_RANGE }] }]
   }))
+}
+
+function sortRanges(ranges: DaySlot[]): DaySlot[] {
+  return [...ranges].sort((a, b) => a.start.localeCompare(b.start))
+}
+
+function addHours(time: string, hours: number): string {
+  const [h, m] = time.split(':').map(Number)
+  const total = Math.min(h * 60 + m + hours * 60, 23 * 60 + 59)
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
+
+/** One message per invalid day; an empty object means the schedule can be saved. */
+function validateSchedule(schedule: ScheduleState): Record<string, string> {
+  const problems: Record<string, string> = {}
+  for (const [key] of WEEKDAYS) {
+    const day = schedule[key]
+    if (!day?.active) continue
+    const sorted = sortRanges(day.ranges)
+    if (sorted.some((range) => !range.start || !range.end || range.start >= range.end)) {
+      problems[key] = 'Cada horario debe terminar después de empezar.'
+      continue
+    }
+    if (sorted.some((range, index) => index > 0 && range.start < sorted[index - 1].end)) {
+      problems[key] = 'Los horarios de un mismo día no pueden encimarse.'
+    }
+  }
+  return problems
 }
 
 export default function WalkerProfilePage() {
@@ -39,6 +80,8 @@ export default function WalkerProfilePage() {
     () => auth.currentUser?.providerData.some((provider) => provider.providerId === 'password') ?? false,
     [],
   )
+  const problems = useMemo(() => validateSchedule(schedule), [schedule])
+  const hasProblems = Object.keys(problems).length > 0
 
   useEffect(() => {
     if (profile.zones.length === 0) {
@@ -76,18 +119,52 @@ export default function WalkerProfilePage() {
     return () => { cancelled = true }
   }, [profile.zones])
 
-  const updateDay = (key: string, changes: Partial<DaySchedule>) => {
-    setSchedule((current) => ({ ...current, [key]: { ...current[key], ...changes } }))
-    setSaveStatus('idle')
+  const touch = () => setSaveStatus('idle')
+
+  const toggleDay = (key: string) => {
+    setSchedule((current) => ({ ...current, [key]: { ...current[key], active: !current[key].active } }))
+    touch()
+  }
+
+  const updateRange = (key: string, index: number, changes: Partial<DaySlot>) => {
+    setSchedule((current) => {
+      const day = current[key]
+      const ranges = day.ranges.map((range, position) => (position === index ? { ...range, ...changes } : range))
+      return { ...current, [key]: { ...day, ranges } }
+    })
+    touch()
+  }
+
+  const addRange = (key: string) => {
+    setSchedule((current) => {
+      const day = current[key]
+      if (day.ranges.length >= MAX_RANGES_PER_DAY) return current
+      const sorted = sortRanges(day.ranges)
+      // Start the new block where the last one ends, so the default is valid.
+      const start = sorted[sorted.length - 1]?.end ?? DEFAULT_RANGE.start
+      return { ...current, [key]: { ...day, ranges: [...day.ranges, { start, end: addHours(start, 2) }] } }
+    })
+    touch()
+  }
+
+  const removeRange = (key: string, index: number) => {
+    setSchedule((current) => {
+      const day = current[key]
+      if (day.ranges.length <= 1) return current
+      return { ...current, [key]: { ...day, ranges: day.ranges.filter((_, position) => position !== index) } }
+    })
+    touch()
   }
 
   const saveProfile = async () => {
-    if (saving) return
+    if (saving || hasProblems) return
     setSaving(true)
     setSaveStatus('idle')
+    // Written under the English keys only, which also clears any Spanish keys
+    // left by older tooling: after one save there is a single spelling.
     const scheduleData = Object.fromEntries(WEEKDAYS.map(([key]) => [
       key,
-      schedule[key]?.active ? [{ start: schedule[key].start, end: schedule[key].end }] : [],
+      schedule[key]?.active ? sortRanges(schedule[key].ranges).map(({ start, end }) => ({ start, end })) : [],
     ]))
     try {
       await updateDoc(doc(db, 'walkerProfiles', uid), {
@@ -153,7 +230,7 @@ export default function WalkerProfilePage() {
             autoComplete="tel"
             maxLength={20}
             value={phone}
-            onChange={(event) => { setPhone(event.target.value); setSaveStatus('idle') }}
+            onChange={(event) => { setPhone(event.target.value); touch() }}
             className="mt-1"
           />
         </div>
@@ -180,26 +257,53 @@ export default function WalkerProfilePage() {
 
       <Card className="p-4 shadow-none sm:p-5">
         <div className="mb-1 flex items-center gap-2"><Clock3 size={17} className="text-primary" /><h2 className="font-bold text-ink">Disponibilidad semanal</h2></div>
-        <p className="mb-4 text-xs text-muted">Declara cuándo puedes recibir asignaciones. Esto no confirma paseos automáticamente.</p>
+        <p className="mb-4 text-xs text-muted">
+          Declara cuándo puedes recibir asignaciones. Puedes registrar hasta {MAX_RANGES_PER_DAY} horarios por día, por ejemplo mañana y tarde. Esto no confirma paseos automáticamente.
+        </p>
         <div className="space-y-2">
           {WEEKDAYS.map(([key, label]) => {
             const day = schedule[key]
             return (
-              <div key={key} className="rounded-xl bg-ink/[0.035] p-3 sm:flex sm:items-center sm:gap-3">
-                <button
-                  type="button"
-                  aria-pressed={day.active}
-                  aria-label={`${day.active ? 'Desactivar' : 'Activar'} ${label}`}
-                  onClick={() => updateDay(key, { active: !day.active })}
-                  className={`min-h-11 w-full rounded-lg px-3 text-left text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-28 ${day.active ? 'bg-primary/10 text-primary' : 'bg-ink/5 text-muted'}`}
-                >
-                  {label} <span aria-hidden="true">{day.active ? '✓' : '—'}</span>
-                </button>
+              <div key={key} className="rounded-xl bg-ink/[0.035] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    aria-pressed={day.active}
+                    aria-label={`${day.active ? 'Desactivar' : 'Activar'} ${label}`}
+                    onClick={() => toggleDay(key)}
+                    className={`min-h-11 rounded-lg px-3 text-left text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-32 ${day.active ? 'bg-primary/10 text-primary' : 'bg-ink/5 text-muted'}`}
+                  >
+                    {label} <span aria-hidden="true">{day.active ? '✓' : '—'}</span>
+                  </button>
+                  {day.active && day.ranges.length < MAX_RANGES_PER_DAY && (
+                    <button
+                      type="button"
+                      onClick={() => addRange(key)}
+                      className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      <Plus size={13} aria-hidden="true" /> Agregar horario
+                    </button>
+                  )}
+                </div>
                 {day.active && (
-                  <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:mt-0 sm:flex-1">
-                    <Input type="time" aria-label={`Inicio ${label}`} value={day.start} onChange={(event) => updateDay(key, { start: event.target.value })} />
-                    <span className="text-xs text-muted">a</span>
-                    <Input type="time" aria-label={`Fin ${label}`} value={day.end} onChange={(event) => updateDay(key, { end: event.target.value })} />
+                  <div className="mt-2 space-y-2">
+                    {day.ranges.map((range, index) => (
+                      <div key={index} className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2">
+                        <Input type="time" aria-label={`Inicio ${label}, horario ${index + 1}`} value={range.start} onChange={(event) => updateRange(key, index, { start: event.target.value })} />
+                        <span className="text-xs text-muted">a</span>
+                        <Input type="time" aria-label={`Fin ${label}, horario ${index + 1}`} value={range.end} onChange={(event) => updateRange(key, index, { end: event.target.value })} />
+                        <button
+                          type="button"
+                          onClick={() => removeRange(key, index)}
+                          disabled={day.ranges.length <= 1}
+                          aria-label={`Quitar horario ${index + 1} del ${label.toLowerCase()}`}
+                          className="grid h-11 w-11 place-items-center rounded-lg text-muted transition-colors hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-30"
+                        >
+                          <X size={15} aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                    {problems[key] && <p className="text-xs text-red-700" role="alert">{problems[key]}</p>}
                   </div>
                 )}
               </div>
@@ -208,7 +312,8 @@ export default function WalkerProfilePage() {
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Button onClick={() => void saveProfile()} isLoading={saving} leftIcon={<Save size={15} />}>Guardar cambios</Button>
+          <Button onClick={() => void saveProfile()} isLoading={saving} disabled={hasProblems} leftIcon={<Save size={15} />}>Guardar cambios</Button>
+          {hasProblems && <p className="text-sm text-red-700" role="alert">Corrige los horarios marcados antes de guardar.</p>}
           {saveStatus === 'saved' && <p className="inline-flex items-center gap-1.5 text-sm font-medium text-success-700" role="status"><CheckCircle2 size={15} />Cambios guardados</p>}
           {saveStatus === 'error' && <p className="text-sm text-red-700" role="alert">No pudimos guardar. Revisa tu conexión o permisos.</p>}
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc,
   doc, serverTimestamp, limit,
@@ -60,6 +61,28 @@ const PET_TYPE_OPTIONS = [
   { value: 'gato', label: 'Gato', emoji: '🐈' },
   { value: 'otro', label: 'Otro', emoji: '🐾' },
 ]
+
+/**
+ * Suggestions, not a closed list: the field stays free text, because forcing a
+ * choice would make a family pick something false for a mixed or uncommon
+ * breed. "Mestizo" leads because it is the most common answer.
+ */
+const BREED_SUGGESTIONS: Record<'perro' | 'gato' | 'otro', readonly string[]> = {
+  perro: [
+    'Mestizo', 'Chihuahua', 'Labrador Retriever', 'Golden Retriever', 'Pastor Alemán',
+    'Schnauzer', 'Schnauzer Miniatura', 'Poodle', 'Yorkshire Terrier', 'Shih Tzu', 'Pug',
+    'Bulldog Francés', 'Bulldog Inglés', 'Beagle', 'Dachshund (Salchicha)', 'Husky Siberiano',
+    'Border Collie', 'Boxer', 'Rottweiler', 'Pitbull', 'Pomerania', 'Maltés', 'Cocker Spaniel',
+    'Xoloitzcuintle', 'Doberman', 'Gran Danés', 'Akita', 'Samoyedo', 'Jack Russell Terrier',
+  ],
+  gato: [
+    'Mestizo', 'Doméstico de pelo corto', 'Doméstico de pelo largo', 'Siamés', 'Persa',
+    'Maine Coon', 'Bengalí', 'Ragdoll', 'Angora', 'Esfinge',
+  ],
+  otro: [],
+}
+
+const QUICK_BREEDS = 6
 
 const ENERGY_OPTIONS = [
   { value: 'bajo', label: 'Tranquilo', emoji: '😴', desc: 'Prefiere paseos cortos' },
@@ -365,7 +388,7 @@ export default function MisPerrosPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{pet.name}</p>
+                      <Link href={`/familia/perros/${encodeURIComponent(pet.id)}`} className="rounded text-sm font-bold underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" style={{ color: 'var(--text-primary)' }}>{pet.name}</Link>
                       {pet.sex && (
                         <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>
                           {pet.sex === 'macho' ? '♂️' : '♀️'}
@@ -423,6 +446,9 @@ export default function MisPerrosPage() {
                       <span>{pet.notes}</span>
                     </div>
                   )}
+                  <Link href={`/familia/perros/${encodeURIComponent(pet.id)}`} className="mt-2 inline-flex min-h-9 items-center text-xs font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    Ver perfil de {pet.name}
+                  </Link>
                 </div>
               </div>
 
@@ -524,7 +550,27 @@ export default function MisPerrosPage() {
                       <label htmlFor="dog-breed" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
                         Raza <span style={{ color: 'var(--color-danger)' }}>*</span>
                       </label>
-                      <input id="dog-breed" type="text" value={form.breed} onChange={(e) => setField('breed', e.target.value)} placeholder="Ej: Labrador, Mestizo, Pastor Alemán..." className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: errors.breed ? 'var(--color-error)' : 'var(--border)', color: 'var(--text-primary)' }} />
+                      <input id="dog-breed" type="text" list={`breed-options-${form.petType}`} autoComplete="off" value={form.breed} onChange={(e) => setField('breed', e.target.value)} placeholder="Escribe o elige una raza" className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30" style={{ background: 'var(--glass-bg)', borderColor: errors.breed ? 'var(--color-error)' : 'var(--border)', color: 'var(--text-primary)' }} />
+                      <datalist id={`breed-options-${form.petType}`}>
+                        {BREED_SUGGESTIONS[form.petType].map((breed) => <option key={breed} value={breed} />)}
+                      </datalist>
+                      {/* iOS Safari shows datalist suggestions poorly, so the most
+                          common answers are also one tap away. */}
+                      {BREED_SUGGESTIONS[form.petType].length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {BREED_SUGGESTIONS[form.petType].slice(0, QUICK_BREEDS).map((breed) => (
+                            <button
+                              key={breed}
+                              type="button"
+                              onClick={() => setField('breed', breed)}
+                              aria-pressed={form.breed === breed}
+                              className={`min-h-9 rounded-full border px-3 text-2xs font-medium transition-colors ${form.breed === breed ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted hover:text-ink'}`}
+                            >
+                              {breed}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       {errors.breed && <p role="alert" className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>{errors.breed}</p>}
                     </div>
 

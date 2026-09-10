@@ -148,7 +148,7 @@ export async function advanceWalkerSession(session: WalkSession): Promise<void> 
   const point = locationField ? await captureWalkPoint() : null
 
   const sessionRef = doc(db, 'walkSessions', session.id)
-  await runTransaction(db, async (transaction) => {
+  const commit = (withLocation: boolean) => runTransaction(db, async (transaction) => {
     const snapshot = await transaction.get(sessionRef)
     if (!snapshot.exists()) throw new Error('walker-session-not-found')
 
@@ -161,8 +161,21 @@ export async function advanceWalkerSession(session: WalkSession): Promise<void> 
     transaction.update(sessionRef, {
       status: transition.to,
       [transition.timestampField]: timestamp,
-      ...(locationField && point ? { [locationField]: point } : {}),
+      ...(withLocation && locationField && point ? { [locationField]: point } : {}),
       updatedAt: timestamp,
     })
   })
+
+  try {
+    await commit(true)
+  } catch (cause) {
+    // Location is best-effort; the transition is not. If the deployed rules
+    // predate the location fields -- the app can ship before `firebase deploy
+    // --only firestore:rules` runs -- the write carrying a point is rejected
+    // as a whole, which would stop every walker from starting or finishing a
+    // walk. Retry once without it. Any other failure propagates unchanged.
+    const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
+    if (!point || !code.includes('permission-denied')) throw cause
+    await commit(false)
+  }
 }

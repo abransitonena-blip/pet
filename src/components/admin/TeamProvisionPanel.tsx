@@ -221,14 +221,17 @@ export default function TeamProvisionPanel({ zones, onProvisioned }: TeamProvisi
                   <span className="text-xs font-medium text-muted">Zonas</span>
                   <div className="flex flex-wrap gap-1.5">
                     {zones.map((zone) => {
-                      const selected = selectedZones.includes(zone.name)
+                      // IDs, not names: dispatch matches `zones` against the
+                      // address's zoneId and the walker's profile resolves IDs
+                      // back to names. A name here never matches anything.
+                      const selected = selectedZones.includes(zone.id)
                       return (
                         <button
                           key={zone.id}
                           type="button"
                           onClick={() => setSelectedZones(selected
-                            ? selectedZones.filter((value) => value !== zone.name)
-                            : [...selectedZones, zone.name])}
+                            ? selectedZones.filter((value) => value !== zone.id)
+                            : [...selectedZones, zone.id])}
                           className={`min-h-9 rounded-full border px-3 text-[11px] font-medium transition-colors ${selected ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted'}`}
                           aria-pressed={selected}
                         >

@@ -1,15 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, collection, query, orderBy, onSnapshot, updateDoc, limit } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, limit, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
-import { ArrowLeft, Bell, Dog, CalendarCheck, Star, Gift } from 'lucide-react'
+import { ArrowLeft, Bell, Dog, CalendarCheck, Star, Gift, MessagesSquare } from 'lucide-react'
 import { Button, EmptyState, ErrorState } from '@/components/ui'
+import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
+import { deriveWalkActivity } from '@/lib/walkActivity'
 
-interface Notification {
+/**
+ * Notificaciones de la familia.
+ *
+ * Stored notifications can only be written by an admin (or, one day, a
+ * trusted backend), and nothing has ever written one -- so this page was
+ * permanently empty. Most of what a family wants to be told is recorded
+ * anyway: each step of a walk leaves a timestamp on the session. The feed is
+ * built from those (see walkActivity.ts), plus a pinned item when the admin
+ * has replied in Mensajes, with any stored notifications merged in by time.
+ *
+ * "Unread" for the derived items is per device: anything newer than the last
+ * visit to this page, remembered in localStorage.
+ */
+
+interface StoredNotification {
   id: string
   title: string
   message: string
@@ -18,78 +34,170 @@ interface Notification {
   createdAt: { seconds: number; nanoseconds: number } | null
 }
 
-const typeIcons: Record<string, typeof Bell> = {
-  walk_update: Dog,
+type FeedKind = 'walk' | 'loyalty' | 'referral' | 'system' | 'message'
+
+interface FeedItem {
+  id: string
+  kind: FeedKind
+  title: string
+  message: string
+  at: number
+  unread: boolean
+  href?: string
+  storedId?: string
+}
+
+const KIND_ICONS: Record<FeedKind, typeof Bell> = {
+  walk: Dog,
   loyalty: Star,
   referral: Gift,
   system: CalendarCheck,
+  message: MessagesSquare,
 }
 
-const typeColors: Record<string, string> = {
-  walk_update: 'var(--color-primary)',
-  loyalty: '#F59E0B',
-  referral: '#8B5CF6',
+const KIND_COLORS: Record<FeedKind, string> = {
+  walk: 'var(--color-primary)',
+  loyalty: '#B45309',
+  referral: '#7C3AED',
   system: 'var(--color-success)',
+  message: '#0369A1',
+}
+
+const MAX_ITEMS = 60
+
+function seenKey(uid: string) {
+  return `pet-notificaciones-vistas:${uid}`
+}
+
+function readLastSeen(uid: string): number {
+  try {
+    return Number(window.localStorage.getItem(seenKey(uid))) || 0
+  } catch {
+    return 0
+  }
+}
+
+function writeLastSeen(uid: string, at: number) {
+  try {
+    window.localStorage.setItem(seenKey(uid), String(at))
+  } catch {
+    // Private mode or blocked storage: every item simply stays "new".
+  }
+}
+
+function formatTime(at: number): string {
+  const diffMin = Math.floor((Date.now() - at) / 60000)
+  if (diffMin < 1) return 'Ahora'
+  if (diffMin < 60) return `Hace ${diffMin} min`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `Hace ${diffHr} h`
+  const diffDay = Math.floor(diffHr / 24)
+  if (diffDay < 7) return `Hace ${diffDay} d`
+  return new Date(at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
 export default function NotificacionesPage() {
   const router = useRouter()
   const [uid, setUid] = useState('')
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState('')
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  const [stored, setStored] = useState<StoredNotification[]>([])
+  const [storedError, setStoredError] = useState('')
+  const [dogNames, setDogNames] = useState<Record<string, string>>({})
+  const [pendingReplies, setPendingReplies] = useState<{ count: number; at: number } | null>(null)
+  const [lastSeen, setLastSeen] = useState<number | null>(null)
   const [retryKey, setRetryKey] = useState(0)
+  const { sessions, loading: sessionsLoading, error: sessionsError, retry: retrySessions } = useCustomerWalkSessions(uid)
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
+    return onAuthStateChanged(auth, (user) => {
       if (!user) { router.push('/login'); return }
       setUid(user.uid)
-      setLoading(false)
+      setCheckingAuth(false)
     })
-    return unsub
   }, [router])
+
+  // Capture what counted as "seen" before this visit, then move the mark to
+  // now, so items stay highlighted for the whole visit and not after it.
+  useEffect(() => {
+    if (!uid) return
+    setLastSeen(readLastSeen(uid))
+    writeLastSeen(uid, Date.now())
+  }, [uid])
 
   useEffect(() => {
     if (!uid) return
-    setLoadError('')
-    const q = query(
-      collection(db, 'notifications', uid, 'items'),
-      orderBy('createdAt', 'desc'),
-      limit(50)
-    )
-    return onSnapshot(q, (snap) => {
-      const items: Notification[] = []
-      snap.forEach((d) => {
-        items.push({ id: d.id, ...d.data() } as Notification)
-      })
-      setNotifications(items)
-    }, (cause) => {
-      setLoadError(cause.code.includes('permission-denied')
+    setStoredError('')
+    return onSnapshot(
+      query(collection(db, 'notifications', uid, 'items'), orderBy('createdAt', 'desc'), limit(50)),
+      (snapshot) => setStored(snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as StoredNotification))),
+      (cause) => setStoredError(cause.code.includes('permission-denied')
         ? 'Tu sesión no tiene permiso para consultar tus notificaciones.'
-        : 'No pudimos consultar tus notificaciones. Revisa tu conexión.')
-    })
+        : 'No pudimos consultar tus notificaciones. Revisa tu conexión.'),
+    )
   }, [uid, retryKey])
 
-  const markRead = async (id: string) => {
-    await updateDoc(doc(db, 'notifications', uid, 'items', id), { read: true }).catch(() => {})
+  useEffect(() => {
+    if (!uid) return
+    let cancelled = false
+    getDocs(query(collection(db, 'dogs'), where('ownerId', '==', uid), limit(50)))
+      .then((snapshot) => {
+        if (cancelled) return
+        setDogNames(Object.fromEntries(snapshot.docs.map((item) => [item.id, String(item.data().name ?? '')])))
+      })
+      .catch(() => { /* messages fall back to "tu mascota" */ })
+    // A thread only exists once the family has written in Mensajes; before
+    // that the read is denied, which simply means there is nothing to pin.
+    getDoc(doc(db, 'conversations', uid))
+      .then((snapshot) => {
+        if (cancelled || !snapshot.exists()) return
+        const data = snapshot.data()
+        const count = typeof data.unreadClient === 'number' ? data.unreadClient : 0
+        const at = typeof data.lastTimestamp?.seconds === 'number' ? data.lastTimestamp.seconds * 1000 : Date.now()
+        setPendingReplies(count > 0 ? { count, at } : null)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [uid])
+
+  const feed = useMemo<FeedItem[]>(() => {
+    const seen = lastSeen ?? Number.POSITIVE_INFINITY
+    const walkItems: FeedItem[] = deriveWalkActivity(sessions, dogNames).map((item) => ({
+      id: item.id,
+      kind: 'walk',
+      title: item.title,
+      message: item.message,
+      at: item.at,
+      unread: item.at > seen,
+      href: item.href,
+    }))
+    const storedItems: FeedItem[] = stored.map((item) => ({
+      id: `stored:${item.id}`,
+      kind: item.type === 'walk_update' ? 'walk' : item.type,
+      title: item.title,
+      message: item.message,
+      at: item.createdAt ? item.createdAt.seconds * 1000 : Date.now(),
+      unread: !item.read,
+      storedId: item.id,
+    }))
+    const replyItems: FeedItem[] = pendingReplies ? [{
+      id: 'messages:unread',
+      kind: 'message',
+      title: pendingReplies.count === 1 ? 'Tienes 1 mensaje nuevo' : `Tienes ${pendingReplies.count} mensajes nuevos`,
+      message: 'Administración respondió en tu conversación.',
+      at: pendingReplies.at,
+      unread: true,
+      href: '/familia/mensajes',
+    }] : []
+    return [...replyItems, ...walkItems, ...storedItems]
+      .sort((a, b) => Number(b.kind === 'message') - Number(a.kind === 'message') || b.at - a.at)
+      .slice(0, MAX_ITEMS)
+  }, [sessions, dogNames, stored, pendingReplies, lastSeen])
+
+  const markRead = async (storedId: string) => {
+    await updateDoc(doc(db, 'notifications', uid, 'items', storedId), { read: true }).catch(() => {})
   }
 
-  const formatTime = (ts: { seconds: number; nanoseconds: number } | null) => {
-    if (!ts) return 'Ahora'
-    const date = new Date(ts.seconds * 1000)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMin = Math.floor(diffMs / 60000)
-    if (diffMin < 1) return 'Ahora'
-    if (diffMin < 60) return `Hace ${diffMin} min`
-    const diffHr = Math.floor(diffMin / 60)
-    if (diffHr < 24) return `Hace ${diffHr}h`
-    const diffDay = Math.floor(diffHr / 24)
-    if (diffDay < 7) return `Hace ${diffDay}d`
-    return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-  }
-
-  if (loading) {
+  if (checkingAuth || (sessionsLoading && feed.length === 0)) {
     return (
       <div className="space-y-4">
         <div className="skeleton h-10 w-48 rounded-xl" />
@@ -100,6 +208,8 @@ export default function NotificacionesPage() {
     )
   }
 
+  const unreadCount = feed.filter((item) => item.unread).length
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
@@ -107,51 +217,58 @@ export default function NotificacionesPage() {
           <ArrowLeft size={14} />
         </Button>
         <div>
-          <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Notificaciones</h1>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{notifications.filter((n) => !n.read).length} sin leer</p>
+          <h1 className="text-lg font-bold text-ink">Notificaciones</h1>
+          <p className="text-xs text-muted">{unreadCount === 0 ? 'Sin novedades' : `${unreadCount} sin revisar`}</p>
         </div>
       </div>
 
-      {loadError ? (
-        <ErrorState description={loadError} onRetry={() => setRetryKey((value) => value + 1)} />
-      ) : notifications.length === 0 ? (
+      {sessionsError && (
+        <ErrorState description={canonicalReadErrorMessage(sessionsError)} onRetry={retrySessions} />
+      )}
+      {storedError && (
+        <ErrorState description={storedError} onRetry={() => setRetryKey((value) => value + 1)} />
+      )}
+
+      {feed.length === 0 ? (
         <EmptyState
           icon={<Bell size={28} />}
           title="Sin notificaciones"
-          description="Tus actualizaciones aparecerán aquí"
+          description="Aquí verás cada avance de tus paseos: asignación, llegada del paseador, inicio y fin."
         />
       ) : (
-        <div className="space-y-2">
-          {notifications.map((n, i) => {
-            const Icon = typeIcons[n.type] || Bell
-            const color = typeColors[n.type] || 'var(--text-muted)'
-            return (
-              <motion.div
-                key={n.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.22, delay: i * 0.03 }}
-                onClick={() => { if (!n.read) markRead(n.id) }}
-                className={`flex items-start gap-3 rounded-xl border border-ink/10 p-4 shadow-sm transition-all cursor-pointer hover:bg-ink/5 ${n.read ? 'bg-surface' : 'bg-brand-500/[0.04]'}`}
-              >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: `${color}12` }}
-                >
-                  <Icon size={16} style={{ color }} />
+        <ul className="space-y-2">
+          {feed.map((item) => {
+            const Icon = KIND_ICONS[item.kind] ?? Bell
+            const color = KIND_COLORS[item.kind] ?? 'var(--text-muted)'
+            const body = (
+              <>
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)` }}>
+                  <Icon size={16} style={{ color }} aria-hidden="true" />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{n.title}</p>
-                    {!n.read && <span className="w-2 h-2 rounded-full bg-brand-500 shrink-0" />}
+                    <p className="text-sm font-semibold text-ink">{item.title}</p>
+                    {item.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Sin revisar" />}
                   </div>
-                  <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{n.message}</p>
-                  <p className="text-2xs mt-1.5" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>{formatTime(n.createdAt)}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted">{item.message}</p>
+                  <p className="mt-1.5 text-2xs text-muted">{formatTime(item.at)}</p>
                 </div>
-              </motion.div>
+              </>
+            )
+            const className = `flex items-start gap-3 rounded-2xl p-4 transition-colors ${item.unread ? 'bg-primary/[0.05]' : 'bg-surface'} hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary`
+            return (
+              <li key={item.id}>
+                {item.href ? (
+                  <Link href={item.href} className={className}>{body}</Link>
+                ) : item.storedId && item.unread ? (
+                  <button type="button" onClick={() => void markRead(item.storedId as string)} className={`${className} w-full text-left`}>{body}</button>
+                ) : (
+                  <div className={className}>{body}</div>
+                )}
+              </li>
             )
           })}
-        </div>
+        </ul>
       )}
     </div>
   )
