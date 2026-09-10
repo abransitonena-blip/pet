@@ -1,314 +1,331 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import {
-  Bot, CalendarDays, Dog, Users, Clock,
-  Lightbulb, ArrowUp, ArrowDown, AlertTriangle,
-  Zap, Star, PersonStanding, Banknote, ArrowRight, Percent,
+  AlertTriangle, ArrowDown, ArrowRight, ArrowUp, Banknote, Bot, CalendarDays,
+  Clock, Dog, Lightbulb, PersonStanding, Star, Tag, Users, Zap,
 } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
+import ErrorState from '@/components/ui/ErrorState'
+import Card from '@/components/ui/Card'
 import { usePrices } from '@/context/PricesContext'
-import { useReservations } from '@/context/ReservationsContext'
-import { useConfig } from '@/context/ConfigContext'
+import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
+import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
+import {
+  CANCELLED_STATUSES,
+  COMPLETED_STATUSES,
+  UNASSIGNED_STATUSES,
+  formatMxn,
+  growthPercent,
+  localDateDaysAgo,
+  offeredPlansWithoutPrice,
+  totalValue,
+  valueSessions,
+} from '@/lib/businessMetrics'
+
+/**
+ * Centro de Insights sobre los paseos reales.
+ *
+ * Every rule here used to run over the legacy `reservations` collection, so
+ * it had nothing to say. It now runs over the canonical sessions; walker load
+ * comes from the sessions themselves, and the old margin table is gone because
+ * canonical walks record no discount -- a discount column would be invented.
+ */
 
 interface Insight {
   id: string
   title: string
   description: string
   icon: typeof Bot
-  color: string
   priority: 'high' | 'medium' | 'low'
   action?: string
   actionHref?: string
 }
 
+type Period = '7d' | '30d' | '90d'
+
+const PERIOD_DAYS: Record<Period, number> = { '7d': 7, '30d': 30, '90d': 90 }
+const WEEKDAY_BY_INDEX = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+const OVERLOAD_THRESHOLD = 6
+const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 } as const
+
 export default function AdminIAPage() {
   const router = useRouter()
-  const { reservations, loading } = useReservations()
-  const { prices, hasIncompletePricing } = usePrices()
-  const { config } = useConfig()
-  const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d')
+  const { reservations, loading, error, retry } = useCanonicalReservations({ max: 500 })
+  const { services } = usePrices()
+  const [period, setPeriod] = useState<Period>('30d')
 
-  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? 0
+  const { metrics, insights, plans } = useMemo(() => {
+    const valued = valueSessions(reservations, services)
+    const days = PERIOD_DAYS[period]
+    const today = localDateDaysAgo(0)
+    const start = localDateDaysAgo(days - 1)
+    const previousStart = localDateDaysAgo(days * 2 - 1)
 
-  const insights = useMemo(() => {
-    const now = new Date()
-    const todayStr = now.toISOString().split('T')[0]
-    const periodDays = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
-    const periodStart = new Date(now.getTime() - periodDays * 86400000).toISOString().split('T')[0]
-    const prevStart = new Date(now.getTime() - periodDays * 2 * 86400000).toISOString().split('T')[0]
+    const inPeriod = valued.filter((session) => session.date >= start && session.date <= today)
+    const inPrevious = valued.filter((session) => session.date >= previousStart && session.date < start)
+    const completed = inPeriod.filter((session) => COMPLETED_STATUSES.has(session.status))
+    const value = totalValue(completed)
+    const previousValue = totalValue(inPrevious.filter((session) => COMPLETED_STATUSES.has(session.status)))
+    const cancelled = inPeriod.filter((session) => CANCELLED_STATUSES.has(session.status)).length
+    const cancelRate = inPeriod.length > 0 ? Math.round((cancelled / inPeriod.length) * 100) : 0
+    const active = inPeriod.filter((session) => !CANCELLED_STATUSES.has(session.status))
 
-    const periodRes = reservations.filter((r) => r.date >= periodStart)
-    const prevRes = reservations.filter((r) => r.date >= prevStart && r.date < periodStart)
-    const completed = periodRes.filter((r) => r.status === 'completed')
-    const prevCompleted = prevRes.filter((r) => r.status === 'completed')
-
-    // Revenue
-    const revenue = completed.reduce((s, r) => s + getEffectivePrice(r.service), 0)
-    const prevRevenue = prevCompleted.reduce((s, r) => s + getEffectivePrice(r.service), 0)
-    const revenueGrowth = prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : 0
-
-    // Peak day
-    const dayCounts: Record<string, number> = { 'Dom': 0, 'Lun': 0, 'Mar': 0, 'Mié': 0, 'Jue': 0, 'Vie': 0, 'Sáb': 0 }
-    const dayMap = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-    periodRes.forEach((r) => {
-      const d = new Date(r.date + 'T12:00:00')
-      dayCounts[dayMap[d.getDay()]]++
-    })
-    const peakDay = Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0]
-
-    // Peak hour
-    const hourCounts: Record<number, number> = {}
-    periodRes.forEach((r) => {
-      const hour = parseInt((r.arrivalWindowStart || r.time || '12').split(':')[0])
-      hourCounts[hour] = (hourCounts[hour] || 0) + 1
-    })
-    const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0]
-
-    // Service popularity
-    const serviceCounts: Record<string, number> = {}
-    periodRes.forEach((r) => { serviceCounts[r.service] = (serviceCounts[r.service] || 0) + 1 })
-    const topService = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0]
-
-    // Client retention
-    const phoneCounts = new Map<string, number>()
-    reservations.forEach((r) => phoneCounts.set(r.phone, (phoneCounts.get(r.phone) || 0) + 1))
-    const totalClients = phoneCounts.size
-    const returningClients = Array.from(phoneCounts.values()).filter((c) => c > 1).length
-    const retentionRate = totalClients > 0 ? Math.round((returningClients / totalClients) * 100) : 0
-
-    // Pending alerts
-    const pending = reservations.filter((r) => r.status === 'pending')
-    const pendingToday = pending.filter((r) => r.date === todayStr)
-
-    // Walker load
-    const walkers = (config.walkers || []) as { name: string; uid?: string }[]
-    const walkerLoads = walkers.map((w) => {
-      const assigned = reservations.filter((r) => 
-        (r.assignedWalker === w.name || r.assignment?.walkerId === w.uid) && 
-        r.date === todayStr
-      )
-      return { name: w.name, today: assigned.length, pending: assigned.filter((r) => r.status === 'pending').length }
-    })
-    const overloaded = walkerLoads.filter((w) => w.today > 6)
-
-    // Cancellation rate
-    const cancelled = periodRes.filter((r) => r.status === 'cancelled').length
-    const cancelRate = periodRes.length > 0 ? Math.round((cancelled / periodRes.length) * 100) : 0
-
-    // Generate insights
     const result: Insight[] = []
 
-    // Revenue insight
-    if (revenueGrowth > 10) {
-      result.push({ id: 'rev_up', title: 'Ingresos en alza', description: `Los ingresos subieron ${revenueGrowth}% vs el periodo anterior. Tendencia positiva.`, icon: ArrowUp, color: '#059669', priority: 'high' })
-    } else if (revenueGrowth < -10) {
-      result.push({ id: 'rev_down', title: 'Ingresos bajando', description: `Los ingresos bajaron ${Math.abs(revenueGrowth)}%. Considera promociones para reactivar.`, icon: ArrowDown, color: '#DC2626', priority: 'high', action: 'Crear cupón de descuento', actionHref: '/admin/cupones' })
+    const unassignedToday = valued.filter((session) => session.date === today && UNASSIGNED_STATUSES.has(session.status))
+    if (unassignedToday.length > 0) {
+      result.push({
+        id: 'unassigned-today',
+        title: `${unassignedToday.length} paseo${unassignedToday.length === 1 ? '' : 's'} de hoy sin paseador`,
+        description: 'Tienen fecha de hoy y todavía nadie los ha tomado. Asígnalos antes de la ventana de llegada.',
+        icon: AlertTriangle,
+        priority: 'high',
+        action: 'Ir a solicitudes',
+        actionHref: '/admin/reservas',
+      })
     }
 
-    // Pending alerts
-    if (pendingToday.length > 0) {
-      result.push({ id: 'pending', title: `${pendingToday.length} reserva${pendingToday.length !== 1 ? 's' : ''} pendiente${pendingToday.length !== 1 ? 's' : ''} hoy`, description: 'Reservas sin asignar o confirmar para hoy. Asigna paseadores o confirma con el cliente.', icon: AlertTriangle, color: '#F59E0B', priority: 'high', action: 'Ir a reservas', actionHref: '/admin/reservas' })
+    const weekAhead = localDateDaysAgo(-7)
+    const unassignedSoon = valued.filter((session) => session.date > today && session.date <= weekAhead && UNASSIGNED_STATUSES.has(session.status))
+    if (unassignedSoon.length > 0) {
+      result.push({
+        id: 'unassigned-week',
+        title: `${unassignedSoon.length} paseo${unassignedSoon.length === 1 ? '' : 's'} de la próxima semana sin paseador`,
+        description: 'Asignarlos con anticipación deja margen para reprogramar si nadie está disponible.',
+        icon: CalendarDays,
+        priority: 'medium',
+        action: 'Ir a solicitudes',
+        actionHref: '/admin/reservas',
+      })
     }
 
-    // Peak day
-    if (peakDay && peakDay[1] > 0) {
-      result.push({ id: 'peak_day', title: `Día más demandado: ${peakDay[0]}`, description: `El ${peakDay[0]} concentra ${peakDay[1]} reservas del periodo. Asegúrate de tener paseadores disponibles.`, icon: CalendarDays, color: '#3b82f6', priority: 'medium' })
+    const missing = offeredPlansWithoutPrice(services)
+    if (missing.length > 0) {
+      result.push({
+        id: 'missing-prices',
+        title: `Falta tarifa: ${missing.join(', ')}`,
+        description: 'Las familias no pueden reservar un plan sin tarifa publicada, y sus paseos no suman valor.',
+        icon: Tag,
+        priority: 'high',
+        action: 'Configurar precios',
+        actionHref: '/admin/config',
+      })
     }
 
-    // Peak hour
-    if (peakHour) {
-      result.push({ id: 'peak_hour', title: `Hora pico: ${peakHour[0]}:00`, description: `La mayoría de reservas son a las ${peakHour[0]}:00. Considera bloquear paseadores en ese horario.`, icon: Clock, color: '#8B5CF6', priority: 'medium' })
+    const valueGrowth = growthPercent(value.cents, previousValue.cents)
+    if (valueGrowth !== null && valueGrowth >= 10) {
+      result.push({ id: 'value-up', title: 'Valor completado en alza', description: `Subió ${valueGrowth}% frente al periodo anterior del mismo largo.`, icon: ArrowUp, priority: 'low' })
+    } else if (valueGrowth !== null && valueGrowth <= -10) {
+      result.push({
+        id: 'value-down',
+        title: 'Valor completado a la baja',
+        description: `Bajó ${Math.abs(valueGrowth)}% frente al periodo anterior del mismo largo.`,
+        icon: ArrowDown,
+        priority: 'high',
+        action: 'Crear un cupón',
+        actionHref: '/admin/cupones',
+      })
     }
 
-    // Retention
-    if (retentionRate < 30 && totalClients > 5) {
-      result.push({ id: 'low_retention', title: 'Retención baja', description: `Solo ${retentionRate}% de tus clientes repiten. Usa el sistema de lealtad y referidos para mejorar.`, icon: Users, color: '#F59E0B', priority: 'high' })
-    } else if (retentionRate > 50) {
-      result.push({ id: 'good_retention', title: 'Buena retención', description: `${retentionRate}% de tus clientes son recurrentes. ¡Excelente relación con ellos!`, icon: Star, color: '#059669', priority: 'low' })
+    const walkerLoads = new Map<string, { name: string; today: number }>()
+    for (const session of valued) {
+      if (session.date !== today || !session.assignedWalker || CANCELLED_STATUSES.has(session.status)) continue
+      const entry = walkerLoads.get(session.assignedWalker) ?? { name: session.walkerName || 'Paseador sin nombre', today: 0 }
+      entry.today += 1
+      walkerLoads.set(session.assignedWalker, entry)
     }
-
-    // Top service
-    if (topService) {
-      const pct = periodRes.length > 0 ? Math.round((topService[1] / periodRes.length) * 100) : 0
-      result.push({ id: 'top_service', title: `Servicio estrella: ${topService[0]}`, description: `Representa el ${pct}% de las reservas. Podrías destacarlo en tu página.`, icon: Zap, color: '#D97706', priority: 'medium' })
-    }
-
-    // Overloaded walkers
+    const overloaded = Array.from(walkerLoads.values()).filter((walker) => walker.today > OVERLOAD_THRESHOLD)
     if (overloaded.length > 0) {
-      result.push({ id: 'overloaded', title: 'Paseadores sobrecargados', description: `${overloaded.map((w) => w.name).join(', ')} tienen más de 6 reservas hoy. Considera redistribuir.`, icon: PersonStanding, color: '#DC2626', priority: 'high' })
+      result.push({
+        id: 'overloaded',
+        title: 'Paseadores con carga alta hoy',
+        description: `${overloaded.map((walker) => `${walker.name} (${walker.today})`).join(', ')} tienen más de ${OVERLOAD_THRESHOLD} paseos hoy.`,
+        icon: PersonStanding,
+        priority: 'high',
+        action: 'Ver paseadores',
+        actionHref: '/admin/paseadores',
+      })
     }
 
-    // Cancel rate
-    if (cancelRate > 15) {
-      result.push({ id: 'high_cancel', title: `${cancelRate}% de cancelaciones`, description: 'Tasa de cancelación alta. Revisa si hay patrones (servicio, horario, zona).', icon: AlertTriangle, color: '#F59E0B', priority: 'medium' })
+    if (inPeriod.length >= 5 && cancelRate > 15) {
+      result.push({ id: 'cancel-rate', title: `${cancelRate}% de cancelaciones`, description: 'Revisa si se concentran en un plan, horario o zona.', icon: AlertTriangle, priority: 'medium' })
     }
 
-    return result.sort((a, b) => {
-      const prio = { high: 0, medium: 1, low: 2 }
-      return prio[a.priority] - prio[b.priority]
-    })
-  }, [reservations, config.walkers, selectedPeriod, getEffectivePrice])
+    const weekdayCounts = new Map<string, number>()
+    const hourCounts = new Map<string, number>()
+    const planCounts = new Map<string, number>()
+    for (const session of active) {
+      const weekday = WEEKDAY_BY_INDEX[new Date(`${session.date}T12:00:00`).getDay()]
+      weekdayCounts.set(weekday, (weekdayCounts.get(weekday) ?? 0) + 1)
+      const hour = (session.arrivalWindowStart || session.time || '').split(':')[0]
+      if (hour) hourCounts.set(hour, (hourCounts.get(hour) ?? 0) + 1)
+      planCounts.set(session.service, (planCounts.get(session.service) ?? 0) + 1)
+    }
+    const top = (counts: Map<string, number>) => Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]
+    const peakDay = top(weekdayCounts)
+    const peakHour = top(hourCounts)
+    const topPlan = top(planCounts)
+    if (peakDay && active.length >= 5) {
+      result.push({ id: 'peak-day', title: `Día más demandado: ${peakDay[0]}`, description: `Concentra ${peakDay[1]} de ${active.length} paseos del periodo. Asegura paseadores disponibles ese día.`, icon: CalendarDays, priority: 'medium' })
+    }
+    if (peakHour && active.length >= 5) {
+      result.push({ id: 'peak-hour', title: `Hora pico: ${peakHour[0]}:00`, description: `${peakHour[1]} paseos empiezan a esa hora. Úsalo para planear disponibilidad.`, icon: Clock, priority: 'medium' })
+    }
+    if (topPlan && active.length >= 5) {
+      result.push({ id: 'top-plan', title: `Plan más reservado: ${topPlan[0]}`, description: `Representa ${Math.round((topPlan[1] / active.length) * 100)}% de los paseos del periodo.`, icon: Zap, priority: 'low' })
+    }
 
-  // Service margin analysis
-  const serviceMargins = useMemo(() => {
-    const now = new Date()
-    const periodDays = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
-    const periodStart = new Date(now.getTime() - periodDays * 86400000).toISOString().split('T')[0]
-    const periodRes = reservations.filter((r) => r.date >= periodStart && r.status === 'completed')
+    const walksPerFamily = new Map<string, number>()
+    for (const session of valued) {
+      if (CANCELLED_STATUSES.has(session.status)) continue
+      walksPerFamily.set(session.customerId, (walksPerFamily.get(session.customerId) ?? 0) + 1)
+    }
+    const families = walksPerFamily.size
+    const returning = Array.from(walksPerFamily.values()).filter((count) => count > 1).length
+    const retention = families > 0 ? Math.round((returning / families) * 100) : 0
+    if (families >= 5 && retention < 30) {
+      result.push({ id: 'low-retention', title: 'Pocas familias repiten', description: `Solo ${retention}% de las familias con paseos han vuelto a reservar.`, icon: Users, priority: 'medium' })
+    } else if (families >= 5 && retention >= 50) {
+      result.push({ id: 'good-retention', title: 'Buena recurrencia', description: `${retention}% de las familias con paseos han vuelto a reservar.`, icon: Star, priority: 'low' })
+    }
 
-    const services: Record<string, { count: number; revenue: number; discounts: number }> = {}
-    periodRes.forEach((r) => {
-      const price = getEffectivePrice(r.service)
-      const discount = r.discountApplied || 0
-      if (!services[r.service]) services[r.service] = { count: 0, revenue: 0, discounts: 0 }
-      services[r.service].count++
-      services[r.service].revenue += price
-      services[r.service].discounts += discount
-    })
-
-    return Object.entries(services)
-      .map(([name, data]) => ({
-        name,
-        count: data.count,
-        revenue: data.revenue,
-        discounts: data.discounts,
-        avgPrice: data.count > 0 ? Math.round(data.revenue / data.count) : 0,
-        discountRate: data.revenue > 0 ? Math.round((data.discounts / (data.revenue + data.discounts)) * 100) : 0,
-      }))
-      .sort((a, b) => b.revenue - a.revenue)
-  }, [reservations, selectedPeriod, getEffectivePrice])
-
-  const metrics = useMemo(() => {
-    const now = new Date()
-    const periodDays = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
-    const periodStart = new Date(now.getTime() - periodDays * 86400000).toISOString().split('T')[0]
-    const periodRes = reservations.filter((r) => r.date >= periodStart)
-    const completed = periodRes.filter((r) => r.status === 'completed')
-    const revenue = completed.reduce((s, r) => s + getEffectivePrice(r.service), 0)
-    const uniqueDays = new Set(periodRes.map((r) => r.date)).size
+    const planTable = new Map<string, { name: string; walks: number; completed: number; cents: number }>()
+    for (const session of active) {
+      const entry = planTable.get(session.serviceId) ?? { name: session.service, walks: 0, completed: 0, cents: 0 }
+      entry.walks += 1
+      if (COMPLETED_STATUSES.has(session.status)) {
+        entry.completed += 1
+        if (session.valueCents !== null) entry.cents += session.valueCents
+      }
+      planTable.set(session.serviceId, entry)
+    }
 
     return {
-      totalRes: periodRes.length,
-      completed: completed.length,
-      revenue,
-      avgDaily: uniqueDays > 0 ? (periodRes.length / uniqueDays).toFixed(1) : '0',
-      cancelRate: periodRes.length > 0 ? Math.round((periodRes.filter((r) => r.status === 'cancelled').length / periodRes.length) * 100) : 0,
+      metrics: { walks: inPeriod.length, completed: completed.length, value, cancelRate },
+      insights: result.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]),
+      plans: Array.from(planTable.values()).sort((a, b) => b.walks - a.walks),
     }
-  }, [reservations, selectedPeriod, getEffectivePrice])
+  }, [reservations, services, period])
+
+  const cards = [
+    { label: 'Paseos', value: String(metrics.walks), icon: CalendarDays },
+    { label: 'Completados', value: String(metrics.completed), icon: Dog },
+    { label: 'Valor completado', value: formatMxn(metrics.value.cents), icon: Banknote },
+    { label: 'Cancelaciones', value: `${metrics.cancelRate}%`, icon: AlertTriangle },
+  ]
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Centro de Insights"
-        description="Análisis inteligente basado en tus datos"
-        icon={<Bot size={20} className="text-brand-600" />}
-        actions={(['7d', '30d', '90d'] as const).map((p) => (
-          <button key={p} onClick={() => setSelectedPeriod(p)} className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${selectedPeriod === p ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted hover:text-primary'}`}>
-            {p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
+        description="Alertas y patrones detectados en los paseos registrados"
+        icon={<Bot size={20} className="text-primary" />}
+        actions={(Object.keys(PERIOD_DAYS) as Period[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => setPeriod(key)}
+            className={`min-h-9 rounded-full px-4 text-xs font-medium transition-colors ${period === key ? 'bg-primary/10 text-primary' : 'bg-ink/5 text-muted hover:text-ink'}`}
+          >
+            {PERIOD_DAYS[key]} días
           </button>
         ))}
       />
-      {hasIncompletePricing && <p role="alert" className="rounded-xl bg-warning/10 p-3 text-sm text-amber-900">Análisis parcial: hay servicios sin precio configurado y se excluyeron de los importes.</p>}
 
-      {/* Quick Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Reservas', value: metrics.totalRes, icon: CalendarDays, color: '#D97706' },
-          { label: 'Completadas', value: metrics.completed, icon: Dog, color: '#059669' },
-          { label: 'Ingresos', value: `$${metrics.revenue.toLocaleString()}`, icon: Banknote, color: '#3b82f6' },
-          { label: 'Cancelaciones', value: `${metrics.cancelRate}%`, icon: AlertTriangle, color: metrics.cancelRate > 15 ? '#DC2626' : '#059669' },
-        ].map((m) => (
-          <div key={m.label} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
-            <m.icon size={14} style={{ color: m.color }} className="mb-2" />
-            <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{m.value}</p>
-            <p className="text-2xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Insights */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Lightbulb size={14} className="text-warning-400" />
-          <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Insights</h3>
-          <span className="text-2xs px-2 py-0.5 rounded-full" style={{ background: 'var(--glass-bg)', color: 'var(--text-muted)' }}>
-            {insights.length}
-          </span>
-        </div>
-
-        {loading ? (
-          <LoadingState rows={3} height="h-20" />
-        ) : insights.length === 0 ? (
-          <div className="rounded-xl border border-ink/10 bg-surface p-8 text-center shadow-sm">
-            <Bot className="text-3xl mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No hay insights para este periodo</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {insights.map((insight, i) => {
-              const Icon = insight.icon
-              return (
-                <motion.div
-                  key={insight.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.22, delay: i * 0.05 }}
-                  className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm flex items-start gap-3"
-                >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${insight.color}15` }}>
-                    <Icon size={16} style={{ color: insight.color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{insight.title}</p>
-                      {insight.priority === 'high' && (
-                        <span className="text-2xs px-1.5 py-0.5 rounded-full bg-danger-500/15 text-red-700 font-medium">Urgente</span>
-                      )}
-                    </div>
-                    <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{insight.description}</p>
-                    {insight.action && insight.actionHref && (
-                      <button onClick={() => router.push(insight.actionHref!)} className="text-2xs font-medium mt-2 flex items-center gap-1 transition-colors hover:opacity-80" style={{ color: 'var(--color-primary)' }}>
-                        {insight.action} <ArrowRight size={8} />
-                      </button>
-                    )}
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Service Margin Analysis */}
-      {serviceMargins.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.3 }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Percent size={14} className="text-brand-600" />
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Análisis de margen por servicio</h3>
-          </div>
-          <div className="rounded-xl border border-ink/10 bg-surface shadow-sm overflow-hidden">
-            <div className="grid grid-cols-5 gap-2 border-b border-ink/10 px-4 py-2 text-2xs font-medium" style={{ color: 'var(--text-muted)' }}>
-              <span className="col-span-2">Servicio</span>
-              <span className="text-right">Paseos</span>
-              <span className="text-right">Ingresos</span>
-              <span className="text-right">Descuento %</span>
-            </div>
-            {serviceMargins.map((s) => (
-              <div key={s.name} className="grid grid-cols-5 gap-2 border-b border-ink/10 px-4 py-3 text-xs">
-                <span className="col-span-2 font-medium truncate" style={{ color: 'var(--text-primary)' }}>{s.name}</span>
-                <span className="text-right" style={{ color: 'var(--text-secondary)' }}>{s.count}</span>
-                <span className="text-right font-medium" style={{ color: 'var(--text-primary)' }}>${s.revenue.toLocaleString()}</span>
-                <span className={`text-right font-medium ${s.discountRate > 20 ? 'text-red-700' : s.discountRate > 10 ? 'text-amber-700' : 'text-success-600'}`}>
-                  {s.discountRate}%
-                </span>
-              </div>
+      {error ? (
+        <Card className="p-4 shadow-none">
+          <ErrorState description={canonicalReadErrorMessage(error)} onRetry={retry} />
+        </Card>
+      ) : loading ? (
+        <LoadingState rows={3} height="h-24" />
+      ) : (
+        <>
+          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {cards.map((card) => (
+              <Card key={card.label} className="p-4 shadow-none">
+                <card.icon size={15} className="mb-2 text-primary" aria-hidden="true" />
+                <dd className="text-xl font-bold tabular-nums text-ink">{card.value}</dd>
+                <dt className="mt-0.5 text-2xs text-muted">{card.label}</dt>
+              </Card>
             ))}
-          </div>
-        </motion.div>
+          </dl>
+          {metrics.value.unknown > 0 && (
+            <p className="text-xs text-muted">
+              {metrics.value.unknown} paseo{metrics.value.unknown === 1 ? '' : 's'} completado{metrics.value.unknown === 1 ? '' : 's'} con una tarifa anterior no suma{metrics.value.unknown === 1 ? '' : 'n'} valor.
+            </p>
+          )}
+
+          <section>
+            <div className="mb-3 flex items-center gap-2">
+              <Lightbulb size={15} className="text-primary" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-ink">Insights</h2>
+              <span className="rounded-full bg-ink/5 px-2 py-0.5 text-2xs text-muted">{insights.length}</span>
+            </div>
+            {insights.length === 0 ? (
+              <Card className="p-8 text-center shadow-none">
+                <Bot className="mx-auto mb-3 text-muted" aria-hidden="true" />
+                <p className="text-sm text-muted">Nada que requiera atención en este periodo.</p>
+              </Card>
+            ) : (
+              <ul className="space-y-2">
+                {insights.map((insight) => (
+                  <li key={insight.id}>
+                    <Card className="flex items-start gap-3 p-4 shadow-none">
+                      <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${insight.priority === 'high' ? 'bg-danger-500/10 text-red-700' : 'bg-primary/10 text-primary'}`}>
+                        <insight.icon size={16} aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-ink">{insight.title}</p>
+                          {insight.priority === 'high' && <span className="rounded-full bg-danger-500/10 px-2 py-0.5 text-2xs font-medium text-red-700">Urgente</span>}
+                        </div>
+                        <p className="mt-0.5 text-xs leading-relaxed text-muted">{insight.description}</p>
+                        {insight.action && insight.actionHref && (
+                          <button
+                            onClick={() => router.push(insight.actionHref as string)}
+                            className="mt-2 inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                          >
+                            {insight.action} <ArrowRight size={12} aria-hidden="true" />
+                          </button>
+                        )}
+                      </div>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {plans.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold text-ink">Valor por plan</h2>
+              <Card className="overflow-x-auto p-0 shadow-none">
+                <table className="w-full min-w-[480px] text-left text-xs">
+                  <thead className="text-2xs uppercase tracking-wide text-muted">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Plan</th>
+                      <th className="px-4 py-2 text-right font-medium">Paseos</th>
+                      <th className="px-4 py-2 text-right font-medium">Completados</th>
+                      <th className="px-4 py-2 text-right font-medium">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ink/[0.06]">
+                    {plans.map((plan) => (
+                      <tr key={plan.name}>
+                        <td className="px-4 py-3 font-medium text-ink">{plan.name}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-ink">{plan.walks}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-ink">{plan.completed}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-ink">{formatMxn(plan.cents)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Card>
+            </section>
+          )}
+        </>
       )}
     </div>
   )

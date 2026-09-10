@@ -38,7 +38,9 @@ export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
   LEGACY_RESERVATION_WRITES_ENABLED: false,
   WALK_REPORTS_ENABLED: true,
   FINANCE_PAYMENTS_ENABLED: false,
-  BLUETOOTH_PRINTING_ENABLED: false,
+  // Encendido por decisión del dueño para probarlo con la impresora física.
+  // Web Bluetooth solo existe en Chrome (Android o computadora), no en iPhone.
+  BLUETOOTH_PRINTING_ENABLED: true,
 })
 
 export function isFeatureEnabled(flag: FeatureFlagName): boolean {

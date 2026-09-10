@@ -41,6 +41,8 @@ export interface CanonicalReservationView {
   petName: string
   serviceId: string
   service: string
+  /** Versión de la tarifa con la que se reservó; ver businessMetrics.ts. */
+  serviceVersion: number | null
   date: string
   time: string
   arrivalWindowStart?: string
@@ -60,6 +62,7 @@ interface RawSession {
   dogIds: string[]
   addressId: string
   serviceId: string
+  serviceVersion: number | null
   scheduledDate: string
   scheduledStart: string
   arrivalWindowStart?: string
@@ -89,6 +92,7 @@ function rawFromSnapshot(id: string, data: Record<string, unknown>): RawSession 
     dogIds: Array.isArray(data.dogIds) ? data.dogIds.filter((value): value is string => typeof value === 'string') : [],
     addressId: text(data.addressId),
     serviceId: text(data.serviceId),
+    serviceVersion: typeof data.serviceVersion === 'number' ? data.serviceVersion : null,
     scheduledDate: text(data.scheduledDate),
     scheduledStart: text(data.scheduledStart),
     arrivalWindowStart: text(data.arrivalWindowStart) || undefined,
@@ -225,6 +229,7 @@ export function useCanonicalReservations(options: CanonicalReservationsOptions =
       petName: session.dogIds.map((dogId) => dogs[dogId]?.name).filter(Boolean).join(', '),
       serviceId: session.serviceId,
       service: serviceNames.get(session.serviceId) || session.serviceId,
+      serviceVersion: session.serviceVersion,
       date: session.scheduledDate,
       time: session.scheduledStart,
       arrivalWindowStart: session.arrivalWindowStart,

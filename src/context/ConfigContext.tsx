@@ -6,6 +6,7 @@ import { doc, onSnapshot, setDoc, serverTimestamp, type DocumentSnapshot, type D
 import { db, auth } from '@/firebase/config'
 import { DEFAULT_CONFIG, type SiteConfig } from '@/lib/defaultConfig'
 import { brand } from '@/lib/brand'
+import { withoutUndefined } from '@/lib/withoutUndefined'
 
 export const CONFIG_STALE_MESSAGE = 'Los precios y config del sitio están desactualizados'
 
@@ -93,7 +94,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       try {
         const next = normalizeConfig({ ...config, ...partial })
         await setDoc(doc(db, 'appSettings', 'public'), {
-          ...next,
+          ...withoutUndefined(next),
           updatedAt: serverTimestamp(),
           updatedBy: auth.currentUser?.uid ?? null,
         })

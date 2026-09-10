@@ -36,14 +36,16 @@ describe('catálogo de reserva', () => {
       'paseo-esencial': { amountCents: 0, active: false, complimentary: false, version: 1 },
     }))
 
-    expect(options).toHaveLength(7)
+    // Owner decision (2026-09-10): only two plans are offered. The other five
+    // definitions still exist for the price rules, but are never listed.
+    expect(options.map((item) => item.id)).toEqual(['paseo-individual', 'paseo-extendido'])
     expect(options.find((item) => item.name === 'Paseo Individual')).toMatchObject({
       id: 'paseo-individual', amountCents: 18_000, isRequestable: true,
     })
     expect(options.find((item) => item.name === 'Paseo Extendido')).toMatchObject({
       amountCents: null, isRequestable: false, unavailableReason: 'Precio no configurado',
     })
-    expect(options.find((item) => item.name === 'Paseo Esencial')).toMatchObject({ amountCents: 0, isRequestable: false })
+    expect(options.find((item) => item.name === 'Paseo Esencial')).toBeUndefined()
   })
 
   // Deliberate product change: a plan the customer cannot book is no longer
@@ -60,7 +62,7 @@ describe('catálogo de reserva', () => {
 
     expect(screen.queryByText('Precio no configurado')).toBeNull()
     expect(screen.queryByRole('radio', { name: /Paseo Extendido/ })).toBeNull()
-    expect(screen.getByText(/no tienen tarifa publicada/)).toBeTruthy()
+    expect(screen.getByText(/tarifa publicada/)).toBeTruthy()
     fireEvent.click(screen.getByRole('radio', { name: /Paseo Individual/ }))
     expect(updateForm).toHaveBeenCalledWith({
       serviceId: 'paseo-individual',

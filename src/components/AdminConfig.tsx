@@ -26,7 +26,7 @@ import AdminServicePricing from '@/components/AdminServicePricing'
 import AdminBookingSchedule from '@/components/AdminBookingSchedule'
 import { BRAND } from '@/lib/brand'
 
-type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'walkers' | 'features' | 'maintenance' | 'brand'
+type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'features' | 'maintenance' | 'brand'
 
 const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'prices', label: 'Precios de servicios', icon: 'MXN' },
@@ -39,7 +39,6 @@ const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'announcements', label: 'Anuncios y festividades', icon: '🎉' },
   { id: 'terms', label: 'Términos y condiciones', icon: '📄' },
   { id: 'privacy', label: 'Aviso de privacidad', icon: '🔒' },
-  { id: 'walkers', label: 'Paseadores', icon: '🦮' },
   { id: 'features', label: 'Funcionalidades', icon: '🚀' },
   { id: 'maintenance', label: 'Mantenimiento', icon: '⚠️' },
 ]
@@ -116,8 +115,6 @@ function SectionContent({
       return <TermsEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'privacy':
       return <PrivacyEditor config={config} updateConfig={updateConfig} saving={saving} />
-    case 'walkers':
-      return <WalkersEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'features':
       return <FeaturesEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'maintenance':
@@ -446,40 +443,6 @@ function PrivacyEditor({ config, updateConfig, saving }: EditorProps) {
           <textarea value={item.content} onChange={(e) => updateItem(i, 'content', e.target.value)} rows={3} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs resize-none" aria-label={`Contenido: ${defaults[i].title}`} />
         </div>
       ))}
-      <SaveButton onClick={save} saving={saving} />
-    </div>
-  )
-}
-
-function WalkersEditor({ config, updateConfig, saving }: EditorProps) {
-  const [walkers, setWalkers] = useState(config.walkers)
-
-  useEffect(() => { setWalkers(config.walkers) }, [config.walkers])
-
-  const save = () => updateConfig({ walkers })
-
-  const addWalker = () => setWalkers([...walkers, { name: '', phone: '' }])
-  const removeWalker = (i: number) => setWalkers(walkers.filter((_: { name: string; phone: string }, idx: number) => idx !== i))
-  const updateWalker = (i: number, field: string, value: string) => {
-    const updated = [...walkers]
-    updated[i] = { ...updated[i], [field]: value }
-    setWalkers(updated)
-  }
-
-  return (
-    <div className="space-y-3">
-      {walkers.map((w: { name: string; phone: string }, i: number) => (
-        <div key={i} className="flex gap-2 items-start bg-ink/5 p-3 rounded-lg">
-          <div className="flex-1 flex gap-2">
-            <input value={w.name} onChange={(e) => updateWalker(i, 'name', e.target.value)} className="flex-1 bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" aria-label="Nombre del paseador" placeholder="Nombre" />
-            <input value={w.phone} onChange={(e) => updateWalker(i, 'phone', e.target.value)} className="flex-1 bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" aria-label="Teléfono del paseador" placeholder="Teléfono" />
-          </div>
-           <button onClick={() => removeWalker(i)} className="hover:opacity-80 p-1" style={{ color: 'var(--color-danger)' }}><Trash2 size={10} /></button>
-        </div>
-      ))}
-      <button onClick={addWalker} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-all">
-        <Plus size={8} /> Agregar paseador
-      </button>
       <SaveButton onClick={save} saving={saving} />
     </div>
   )

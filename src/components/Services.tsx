@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { Clock, Dog, Zap, Camera, Calendar } from 'lucide-react'
-import { SERVICE_CATEGORIES } from '@/lib/walkServices'
+import { OFFERED_CATEGORIES } from '@/lib/walkServices'
 import Link from 'next/link'
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -35,8 +35,9 @@ export default function Services() {
           </h2>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {SERVICE_CATEGORIES.map((cat, i) => {
+        {/* Two plans on offer: a centred pair rather than half of an empty four-column row. */}
+        <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2 sm:gap-6">
+          {OFFERED_CATEGORIES.map((cat, i) => {
             const Icon = ICON_MAP[cat.id] || Dog
             return (
               <motion.div

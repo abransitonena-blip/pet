@@ -153,6 +153,7 @@ export default function AdminGalleryManager() {
       const code = error instanceof Error ? error.message : ''
       setMessage(
         code === 'signed-upload-not-configured' ? 'Carga segura no configurada.'
+        : code.startsWith('cloudinary:') && /missing permissions/i.test(code) ? 'Cloudinary rechazó la carga porque esta API Key no tiene permiso para crear archivos. En la consola de Cloudinary, sección API Keys, dale un rol con permiso de subida (o crea una llave nueva con ese permiso) y actualiza CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET en Vercel.'
         : code.startsWith('cloudinary:') ? `Cloudinary rechazó la carga: ${code.slice('cloudinary:'.length)}. Usa "Probar credenciales de Cloudinary" para ver cuál variable falla.`
         : code === 'upload-rejected-shape' ? 'Cloudinary respondió con un formato inesperado y la imagen no se registró.'
         : code.includes('permission') ? 'No tienes permiso para registrar esta imagen.'
@@ -173,7 +174,10 @@ export default function AdminGalleryManager() {
         config?: { cloudName?: string; cloudNameConfigured?: boolean; apiKeyConfigured?: boolean; apiSecretConfigured?: boolean }
       }
       if (response.ok && result.ok) {
-        setDiagnosticsMessage(`Credenciales válidas para el cloud "${result.config?.cloudName ?? '—'}". El problema no son las llaves; revisa la firma de subida.`)
+        // A successful read proves the key belongs to this cloud -- not that it
+        // may upload. Cloudinary API keys carry roles, and a key without the
+        // "create" permission reads fine and then fails every upload.
+        setDiagnosticsMessage(`La llave es válida para el cloud "${result.config?.cloudName ?? '—'}" y puede leer. Si la carga falla con "missing permissions", a esta llave le falta permiso para crear archivos: en la consola de Cloudinary, sección API Keys, dale un rol con permiso de subida (o crea una llave nueva con ese permiso) y actualiza CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET en Vercel.`)
         return
       }
       // Which of the three variables is missing is the actionable part, so

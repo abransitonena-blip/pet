@@ -1,228 +1,308 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Download } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
+import ErrorState from '@/components/ui/ErrorState'
+import Card from '@/components/ui/Card'
 import DataCard from '@/components/ui/DataCard'
 import Button from '@/components/ui/Button'
 import { usePrices } from '@/context/PricesContext'
-import { useReservations } from '@/context/ReservationsContext'
+import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
+import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import {
+  CANCELLED_STATUSES,
+  COMPLETED_STATUSES,
+  STATUS_LABELS,
+  UPCOMING_STATUSES,
+  formatMxn,
+  localDateDaysAgo,
+  offeredPlansWithoutPrice,
+  totalValue,
+  valueSessions,
+} from '@/lib/businessMetrics'
+
+/**
+ * Finanzas sobre los paseos reales.
+ *
+ * This page summed the legacy `reservations` collection, which nothing writes
+ * to anymore, so it read $0 with bookings in the system. It now reads the
+ * canonical sessions and values each one through businessMetrics.ts, which
+ * never re-prices a walk booked on an older tariff at today's price.
+ */
+
+type Preset = 'today' | 'week' | 'month' | 'year' | 'custom'
+
+const PRESETS: { key: Preset; label: string }[] = [
+  { key: 'today', label: 'Hoy' },
+  { key: 'week', label: '7 días' },
+  { key: 'month', label: '30 días' },
+  { key: 'year', label: 'Año' },
+  { key: 'custom', label: 'Rango' },
+]
+
+const PRESET_DAYS: Record<Exclude<Preset, 'custom'>, number> = { today: 0, week: 6, month: 29, year: 364 }
+const TABLE_ROWS = 25
+
+/** Spreadsheet apps run a cell that starts with = + - @ as a formula. */
+function csvCell(value: string): string {
+  const safe = /^[=+\-@]/.test(value) ? `'${value}` : value
+  return `"${safe.replace(/"/g, '""')}"`
+}
 
 export default function AdminFinanzasPage() {
-  const { reservations, loading } = useReservations()
+  const { reservations, loading, error, retry } = useCanonicalReservations({ max: 500 })
+  const { services } = usePrices()
+  const [preset, setPreset] = useState<Preset>('month')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [datePreset, setDatePreset] = useState<'all' | 'today' | 'week' | 'month' | 'year'>('all')
-  const { prices, hasIncompletePricing } = usePrices()
 
-  const getEffectivePrice = (serviceName: string) => prices[serviceName] ?? 0
+  const valued = useMemo(() => valueSessions(reservations, services), [reservations, services])
+  const missingPrices = useMemo(() => offeredPlansWithoutPrice(services), [services])
 
-  const dateFiltered = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
-    let result = reservations
-
-    if (datePreset === 'today') {
-      result = result.filter((r) => r.date === today)
-    } else if (datePreset === 'week') {
-      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
-      result = result.filter((r) => r.date >= weekAgo)
-    } else if (datePreset === 'month') {
-      const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-      result = result.filter((r) => r.date >= monthAgo)
-    } else if (datePreset === 'year') {
-      const yearAgo = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0]
-      result = result.filter((r) => r.date >= yearAgo)
-    } else if (dateFrom || dateTo) {
-      if (dateFrom) result = result.filter((r) => r.date >= dateFrom)
-      if (dateTo) result = result.filter((r) => r.date <= dateTo)
+  const filtered = useMemo(() => {
+    if (preset === 'custom') {
+      return valued.filter((session) => (!dateFrom || session.date >= dateFrom) && (!dateTo || session.date <= dateTo))
     }
-
-    return result
-  }, [reservations, datePreset, dateFrom, dateTo])
+    const today = localDateDaysAgo(0)
+    const from = localDateDaysAgo(PRESET_DAYS[preset])
+    // The last N days plus everything already booked ahead: upcoming walks are
+    // exactly what "por realizar" measures. "Hoy" means today only.
+    return valued.filter((session) => session.date >= from && (preset !== 'today' || session.date === today))
+  }, [valued, preset, dateFrom, dateTo])
 
   const stats = useMemo(() => {
-    const completed = dateFiltered.filter((r) => r.status === 'completed')
-    const pending = dateFiltered.filter((r) => r.status === 'pending' || (!r.status && r.status !== 'cancelled'))
-    const paid = completed.filter((r) => r.paymentStatus === 'paid')
-    const unpaid = completed.filter((r) => r.paymentStatus !== 'paid')
-
-    const totalRevenue = completed.reduce((sum, r) => sum + getEffectivePrice(r.service), 0)
-    const collectedAmount = paid.reduce((sum, r) => sum + getEffectivePrice(r.service), 0)
-    const pendingAmount = unpaid.reduce((sum, r) => sum + getEffectivePrice(r.service), 0)
-    const potentialPending = pending.reduce((sum, r) => sum + getEffectivePrice(r.service), 0)
-
+    const completed = filtered.filter((session) => COMPLETED_STATUSES.has(session.status))
+    const upcoming = filtered.filter((session) => UPCOMING_STATUSES.has(session.status))
+    const completedValue = totalValue(completed)
     return {
-      totalReservations: dateFiltered.length,
-      completedReservations: completed.length,
-      totalRevenue,
-      collectedAmount,
-      pendingAmount,
-      potentialPending,
-      avgTicket: completed.length > 0 ? Math.round(totalRevenue / completed.length) : 0,
+      completed: completed.length,
+      upcoming: upcoming.length,
+      cancelled: filtered.filter((session) => CANCELLED_STATUSES.has(session.status)).length,
+      completedValue,
+      upcomingValue: totalValue(upcoming),
+      averageCents: completedValue.counted > 0 ? Math.round(completedValue.cents / completedValue.counted) : null,
     }
-  }, [dateFiltered, getEffectivePrice])
+  }, [filtered])
 
-  const serviceBreakdown = useMemo(() => {
-    const counts: Record<string, { count: number; revenue: number }> = {}
-    dateFiltered.filter((r) => r.status === 'completed').forEach((r) => {
-      if (!counts[r.service]) counts[r.service] = { count: 0, revenue: 0 }
-      counts[r.service].count++
-      counts[r.service].revenue += getEffectivePrice(r.service)
+  const daily = useMemo(() => {
+    const days = Array.from({ length: 14 }, (_, index) => {
+      const date = localDateDaysAgo(13 - index)
+      return { date, label: `${Number(date.slice(8, 10))}/${Number(date.slice(5, 7))}`, cents: 0, count: 0 }
     })
-    return Object.entries(counts)
-      .sort((a, b) => b[1].revenue - a[1].revenue)
-      .map(([service, data]) => ({ service, ...data }))
-  }, [dateFiltered, getEffectivePrice])
-
-  const dailyRevenue = useMemo(() => {
-    const today = new Date()
-    const days: { date: string; label: string; revenue: number; count: number }[] = []
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(today)
-      d.setDate(d.getDate() - i)
-      const dateStr = d.toISOString().split('T')[0]
-      days.push({
-        date: dateStr,
-        label: `${d.getDate()}/${d.getMonth() + 1}`,
-        revenue: 0,
-        count: 0,
-      })
+    const byDate = new Map(days.map((day) => [day.date, day]))
+    for (const session of valued) {
+      if (!COMPLETED_STATUSES.has(session.status)) continue
+      const day = byDate.get(session.date)
+      if (!day) continue
+      day.count += 1
+      if (session.valueCents !== null) day.cents += session.valueCents
     }
-    dateFiltered.filter((r) => r.status === 'completed').forEach((r) => {
-      const day = days.find((d) => d.date === r.date)
-      if (day) {
-        day.revenue += getEffectivePrice(r.service)
-        day.count++
-      }
-    })
     return days
-  }, [dateFiltered, getEffectivePrice])
+  }, [valued])
+  const maxDaily = Math.max(...daily.map((day) => day.cents), 1)
 
-  const maxRevenue = Math.max(...dailyRevenue.map((d) => d.revenue), 1)
+  const byPlan = useMemo(() => {
+    const plans = new Map<string, { name: string; walks: number; completed: number; cents: number }>()
+    for (const session of filtered) {
+      if (CANCELLED_STATUSES.has(session.status)) continue
+      const entry = plans.get(session.serviceId) ?? { name: session.service, walks: 0, completed: 0, cents: 0 }
+      entry.walks += 1
+      if (COMPLETED_STATUSES.has(session.status)) {
+        entry.completed += 1
+        if (session.valueCents !== null) entry.cents += session.valueCents
+      }
+      plans.set(session.serviceId, entry)
+    }
+    return Array.from(plans.values()).sort((a, b) => b.walks - a.walks)
+  }, [filtered])
 
-  const exportCSV = () => {
-    const headers = ['Fecha', 'Cliente', 'Mascota', 'Servicio', 'Monto', 'Estado Pago', 'Paseador']
-    const rows = dateFiltered.map((r) => [
-      r.date, r.name, r.petName, r.service,
-      `$${getEffectivePrice(r.service)}`,
-      r.paymentStatus === 'paid' ? 'Pagado' : 'Pendiente',
-      r.assignedWalker || '',
+  const latest = useMemo(
+    () => [...filtered].sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`)).slice(0, TABLE_ROWS),
+    [filtered],
+  )
+
+  const exportCsv = () => {
+    const header = ['Fecha', 'Hora', 'Familia', 'Mascota', 'Plan', 'Estado', 'Valor MXN', 'Paseador']
+    const rows = filtered.map((session) => [
+      session.date,
+      session.time,
+      session.name,
+      session.petName,
+      session.service,
+      STATUS_LABELS[session.status] ?? session.status,
+      session.valueCents === null ? '' : (session.valueCents / 100).toFixed(2),
+      session.walkerName,
     ])
-    const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${c}"`).join(','))].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `finanzas-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
+    const csv = [header, ...rows].map((row) => row.map((cell) => csvCell(String(cell ?? ''))).join(',')).join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `finanzas-${localDateDaysAgo(0)}.csv`
+    link.click()
     URL.revokeObjectURL(url)
   }
+
+  const kpis = [
+    {
+      label: 'Valor completado',
+      value: formatMxn(stats.completedValue.cents),
+      note: stats.completedValue.unknown > 0
+        ? `${stats.completedValue.unknown} paseo${stats.completedValue.unknown === 1 ? '' : 's'} con tarifa anterior no suma${stats.completedValue.unknown === 1 ? '' : 'n'}`
+        : `${stats.completed} paseo${stats.completed === 1 ? '' : 's'} completado${stats.completed === 1 ? '' : 's'}`,
+    },
+    {
+      label: 'Por realizar',
+      value: formatMxn(stats.upcomingValue.cents),
+      note: `${stats.upcoming} paseo${stats.upcoming === 1 ? '' : 's'} próximo${stats.upcoming === 1 ? '' : 's'} o en curso`,
+    },
+    {
+      label: 'Cobrado',
+      value: '—',
+      note: FEATURE_FLAGS.FINANCE_PAYMENTS_ENABLED
+        ? 'Consulta los pagos registrados en Etiquetas internas'
+        : 'El registro de pagos todavía no está activo',
+    },
+    {
+      label: 'Ticket promedio',
+      value: stats.averageCents === null ? '—' : formatMxn(stats.averageCents),
+      note: 'Por paseo completado',
+    },
+    { label: 'Completados', value: String(stats.completed), note: 'En el periodo' },
+    { label: 'Cancelados', value: String(stats.cancelled), note: 'En el periodo' },
+  ]
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Finanzas"
-        description="Ingresos, pagos y rendimiento financiero"
-        actions={
-          <Button size="sm" variant="secondary" onClick={exportCSV} leftIcon={<Download size={12} />}>
-            Exportar
+        description="Valor de los paseos según la tarifa con la que se reservaron"
+        actions={(
+          <Button size="sm" variant="secondary" onClick={exportCsv} disabled={filtered.length === 0} leftIcon={<Download size={12} />}>
+            Exportar CSV
           </Button>
-        }
+        )}
       />
-      {hasIncompletePricing && <p role="alert" className="rounded-xl bg-warning/10 p-3 text-sm text-amber-900">Cálculo parcial: hay servicios sin precio configurado y se excluyeron de los importes.</p>}
 
-      {/* Date filters */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { key: 'all' as const, label: 'Todo' },
-          { key: 'today' as const, label: 'Hoy' },
-          { key: 'week' as const, label: '7 días' },
-          { key: 'month' as const, label: '30 días' },
-          { key: 'year' as const, label: 'Año' },
-        ].map((p) => (
-          <button
-            key={p.key}
-            onClick={() => { setDatePreset(p.key); if (p.key === 'all') { setDateFrom(''); setDateTo('') } }}
-            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-              datePreset === p.key ? 'bg-brand-500/15 text-brand-600' : 'bg-ink/5 text-muted hover:text-primary'
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      {datePreset === 'all' && (
-        <div className="flex gap-3">
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="input-field !w-auto text-xs" title="Desde" />
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="input-field !w-auto text-xs" title="Hasta" />
-        </div>
+      {missingPrices.length > 0 && (
+        <p role="alert" className="rounded-2xl bg-warning/10 px-4 py-3 text-sm text-amber-900">
+          Falta publicar la tarifa de: {missingPrices.join(', ')}. Esos paseos no suman valor hasta que la configures en Configuración → Precios de servicios.
+        </p>
       )}
 
-      {loading ? (
-        <LoadingState rows={3} height="h-32" />
+      <div className="flex flex-wrap items-center gap-2">
+        {PRESETS.map((item) => (
+          <button
+            key={item.key}
+            onClick={() => setPreset(item.key)}
+            className={`min-h-9 rounded-full px-4 text-xs font-medium transition-colors ${preset === item.key ? 'bg-primary/10 text-primary' : 'bg-ink/5 text-muted hover:text-ink'}`}
+          >
+            {item.label}
+          </button>
+        ))}
+        {preset === 'custom' && (
+          <div className="flex flex-wrap gap-2">
+            <input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="input-field !w-auto text-xs" aria-label="Desde" />
+            <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="input-field !w-auto text-xs" aria-label="Hasta" />
+          </div>
+        )}
+      </div>
+
+      {error ? (
+        <Card className="p-4 shadow-none">
+          <ErrorState description={canonicalReadErrorMessage(error)} onRetry={retry} />
+        </Card>
+      ) : loading ? (
+        <LoadingState rows={3} height="h-28" />
       ) : (
         <>
-          {/* KPI cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {[
-              { label: 'Ingresos totales', value: `$${stats.totalRevenue.toLocaleString()}`, color: '#D97706' },
-              { label: 'Cobrado', value: `$${stats.collectedAmount.toLocaleString()}`, color: '#059669' },
-              { label: 'Por cobrar', value: `$${stats.pendingAmount.toLocaleString()}`, color: '#DC2626' },
-              { label: 'Ticket promedio', value: `$${stats.avgTicket}`, color: '#3b82f6' },
-              { label: 'Completadas', value: stats.completedReservations, color: '#7C3AED' },
-              { label: 'Pendientes', value: stats.totalReservations - stats.completedReservations, color: '#f59e0b' },
-            ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-ink/10 bg-surface p-3 shadow-sm">
-                <p className="text-lg font-bold" style={{ color: s.color }}>{s.value}</p>
-                <p className="text-2xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
-              </div>
+          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            {kpis.map((kpi) => (
+              <Card key={kpi.label} className="p-4 shadow-none">
+                <dt className="text-xs text-muted">{kpi.label}</dt>
+                <dd className="mt-1 text-2xl font-bold tabular-nums text-ink">{kpi.value}</dd>
+                <p className="mt-0.5 text-2xs text-muted">{kpi.note}</p>
+              </Card>
             ))}
-          </div>
+          </dl>
 
-          {/* Revenue chart (bar chart) */}
-          <DataCard title="Ingresos diarios (últimos 14 días)">
-            <div className="flex items-end gap-1 h-32">
-              {dailyRevenue.map((d) => (
-                <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+          <DataCard title="Valor completado por día (últimos 14 días)">
+            <div className="flex h-36 items-end gap-1">
+              {daily.map((day) => (
+                <div key={day.date} className="flex flex-1 flex-col items-center gap-1">
                   <div
-                    className="w-full rounded-t bg-brand-500/60 transition-all hover:bg-brand-500 min-h-[2px]"
-                    style={{ height: `${(d.revenue / maxRevenue) * 100}%` }}
-                    title={`${d.label}: $${d.revenue} (${d.count} reservas)`}
+                    className="min-h-[2px] w-full rounded-t-md bg-primary/60 transition-colors hover:bg-primary"
+                    style={{ height: `${(day.cents / maxDaily) * 100}%` }}
+                    title={`${day.label}: ${formatMxn(day.cents)} · ${day.count} paseo${day.count === 1 ? '' : 's'}`}
                   />
-                  <span className="text-2xs" style={{ color: 'var(--text-muted)' }}>{d.label}</span>
+                  <span className="text-2xs text-muted">{day.label}</span>
                 </div>
               ))}
             </div>
           </DataCard>
 
-          {/* Service breakdown */}
-          {serviceBreakdown.length > 0 && (
-            <DataCard title="Ingresos por servicio">
-              <div className="space-y-2">
-                {serviceBreakdown.map((s) => {
-                  const maxRev = serviceBreakdown[0]?.revenue || 1
-                  return (
-                    <div key={s.service}>
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span style={{ color: 'var(--text-primary)' }}>{s.service}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>{s.count} reservas · ${s.revenue.toLocaleString()}</span>
-                      </div>
-                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                        <div
-                          className="h-full rounded-full bg-brand-500/50"
-                          style={{ width: `${(s.revenue / maxRev) * 100}%` }}
-                        />
-                      </div>
+          {byPlan.length > 0 && (
+            <DataCard title="Por plan (en el periodo)">
+              <div className="space-y-3">
+                {byPlan.map((plan) => (
+                  <div key={plan.name}>
+                    <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                      <span className="font-medium text-ink">{plan.name}</span>
+                      <span className="tabular-nums text-muted">{plan.walks} paseos · {plan.completed} completados · {formatMxn(plan.cents)}</span>
                     </div>
-                  )
-                })}
+                    <div className="h-1.5 overflow-hidden rounded-full bg-ink/5">
+                      <div className="h-full rounded-full bg-primary/50" style={{ width: `${(plan.walks / byPlan[0].walks) * 100}%` }} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </DataCard>
           )}
+
+          <DataCard title={`Paseos del periodo${filtered.length > TABLE_ROWS ? ` (${TABLE_ROWS} más recientes de ${filtered.length})` : ''}`}>
+            {latest.length === 0 ? (
+              <p className="text-sm text-muted">No hay paseos en este periodo.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] text-left text-xs">
+                  <thead className="text-2xs uppercase tracking-wide text-muted">
+                    <tr>
+                      <th className="py-2 pr-3 font-medium">Fecha</th>
+                      <th className="py-2 pr-3 font-medium">Familia</th>
+                      <th className="py-2 pr-3 font-medium">Mascota</th>
+                      <th className="py-2 pr-3 font-medium">Plan</th>
+                      <th className="py-2 pr-3 font-medium">Estado</th>
+                      <th className="py-2 text-right font-medium">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ink/[0.06]">
+                    {latest.map((session) => (
+                      <tr key={session.id}>
+                        <td className="py-2 pr-3 tabular-nums text-ink">{session.date} {session.time}</td>
+                        <td className="py-2 pr-3 text-ink">{session.name || '—'}</td>
+                        <td className="py-2 pr-3 text-ink">{session.petName || '—'}</td>
+                        <td className="py-2 pr-3 text-ink">{session.service}</td>
+                        <td className="py-2 pr-3 text-muted">{STATUS_LABELS[session.status] ?? session.status}</td>
+                        <td className="py-2 text-right tabular-nums text-ink">
+                          {session.valueCents === null ? <span className="text-muted">Sin tarifa vigente</span> : formatMxn(session.valueCents)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </DataCard>
         </>
       )}
+
+      <p className="text-xs text-muted">
+        Cada paseo se valora con la tarifa publicada de su plan, siempre que se haya reservado con esa misma versión. Los
+        reservados con una tarifa anterior aparecen como «Sin tarifa vigente» y no se re-cotizan al precio de hoy.
+        «Cobrado» empezará a sumar cuando se active el registro de pagos.
+      </p>
     </div>
   )
 }

@@ -103,7 +103,9 @@ export default function StepV2Service({ form, updateForm, prices, priceStatus, o
 
       {hiddenCount > 0 && services.length > 0 && (
         <p className="text-xs text-muted">
-          {hiddenCount === 1 ? 'Hay 1 servicio más' : `Hay ${hiddenCount} servicios más`} que aún no tienen tarifa publicada y por eso no aparecen aquí.
+          {hiddenCount === 1
+            ? 'Hay 1 plan más que aún no tiene tarifa publicada y por eso no aparece aquí.'
+            : `Hay ${hiddenCount} planes más que aún no tienen tarifa publicada y por eso no aparecen aquí.`}
         </p>
       )}
 

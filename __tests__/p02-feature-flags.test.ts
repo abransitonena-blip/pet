@@ -22,7 +22,8 @@ describe('P0.2 safe feature defaults', () => {
     // PET_AHORA_ENABLED was turned on by an explicit owner decision. It stays
     // double-gated: the code flag below plus config.features.petAhoraEnabled,
     // the operational switch an admin controls from Configuración.
-    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED', 'PET_AHORA_ENABLED'])
+    // BLUETOOTH_PRINTING_ENABLED: owner decision, to test with the physical printer.
+    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED', 'PET_AHORA_ENABLED', 'BLUETOOTH_PRINTING_ENABLED'])
     expect(Object.entries(FEATURE_FLAGS).every(([name, enabled]) => enabledByDesign.has(name) ? enabled : enabled === false)).toBe(true)
   })
 

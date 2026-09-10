@@ -17,33 +17,33 @@ export interface ServiceCategory {
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
   {
     id: 'cotidiano',
-    name: 'Paseo cotidiano',
-    description: 'Para el cuidado diario de tu perro. Un paseo pensado para sus necesidades regulares de ejercicio y estimulación.',
+    name: 'Paseo Individual',
+    description: 'Para el cuidado diario de tu perro: 30 minutos, uno a uno, con un paseador asignado.',
     duration: '30 min',
     modality: '1 a 1',
     icon: '🐕',
     benefits: [
-      'Ruta personalizada según tu zona',
-      'Ejercicio moderado y supervisado',
-      'Agua y descansos incluidos',
-      'Notificación al iniciar y al finalizar',
+      'Paseador asignado, uno a uno',
+      'Cada etapa del paseo visible en Familia PET',
+      'Reporte escrito al terminar',
+      'Hora de inicio y de fin registradas',
     ],
     restrictions: ['Disponible en zonas autorizadas', 'Sujeto a disponibilidad de paseadores'],
   },
   {
     id: 'energia',
-    name: 'Más energía y ejercicio',
-    description: 'Para perros que necesitan quemar más energía. Ideal para razas activas o después de un día en casa.',
+    name: 'Paseo Extendido',
+    description: 'Para perros que necesitan más actividad: una hora continua de paseo, juego y descansos.',
     duration: '1 hora',
     modality: '1 a 1',
     icon: '🏃',
     benefits: [
-      'Ruta más larga con mayor actividad',
-      'Juegos y ejercicios durante el recorrido',
-      'Pausas de hidratación programadas',
-      'Adecuado para perros de alta energía',
+      'Una hora de actividad continua',
+      'Juegos y pausas para hidratarse',
+      'Cada etapa del paseo visible en Familia PET',
+      'Reporte escrito al terminar',
     ],
-    restrictions: ['Requiere evaluación de condición física', 'No apto para perros con restricción veterinaria'],
+    restrictions: ['No apto para perros con restricción veterinaria de ejercicio', 'Sujeto a disponibilidad de paseadores'],
   },
   {
     id: 'acompanamiento',
@@ -136,6 +136,19 @@ export const RESERVATION_SERVICE_IDS: Record<string, { id: string; packageType: 
   'Paquete Semanal': { id: 'paquete-semanal', packageType: 'weekly' },
 }
 
+/**
+ * Planes que se ofrecen hoy. Owner decision (2026-09-10): few, clear plans.
+ * The other definitions stay because the Firestore rules require every
+ * service to exist in the prices document; they are simply never offered, and
+ * bringing one back is a matter of adding its id here.
+ */
+export const OFFERED_SERVICE_IDS: readonly string[] = ['paseo-individual', 'paseo-extendido']
+export const OFFERED_CATEGORY_IDS: readonly string[] = ['cotidiano', 'energia']
+
+export function isOfferedService(id: string): boolean {
+  return OFFERED_SERVICE_IDS.includes(id)
+}
+
 export const SERVICE_LABELS: Record<string, string> = Object.fromEntries(
   SERVICES.map((s) => [s.name, s.name.replace('Paseo ', '').replace('Paquete ', '')])
 )
@@ -175,7 +188,7 @@ export function getReservationServiceDefinitions() {
 export function getReservationServiceOptions(
   prices: Record<string, PublicServicePrice>,
 ): ReservationServiceOption[] {
-  return SERVICES.map((service) => {
+  return SERVICES.filter((service) => isOfferedService(RESERVATION_SERVICE_IDS[service.name]?.id ?? service.name)).map((service) => {
     const identity = RESERVATION_SERVICE_IDS[service.name] ?? {
       id: service.name,
       packageType: 'custom' as const,
@@ -317,6 +330,9 @@ export interface Quote {
 export function getCategories() {
   return SERVICE_CATEGORIES
 }
+
+/** What the landing shows: only the categories that map to offered plans. */
+export const OFFERED_CATEGORIES = SERVICE_CATEGORIES.filter((category) => OFFERED_CATEGORY_IDS.includes(category.id))
 
 export function getCategory(id: string) {
   return SERVICE_CATEGORIES.find((c) => c.id === id)

@@ -8,7 +8,8 @@ describe('SERVICE_CATEGORIES', () => {
   it('includes cotidiano', () => {
     const c = SERVICE_CATEGORIES.find((cat) => cat.id === 'cotidiano')
     expect(c).toBeDefined()
-    expect(c?.name).toBe('Paseo cotidiano')
+    // Renamed to match the offered plan (owner decision, 2026-09-10).
+    expect(c?.name).toBe('Paseo Individual')
     expect(c?.duration).toBe('30 min')
   })
 
@@ -54,7 +55,7 @@ describe('getCategory', () => {
   it('finds a category by id', () => {
     const cat = getCategory('cotidiano')
     expect(cat).toBeDefined()
-    expect(cat?.name).toBe('Paseo cotidiano')
+    expect(cat?.name).toBe('Paseo Individual')
   })
 
   it('returns undefined for unknown id', () => {
