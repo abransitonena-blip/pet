@@ -39,12 +39,14 @@
   --brand-800: 85 31 0;
   --brand-900: 45 16 0;
 
-  /* ── Radius semánticos (controlados por brandSettings) ── */
-  --radius-control: 12px;
-  --radius-button: 14px;
-  --radius-card: 16px;
-  --radius-panel: 24px;
-  --radius-sheet: 28px;
+  /* ── Radius semánticos (controlados por brandSettings) ──
+     Raised one step for a softer, less boxy system. Tailwind maps rounded-lg,
+     -xl, -2xl and -3xl onto these, so the whole app follows from here. */
+  --radius-control: 14px;
+  --radius-button: 16px;
+  --radius-card: 20px;
+  --radius-panel: 28px;
+  --radius-sheet: 32px;
   --radius-pill: 9999px;
 
   /* ── Typography ── */
@@ -94,8 +96,8 @@
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08);
   --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-card: 0 1px 2px rgba(23, 32, 51, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(23, 32, 51, 0.08);
 
   /* ── Transitions ── */
   --transition-fast: 140ms ease;
@@ -124,6 +126,10 @@
   --border-hover: rgba(23, 32, 51, 0.24);
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(23, 32, 51, 0.08);
+  /* Hairline for containers. Form controls keep --border (#808897), which is
+     there for 3:1 non-text contrast; a card does not need that, and drawing
+     it around every block is what made the app read as a stack of boxes. */
+  --border-subtle: rgba(23, 32, 51, 0.08);
 
   /* ── Aliases legacy (un solo tema) ── */
   --bg-primary: var(--bg-canvas);
@@ -182,8 +188,8 @@
   /* ── Cards ── */
   .card {
     background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl, 16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
     transition: box-shadow var(--transition-base), border-color var(--transition-base);
   }
@@ -194,19 +200,35 @@
 
   .card-elevated {
     background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl, 16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
     box-shadow: var(--shadow-lg);
   }
 
-  /* ── Buttons ── */
-  .btn {
+  /* Used by the landing (reseñas, FAQ, referidos) and PET Ahora, but never
+     defined anywhere, so those blocks rendered with no surface at all. */
+  .glass-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ── Buttons ──
+     The variants are also used on their own ("btn-primary w-full"), without
+     .btn, which left those buttons with no padding and no radius. They now
+     carry the base shape themselves. */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-trust {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-5);
-    border-radius: var(--radius-lg, 12px);
+    border-radius: var(--radius-pill);
     font-size: var(--text-label);
     font-weight: 600;
     line-height: var(--text-label-lh);
@@ -251,7 +273,7 @@
   .input {
     width: 100%;
     padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-lg, 12px);
+    border-radius: var(--radius-control);
     font-size: var(--text-body);
     line-height: var(--text-body-lh);
     background: var(--bg-surface);
@@ -265,6 +287,33 @@
     border-color: var(--focus-ring);
     box-shadow: 0 0 0 3px rgba(24, 90, 188, 0.15);
   }
+
+  /* Same story as .glass-card: 29 form controls use this class and it was
+     never defined, so they rendered as bare, unpadded browser inputs. The
+     border stays --border (#808897): a control must show its edge at 3:1. */
+  .input-field {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-control);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    line-height: var(--text-label-lh);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  .input-field::placeholder { color: var(--text-muted); }
+  .input-field:focus {
+    outline: none;
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px rgba(24, 90, 188, 0.15);
+  }
+  textarea.input-field { min-height: 88px; line-height: var(--text-body-lh); }
+
+  /* The mobile review carousel scrolls sideways; its scrollbar is noise. */
+  .review-scroll { scrollbar-width: none; }
+  .review-scroll::-webkit-scrollbar { display: none; }
 
   .input-label {
     display: block;

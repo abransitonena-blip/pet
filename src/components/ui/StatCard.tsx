@@ -21,7 +21,7 @@ export default function StatCard({ label, value, icon, change, trend = 'neutral'
   const numFromStr = typeof value === 'string' ? parseInt(value.replace(/[^\d]/g, ''), 10) : null
 
   return (
-    <div className={`rounded-xl border border-ink/10 bg-surface p-5 shadow-sm transition-all duration-200 motion-reduce:transition-none hover:scale-[1.02] hover:border-ink/20 cursor-default group ${className}`}>
+    <div className={`rounded-xl border border-ink/[0.08] bg-surface p-5 transition-all duration-200 motion-reduce:transition-none hover:scale-[1.02] hover:border-ink/20 cursor-default group ${className}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110" style={{ background: `${color}15`, color }}>
           {icon}

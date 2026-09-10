@@ -31,7 +31,10 @@ export const PRIMARY_SWATCHES: { name: string; value: string }[] = [
 
 export const RADIUS_PRESETS: Record<BrandRadius, { label: string; control: string; button: string; card: string; panel: string; sheet: string; pill: string }> = {
   compact:  { label: 'Compacto',   control: '8px',   button: '10px',  card: '12px',  panel: '16px',  sheet: '18px',  pill: '999px' },
-  standard: { label: 'Estándar',   control: '12px',  button: '14px',  card: '16px',  panel: '24px',  sheet: '28px',  pill: '999px' },
+  // The default preset. BrandContext writes these onto :root at runtime, so
+  // they -- not the fallbacks in globals.css -- decide the app's radii. Raised
+  // one step with the softer, less boxy system; keep both in step.
+  standard: { label: 'Estándar',   control: '14px',  button: '16px',  card: '20px',  panel: '28px',  sheet: '32px',  pill: '999px' },
   generous: { label: 'Generoso',   control: '16px',  button: '18px',  card: '24px',  panel: '32px',  sheet: '36px',  pill: '999px' },
 }
 
