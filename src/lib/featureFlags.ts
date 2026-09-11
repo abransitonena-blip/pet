@@ -13,6 +13,11 @@ export const FEATURE_FLAG_NAMES = [
   'WALK_REPORTS_ENABLED',
   'FINANCE_PAYMENTS_ENABLED',
   'BLUETOOTH_PRINTING_ENABLED',
+  'WALK_TRACKING_ENABLED',
+  // J: perfil de emergencia con QR por mascota (opt-in, apagado por defecto)
+  'PET_EMERGENCY_QR_ENABLED',
+  // K: panel de analítica de segmentos de gasto de clientes (apagado por defecto)
+  'CLIENT_SPEND_SEGMENT_ANALYTICS_ENABLED',
 ] as const
 
 export type FeatureFlagName = (typeof FEATURE_FLAG_NAMES)[number]
@@ -43,6 +48,16 @@ export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
   // Encendido por decisión del dueño para probarlo con la impresora física.
   // Web Bluetooth solo existe en Chrome (Android o computadora), no en iPhone.
   BLUETOOTH_PRINTING_ENABLED: true,
+  // Encendido por decisión del dueño: ubicación cada ~2 min solo durante un
+  // paseo en curso, y alerta si el paseador sale de la zona.
+  WALK_TRACKING_ENABLED: true,
+  // J: perfil de emergencia con QR por mascota.
+  // Cada mascota tiene opt-in individual (emergencyProfile.enabled);
+  // este flag es la condición necesaria pero no suficiente para mostrarlo.
+  PET_EMERGENCY_QR_ENABLED: false,
+  // K: segmentos de gasto de clientes (analítica interna, solo lectura).
+  // El admin debe configurar los umbrales antes de que el panel sea útil.
+  CLIENT_SPEND_SEGMENT_ANALYTICS_ENABLED: false,
 })
 
 export function isFeatureEnabled(flag: FeatureFlagName): boolean {

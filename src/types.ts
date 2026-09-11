@@ -270,6 +270,25 @@ export interface Pet {
     specialNeeds: string
   }
   photos?: string[]
+  /**
+   * Perfil de emergencia con QR (Feature J). Solo presente si el dueño lo
+   * activó explícitamente. Nunca se activa por defecto ni se copia a
+   * emergency-profiles/{publicSlug} sin acción explícita del dueño.
+   */
+  emergencyProfile?: {
+    /** El dueño activó este perfil para esta mascota. */
+    enabled: boolean
+    /**
+     * Token aleatorio de 21 chars (nanoid). No es el petId real.
+     * Se usa como clave en emergency-profiles/{publicSlug}.
+     */
+    publicSlug: string
+    /**
+     * Si true, el teléfono del dueño se incluye en el documento
+     * emergency-profiles/{publicSlug} y se muestra en /qr/[slug].
+     */
+    showOwnerPhone: boolean
+  }
 }
 
 export interface Client {

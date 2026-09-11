@@ -1,6 +1,7 @@
 {
   "projects": {
-    "prod": "pet-1cb0b"
+    "prod": "pet-1cb0b",
+    "default": "pet-1cb0b"
   },
   "targets": {},
   "etags": {}

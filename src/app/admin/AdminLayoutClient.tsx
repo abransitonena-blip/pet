@@ -15,6 +15,7 @@ import {
   MessageSquare, Image, Zap, Printer, Ticket, FlaskConical, AlertOctagon, MessageSquareHeart,
 } from 'lucide-react'
 import AdminShell from '@/components/layout/AdminShell'
+import GeofenceAlertsBanner from '@/components/admin/GeofenceAlertsBanner'
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Resumen', icon: Gauge, href: '/admin', group: 'General' },
@@ -108,6 +109,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   return (
     <ReservationsProvider>
       <AdminShell navItems={NAV_ITEMS} onLogout={handleLogout} version={version}>
+        <GeofenceAlertsBanner />
         {children}
       </AdminShell>
     </ReservationsProvider>

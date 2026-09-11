@@ -15,6 +15,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import { Button, ConfirmDialog } from '@/components/ui'
 import { useToast } from '@/context/ToastContext'
 import { Zone } from '@/types'
+import ZoneMap from '@/components/admin/ZoneMap'
 
 interface ZoneForm {
   name: string
@@ -176,6 +177,10 @@ export default function AdminZonasPage() {
         />
       </div>
 
+      {zones.length > 0 && (
+        <ZoneMap label="Mapa de todas las zonas" zones={zones} height={280} />
+      )}
+
       {filtered.length === 0 ? (
         <EmptyState
           icon={<MapPinned size={24} />}
@@ -280,6 +285,22 @@ export default function AdminZonasPage() {
                   className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
                   style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <ZoneMap
+                  label="Toca el mapa para fijar el centro de la zona"
+                  zones={zones.filter((zone) => zone.id !== editing?.id)}
+                  draft={{
+                    center: form.centerLat && form.centerLng && Number.isFinite(parseFloat(form.centerLat)) && Number.isFinite(parseFloat(form.centerLng))
+                      ? { lat: parseFloat(form.centerLat), lng: parseFloat(form.centerLng) }
+                      : null,
+                    radiusKm: parseFloat(form.radius) || 0,
+                  }}
+                  onPick={(picked) => setForm((current) => ({ ...current, centerLat: picked.lat.toFixed(6), centerLng: picked.lng.toFixed(6) }))}
+                  height={220}
+                />
+                <p className="text-2xs text-muted">Toca el mapa para fijar el centro; el círculo punteado muestra el radio. Si un paseador sale de este círculo durante un paseo, administración recibe un aviso.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

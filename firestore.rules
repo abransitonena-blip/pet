@@ -1085,6 +1085,33 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════
+    // RASTREO DURANTE EL PASEO (solo servidor escribe)
+    // ═══════════════════════════════════════════
+    // /api/tracking/point writes these with the privileged client after
+    // checking the session is the walker's own and in progress. No browser
+    // writes a point or raises an alert; staff read them, and may only mark
+    // an alert as seen, with their own uid and the server's clock.
+
+    match /walkTracks/{sessionId} {
+      allow read, write: if false;
+
+      match /points/{pointId} {
+        allow read: if isStaff();
+        allow write: if false;
+      }
+    }
+
+    match /geofenceAlerts/{sessionId} {
+      allow read: if isStaff();
+      allow update: if isStaff()
+        && request.resource.data.status == 'acknowledged'
+        && request.resource.data.acknowledgedBy == request.auth.uid
+        && request.resource.data.acknowledgedAt == request.time
+        && onlyAllowedFieldsChanged(['status', 'acknowledgedBy', 'acknowledgedAt']);
+      allow create, delete: if false;
+    }
+
+    // ═══════════════════════════════════════════
     // WALK LOGS (bitácora)
     // ═══════════════════════════════════════════
 

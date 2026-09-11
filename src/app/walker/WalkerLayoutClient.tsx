@@ -11,6 +11,7 @@ import { useSessionRole } from '@/lib/useSessionRole'
 import { ACCESS_MESSAGES, ROLES, ROLE_HOME } from '@/lib/roles'
 import AppShell from '@/components/layout/AppShell'
 import WalkerHeartbeat from '@/components/WalkerHeartbeat'
+import WalkTracker from '@/components/walker/WalkTracker'
 import { Button, Card, LoadingState } from '@/components/ui'
 import {
   WalkerPanelProvider,
@@ -167,6 +168,7 @@ export default function WalkerLayoutClient({ children }: { children: React.React
         mobileNavigation
         showLogoutLabel
       >
+        <WalkTracker uid={contextValue.uid} />
         {children}
       </AppShell>
     </WalkerPanelProvider>

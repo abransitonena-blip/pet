@@ -31,8 +31,9 @@ const directives = [
   "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline' https://accounts.google.com",
   "font-src 'self'",
-  // api.cloudinary.com serves the expiring links to private walk photos.
-  "img-src 'self' data: blob: https://res.cloudinary.com https://api.cloudinary.com",
+  // api.cloudinary.com serves the expiring links to private walk photos;
+  // tile.openstreetmap.org draws the zone map (attribution shown on the map).
+  "img-src 'self' data: blob: https://res.cloudinary.com https://api.cloudinary.com https://tile.openstreetmap.org",
   `connect-src 'self' ${authOrigin} https://accounts.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com https://api.cloudinary.com${pushConnectHosts}`,
   `frame-src https://accounts.google.com ${authOrigin}`,
   "worker-src 'self' blob:",
