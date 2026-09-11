@@ -12,7 +12,9 @@ import { useSessionRole } from '@/lib/useSessionRole'
 import { getReservationServiceDefinitions } from '@/lib/walkServices'
 import { buildPetApTicket } from '@/lib/printing/petApTicketBuilder'
 import { buildTicketSnapshotFromSession, type TicketSourceSession } from '@/lib/printing/ticketSnapshotBuilder'
-import { ManualHexTransport, WebBluetoothTransport, isWebBluetoothAvailable } from '@/lib/printing/transports'
+import { ManualHexTransport, WebBluetoothTransport } from '@/lib/printing/transports'
+import { BluetoothSupportNotice } from '@/components/admin/BluetoothSupportNotice'
+import { useWebBluetoothSupport } from '@/lib/useWebBluetoothSupport'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { TemporaryReportStatus, TemporaryTicketSnapshot } from '@/lib/finance/domain/ticketPreview'
 import { createPersistentTicket, TicketOperationError } from '@/lib/tickets'
@@ -133,6 +135,7 @@ export default function TicketPrintTool() {
   const [bluetoothMessage, setBluetoothMessage] = useState('')
   const [persisting, setPersisting] = useState(false)
   const [persistentTicketId, setPersistentTicketId] = useState('')
+  const bluetoothSupported = useWebBluetoothSupport()
 
   useEffect(() => {
     if (sessionRole.status !== 'ready') return
@@ -370,8 +373,8 @@ export default function TicketPrintTool() {
                       variant="secondary"
                       onClick={() => void sendOverBluetooth()}
                       isLoading={bluetoothSending}
-                      disabled={!isWebBluetoothAvailable()}
-                      title={isWebBluetoothAvailable() ? undefined : 'Este navegador no permite Bluetooth'}
+                      disabled={bluetoothSupported !== true}
+                      title={bluetoothSupported === true ? undefined : 'Este navegador no permite Bluetooth'}
                       leftIcon={<Printer className="h-4 w-4" aria-hidden="true" />}
                     >
                       Enviar por Bluetooth
@@ -379,6 +382,7 @@ export default function TicketPrintTool() {
                   )}
                   {persistentTicketId && <Link href={`/admin/tickets/${encodeURIComponent(persistentTicketId)}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]">Abrir ticket persistente</Link>}
                 </div>
+                <BluetoothSupportNotice supported={bluetoothSupported} />
                 {bluetoothMessage && <p role="status" className="rounded-xl bg-primary/10 px-4 py-3 text-sm text-ink">{bluetoothMessage}</p>}
                 <details className="rounded-xl border border-ink/10 bg-surface p-4">
                   <summary className="min-h-11 cursor-pointer select-none py-2 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]">Panel técnico</summary>

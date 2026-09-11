@@ -6,7 +6,9 @@ import { Button, ErrorState, LoadingState } from '@/components/ui'
 import { ROLES } from '@/lib/roles'
 import { useSessionRole } from '@/lib/useSessionRole'
 import { EscPosEncoder, PET_AP_58MM_PROFILE, createPetApDogLogo, type RasterImage } from '@/lib/printing/escpos'
-import { WebBluetoothTransport, bytesToHex, isWebBluetoothAvailable } from '@/lib/printing/transports'
+import { WebBluetoothTransport, bytesToHex } from '@/lib/printing/transports'
+import { BluetoothSupportNotice } from '@/components/admin/BluetoothSupportNotice'
+import { useWebBluetoothSupport } from '@/lib/useWebBluetoothSupport'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 const MAX_LOGO_WIDTH = PET_AP_58MM_PROFILE.dotsPerLine
@@ -120,6 +122,7 @@ export default function PrintingLab() {
   const [copied, setCopied] = useState(false)
   const [bluetoothSending, setBluetoothSending] = useState(false)
   const [bluetoothMessage, setBluetoothMessage] = useState('')
+  const bluetoothSupported = useWebBluetoothSupport()
   const fileInput = useRef<HTMLInputElement>(null)
 
   const setField = useCallback(<K extends keyof LabFields>(key: K, value: LabFields[K]) => {
@@ -327,14 +330,15 @@ export default function PrintingLab() {
                     variant="secondary"
                     onClick={() => void sendOverBluetooth()}
                     isLoading={bluetoothSending}
-                    disabled={!isWebBluetoothAvailable()}
-                    title={isWebBluetoothAvailable() ? undefined : 'Este navegador no permite Bluetooth'}
+                    disabled={bluetoothSupported !== true}
+                    title={bluetoothSupported === true ? undefined : 'Este navegador no permite Bluetooth'}
                     leftIcon={<Printer className="h-4 w-4" aria-hidden="true" />}
                   >
                     Enviar por Bluetooth
                   </Button>
                 )}
               </div>
+              <BluetoothSupportNotice supported={bluetoothSupported} />
               {bluetoothMessage && <p role="status" className="rounded-xl bg-primary/10 px-4 py-3 text-sm text-ink">{bluetoothMessage}</p>}
               <details className="rounded-xl border border-ink/10 p-3">
                 <summary className="min-h-11 cursor-pointer select-none py-2 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]">HEX continuo</summary>
