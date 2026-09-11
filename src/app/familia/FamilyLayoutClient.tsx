@@ -9,6 +9,7 @@ import { getCustomerProfile } from '@/lib/customerProfile'
 import { getFamilyOnboardingStep, loadFamilyOnboardingSnapshot } from '@/lib/familyOnboarding'
 import { useSessionRole } from '@/lib/useSessionRole'
 import { ROLES, ROLE_HOME } from '@/lib/roles'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import AppShell from '@/components/layout/AppShell'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
@@ -38,6 +39,14 @@ const ACCOUNT_ITEMS = [
   { id: 'config', label: 'Configuración', icon: Settings, href: '/familia/config', group: 'Cuenta' },
   { id: 'privacidad', label: 'Privacidad y ARCO', icon: ShieldCheck, href: '/familia/privacidad', group: 'Cuenta' },
 ]
+// Créditos y lealtad no tienen forma de moverse: nada escribe esos saldos
+// mientras sus banderas están apagadas. El menú no manda a la familia a un cero
+// que nunca cambia; al encender la bandera, la entrada vuelve sola.
+  .filter((item) => {
+    if (item.id === 'billetera') return FEATURE_FLAGS.WALLET_MUTATIONS_ENABLED
+    if (item.id === 'lealtad') return FEATURE_FLAGS.LOYALTY_REDEMPTION_ENABLED
+    return true
+  })
 
 export default function FamilyLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter()

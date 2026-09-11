@@ -13,6 +13,7 @@ import PetAhoraRequestForm from '@/components/PetAhoraRequestForm'
 import { getCustomerProfile } from '@/lib/customerProfile'
 import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
 import WalletCard from '@/components/WalletCard'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import CanonicalFamilyRequests from '@/components/family/CanonicalFamilyRequests'
@@ -167,7 +168,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Wallet */}
-      <WalletCard compact />
+      {FEATURE_FLAGS.WALLET_MUTATIONS_ENABLED && <WalletCard compact />}
 
       {/* PET Ahora — Instant Walk */}
       {activePetAhoraId && petAhoraRequest ? (

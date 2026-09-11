@@ -1,5 +1,7 @@
 'use client'
 
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Dog, MessageCircle, XCircle, Mail, Music } from 'lucide-react'
@@ -73,10 +75,14 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
                 <Mail size={14} />
                 {config.contactEmail || BRAND.email}
               </a>
-              <Link href="/cancelar" className="flex min-h-11 items-center gap-2 text-sm text-muted transition-colors hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                <XCircle size={14} />
-                Cancelar reserva
-              </Link>
+              {/* La cancelación por teléfono está apagada; sin esto el enlace
+                  lleva a una página que solo dice "no disponible". */}
+              {FEATURE_FLAGS.PUBLIC_PHONE_CANCELLATION_ENABLED && (
+                <Link href="/cancelar" className="flex min-h-11 items-center gap-2 text-sm text-muted transition-colors hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  <XCircle size={14} />
+                  Cancelar reserva
+                </Link>
+              )}
             </div>
           </motion.div>
 
