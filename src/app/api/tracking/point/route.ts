@@ -5,6 +5,7 @@ import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { isOutsideZone, isUsableCenter } from '@/lib/geo'
+import { trackingExpiryDate } from '@/lib/trackingRetention'
 
 export const runtime = 'nodejs'
 
@@ -81,6 +82,9 @@ export async function POST(request: Request) {
       : null
 
     const now = Timestamp.now()
+    // Cada punto nace con su fecha de caducidad: la política TTL de Firestore
+    // lo borra sola a los TRACKING_RETENTION_DAYS días. Ver trackingRetention.ts.
+    const expiresAt = Timestamp.fromDate(trackingExpiryDate(now.toDate()))
     await firestore.collection('walkTracks').doc(sessionId).collection('points').add({
       lat: point.lat,
       lng: point.lng,
@@ -89,6 +93,7 @@ export async function POST(request: Request) {
       distanceMeters: verdict?.distanceMeters ?? null,
       walkerId: walkerUid,
       capturedAt: now,
+      expiresAt,
     })
 
     if (verdict?.outside && zone && isUsableCenter(zone.center)) {
@@ -102,6 +107,8 @@ export async function POST(request: Request) {
           lastOutsideAt: now,
           lastPoint: { lat: point.lat, lng: point.lng, accuracy },
           distanceMeters: verdict.distanceMeters,
+          // La alerta guarda una ubicación, así que caduca igual que los puntos.
+          expiresAt,
         }
         if (!existing.exists) {
           transaction.set(alertRef, {

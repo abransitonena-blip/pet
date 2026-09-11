@@ -13,7 +13,7 @@ export interface PrivacySection {
   providers?: PrivacyProvider[]
 }
 
-export const PRIVACY_LAST_UPDATED = '8 de agosto de 2026'
+export const PRIVACY_LAST_UPDATED = '11 de septiembre de 2026'
 
 export const privacySections: PrivacySection[] = [
   {
@@ -22,7 +22,7 @@ export const privacySections: PrivacySection[] = [
   },
   {
     title: '2. Categorías de datos',
-    content: 'Podemos tratar identificadores de cuenta, nombre, correo, teléfono, perfiles de perros, dirección de recogida, agenda, órdenes, sesiones, pagos confirmados, reportes, reseñas, reportes de errores técnicos y comunicaciones. Información de salud o conducta del perro solo debe proporcionarse cuando sea necesaria para realizar el paseo de forma segura. No solicitamos diagnósticos médicos de personas.',
+    content: 'Podemos tratar identificadores de cuenta, nombre, correo, teléfono, perfiles de perros, dirección de recogida, agenda, órdenes, sesiones, pagos confirmados, reportes, reseñas, reportes de errores técnicos y comunicaciones. Mientras un paseo está en curso, el teléfono del paseador comparte su ubicación cada pocos minutos para avisar si el paseo sale de la zona acordada; esos puntos quedan asociados al paseo y al paseador. Información de salud o conducta del perro solo debe proporcionarse cuando sea necesaria para realizar el paseo de forma segura. No solicitamos diagnósticos médicos de personas.',
   },
   {
     title: '3. Finalidades necesarias',
@@ -46,7 +46,7 @@ export const privacySections: PrivacySection[] = [
   },
   {
     title: '6. Retención',
-    content: 'La matriz mostrada abajo contiene plazos operativos propuestos, no plazos legales definitivos. En el MVP los procesos de revisión y eliminación son manuales. Pueden existir excepciones por servicios activos, controversias u obligaciones aplicables, que deben documentarse.',
+    content: 'La matriz mostrada abajo contiene plazos operativos propuestos, no plazos legales definitivos. Los puntos de ubicación registrados durante un paseo y las alertas de salida de zona se conservan 30 días y después se eliminan de forma automática. En el MVP los demás procesos de revisión y eliminación son manuales. Pueden existir excepciones por servicios activos, controversias u obligaciones aplicables, que deben documentarse.',
   },
   {
     title: '7. Derechos ARCO, revocación y retiro de fotografías',

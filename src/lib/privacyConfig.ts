@@ -1,4 +1,4 @@
-export const PRIVACY_DRAFT_VERSION = '2026-08-08-draft'
+export const PRIVACY_DRAFT_VERSION = '2026-09-11-draft'
 export const PHOTO_CONSENT_VERSION = '2026-08-08-v1'
 
 export const PHOTO_CONSENT_FIELDS = [
@@ -38,6 +38,7 @@ export const RETENTION_MATRIX = [
   { category: 'Perros y direcciones', purpose: 'Seguridad y prestación del paseo', period: 'Cuenta activa y hasta 90 días después del cierre, si no existen servicios activos', starts: 'Cierre verificado', owner: 'Administración', deletion: 'Manual', provider: 'Firestore', exception: 'Servicio activo o incidencia abierta', evidence: 'Checklist por UID' },
   { category: 'Órdenes y sesiones', purpose: 'Ejecución, soporte y comprobación del servicio', period: 'Propuesta operativa: 24 meses desde la última sesión', starts: 'Última sesión', owner: 'Administración', deletion: 'Manual', provider: 'Firestore', exception: 'Revisión fiscal/jurídica o controversia', evidence: 'Acta de depuración' },
   { category: 'Reportes operativos', purpose: 'Evidencia del paseo', period: 'Propuesta operativa: 12 meses desde el paseo', starts: 'Paseo completado', owner: 'Operaciones', deletion: 'Manual', provider: 'Firestore', exception: 'Incidencia abierta', evidence: 'Registro de retiro' },
+  { category: 'Ubicación durante el paseo', purpose: 'Avisar si el paseo sale de la zona acordada', period: '30 días desde la captura del punto', starts: 'Captura del punto', owner: 'Operaciones', deletion: 'Automática: política TTL de Firestore sobre expiresAt', provider: 'Firestore', exception: 'Incidencia abierta que requiera conservar el recorrido', evidence: 'Política TTL activa; ver TRACKING_POLICY.md' },
   { category: 'Fotografías operativas', purpose: 'Reporte privado', period: 'Propuesta: 30 días después de entrega; uploads desactivados en MVP', starts: 'Entrega del reporte', owner: 'Operaciones', deletion: 'Manual y por proveedor', provider: 'Cloudinary si se habilita', exception: 'Incidencia o conservación solicitada', evidence: 'Asset, derivados y caché verificados' },
   { category: 'Galería pública', purpose: 'Difusión autorizada', period: 'Hasta revocación, retiro o vencimiento del alcance documentado', starts: 'Publicación', owner: 'Privacidad/administración', deletion: 'Manual', provider: 'Firestore y proveedor de medios', exception: 'Conservación mínima de evidencia de consentimiento', evidence: 'Documento retirado, asset y cachés verificados' },
   { category: 'Reseñas', purpose: 'Calidad y testimonio cuando se autorice', period: 'Propuesta: 24 meses o hasta retiro/moderación', starts: 'Creación', owner: 'Administración', deletion: 'Manual', provider: 'Firestore', exception: 'Incidencia abierta', evidence: 'Registro de moderación' },
