@@ -220,6 +220,16 @@ export interface Walker {
   }
 }
 
+/** Un lugar marcado dentro de una zona: un parque, una ruta buena, o algo que conviene evitar. */
+export interface ZoneSpot {
+  id: string
+  name: string
+  kind: 'parque' | 'recomendado' | 'evitar'
+  lat: number
+  lng: number
+  note?: string
+}
+
 export interface Zone {
   id: string
   name: string
@@ -227,6 +237,14 @@ export interface Zone {
   radius: number
   active: boolean
   walkerIds: string[]
+  /**
+   * Códigos postales que cubre la zona. Sirven para asignarle su zona a una
+   * dirección en cuanto la familia escribe su CP. No dibujan un borde: el
+   * aviso de "salió de la zona" sigue usando center + radius.
+   */
+  postalCodes?: string[]
+  /** Parques y lugares recomendados que ve el paseador. */
+  spots?: ZoneSpot[]
   basePrice: number
   fixedAdjustment: number
   percentAdjustment: number

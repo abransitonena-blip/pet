@@ -14,14 +14,18 @@ import PageHeader from '@/components/ui/PageHeader'
 import EmptyState from '@/components/ui/EmptyState'
 import { Button, ConfirmDialog } from '@/components/ui'
 import { useToast } from '@/context/ToastContext'
-import { Zone } from '@/types'
+import { type Zone, type ZoneSpot } from '@/types'
 import ZoneMap from '@/components/admin/ZoneMap'
+import { ZONE_SPOT_KINDS, ZONE_SPOT_LABELS, duplicatedPostalCodes, parsePostalCodes } from '@/lib/zoneMatching'
 
 interface ZoneForm {
   name: string
   centerLat: string
   centerLng: string
   radius: string
+  /** Texto libre: "06700, 06600 06140". Se limpia al guardar. */
+  postalCodes: string
+  spots: ZoneSpot[]
   basePrice: string
   fixedAdjustment: string
   percentAdjustment: string
@@ -32,9 +36,12 @@ interface ZoneForm {
 
 const EMPTY_FORM: ZoneForm = {
   name: '', centerLat: '', centerLng: '', radius: '3',
+  postalCodes: '', spots: [],
   basePrice: '0', fixedAdjustment: '0', percentAdjustment: '0',
   transitIncluded: true, coverageRadius: '5', minOrder: '0',
 }
+
+const EMPTY_SPOT = { name: '', kind: 'parque' as ZoneSpot['kind'], lat: '', lng: '', note: '' }
 
 export default function AdminZonasPage() {
   const [zones, setZones] = useState<Zone[]>([])
@@ -46,6 +53,7 @@ export default function AdminZonasPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [search, setSearch] = useState('')
+  const [spotDraft, setSpotDraft] = useState(EMPTY_SPOT)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -73,6 +81,8 @@ export default function AdminZonasPage() {
       centerLat: String(zone.center?.lat || ''),
       centerLng: String(zone.center?.lng || ''),
       radius: String(zone.radius || '3'),
+      postalCodes: (zone.postalCodes ?? []).join(', '),
+      spots: zone.spots ?? [],
       basePrice: String(zone.basePrice || '0'),
       fixedAdjustment: String(zone.fixedAdjustment || '0'),
       percentAdjustment: String(zone.percentAdjustment || '0'),
@@ -94,6 +104,10 @@ export default function AdminZonasPage() {
           lng: parseFloat(form.centerLng) || 0,
         },
         radius: parseFloat(form.radius) || 3,
+        // El CP decide a qué zona pertenece una dirección; el círculo de
+        // arriba sigue siendo el límite que dispara el aviso de salida.
+        postalCodes: parsePostalCodes(form.postalCodes),
+        spots: form.spots,
         active: true,
         walkerIds: editing?.walkerIds || [],
         basePrice: parseFloat(form.basePrice) || 0,
@@ -181,6 +195,13 @@ export default function AdminZonasPage() {
         <ZoneMap label="Mapa de todas las zonas" zones={zones} height={280} />
       )}
 
+      {duplicatedPostalCodes(zones).length > 0 && (
+        <p role="alert" className="rounded-xl bg-warning/10 px-4 py-3 text-sm text-amber-900">
+          Estos códigos postales están en más de una zona activa: {duplicatedPostalCodes(zones).join(', ')}.
+          Mientras se repitan, una dirección con ese CP puede caer en cualquiera de las dos.
+        </p>
+      )}
+
       {filtered.length === 0 ? (
         <EmptyState
           icon={<MapPinned size={24} />}
@@ -211,6 +232,8 @@ export default function AdminZonasPage() {
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{zone.name}</p>
                     <p className="text-2xs" style={{ color: 'var(--text-muted)' }}>
                       {zone.active ? 'Activa' : 'Inactiva'}
+                      {zone.postalCodes?.length ? ` · ${zone.postalCodes.length} CP` : ' · sin CP'}
+                      {zone.spots?.length ? ` · ${zone.spots.length} lugar${zone.spots.length === 1 ? '' : 'es'}` : ''}
                     </p>
                   </div>
                 </div>
@@ -344,6 +367,129 @@ export default function AdminZonasPage() {
                   className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
                   style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 />
+              </div>
+
+              <div className="border-t border-ink/10 pt-4 space-y-2">
+                <label htmlFor="zone-postal-codes" className="text-xs font-semibold block" style={{ color: 'var(--text-secondary)' }}>
+                  Códigos postales que cubre
+                </label>
+                <input
+                  id="zone-postal-codes"
+                  type="text"
+                  inputMode="numeric"
+                  value={form.postalCodes}
+                  onChange={(e) => setForm({ ...form, postalCodes: e.target.value })}
+                  placeholder="06700, 06600, 06140"
+                  className="w-full px-4 py-2.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                />
+                <div className="flex flex-wrap gap-1">
+                  {parsePostalCodes(form.postalCodes).map((code) => (
+                    <span key={code} className="text-2xs rounded-full bg-success-500/10 px-2 py-0.5 text-success-600">{code}</span>
+                  ))}
+                </div>
+                <p className="text-2xs text-muted">
+                  Con esto la dirección de una familia cae sola en esta zona al escribir su CP. No dibuja un borde:
+                  el aviso de que el paseador salió sigue usando el círculo de arriba.
+                </p>
+              </div>
+
+              <div className="border-t border-ink/10 pt-4 space-y-2">
+                <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Parques y lugares para pasear</p>
+                {form.spots.length > 0 && (
+                  <ul className="space-y-1.5">
+                    {form.spots.map((spot) => (
+                      <li key={spot.id} className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs" style={{ background: 'var(--glass-bg)' }}>
+                        <span className="min-w-0">
+                          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{spot.name}</span>
+                          <span className="block text-2xs" style={{ color: 'var(--text-muted)' }}>
+                            {ZONE_SPOT_LABELS[spot.kind]} · {spot.lat.toFixed(4)}, {spot.lng.toFixed(4)}{spot.note ? ` · ${spot.note}` : ''}
+                          </span>
+                        </span>
+                        <Button
+                          variant="icon"
+                          onClick={() => setForm({ ...form, spots: form.spots.filter((item) => item.id !== spot.id) })}
+                          aria-label={`Quitar ${spot.name}`}
+                          className="hover:bg-danger-500/10 hover:text-danger-400"
+                        >
+                          <Trash2 size={11} />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={spotDraft.name}
+                    onChange={(e) => setSpotDraft({ ...spotDraft, name: e.target.value })}
+                    placeholder="Nombre del lugar"
+                    aria-label="Nombre del lugar"
+                    className="px-3 py-2 rounded-lg text-xs border"
+                    style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                  />
+                  <select
+                    value={spotDraft.kind}
+                    onChange={(e) => setSpotDraft({ ...spotDraft, kind: e.target.value as ZoneSpot['kind'] })}
+                    aria-label="Tipo de lugar"
+                    className="px-3 py-2 rounded-lg text-xs border"
+                    style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                  >
+                    {ZONE_SPOT_KINDS.map((kind) => <option key={kind} value={kind}>{ZONE_SPOT_LABELS[kind]}</option>)}
+                  </select>
+                  <input
+                    type="number"
+                    step="any"
+                    value={spotDraft.lat}
+                    onChange={(e) => setSpotDraft({ ...spotDraft, lat: e.target.value })}
+                    placeholder="Latitud"
+                    aria-label="Latitud del lugar"
+                    className="px-3 py-2 rounded-lg text-xs border"
+                    style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                  />
+                  <input
+                    type="number"
+                    step="any"
+                    value={spotDraft.lng}
+                    onChange={(e) => setSpotDraft({ ...spotDraft, lng: e.target.value })}
+                    placeholder="Longitud"
+                    aria-label="Longitud del lugar"
+                    className="px-3 py-2 rounded-lg text-xs border"
+                    style={{ background: 'var(--glass-bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setSpotDraft({ ...spotDraft, lat: form.centerLat, lng: form.centerLng })}
+                    disabled={!form.centerLat || !form.centerLng}
+                  >
+                    Usar el centro de la zona
+                  </Button>
+                  <Button
+                    size="sm"
+                    leftIcon={<Plus size={12} />}
+                    disabled={!spotDraft.name.trim() || !Number.isFinite(parseFloat(spotDraft.lat)) || !Number.isFinite(parseFloat(spotDraft.lng))}
+                    onClick={() => {
+                      setForm({
+                        ...form,
+                        spots: [...form.spots, {
+                          id: `spot-${Date.now()}`,
+                          name: spotDraft.name.trim(),
+                          kind: spotDraft.kind,
+                          lat: parseFloat(spotDraft.lat),
+                          lng: parseFloat(spotDraft.lng),
+                          ...(spotDraft.note.trim() ? { note: spotDraft.note.trim() } : {}),
+                        }],
+                      })
+                      setSpotDraft(EMPTY_SPOT)
+                    }}
+                  >
+                    Agregar lugar
+                  </Button>
+                </div>
+                <p className="text-2xs text-muted">El paseador ve estos lugares cuando le toca un paseo en esta zona.</p>
               </div>
 
               <div className="border-t border-ink/10 pt-4 space-y-3">

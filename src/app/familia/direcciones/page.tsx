@@ -15,6 +15,7 @@ import {
 import type { Address } from '@/types'
 import { Button, Card, ConfirmDialog, EmptyState } from '@/components/ui'
 import { usePostalCodeLookup } from '@/lib/usePostalCodeLookup'
+import { normalizePostalCode, zoneForPostalCode } from '@/lib/zoneMatching'
 
 const ALIAS_OPTIONS = [
   { value: 'Casa', icon: Home },
@@ -51,7 +52,7 @@ export default function DireccionesPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [zones, setZones] = useState<Array<{ id: string; name: string }>>([])
+  const [zones, setZones] = useState<Array<{ id: string; name: string; active: boolean; postalCodes: string[] }>>([])
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const { suggestion: postalSuggestion, loading: postalLoading } = usePostalCodeLookup(form.zip)
@@ -72,6 +73,17 @@ export default function DireccionesPage() {
     })
   }, [postalSuggestion])
 
+  // El código postal elige la zona, como en las apps de reparto. Solo cuando
+  // todavía no hay una elegida: si la familia escogió otra a propósito, se
+  // respeta. El CP no dibuja un borde; solo dice a qué zona pertenece.
+  const zoneForZip = zoneForPostalCode(zones, form.zip)
+  const typedPostalCode = normalizePostalCode(form.zip)
+
+  useEffect(() => {
+    if (!zoneForZip) return
+    setForm((current) => (current.zoneId ? current : { ...current, zoneId: zoneForZip.id }))
+  }, [zoneForZip])
+
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (!user) { router.push('/login'); return }
@@ -88,7 +100,17 @@ export default function DireccionesPage() {
   useEffect(() => {
     const zonesQuery = query(collection(db, 'zones'), where('active', '==', true), limit(100))
     return onSnapshot(zonesQuery, (snapshot) => {
-      setZones(snapshot.docs.map((item) => ({ id: item.id, name: String(item.data().name || item.id) })))
+      setZones(snapshot.docs.map((item) => {
+        const data = item.data()
+        return {
+          id: item.id,
+          name: String(data.name || item.id),
+          active: data.active !== false,
+          postalCodes: Array.isArray(data.postalCodes)
+            ? data.postalCodes.filter((code: unknown): code is string => typeof code === 'string')
+            : [],
+        }
+      }))
     }, () => setSaveError('No pudimos consultar las zonas disponibles.'))
   }, [])
 
@@ -309,6 +331,16 @@ export default function DireccionesPage() {
                   {zones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}
                 </select>
                 {zones.length === 0 && <p className="mt-1 text-xs text-warning">Aún no hay zonas activas disponibles. Contacta a PET Ap para confirmar cobertura.</p>}
+                {zoneForZip && (
+                  <p className="mt-1 text-xs text-muted">
+                    Tu código postal {typedPostalCode} corresponde a la zona <strong>{zoneForZip.name}</strong>.
+                  </p>
+                )}
+                {!zoneForZip && typedPostalCode && zones.length > 0 && (
+                  <p className="mt-1 text-xs text-warning">
+                    Todavía no tenemos una zona para el código postal {typedPostalCode}. Elige la más cercana o escríbenos para confirmar cobertura.
+                  </p>
+                )}
               </div>
 
               {/* Alias */}
