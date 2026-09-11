@@ -52,7 +52,7 @@ export const RETENTION_MATRIX = [
 ] as const
 
 export const STORAGE_INVENTORY = [
-  { name: '__session', kind: 'cookie', category: 'esencial', purpose: 'Señal de navegación; no autoriza', duration: '24 horas', creator: 'PET Ap', removal: 'Logout o expiración' },
+  { name: '__session', kind: 'cookie', category: 'esencial', purpose: 'Señal de navegación; no autoriza', duration: '30 días, renovada mientras la sesión siga abierta', creator: 'PET Ap', removal: 'Logout o expiración' },
   { name: 'petap_consent_v1', kind: 'localStorage', category: 'preferencia', purpose: 'Elección de analítica', duration: 'Hasta borrar o cambiar elección', creator: 'PET Ap', removal: 'Control Privacidad > Borrar elección' },
   { name: 'pq_reservation_draft', kind: 'localStorage', category: 'esencial', purpose: 'Borrador local de reserva', duration: 'Hasta enviar o limpiar datos del sitio', creator: 'PET Ap', removal: 'Al completar la solicitud o desde el navegador' },
   { name: 'petap_banner_dismissed', kind: 'localStorage', category: 'preferencia', purpose: 'Recordar banner cerrado', duration: 'Hasta cambiar el mensaje o limpiar datos', creator: 'PET Ap', removal: 'Configuración del navegador' },

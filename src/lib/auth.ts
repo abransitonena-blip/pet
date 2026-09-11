@@ -1,6 +1,8 @@
 import { entryForPrivatePath, isSafeRedirect } from '@/lib/roles'
 
-const SESSION_MAX_AGE = 86400 // 24h
+// 30 días. Se renueva en cada carga con sesión activa (SessionCookieKeeper),
+// así que la persona solo vuelve a entrar cuando cierra sesión de verdad.
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30
 
 function setCookie(name: string, value: string, maxAge: number) {
   document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`

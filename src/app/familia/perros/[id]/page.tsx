@@ -10,6 +10,7 @@ import { auth, db } from '@/firebase/config'
 import { Card, EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import { PawMark } from '@/components/ui/Logo'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
+import EmergencyTagSection from '@/components/family/EmergencyTagSection'
 
 /**
  * Perfil de la mascota.
@@ -285,6 +286,14 @@ export default function DogProfilePage() {
           )}
         </Section>
       )}
+
+      <EmergencyTagSection
+        dogId={dogId}
+        petName={dog.name}
+        breed={dog.breed}
+        size={dog.size}
+        petType={dog.petType}
+      />
 
       <Section title="Actividad reciente">
         {sessionsError ? (

@@ -1085,6 +1085,27 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════
+    // PERFIL DE EMERGENCIA (placa con QR)
+    // ═══════════════════════════════════════════
+    // Documento espejo que la familia publica a propósito, para que quien
+    // encuentre a su perro pueda avisarle. Solo lleva lo que el dueño aceptó
+    // mostrar: nombre, raza, talla, tipo, foto y, únicamente si lo activó, su
+    // teléfono. Nunca dirección, salud, notas ni el id real de la mascota.
+    //
+    // `get` es público porque el slug ES el secreto: 128 bits aleatorios que
+    // solo existen en el QR impreso. `list` queda prohibido, así que nadie
+    // puede recorrer la colección para cosechar teléfonos.
+    match /emergency-profiles/{publicSlug} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isAuthenticated()
+        && request.resource.data.ownerId == request.auth.uid
+        && noRoleField();
+      allow delete: if isAuthenticated()
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    // ═══════════════════════════════════════════
     // RASTREO DURANTE EL PASEO (solo servidor escribe)
     // ═══════════════════════════════════════════
     // /api/tracking/point writes these with the privileged client after
