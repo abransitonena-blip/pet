@@ -1,5 +1,7 @@
 'use client'
 
+import { BookingPausedNotice } from '@/components/Maintenance'
+
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -69,6 +71,8 @@ export default function PetAhoraRequestForm({ onRequestCreated }: Props) {
       onRequestCreated?.(id)
     }
   }
+
+  if (config.maintenance === true) return <BookingPausedNotice />
 
   if (!FEATURE_FLAGS.PET_AHORA_ENABLED || !config.features.petAhoraEnabled) {
     return (

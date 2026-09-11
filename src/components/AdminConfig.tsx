@@ -34,7 +34,7 @@ const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'brand', label: 'Diseño y marca', icon: '🎨' },
   { id: 'hero', label: 'Textos del sitio', icon: '📝' },
   { id: 'social', label: 'Redes sociales', icon: '📱' },
-  { id: 'tips', label: 'Walk Tips', icon: '💡' },
+  { id: 'tips', label: 'Consejos para el paseo', icon: '💡' },
   { id: 'faq', label: 'FAQ', icon: '❓' },
   { id: 'announcements', label: 'Anuncios y festividades', icon: '🎉' },
   { id: 'terms', label: 'Términos y condiciones', icon: '📄' },
@@ -270,6 +270,7 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
 
   return (
     <div className="space-y-3">
+      <p className="text-xs text-muted">Se muestran en el inicio del panel de familia. Un consejo sin título o sin texto no aparece.</p>
       {tips.map((tip: { title: string; text: string; icon: string }, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-ink/5 p-3 rounded-lg">
           <div className="flex-1 space-y-2">
@@ -503,12 +504,12 @@ function MaintenanceEditor({ config, updateConfig, saving }: EditorProps) {
         >
           <div className={`w-4 h-4 rounded-full bg-white shadow transition-all ${enabled ? 'translate-x-5' : 'translate-x-1'}`} />
         </button>
-        <span className="text-xs text-muted">{enabled ? 'Activado - el sitio muestra "En mantenimiento"' : 'Desactivado - sitio normal'}</span>
+        <span className="text-xs text-muted">{enabled ? 'Encendido: el sitio público muestra “En mantenimiento”' : 'Apagado: todo funciona normal'}</span>
       </div>
       {enabled && (
         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
            <AlertTriangle className="shrink-0 mt-0.5" size={12} style={{ color: 'var(--color-danger)' }} />
-           <p className="text-xs" style={{ color: 'var(--color-danger)' }}>El sitio mostrará una pantalla de mantenimiento. Los clientes no podrán acceder a la página principal.</p>
+           <p className="text-xs" style={{ color: 'var(--color-danger)' }}>La página principal y las páginas informativas mostrarán “En mantenimiento” y no se podrán solicitar paseos nuevos, ni programados ni PET Ahora. Siguen funcionando admin, paseadores, supervisores, el panel de familia, los paseos ya agendados y el aviso de privacidad.</p>
         </div>
       )}
       <SaveButton onClick={save} saving={saving} />

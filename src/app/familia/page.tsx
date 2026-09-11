@@ -18,6 +18,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import CanonicalFamilyRequests from '@/components/family/CanonicalFamilyRequests'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
+import { useConfig } from '@/context/ConfigContext'
 import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
 import type { WalkSessionStatus } from '@/lib/domainStates'
 
@@ -41,6 +42,9 @@ export default function DashboardPage() {
   const [petAhoraRequested, setPetAhoraRequested] = useState(false)
   const [loadError, setLoadError] = useState('')
   const { request: petAhoraRequest } = usePetAhoraClientRequest(activePetAhoraId)
+  const { config } = useConfig()
+  // Edited in Configuración → Consejos para el paseo; a half-filled tip is not shown.
+  const walkTips = (config.walkTips ?? []).filter((tip) => tip.title?.trim() && tip.text?.trim())
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
@@ -277,6 +281,23 @@ export default function DashboardPage() {
           </div>
         )}
       </motion.div>
+
+      {walkTips.length > 0 && (
+        <section aria-labelledby="walk-tips-title">
+          <h2 id="walk-tips-title" className="mb-3 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Consejos para el paseo
+          </h2>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {walkTips.map((tip, index) => (
+              <li key={`${tip.title}-${index}`} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
+                {tip.icon && <p className="text-lg" aria-hidden="true">{tip.icon}</p>}
+                <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{tip.title}</p>
+                <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>{tip.text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }
