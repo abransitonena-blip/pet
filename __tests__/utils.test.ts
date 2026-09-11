@@ -50,10 +50,10 @@ describe('single source of truth for phone', () => {
     expect(DEFAULT_CONFIG.displayPhone).toBe(brand.displayPhone)
   })
 
-  it('walker phone is a valid 10-digit Mexican number', () => {
-    for (const walker of DEFAULT_CONFIG.walkers) {
-      expect(walker.phone.replace(/\D/g, '')).toMatch(/^\d{10}$/)
-    }
+  it('los teléfonos de paseadores no viven en la config del sitio', () => {
+    // El registro `walkers` se quitó: los paseadores, con su teléfono, viven en
+    // `walkerProfiles`, que es la colección en la que confían las reglas.
+    expect('walkers' in DEFAULT_CONFIG).toBe(false)
   })
 
   it('hero content has no legacy "Quebrada" text', () => {

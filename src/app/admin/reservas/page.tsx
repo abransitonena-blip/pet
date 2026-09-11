@@ -15,7 +15,6 @@ import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 import type { SessionStatus } from '@/types'
 import { useReservations } from '@/context/ReservationsContext'
 import { useToast } from '@/context/ToastContext'
-import { useConfig } from '@/context/ConfigContext'
 import { isWalkerAvailable } from '@/lib/scheduling'
 import Badge from '@/components/ui/Badge'
 import PageHeader from '@/components/ui/PageHeader'
@@ -52,7 +51,6 @@ export default function AdminReservas() {
   const [viewTab, setViewTab] = useState<'canonical' | 'reservations' | 'orders'>('canonical')
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const { toast } = useToast()
-  const { config } = useConfig()
   const { orders } = useServiceOrders()
 
   const filtered = useMemo(() => {
@@ -288,12 +286,12 @@ export default function AdminReservas() {
     setAutoAssigning(false)
   }
 
-  const walkers = useMemo(() => {
-    // Combine walkers from reservations and config
-    const fromReservations = reservations.filter((r) => r.assignedWalker).map((r) => r.assignedWalker)
-    const fromConfig = ((config.walkers || []) as { name: string }[]).map((w) => w.name)
-    return Array.from(new Set([...fromReservations, ...fromConfig]))
-  }, [reservations, config.walkers])
+  // Nombres que aparecen en el historial legacy. Los paseadores reales viven
+  // en `walkerProfiles` y se asignan desde Solicitudes canónicas.
+  const walkers = useMemo(
+    () => Array.from(new Set(reservations.filter((r) => r.assignedWalker).map((r) => r.assignedWalker))),
+    [reservations],
+  )
 
   return (
     <div className="space-y-6">

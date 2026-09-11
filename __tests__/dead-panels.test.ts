@@ -43,6 +43,15 @@ describe('paneles viejos o sin función', () => {
     expect(read('src/app/familia/page.tsx')).toContain('{FEATURE_FLAGS.WALLET_MUTATIONS_ENABLED && <WalletCard compact />}')
   })
 
+  test('el registro viejo de paseadores ya no se lee en ningún panel', () => {
+    const offenders = sourceFiles('src').filter((file) => read(file).includes('config.walkers'))
+    expect(offenders).toEqual([])
+    const page = read('src/app/admin/paseadores/page.tsx')
+    expect(page).toContain("collection(db, 'walkerProfiles')")
+    expect(page).toContain('useCanonicalReservations')
+    expect(page).not.toContain('useReservations')
+  })
+
   test('Incidencias del supervisor mira paseos reales, no solo reseñas', () => {
     const page = read('src/app/supervisor/incidencias/page.tsx')
     expect(page).toContain('useCanonicalReservations')

@@ -11,7 +11,6 @@ import { logChange } from '@/lib/audit'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import { useFocusTrap } from '@/lib/useFocusTrap'
 import { useToast } from '@/context/ToastContext'
-import { useConfig } from '@/context/ConfigContext'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 export default function EditReservationModal({
@@ -36,7 +35,6 @@ export default function EditReservationModal({
   })
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
-  const { config } = useConfig()
   const trapRef = useFocusTrap(isOpen)
   useEscapeKey(onClose, isOpen)
 
@@ -199,18 +197,15 @@ export default function EditReservationModal({
                   />
                 </div>
                 <div className="mt-3">
-                  <label htmlFor="edit-res-walker" className="block text-xs text-muted mb-1">Paseador asignado</label>
-                  <select
-                    id="edit-res-walker"
-                    value={form.assignedWalker}
-                    onChange={(e) => setForm({ ...form, assignedWalker: e.target.value })}
-                    className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"
-                  >
-                    <option value="">Sin asignar</option>
-                    {((config.walkers || []) as { name: string; phone: string }[]).map((w) => (
-                      <option key={w.name} value={w.name}>{w.name}</option>
-                    ))}
-                  </select>
+                  <p className="block text-xs text-muted mb-1">Paseador asignado</p>
+                  <p className="w-full rounded-lg border border-ink/15 px-3 py-2 text-sm text-ink">
+                    {form.assignedWalker || 'Sin asignar'}
+                  </p>
+                  {/* El desplegable salía de un registro viejo en la configuración.
+                      Las asignaciones reales se hacen en Solicitudes canónicas. */}
+                  <p className="text-2xs mt-1 text-muted">
+                    Este historial es de solo lectura. Las asignaciones se hacen en Solicitudes canónicas.
+                  </p>
                 </div>
               </div>
             </div>

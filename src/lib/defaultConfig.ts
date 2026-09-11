@@ -80,7 +80,8 @@ export interface SiteConfig {
   faq: { question: string; answer: string }[]
   termsSections?: { title: string; content: string }[]
   privacySections?: { title: string; content: string }[]
-  walkers: { name: string; phone: string; email?: string; uid?: string; status?: string; zones?: string[]; maxDaily?: number; maxWeekly?: number; schedule?: Record<string, Array<{ start: string; end: string }>> }[]
+  // Los paseadores viven en `walkerProfiles`, la colección en la que confían
+  // las reglas. El registro que se guardaba aquí ya no lo lee ningún panel.
   maintenance: boolean
   features: {
     petAhoraEnabled: boolean
@@ -131,9 +132,6 @@ export const DEFAULT_CONFIG: SiteConfig = {
   ],
   termsSections: undefined,
   privacySections: undefined,
-  walkers: [
-    { name: 'Efrain', phone: '5538231235' },
-  ],
   maintenance: false,
   features: {
     petAhoraEnabled: false,
