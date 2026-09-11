@@ -14,6 +14,7 @@ import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
 import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
 import CanonicalFamilyHistory from '@/components/family/CanonicalFamilyHistory'
 import ReviewForm from '@/components/ReviewForm'
+import { formatShortDate } from '@/lib/customerSegments'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 
 export default function HistorialPage() {
@@ -41,6 +42,10 @@ export default function HistorialPage() {
 
   const filtered = filter === 'all' ? reservations : reservations.filter((r) => r.status === filter)
   const completedCount = reservations.filter((r) => r.status === 'completed').length
+  // El último paseo terminado: se invita a reseñar ese, no "en general".
+  const lastCompleted = reservations
+    .filter((r) => r.status === 'completed')
+    .sort((a, b) => b.date.localeCompare(a.date))[0]
 
   if (loading) {
     return (
@@ -84,7 +89,15 @@ export default function HistorialPage() {
       <section aria-labelledby="familia-review-title" className="space-y-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Tu opinión</p>
-          <h2 id="familia-review-title" className="mt-1 text-base font-bold text-ink">Deja tu reseña</h2>
+          <h2 id="familia-review-title" className="mt-1 text-base font-bold text-ink">
+            {lastCompleted ? `¿Cómo les fue el ${formatShortDate(lastCompleted.date)}?` : 'Deja tu reseña'}
+          </h2>
+          {lastCompleted && (
+            <p className="mt-1 text-sm text-muted">
+              Cuéntanos del paseo de {lastCompleted.petName || 'tu perro'}
+              {lastCompleted.walkerName ? ` con ${lastCompleted.walkerName}` : ''}. Tu reseña ayuda a otras familias a decidir.
+            </p>
+          )}
         </div>
         <ReviewForm />
       </section>

@@ -2,8 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
-import { MessageCircle, Mail, Clock, Music, Phone } from 'lucide-react'
-import { FacebookIcon, InstagramIcon } from '@/components/ui/SocialIcons'
+import { Mail, Clock, Phone } from 'lucide-react'
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '@/components/ui/SocialIcons'
 import { formatBusinessHours } from '@/lib/defaultConfig'
 import { confirmWhatsAppShare, formatDisplayPhone } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
@@ -12,7 +12,7 @@ export default function ContactSection() {
   const { config } = useConfig()
 
   const contacts = [
-    { icon: MessageCircle, label: 'WhatsApp', value: formatDisplayPhone(BRAND.whatsapp), href: BRAND.whatsappUrl },
+    { icon: WhatsAppIcon, label: 'WhatsApp', value: formatDisplayPhone(BRAND.whatsapp), href: BRAND.whatsappUrl },
     { icon: Phone, label: 'Llamar', value: BRAND.displayPhone, href: BRAND.telUrl },
     { icon: Mail, label: 'Correo electrónico', value: config.contactEmail || BRAND.email, href: `mailto:${config.contactEmail || BRAND.email}` },
     { icon: Clock, label: 'Horario', value: formatBusinessHours().map((h) => `${h.weekday} ${h.hours}`).join(' · '), href: null },
@@ -21,7 +21,7 @@ export default function ContactSection() {
   const socials = [
     ...(config.facebook ? [{ icon: FacebookIcon, label: 'Facebook', href: config.facebook }] : []),
     ...(config.instagram ? [{ icon: InstagramIcon, label: 'Instagram', href: config.instagram }] : []),
-    ...(config.tiktok ? [{ icon: Music, label: 'TikTok', href: config.tiktok }] : []),
+    ...(config.tiktok ? [{ icon: TikTokIcon, label: 'TikTok', href: config.tiktok }] : []),
   ]
 
   return (

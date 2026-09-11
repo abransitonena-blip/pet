@@ -16,6 +16,7 @@ import type { Address } from '@/types'
 import { Button, Card, ConfirmDialog, EmptyState } from '@/components/ui'
 import { usePostalCodeLookup } from '@/lib/usePostalCodeLookup'
 import { normalizePostalCode, zoneForPostalCode } from '@/lib/zoneMatching'
+import { getWhatsAppLink } from '@/lib/utils'
 
 const ALIAS_OPTIONS = [
   { value: 'Casa', icon: Home },
@@ -328,7 +329,16 @@ export default function DireccionesPage() {
                 <label htmlFor="address-zone" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Zona disponible *</label>
                 <select id="address-zone" value={form.zoneId} onChange={(event) => setForm({ ...form, zoneId: event.target.value })} className="input-field min-h-11 w-full" required>
                   <option value="">Selecciona una zona</option>
-                  {zones.map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}
+                  {/* Con los CP a la vista, la familia entiende por qué una zona
+                      le toca o no, en lugar de adivinar entre nombres. */}
+                  {zones.map((zone) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.name}
+                      {zone.postalCodes.length > 0
+                        ? ` · CP ${zone.postalCodes.slice(0, 3).join(', ')}${zone.postalCodes.length > 3 ? '…' : ''}`
+                        : ''}
+                    </option>
+                  ))}
                 </select>
                 {zones.length === 0 && <p className="mt-1 text-xs text-warning">Aún no hay zonas activas disponibles. Contacta a PET Ap para confirmar cobertura.</p>}
                 {zoneForZip && (
@@ -338,7 +348,16 @@ export default function DireccionesPage() {
                 )}
                 {!zoneForZip && typedPostalCode && zones.length > 0 && (
                   <p className="mt-1 text-xs text-warning">
-                    Todavía no tenemos una zona para el código postal {typedPostalCode}. Elige la más cercana o escríbenos para confirmar cobertura.
+                    Todavía no tenemos una zona para el código postal {typedPostalCode}. Elige la más cercana para guardar tu dirección, o{' '}
+                    <a
+                      href={getWhatsAppLink(`Hola, soy familia de PET Ap. Mi código postal es ${typedPostalCode} y no aparece en las zonas disponibles. ¿Me confirman si hay cobertura?`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      pregúntanos por WhatsApp
+                    </a>{' '}
+                    si tu colonia debería estar cubierta.
                   </p>
                 )}
               </div>

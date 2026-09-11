@@ -4,8 +4,8 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Dog, MessageCircle, XCircle, Mail, Music } from 'lucide-react'
-import { FacebookIcon, InstagramIcon } from '@/components/ui/SocialIcons'
+import { Dog, MessageCircle, XCircle, Mail } from 'lucide-react'
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '@/components/ui/SocialIcons'
 import { useConfig } from '@/context/ConfigContext'
 import { formatBusinessHours } from '@/lib/defaultConfig'
 import { confirmWhatsAppShare, formatDisplayPhone } from '@/lib/utils'
@@ -95,10 +95,10 @@ export default function Footer({ onTerms }: { onTerms: () => void }) {
             <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 text-ink">Síguenos</h3>
             <div className="flex gap-3">
               {[
-                { icon: MessageCircle, href: BRAND.whatsappUrl, label: 'WhatsApp' },
+                { icon: WhatsAppIcon, href: BRAND.whatsappUrl, label: 'WhatsApp' },
                 ...(config.instagram ? [                { icon: InstagramIcon, href: config.instagram, label: 'Instagram' }] : []),
                 ...(config.facebook ? [{ icon: FacebookIcon, href: config.facebook, label: 'Facebook' }] : []),
-                ...(config.tiktok ? [{ icon: Music, href: config.tiktok, label: 'TikTok' }] : []),
+                ...(config.tiktok ? [{ icon: TikTokIcon, href: config.tiktok, label: 'TikTok' }] : []),
               ].map(({ icon: Icon, href, label }) => (
                 <a
                   key={href}
