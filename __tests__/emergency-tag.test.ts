@@ -42,6 +42,14 @@ describe('placa QR de emergencia', () => {
     expect(read('src/components/family/EmergencyTagSection.tsx')).toContain('if (!FEATURE_FLAGS.PET_EMERGENCY_QR_ENABLED) return null')
   })
 
+  test('la ruta tiene su propia pantalla cuando no hay placa que mostrar', () => {
+    // Sin este archivo, notFound() en este segmento devolvía una página en
+    // blanco: el título correcto y el cuerpo vacío.
+    const notFound = readFileSync('src/app/qr/[slug]/not-found.tsx', 'utf8')
+    expect(notFound).toContain('Esta placa no está disponible')
+    expect(notFound).toContain('wa.me')
+  })
+
   test('el teléfono solo viaja al documento público si el dueño lo activó', () => {
     const source = read('src/lib/emergencyProfile.ts')
     expect(source).toContain('if (input.showOwnerPhone && input.ownerPhone) payload.ownerPhone = input.ownerPhone')
