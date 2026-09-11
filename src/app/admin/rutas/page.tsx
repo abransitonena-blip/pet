@@ -28,7 +28,9 @@ import type { WalkPoint } from '@/types'
  * them would suggest a measured path between samples that nobody recorded.
  */
 
-const MAX_SESSIONS = 200
+// firestore.rules only lets a walkSessions list ask for 100 (validListLimit);
+// a bigger limit is rejected as permission-denied, not trimmed.
+const MAX_SESSIONS = 100
 const MAX_ALERTS = 30
 const MAX_POINTS = 300
 

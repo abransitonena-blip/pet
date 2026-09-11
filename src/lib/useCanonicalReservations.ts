@@ -9,8 +9,11 @@ import {
   onSnapshot,
   orderBy,
   query,
+  startAfter,
   where,
   type FirestoreError,
+  type QueryConstraint,
+  type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import type { WalkSessionStatus } from '@/lib/domainStates'
@@ -30,6 +33,15 @@ import { getReservationServiceDefinitions } from '@/lib/walkServices'
  * Names/phones live on other documents (customerProfiles, dogs, walkerProfiles),
  * so they are resolved here in batched `in` queries rather than one read per row.
  */
+
+/**
+ * The rules only allow listing walkSessions with `limit <= 100`
+ * (`validListLimit(100)` in firestore.rules). A bigger limit does not return a
+ * shorter list: Firestore rejects the whole query as permission-denied, which
+ * is how Finanzas, Analítica, Insights, Familias and Perros broke when they
+ * asked for 500 at once. More history is read in pages of this size.
+ */
+export const WALK_SESSIONS_PAGE_SIZE = 100
 
 export interface CanonicalReservationView {
   id: string
@@ -151,27 +163,95 @@ export function useCanonicalReservations(options: CanonicalReservationsOptions =
 
   useEffect(() => {
     setLoading(true)
-    const filters = []
+    const filters: QueryConstraint[] = []
     if (customerId) filters.push(where('customerId', '==', customerId))
     if (fromDate) filters.push(where('scheduledDate', '>=', fromDate))
     if (toDate) filters.push(where('scheduledDate', '<=', toDate))
 
-    const sessionsQuery = query(
+    const pageQuery = (size: number, after?: QueryDocumentSnapshot) => query(
       collection(db, 'walkSessions'),
       ...filters,
       orderBy('scheduledDate', 'desc'),
-      fsLimit(max),
+      ...(after ? [startAfter(after)] : []),
+      fsLimit(size),
     )
 
-    return onSnapshot(sessionsQuery, (snapshot) => {
-      setSessions(snapshot.docs.map((item) => rawFromSnapshot(item.id, item.data())))
+    const firstPageSize = Math.min(max, WALK_SESSIONS_PAGE_SIZE)
+    let cancelled = false
+    let newest: RawSession[] = []
+    let older: RawSession[] = []
+    let olderCursorId = ''
+    let olderRequest = 0
+
+    const publish = () => {
+      const seen = new Set<string>()
+      const merged: RawSession[] = []
+      for (const session of [...newest, ...older]) {
+        if (seen.has(session.id)) continue
+        seen.add(session.id)
+        merged.push(session)
+      }
+      setSessions(merged.slice(0, max))
       setError(null)
       setLoading(false)
-    }, (readError: FirestoreError) => {
+    }
+
+    const fail = (readError: unknown) => {
+      if (cancelled) return
       setSessions([])
-      setError(classifyCanonicalReadError(readError))
+      setError(classifyCanonicalReadError(readError as FirestoreError))
       setLoading(false)
-    })
+    }
+
+    const loadOlder = async (cursor: QueryDocumentSnapshot): Promise<RawSession[]> => {
+      const pages: RawSession[] = []
+      let after = cursor
+      while (newest.length + pages.length < max) {
+        const size = Math.min(WALK_SESSIONS_PAGE_SIZE, max - newest.length - pages.length)
+        const snapshot = await getDocs(pageQuery(size, after))
+        pages.push(...snapshot.docs.map((item) => rawFromSnapshot(item.id, item.data())))
+        if (snapshot.docs.length < size) break
+        after = snapshot.docs[snapshot.docs.length - 1]
+      }
+      return pages
+    }
+
+    // The newest page stays live -- today's walks change status while staff
+    // watch. Older history is read once, and again only when that page's
+    // last walk changes.
+    const unsubscribe = onSnapshot(pageQuery(firstPageSize), (snapshot) => {
+      if (cancelled) return
+      newest = snapshot.docs.map((item) => rawFromSnapshot(item.id, item.data()))
+      const last = snapshot.docs[snapshot.docs.length - 1]
+      if (max <= firstPageSize || snapshot.docs.length < firstPageSize || !last) {
+        older = []
+        publish()
+        return
+      }
+      if (last.id === olderCursorId) {
+        publish()
+        return
+      }
+      const firstLoad = olderCursorId === ''
+      olderCursorId = last.id
+      // After the first load, show the live page right away; history follows.
+      if (!firstLoad) publish()
+      const request = ++olderRequest
+      loadOlder(last)
+        .then((pages) => {
+          if (cancelled || request !== olderRequest) return
+          older = pages
+          publish()
+        })
+        .catch((readError) => {
+          if (request === olderRequest) fail(readError)
+        })
+    }, fail)
+
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
   }, [customerId, fromDate, toDate, max, revision])
 
   const customerIds = useMemo(
