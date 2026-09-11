@@ -13,25 +13,30 @@ import AppShell from '@/components/layout/AppShell'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 import {
-  Dog, Calendar, PawPrint, Camera, Users, MapPin,
+  Dog, Calendar, PawPrint, Camera, Users, MapPin, Wallet,
   Settings, Gift, Home, History, BookOpen, Bell, ShieldCheck, MessagesSquare,
 } from 'lucide-react'
 
+/**
+ * Fourteen destinations in one flat list read as a wall. They are grouped by
+ * what a family comes to do, with the walk itself first: book, follow, see the
+ * photos. Every destination is the same as before; only order and headings.
+ */
 const ACCOUNT_ITEMS = [
-  { id: 'dashboard', label: 'Inicio', icon: Home, color: '#D97706', href: '/familia' },
-  { id: 'nueva-reserva', label: 'Nueva reserva', icon: Calendar, color: '#059669', href: '/familia/nueva-reserva' },
-  { id: 'perros', label: 'Mis perros', icon: PawPrint, color: '#3b82f6', href: '/familia/perros' },
-  { id: 'direcciones', label: 'Mis direcciones', icon: MapPin, color: '#F97316', href: '/familia/direcciones' },
-  { id: 'historial', label: 'Mi historial', icon: History, color: '#8B5CF6', href: '/familia/historial' },
-  { id: 'fotos', label: 'Fotos de paseos', icon: Camera, color: '#06B6D4', href: '/familia/fotos' },
-  { id: 'notificaciones', label: 'Notificaciones', icon: Bell, color: '#D97706', href: '/familia/notificaciones' },
-  { id: 'billetera', label: 'Créditos PET', icon: Dog, color: '#0F766E', href: '/familia/billetera' },
-  { id: 'referir', label: 'Referir amigo', icon: Users, color: '#EC4899', href: '/familia/referir' },
-  { id: 'lealtad', label: 'Mi lealtad', icon: Gift, color: '#F59E0B', href: '/familia/lealtad' },
-  { id: 'mensajes', label: 'Mensajes', icon: MessagesSquare, color: '#0EA5E9', href: '/familia/mensajes' },
-  { id: 'ayuda', label: 'Centro de ayuda', icon: BookOpen, color: '#64748B', href: '/familia/ayuda' },
-  { id: 'config', label: 'Configuración', icon: Settings, color: '#64748B', href: '/familia/config' },
-  { id: 'privacidad', label: 'Privacidad y ARCO', icon: ShieldCheck, color: '#0F766E', href: '/familia/privacidad' },
+  { id: 'dashboard', label: 'Inicio', icon: Home, href: '/familia', group: 'Paseos' },
+  { id: 'nueva-reserva', label: 'Nueva reserva', icon: Calendar, href: '/familia/nueva-reserva', group: 'Paseos' },
+  { id: 'historial', label: 'Mi historial', icon: History, href: '/familia/historial', group: 'Paseos' },
+  { id: 'fotos', label: 'Fotos y reportes', icon: Camera, href: '/familia/fotos', group: 'Paseos' },
+  { id: 'perros', label: 'Mis perros', icon: PawPrint, href: '/familia/perros', group: 'Mi familia' },
+  { id: 'direcciones', label: 'Mis direcciones', icon: MapPin, href: '/familia/direcciones', group: 'Mi familia' },
+  { id: 'billetera', label: 'Créditos PET', icon: Wallet, href: '/familia/billetera', group: 'Beneficios' },
+  { id: 'lealtad', label: 'Mi lealtad', icon: Gift, href: '/familia/lealtad', group: 'Beneficios' },
+  { id: 'referir', label: 'Referir amigo', icon: Users, href: '/familia/referir', group: 'Beneficios' },
+  { id: 'mensajes', label: 'Mensajes', icon: MessagesSquare, href: '/familia/mensajes', group: 'Cuenta' },
+  { id: 'notificaciones', label: 'Notificaciones', icon: Bell, href: '/familia/notificaciones', group: 'Cuenta' },
+  { id: 'ayuda', label: 'Centro de ayuda', icon: BookOpen, href: '/familia/ayuda', group: 'Cuenta' },
+  { id: 'config', label: 'Configuración', icon: Settings, href: '/familia/config', group: 'Cuenta' },
+  { id: 'privacidad', label: 'Privacidad y ARCO', icon: ShieldCheck, href: '/familia/privacidad', group: 'Cuenta' },
 ]
 
 export default function FamilyLayoutClient({ children }: { children: React.ReactNode }) {

@@ -12,6 +12,19 @@ interface NavItem {
   label: string
   href: string
   icon?: React.ComponentType<{ size?: number | string; }>
+  /** Optional heading: consecutive items with the same group are listed under it. */
+  group?: string
+}
+
+function groupNavItems(items: NavItem[]): Array<{ group: string; items: NavItem[] }> {
+  const groups: Array<{ group: string; items: NavItem[] }> = []
+  items.forEach((item) => {
+    const group = item.group ?? ''
+    const last = groups[groups.length - 1]
+    if (last && last.group === group) last.items.push(item)
+    else groups.push({ group, items: [item] })
+  })
+  return groups
 }
 
 interface AppShellProps {
@@ -113,22 +126,29 @@ export default function AppShell({
                 <span className="text-xs font-medium text-muted group-open:hidden">Abrir menú</span>
                 <span className="hidden text-xs font-medium text-muted group-open:inline">Cerrar menú</span>
               </summary>
-              <div className="grid grid-cols-2 gap-1 border-t border-ink/10 p-2 sm:grid-cols-3">
-                {navItems.map((item) => {
-                  const Icon = item.icon
-                  const active = isPanelRouteActive(pathname, item.href)
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      aria-current={active ? 'page' : undefined}
-                      className={`flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none ${active ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-ink/5 hover:text-ink'}`}
-                    >
-                      {Icon && <Icon size={16} aria-hidden="true" />}
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  )
-                })}
+              <div className="space-y-2 border-t border-ink/10 p-2">
+                {groupNavItems(navItems).map(({ group, items }, index) => (
+                  <div key={`${group}-${index}`}>
+                    {group && <p className="px-3 pb-1 pt-1 text-2xs font-semibold uppercase tracking-[0.14em] text-muted">{group}</p>}
+                    <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
+                      {items.map((item) => {
+                        const Icon = item.icon
+                        const active = isPanelRouteActive(pathname, item.href)
+                        return (
+                          <Link
+                            key={item.id}
+                            href={item.href}
+                            aria-current={active ? 'page' : undefined}
+                            className={`flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none ${active ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-ink/5 hover:text-ink'}`}
+                          >
+                            {Icon && <Icon size={16} aria-hidden="true" />}
+                            <span className="truncate">{item.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </details>
           )}
@@ -138,23 +158,28 @@ export default function AppShell({
       <div className="section-container pb-10 pt-3 lg:py-8">
         <div className="grid lg:grid-cols-4 gap-6">
           <aside className={`${mobileNavigation ? 'hidden lg:block' : ''} lg:col-span-1`}>
-            <nav className="space-y-1" aria-label="Navegación del panel">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const active = isPanelRouteActive(pathname, item.href)
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    aria-current={active ? 'page' : undefined}
-                    className={`flex min-h-11 items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none ${active ? 'bg-brand-500/10 text-brand-600' : ''}`}
-                    style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                  >
-                    {Icon && <Icon size={16} aria-hidden="true" />}
-                    {item.label}
-                  </Link>
-                )
-              })}
+            <nav className="space-y-4" aria-label="Navegación del panel">
+              {groupNavItems(navItems).map(({ group, items }, index) => (
+                <div key={`${group}-${index}`} className="space-y-1">
+                  {group && <p className="px-4 pb-1 text-2xs font-semibold uppercase tracking-[0.14em] text-muted">{group}</p>}
+                  {items.map((item) => {
+                    const Icon = item.icon
+                    const active = isPanelRouteActive(pathname, item.href)
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        aria-current={active ? 'page' : undefined}
+                        className={`flex min-h-11 items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none ${active ? 'bg-brand-500/10 text-brand-600' : ''}`}
+                        style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+                      >
+                        {Icon && <Icon size={16} aria-hidden="true" />}
+                        {item.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              ))}
             </nav>
           </aside>
 
