@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc,
+  collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, deleteField,
   doc, serverTimestamp, limit,
 } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
@@ -230,7 +230,6 @@ export default function MisPerrosPage() {
         name: form.name.trim(),
         breed: form.breed.trim(),
         size: form.size,
-        sex: form.sex || undefined,
         age: form.age.trim(),
         weight: form.weight.trim(),
         petType: form.petType,
@@ -253,11 +252,14 @@ export default function MisPerrosPage() {
         },
       }
 
+      // Firestore rejects `undefined`, so a pet saved without choosing a sex
+      // used to fail outright. Unset means: absent on create, removed on edit.
       if (editingPet) {
-        await updateDoc(doc(db, 'dogs', editingPet.id), data)
+        await updateDoc(doc(db, 'dogs', editingPet.id), { ...data, sex: form.sex || deleteField() })
       } else {
         await addDoc(collection(db, 'dogs'), {
           ...data,
+          ...(form.sex ? { sex: form.sex } : {}),
           ownerId: user.uid,
           createdAt: serverTimestamp(),
         })
@@ -697,12 +699,23 @@ export default function MisPerrosPage() {
                         })}
                       </div>
                       {form.health.vaccines.map((vac, i) => (
-                        <div key={i} className="flex items-center gap-2 mb-2 p-2 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
-                          <Syringe size={12} className="text-brand-600 shrink-0" />
-                          <input type="text" value={vac.name} onChange={(e) => updateVaccine(i, 'name', e.target.value)} placeholder="Nombre" className="flex-1 text-xs bg-transparent border-none outline-none" style={{ color: 'var(--text-primary)' }} />
-                          <label htmlFor={`dog-vaccine-date-${i}`} className="sr-only">Fecha de la vacuna</label>
-                          <input id={`dog-vaccine-date-${i}`} type="date" value={vac.date} onChange={(e) => updateVaccine(i, 'date', e.target.value)} className="text-2xs bg-transparent outline-none" style={{ color: 'var(--text-muted)' }} />
-                          <button type="button" onClick={() => removeVaccine(i)} className="text-danger-400 hover:opacity-80"><X size={10} /></button>
+                        <div key={i} className="mb-2 space-y-1.5 p-2 rounded-xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border)' }}>
+                          <div className="flex items-center gap-2">
+                            <Syringe size={12} className="text-brand-600 shrink-0" />
+                            <input type="text" value={vac.name} onChange={(e) => updateVaccine(i, 'name', e.target.value)} placeholder="Nombre" aria-label="Nombre de la vacuna" className="flex-1 text-xs bg-transparent border-none outline-none" style={{ color: 'var(--text-primary)' }} />
+                            <button type="button" onClick={() => removeVaccine(i)} aria-label="Quitar vacuna" className="text-danger-400 hover:opacity-80"><X size={10} /></button>
+                          </div>
+                          {/* The booster date is what lets admin warn before a vaccine lapses; nothing is assumed without it. */}
+                          <div className="grid grid-cols-2 gap-2 pl-5">
+                            <label htmlFor={`dog-vaccine-date-${i}`} className="text-2xs" style={{ color: 'var(--text-muted)' }}>
+                              Aplicada
+                              <input id={`dog-vaccine-date-${i}`} type="date" value={vac.date} onChange={(e) => updateVaccine(i, 'date', e.target.value)} className="block w-full text-2xs bg-transparent outline-none" style={{ color: 'var(--text-secondary)' }} />
+                            </label>
+                            <label htmlFor={`dog-vaccine-next-${i}`} className="text-2xs" style={{ color: 'var(--text-muted)' }}>
+                              Próximo refuerzo
+                              <input id={`dog-vaccine-next-${i}`} type="date" value={vac.nextDue ?? ''} onChange={(e) => updateVaccine(i, 'nextDue', e.target.value)} className="block w-full text-2xs bg-transparent outline-none" style={{ color: 'var(--text-secondary)' }} />
+                            </label>
+                          </div>
                         </div>
                       ))}
                     </div>
