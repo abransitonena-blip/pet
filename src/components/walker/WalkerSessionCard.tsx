@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { CalendarDays, Check, ClipboardList, Clock, Dog, FileText, MapPin } from 'lucide-react'
+import { AlertTriangle, CalendarDays, Check, ClipboardList, Clock, Dog, FileText, MapPin, Stethoscope } from 'lucide-react'
 import { Button, Card, StatusBadge } from '@/components/ui'
+import WalkSheet from '@/components/walker/WalkSheet'
 import type { WalkSession } from '@/types'
 import {
   getWalkerTransition,
@@ -22,6 +24,7 @@ interface WalkerSessionCardProps {
 }
 
 export default function WalkerSessionCard({ session, onAdvance, updating = false, compact = false }: WalkerSessionCardProps) {
+  const [sheetOpen, setSheetOpen] = useState(false)
   const status = walkerSessionStatus(session)
   const transition = getWalkerTransition(status)
   const date = walkerSessionDate(session)
@@ -99,9 +102,30 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
             </dl>
           )}
 
+          {!compact && (
+            <div className="mt-3 space-y-2">
+              <button
+                type="button"
+                onClick={() => setSheetOpen((open) => !open)}
+                aria-expanded={sheetOpen}
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink/[0.04] px-3 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <Stethoscope size={15} aria-hidden="true" />
+                {sheetOpen ? 'Ocultar la ficha del paseo' : 'Ver la ficha del paseo'}
+              </button>
+              {sheetOpen && <WalkSheet sessionId={session.id} today={date} />}
+            </div>
+          )}
+
           {(status === 'arrived' || status === 'in_progress') && (
-            <div className="mt-3 flex justify-end">
-              <Link href={`/walker/reportes/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-primary/10 px-5 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto">
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <Link
+                href={`/walker/reportes/${encodeURIComponent(session.id)}#incidencia`}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-danger-500/10 px-5 text-sm font-semibold text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500"
+              >
+                <AlertTriangle size={16} aria-hidden="true" /> Reportar incidencia
+              </Link>
+              <Link href={`/walker/reportes/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary/10 px-5 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 <ClipboardList size={16} aria-hidden="true" /> Bitácora del paseo
               </Link>
             </div>

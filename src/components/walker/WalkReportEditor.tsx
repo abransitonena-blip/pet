@@ -258,7 +258,13 @@ export default function WalkReportEditor({ sessionId }: { sessionId: string }) {
         {(['summary', 'behaviorNotes', 'bathroomNotes', 'incidentsSummary'] as const).map((key) => {
           const textLimit = WALK_REPORT_TEXT_LIMITS[key]
           return (
-            <label key={key} className="block">
+            <label
+              key={key}
+              // El botón "Reportar incidencia" del paseo en curso abre la
+              // bitácora directo en este campo.
+              id={key === 'incidentsSummary' ? 'incidencia' : undefined}
+              className="block scroll-mt-24"
+            >
               <span className="mb-1.5 block text-sm font-semibold text-ink">{LABELS[key]}{key === 'summary' ? ' *' : ''}</span>
               <textarea
                 value={content[key]}
