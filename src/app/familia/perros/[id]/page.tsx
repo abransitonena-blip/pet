@@ -8,7 +8,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { AlertTriangle, ArrowLeft, FileText, Pencil, Phone, Syringe } from 'lucide-react'
 import { auth, db } from '@/firebase/config'
 import { Card, EmptyState, ErrorState, LoadingState } from '@/components/ui'
-import { PawMark } from '@/components/ui/Logo'
+import DogAvatar from '@/components/family/DogAvatar'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import EmergencyTagSection from '@/components/family/EmergencyTagSection'
 
@@ -197,9 +197,7 @@ export default function DogProfilePage() {
       </div>
 
       <header className="flex flex-col items-center gap-3 text-center">
-        <div className="grid h-24 w-24 place-items-center rounded-full bg-primary/10 text-primary">
-          <PawMark size={52} />
-        </div>
+        <DogAvatar name={dog.name} breed={dog.breed} size={96} />
         <div>
           <p className="text-2xs font-semibold uppercase tracking-[0.16em] text-muted">{TYPE_LABELS[dog.petType] ?? 'Mascota'}</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-ink">{dog.name}</h1>

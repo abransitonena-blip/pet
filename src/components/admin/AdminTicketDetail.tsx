@@ -10,6 +10,7 @@ import { getTicket, listPrintEvents, newPrintEventId, recordPrintEvent, sha256He
 import { ROLES } from '@/lib/roles'
 import { useSessionRole } from '@/lib/useSessionRole'
 import TicketReceiptView from '@/components/tickets/TicketReceiptView'
+import { shortFolio } from '@/lib/ticketFolio'
 
 type LoadState = 'loading' | 'ready' | 'permission' | 'network'
 
@@ -112,7 +113,7 @@ export default function AdminTicketDetail({ ticketId }: { ticketId: string }) {
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `${ticket.folio}.bin`
+      anchor.download = `ticket-${shortFolio(ticket.folio)}.bin`
       anchor.click()
       URL.revokeObjectURL(url)
       setMessage('BIN descargado y exportación registrada. La impresión física sigue sin confirmar.')
@@ -141,7 +142,7 @@ export default function AdminTicketDetail({ ticketId }: { ticketId: string }) {
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-6 overflow-x-hidden">
-      <header className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Ticket interno</p><h1 className="mt-1 break-all font-mono text-xl font-bold text-ink sm:text-2xl">{ticket.folio}</h1><p className="mt-1 text-sm text-muted">Snapshot inmutable · pago no registrado · no CFDI</p></div><span className="inline-flex min-h-8 items-center rounded-full bg-success/10 px-3 text-xs font-semibold text-success-700">Activo</span></header>
+      <header className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Ticket interno</p><h1 className="mt-1 font-mono text-2xl font-bold tracking-[0.14em] text-ink sm:text-3xl">{shortFolio(ticket.folio)}</h1><p className="mt-1 break-all font-mono text-[11px] text-muted">{ticket.folio}</p><p className="mt-1 text-sm text-muted">Snapshot inmutable · pago no registrado · no CFDI</p></div><span className="inline-flex min-h-8 items-center rounded-full bg-success/10 px-3 text-xs font-semibold text-success-700">Activo</span></header>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_384px]">
         <section className="min-w-0 space-y-5">
           <div className="flex flex-wrap gap-2">

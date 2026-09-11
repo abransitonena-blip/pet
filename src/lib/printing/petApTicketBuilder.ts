@@ -1,6 +1,7 @@
 import type { Money } from '@/lib/finance/domain'
 import type { TemporaryTicketSnapshot } from '@/lib/finance/domain/ticketPreview'
 import { createPetApDogLogo, EscPosEncoder, PET_AP_58MM_PROFILE, type RasterImage } from './escpos'
+import { shortFolio } from '@/lib/ticketFolio'
 
 export interface PetApTicketBuildOptions {
   readonly logo?: RasterImage
@@ -76,7 +77,9 @@ export class PetApTicketBuilder {
     lineWrapped(encoder, `${snapshot.serviceDisplayName}${snapshot.durationMinutes ? ` - ${snapshot.durationMinutes} min` : ''}`)
     encoder.line(`${snapshot.serviceDate}  ${snapshot.startTime}${snapshot.endTime ? `-${snapshot.endTime}` : ''}`)
     lineWrapped(encoder, `Paseador: ${snapshot.walker.displayName}`)
-    lineWrapped(encoder, `Folio: ${snapshot.folio}`)
+    // El folio impreso es el corto: el largo es el id del paseo y ocupaba tres
+    // renglones del papel sin que nadie pudiera dictarlo.
+    encoder.line(`Folio: ${shortFolio(snapshot.folio)}`)
     encoder.line()
     financialLines(snapshot).forEach((line) => lineWrapped(encoder, line))
     encoder.line().line('-'.repeat(PET_AP_58MM_PROFILE.columns)).line()

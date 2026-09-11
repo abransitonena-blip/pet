@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { Pet } from '@/types'
 import { Button, Card, EmptyState } from '@/components/ui'
+import DogAvatar from '@/components/family/DogAvatar'
 
 type PetTab = 'basico' | 'personalidad' | 'salud' | 'preferencias'
 
@@ -384,9 +385,7 @@ export default function MisPerrosPage() {
               className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm"
             >
               <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center shrink-0 text-xl">
-                  {pet.petType === 'perro' ? '🐕' : pet.petType === 'gato' ? '🐈' : '🐾'}
-                </div>
+                <DogAvatar name={pet.name} breed={pet.breed} size={48} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -406,9 +405,11 @@ export default function MisPerrosPage() {
                       </button>
                     </div>
                   </div>
+                  {/* Sin raza ni tamaño, "Sin datos todavía" solo constata el
+                      hueco; mejor decir qué falta y para qué sirve. */}
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                    {[pet.breed, SIZE_OPTIONS.find((s) => s.value === pet.size)?.label]
-                      .filter(Boolean).join(' · ') || 'Sin datos todavía'}
+                    {[pet.breed, SIZE_OPTIONS.find((s) => s.value === pet.size)?.label].filter(Boolean).join(' · ')
+                      || 'Agrega su raza y tamaño para que el paseador sepa a quién va a pasear'}
                   </p>
                   <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                     {pet.age && (

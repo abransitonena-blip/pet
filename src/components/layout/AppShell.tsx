@@ -65,16 +65,19 @@ export default function AppShell({
       >
         <div className="section-container min-h-16 py-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
+            {/* La marca va centrada en su propia caja cuadrada, y el rol con el
+                nombre forman un bloque apretado: así el perrito queda a la
+                misma altura óptica que el texto, no debajo. */}
             <Link
               href={logoHref}
               aria-label="PET Ap"
-              className="flex h-11 w-11 items-center justify-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="grid h-11 w-11 place-items-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-              <Logo size={36} />
+              <Logo size={32} />
             </Link>
-            <div>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{userRole}</p>
-              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{userName}</p>
+            <div className="leading-tight">
+              <p className="text-xs leading-none" style={{ color: 'var(--text-muted)' }}>{userRole}</p>
+              <p className="mt-1 text-sm font-semibold leading-none" style={{ color: 'var(--text-primary)' }}>{userName}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

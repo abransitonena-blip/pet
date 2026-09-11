@@ -124,7 +124,9 @@ describe('T1 ESC/POS output', () => {
   it('contains initialization, raster logo, native QR, feed and final reset', () => {
     const payload = buildPetApTicket(buildTemporaryTicketSnapshot(input()))
     const hex = bytesToHex(payload)
-    expect(payload.byteLength).toBe(2938)
+    // 11 bytes menos que antes: el folio impreso pasó del id largo del paseo a
+    // su código corto de seis caracteres (ver ticketFolio.ts).
+    expect(payload.byteLength).toBe(2927)
     expect(hex.startsWith('1B401B7402')).toBe(true)
     expect(hex).toContain('1D763000')
     expect(hex).toContain('1D286B040031413200')

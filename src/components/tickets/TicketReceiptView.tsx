@@ -1,4 +1,5 @@
 import type { PersistentTicketSnapshot } from '@/lib/finance/domain'
+import { shortFolio } from '@/lib/ticketFolio'
 import PetApDogMark from './PetApDogMark'
 
 export default function TicketReceiptView({ ticket }: { ticket: PersistentTicketSnapshot }) {
@@ -17,8 +18,10 @@ export default function TicketReceiptView({ ticket }: { ticket: PersistentTicket
       </div>
       <dl className="mt-4 space-y-1">
         <div className="flex gap-2"><dt className="shrink-0 font-bold">Paseador</dt><dd className="min-w-0 break-words">{ticket.walkerName}</dd></div>
-        <div><dt className="font-bold">Folio</dt><dd className="break-all text-[11px]">{ticket.folio}</dd></div>
-        <div><dt className="font-bold">Servicio</dt><dd className="break-all text-[11px]">{ticket.serviceFolio}</dd></div>
+        {/* El folio corto: el largo es el id del paseo, no se dicta por
+            teléfono ni cabe en el papel. El de servicio sale del mismo id, así
+            que imprimirlo también sería repetir el mismo código. */}
+        <div className="flex gap-2"><dt className="shrink-0 font-bold">Folio</dt><dd className="font-black tracking-[0.14em]">{shortFolio(ticket.folio)}</dd></div>
       </dl>
       <p className="mt-4 border-y border-dashed border-black/60 py-3 text-center font-black">PAGO NO REGISTRADO</p>
       <div className="text-center">
