@@ -10,7 +10,7 @@ import Card from '@/components/ui/Card'
 import { usePrices } from '@/context/PricesContext'
 import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
 import { useCanonicalDirectory } from '@/lib/useCanonicalDirectory'
-import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
+import { canonicalReadErrorMessage, useCanonicalAddressZones } from '@/lib/useCanonicalWalkSessions'
 import { formatMxn } from '@/lib/businessMetrics'
 import { mexicoCityToday } from '@/lib/customerSegments'
 import { useOpenGeofenceAlerts, useSubmittedReportIds } from '@/lib/useInsightSignals'
@@ -33,6 +33,7 @@ import {
  */
 
 const MAX_SESSIONS = 500
+const MAX_ADDRESS_LOOKUPS = 60
 
 type Period = '7d' | '30d' | '90d'
 
@@ -55,8 +56,15 @@ export default function AdminIAPage() {
   const reportIds = useMemo(() => reportCheckSessionIds(reservations, today), [reservations, today])
   const submittedReportIds = useSubmittedReportIds(reportIds)
   const openGeofenceAlerts = useOpenGeofenceAlerts()
+  // Cada dirección se lee de a diez por consulta; con este tope son seis.
+  const addressIds = useMemo(
+    () => Array.from(new Set(reservations.map((session) => session.addressId).filter(Boolean))).slice(0, MAX_ADDRESS_LOOKUPS),
+    [reservations],
+  )
+  const { zonesByAddress } = useCanonicalAddressZones(addressIds)
+  const zonesKnown = Object.keys(zonesByAddress).length > 0 ? zonesByAddress : null
 
-  const { metrics, insights, plans } = useMemo(() => computeInsights({
+  const { metrics, insights, plans, zones } = useMemo(() => computeInsights({
     sessions: reservations,
     customers,
     dogs,
@@ -64,9 +72,10 @@ export default function AdminIAPage() {
     pricesLoaded: pricesStatus !== 'loading',
     submittedReportIds,
     openGeofenceAlerts,
+    zonesByAddress: zonesKnown,
     today,
     periodDays: PERIOD_DAYS[period],
-  }), [reservations, customers, dogs, services, pricesStatus, submittedReportIds, openGeofenceAlerts, today, period])
+  }), [reservations, customers, dogs, services, pricesStatus, submittedReportIds, openGeofenceAlerts, zonesKnown, today, period])
 
   const countByCategory = useMemo(() => {
     const counts = Object.fromEntries(INSIGHT_CATEGORY_ORDER.map((key) => [key, 0])) as Record<InsightCategory, number>
@@ -231,6 +240,36 @@ export default function AdminIAPage() {
                   </tbody>
                 </table>
               </Card>
+            </section>
+          )}
+          {zones.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold text-ink">Demanda por zona</h2>
+              <Card className="overflow-x-auto p-0 shadow-none">
+                <table className="w-full min-w-[420px] text-left text-xs">
+                  <thead className="text-2xs uppercase tracking-wide text-muted">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Zona</th>
+                      <th className="px-4 py-2 text-right font-medium">Paseos</th>
+                      <th className="px-4 py-2 text-right font-medium">Completados</th>
+                      <th className="px-4 py-2 text-right font-medium">Cancelados</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ink/[0.06]">
+                    {zones.map((zone) => (
+                      <tr key={zone.zone}>
+                        <td className="px-4 py-3 font-medium text-ink">{zone.zone}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-ink">{zone.walks}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-ink">{zone.completed}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-ink">{zone.cancelled}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Card>
+              <p className="mt-2 text-xs text-muted">
+                La zona sale de la dirección de cada paseo. Se leen hasta {MAX_ADDRESS_LOOKUPS} direcciones distintas: las demás aparecen como zona desconocida.
+              </p>
             </section>
           )}
         </>

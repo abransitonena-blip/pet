@@ -50,6 +50,7 @@ const run = (partial: Partial<InsightInputs>) => computeInsights({
   pricesLoaded: false,
   submittedReportIds: null,
   openGeofenceAlerts: null,
+  zonesByAddress: null,
   today,
   periodDays: 30,
   ...partial,
@@ -132,6 +133,28 @@ describe('Centro de Insights', () => {
   test('la tarifa faltante solo se reporta cuando los precios ya cargaron', () => {
     expect(find(run({ pricesLoaded: false }), 'missing-prices')).toBeUndefined()
     expect(find(run({ pricesLoaded: true }), 'missing-prices')?.priority).toBe('high')
+  })
+
+  test('demanda por zona: solo con la cadena dirección → zona, y lo que no se sabe se cuenta aparte', () => {
+    const sessions = [
+      ...Array.from({ length: 6 }, (_, index) => session({ id: `r${index}`, addressId: 'a1', status: 'completed', date: '2026-09-05' })),
+      session({ id: 'c1', addressId: 'a2', status: 'cancelled', date: '2026-09-04' }),
+      session({ id: 'n1', addressId: 'a3', status: 'completed', date: '2026-09-03' }),
+      session({ id: 'x1', addressId: 'sin-leer', status: 'completed', date: '2026-09-02' }),
+    ]
+    expect(run({ sessions }).zones).toEqual([])
+
+    const result = run({ sessions, zonesByAddress: { a1: 'Roma', a2: 'Condesa', a3: 'Zona no definida' } })
+    expect(result.zones).toEqual([
+      { zone: 'Roma', walks: 6, completed: 6, cancelled: 0 },
+      { zone: 'Condesa', walks: 1, completed: 0, cancelled: 1 },
+      { zone: 'Zona no definida', walks: 1, completed: 1, cancelled: 0 },
+      { zone: 'Zona desconocida', walks: 1, completed: 1, cancelled: 0 },
+    ])
+    expect(find(result, 'zone-top')?.title).toBe('Zona con más paseos: Roma')
+    expect(find(result, 'zone-missing')?.title).toBe('1 paseo con dirección sin zona')
+    // Una sola cancelación no alcanza para señalar una zona.
+    expect(find(result, 'zone-cancellations')).toBeUndefined()
   })
 
   test('patrones solo con suficientes paseos; la anticipación es la mediana', () => {

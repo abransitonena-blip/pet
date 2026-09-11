@@ -99,6 +99,8 @@ export interface InsightInputs {
   submittedReportIds: ReadonlySet<string> | null
   /** Open "salió de la zona" alerts; null while unknown. */
   openGeofenceAlerts: readonly OpenGeofenceAlertInput[] | null
+  /** Nombre de zona por dirección (useCanonicalAddressZones); null mientras no se conoce. */
+  zonesByAddress: Record<string, string> | null
   today: string
   periodDays: number
 }
@@ -110,10 +112,23 @@ export interface PlanRow {
   cents: number
 }
 
+export interface ZoneRow {
+  zone: string
+  walks: number
+  completed: number
+  cancelled: number
+}
+
+/** Lo que devuelve useCanonicalAddressZones cuando la dirección no tiene zona. */
+export const ZONE_UNDEFINED = 'Zona no definida'
+/** No pudimos leer la dirección de ese paseo, así que su zona no se sabe. */
+export const ZONE_UNKNOWN = 'Zona desconocida'
+
 export interface InsightResult {
   metrics: { walks: number; completed: number; value: ValueTotal; cancelRate: number }
   insights: Insight[]
   plans: PlanRow[]
+  zones: ZoneRow[]
 }
 
 const PRIORITY_ORDER: Record<InsightPriority, number> = { high: 0, medium: 1, low: 2 }
@@ -192,7 +207,7 @@ export function reportCheckSessionIds(sessions: readonly CanonicalReservationVie
 }
 
 export function computeInsights(input: InsightInputs): InsightResult {
-  const { sessions, customers, dogs, services, pricesLoaded, submittedReportIds, openGeofenceAlerts, today, periodDays } = input
+  const { sessions, customers, dogs, services, pricesLoaded, submittedReportIds, openGeofenceAlerts, zonesByAddress, today, periodDays } = input
   const limits = INSIGHT_LIMITS
   const valued = valueSessions(sessions, services)
   const start = shiftDate(today, -(periodDays - 1))
@@ -643,6 +658,58 @@ export function computeInsights(input: InsightInputs): InsightResult {
     })
   }
 
+  // Zonas: la sesión guarda la dirección, y la dirección guarda la zona. Sin
+  // esa cadena no se inventa nada: el paseo se cuenta aparte como desconocido.
+  const zoneRows: ZoneRow[] = []
+  if (zonesByAddress) {
+    const byZone = new Map<string, ZoneRow>()
+    for (const session of inPeriod) {
+      const name = (session.addressId ? zonesByAddress[session.addressId] : undefined) ?? ZONE_UNKNOWN
+      const row = byZone.get(name) ?? { zone: name, walks: 0, completed: 0, cancelled: 0 }
+      row.walks += 1
+      if (COMPLETED_STATUSES.has(session.status)) row.completed += 1
+      if (CANCELLED_STATUSES.has(session.status)) row.cancelled += 1
+      byZone.set(name, row)
+    }
+    zoneRows.push(...Array.from(byZone.values()).sort((a, b) => b.walks - a.walks))
+
+    const named = zoneRows.filter((row) => row.zone !== ZONE_UNKNOWN && row.zone !== ZONE_UNDEFINED)
+    if (named.length >= 2 && active.length >= limits.minSample) {
+      add({
+        id: 'zone-top',
+        category: 'demanda',
+        priority: 'low',
+        title: `Zona con más paseos: ${named[0].zone}`,
+        description: `${named[0].walks} de ${inPeriod.length} paseos del periodo salieron de ahí. Asegura paseadores disponibles en esa zona.`,
+        ...NO_ITEMS,
+      })
+      const worst = [...named].sort((a, b) => b.cancelled - a.cancelled)[0]
+      if (worst.cancelled >= limits.minSample) {
+        add({
+          id: 'zone-cancellations',
+          category: 'demanda',
+          priority: 'medium',
+          title: `Las cancelaciones se concentran en ${worst.zone}`,
+          description: `${worst.cancelled} de ${cancelledInPeriod.length} cancelaciones del periodo son de esa zona.`,
+          ...NO_ITEMS,
+        })
+      }
+    }
+
+    const withoutZone = zoneRows.find((row) => row.zone === ZONE_UNDEFINED)
+    if (withoutZone) {
+      add({
+        id: 'zone-missing',
+        category: 'operacion',
+        priority: 'low',
+        title: `${plural(withoutZone.walks, 'paseo', 'paseos')} con dirección sin zona`,
+        description: 'La dirección de la familia no tiene zona asignada. Ese paseo no cuenta en la demanda por zona y tampoco puede avisar si el paseador se sale de la zona.',
+        ...NO_ITEMS,
+        action: { label: 'Ver zonas', href: '/admin/zonas' },
+      })
+    }
+  }
+
   const planTable = new Map<string, PlanRow>()
   for (const session of active) {
     const entry = planTable.get(session.serviceId) ?? { name: session.service, walks: 0, completed: 0, cents: 0 }
@@ -659,5 +726,6 @@ export function computeInsights(input: InsightInputs): InsightResult {
     metrics: { walks: inPeriod.length, completed: completed.length, value, cancelRate },
     insights: insights.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || categoryIndex(a.category) - categoryIndex(b.category)),
     plans: Array.from(planTable.values()).sort((a, b) => b.walks - a.walks),
+    zones: zoneRows,
   }
 }
