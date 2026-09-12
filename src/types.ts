@@ -289,6 +289,11 @@ export interface Pet {
   }
   photos?: string[]
   /**
+   * Id opaco del asset privado con la foto del perro -- no es un URL, y sin un
+   * enlace firmado no muestra nada. Ausente mientras la familia no sube foto.
+   */
+  photoReference?: string
+  /**
    * Perfil de emergencia con QR (Feature J). Solo presente si el dueño lo
    * activó explícitamente. Nunca se activa por defecto ni se copia a
    * emergency-profiles/{publicSlug} sin acción explícita del dueño.

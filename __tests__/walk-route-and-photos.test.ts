@@ -73,3 +73,42 @@ describe('fotos del paseo en curso', () => {
     expect(read('src/components/walker/WalkPhotoButton.tsx')).toContain('walkReportContentOf')
   })
 })
+
+/**
+ * La foto del perro es privada: la sube su familia, se guarda como referencia
+ * opaca y se ve con enlaces que caducan. Lo que se rompe callado es el permiso
+ * -- que el servidor crea al cuerpo de la petición en vez de al documento del
+ * perro -- o que la referencia termine siendo un URL público.
+ */
+describe('foto del perro', () => {
+  test('el firmante comprueba el dueño contra el documento del perro', () => {
+    const route = read('src/app/api/media/private/signature/route.ts')
+    expect(route).toContain("firestore.collection('dogs').doc(dogId).get()")
+    expect(route).toContain("ownerId !== callerUid")
+    expect(route).toContain("code: 'dog-not-yours'")
+  })
+
+  test('la referencia es un id opaco bajo el prefijo privado, no un URL', () => {
+    const lib = read('src/lib/dogPhotos.ts')
+    expect(lib).toContain('pet-ap-private/dogs')
+    expect(lib).toContain('isDogPhotoReference')
+    expect(read('src/lib/media/dogPhotoUpload.ts')).toContain('isDogPhotoReference(result.public_id)')
+  })
+
+  test('para verla hay que pedir un enlace que caduca', () => {
+    const route = read('src/app/api/media/private/dog-photos/route.ts')
+    expect(route).toContain('createPrivateDownloadUrl')
+    expect(route).toContain('LINK_TTL_SECONDS')
+    // Un perro ajeno no viene en la respuesta.
+    expect(route).toContain('if (!isStaff && dog.ownerId !== caller.uid) continue')
+  })
+
+  test('la lista pide todas las fotos de un jalón', () => {
+    expect(read('src/app/familia/perros/page.tsx')).toContain('useDogPhotos(pets.map(')
+    expect(read('src/lib/useDogPhotos.ts')).toContain("JSON.stringify({ dogIds })")
+  })
+
+  test('la política escrita registra la decisión', () => {
+    expect(read('MEDIA_POLICY.md')).toContain('pet-ap-private/dogs/<uuid>')
+  })
+})

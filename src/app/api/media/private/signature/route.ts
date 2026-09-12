@@ -1,26 +1,30 @@
 import { NextResponse } from 'next/server'
-import { verifyAdminToken, verifyWalkerToken } from '@/lib/serverAuth'
+import { verifyAdminToken, verifyAuthenticatedToken, verifyWalkerToken } from '@/lib/serverAuth'
 import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { createCloudinaryPrivateUploadSignature } from '@/lib/media/privateMediaAdmin.server'
 import { isAssignedToWalker } from '@/lib/walkerPanel'
+import { DOG_PHOTO_FOLDER } from '@/lib/dogPhotos'
 
 export const runtime = 'nodejs'
 
 const noStore = { 'Cache-Control': 'private, no-store, max-age=0' }
-// Walk-report photos are the only operational photos switched on (owner
-// decision, 2026-09-10; see MEDIA_POLICY.md). PET Ahora and incident photos
-// stay off until they get the same review.
-const ALLOWED_FOLDERS = new Set(['pet-ap-private/walk-reports'])
+// Walk-report photos and the photo of a family's own dog are the operational
+// photos switched on (owner decision, 2026-09-10 and 2026-09-11; see
+// MEDIA_POLICY.md). PET Ahora and incident photos stay off until they get the
+// same review.
+const WALK_REPORT_FOLDER = 'pet-ap-private/walk-reports'
+const ALLOWED_FOLDERS = new Set([WALK_REPORT_FOLDER, DOG_PHOTO_FOLDER])
 
 /**
  * M1 signed upload for operational (private) photos. Unlike the public
  * gallery signature, this always signs an `authenticated` delivery-type
- * asset -- the URL alone never grants access. A Walker may only request a
- * signature for a session actually assigned to them (verified server-side
- * against walkSessions, via the T3 privileged Firestore client, not trusted
- * from the request body). Fail-closed behind PRIVATE_MEDIA_UPLOADS_ENABLED,
- * which stays off per MEDIA_POLICY.md ("uploads permanecen desactivados").
+ * asset -- the URL alone never grants access.
+ *
+ * Cada carpeta tiene su dueño, y el servidor lo comprueba contra Firestore, no
+ * contra lo que diga el cuerpo de la petición: las fotos de un reporte las sube
+ * el paseador de esa sesión (o el equipo), y la foto de un perro la sube la
+ * familia dueña de ese perro. Fail-closed behind PRIVATE_MEDIA_UPLOADS_ENABLED.
  */
 export async function POST(request: Request) {
   const authorization = request.headers.get('authorization') ?? ''
@@ -29,15 +33,16 @@ export async function POST(request: Request) {
 
   const adminUid = await verifyAdminToken(token)
   const walkerUid = adminUid ? null : await verifyWalkerToken(token)
-  if (!adminUid && !walkerUid) return NextResponse.json({ code: 'admin-or-walker-required' }, { status: 403, headers: noStore })
+  const callerUid = adminUid ?? walkerUid ?? await verifyAuthenticatedToken(token)
+  if (!callerUid) return NextResponse.json({ code: 'auth-required' }, { status: 401, headers: noStore })
 
   if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
     return NextResponse.json({ code: 'private-media-uploads-not-enabled' }, { status: 503, headers: noStore })
   }
 
-  let body: { folder?: unknown; sessionId?: unknown }
+  let body: { folder?: unknown; sessionId?: unknown; dogId?: unknown }
   try {
-    body = await request.json() as { folder?: unknown; sessionId?: unknown }
+    body = await request.json() as typeof body
   } catch {
     return NextResponse.json({ code: 'invalid-json' }, { status: 400, headers: noStore })
   }
@@ -45,7 +50,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: 'invalid-folder' }, { status: 400, headers: noStore })
   }
 
-  if (walkerUid) {
+  if (body.folder === WALK_REPORT_FOLDER && !adminUid && !walkerUid) {
+    return NextResponse.json({ code: 'admin-or-walker-required' }, { status: 403, headers: noStore })
+  }
+
+  if (body.folder === WALK_REPORT_FOLDER && walkerUid) {
     if (typeof body.sessionId !== 'string' || !body.sessionId) {
       return NextResponse.json({ code: 'session-id-required' }, { status: 400, headers: noStore })
     }
@@ -56,6 +65,22 @@ export async function POST(request: Request) {
     const session = sessionSnap.data() as { walkerId?: string }
     if (!isAssignedToWalker({ walkerId: session.walkerId ?? '' }, walkerUid)) {
       return NextResponse.json({ code: 'session-not-assigned' }, { status: 403, headers: noStore })
+    }
+  }
+
+  // La foto de un perro: sólo su familia (o el equipo). El dueño se lee del
+  // documento del perro, nunca del cuerpo de la petición.
+  if (body.folder === DOG_PHOTO_FOLDER && !adminUid) {
+    const dogId = typeof body.dogId === 'string' ? body.dogId.trim() : ''
+    if (!dogId || dogId.includes('/')) {
+      return NextResponse.json({ code: 'dog-id-required' }, { status: 400, headers: noStore })
+    }
+    const firestore = getPrivilegedFirestore()
+    if (!firestore) return NextResponse.json({ code: 'privileged-identity-not-configured' }, { status: 503, headers: noStore })
+    const dogSnap = await firestore.collection('dogs').doc(dogId).get()
+    if (!dogSnap.exists) return NextResponse.json({ code: 'dog-not-found' }, { status: 404, headers: noStore })
+    if ((dogSnap.data() as { ownerId?: string }).ownerId !== callerUid) {
+      return NextResponse.json({ code: 'dog-not-yours' }, { status: 403, headers: noStore })
     }
   }
 

@@ -9,6 +9,9 @@ import { AlertTriangle, ArrowLeft, FileText, Pencil, Phone, Syringe } from 'luci
 import { auth, db } from '@/firebase/config'
 import { Card, EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import DogAvatar from '@/components/family/DogAvatar'
+import DogPhotoButton from '@/components/family/DogPhotoButton'
+import { useDogPhotos } from '@/lib/useDogPhotos'
+import { isDogPhotoReference } from '@/lib/dogPhotos'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import EmergencyTagSection from '@/components/family/EmergencyTagSection'
 
@@ -41,6 +44,8 @@ interface DogProfile {
   favoriteToys: string[]
   commands: string[]
   specialNeeds: string
+  /** Id opaco del asset privado; no es un URL. */
+  photoReference: string
 }
 
 const SIZE_LABELS: Record<string, string> = { 'pequeño': 'Pequeño', pequeno: 'Pequeño', mediano: 'Mediano', grande: 'Grande' }
@@ -93,6 +98,7 @@ function profileFrom(data: Record<string, unknown>): DogProfile {
     favoriteToys: list(preferences.favoriteToys),
     commands: list(preferences.commands),
     specialNeeds: text(preferences.specialNeeds),
+    photoReference: isDogPhotoReference(data.photoReference) ? data.photoReference : '',
   }
 }
 
@@ -128,6 +134,7 @@ export default function DogProfilePage() {
   const [dog, setDog] = useState<DogProfile | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'not-found' | 'error'>('loading')
   const { sessions, error: sessionsError, retry } = useCustomerWalkSessions(uid)
+  const photoUrl = useDogPhotos(dog?.photoReference ? [{ id: dogId, reference: dog.photoReference }] : [])[dogId] ?? ''
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
@@ -197,7 +204,12 @@ export default function DogProfilePage() {
       </div>
 
       <header className="flex flex-col items-center gap-3 text-center">
-        <DogAvatar name={dog.name} breed={dog.breed} size={96} />
+        <DogAvatar name={dog.name} breed={dog.breed} photoUrl={photoUrl} size={96} />
+        <DogPhotoButton
+          dogId={dogId}
+          hasPhoto={dog.photoReference !== ''}
+          onUploaded={(reference) => setDog((current) => (current ? { ...current, photoReference: reference } : current))}
+        />
         <div>
           <p className="text-2xs font-semibold uppercase tracking-[0.16em] text-muted">{TYPE_LABELS[dog.petType] ?? 'Mascota'}</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-ink">{dog.name}</h1>

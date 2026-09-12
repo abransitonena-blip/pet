@@ -19,6 +19,7 @@ import {
 import { Pet } from '@/types'
 import { Button, Card, EmptyState } from '@/components/ui'
 import DogAvatar from '@/components/family/DogAvatar'
+import { useDogPhotos } from '@/lib/useDogPhotos'
 
 type PetTab = 'basico' | 'personalidad' | 'salud' | 'preferencias'
 
@@ -149,6 +150,7 @@ function ChipInput({ items, onChange, placeholder, color }: {
 export default function MisPerrosPage() {
   const router = useRouter()
   const [pets, setPets] = useState<Pet[]>([])
+  const photoUrls = useDogPhotos(pets.map((pet) => ({ id: pet.id, reference: pet.photoReference })))
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingPet, setEditingPet] = useState<Pet | null>(null)
@@ -385,7 +387,7 @@ export default function MisPerrosPage() {
               className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm"
             >
               <div className="flex items-start gap-3">
-                <DogAvatar name={pet.name} breed={pet.breed} size={48} />
+                <DogAvatar name={pet.name} breed={pet.breed} photoUrl={photoUrls[pet.id] ?? ''} size={48} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
