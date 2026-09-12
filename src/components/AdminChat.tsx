@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { db } from '@/firebase/config'
-import {
-  collection, query, orderBy, onSnapshot, doc,
-  addDoc, serverTimestamp, updateDoc, increment,
-} from 'firebase/firestore'
+import { auth, db } from '@/firebase/config'
+import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore'
+import { CHAT_MESSAGE_MAX_LENGTH, sendChatMessage } from '@/lib/chat'
 import {
   MessagesSquare, Send, User, ChevronLeft,
 } from 'lucide-react'
@@ -20,6 +18,8 @@ export default function AdminChat() {
   const [selectedId, setSelectedId] = useState<string | null>(requestedId)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
+  const [sendError, setSendError] = useState('')
+  const [search, setSearch] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -52,23 +52,22 @@ export default function AdminChat() {
   }, [messages])
 
   const sendMessage = async () => {
-    if (!selectedId || !input.trim()) return
+    const uid = auth.currentUser?.uid
+    if (!selectedId || !input.trim() || !uid) return
     const text = input.trim()
     setInput('')
+    setSendError('')
     try {
-      await addDoc(collection(db, 'conversations', selectedId, 'messages'), {
-        text,
-        senderId: 'admin',
-        senderRole: 'admin',
-        timestamp: serverTimestamp(),
-      })
-      await updateDoc(doc(db, 'conversations', selectedId), {
-        lastMessage: text,
-        lastTimestamp: serverTimestamp(),
-        unreadClient: increment(1),
-      }).catch(() => {})
+      // El mismo camino que usan la familia y el paseador, firmado con el uid
+      // real de quien contesta: antes decía 'admin' a secas y no quedaba quién
+      // del equipo había escrito.
+      await sendChatMessage(selectedId, { text, senderId: uid, senderRole: 'admin' })
       notifyChatReply(selectedId)
-    } catch (e) { console.error('Error sending message:', e) }
+    } catch (e) {
+      setInput(text)
+      setSendError('No pudimos enviar el mensaje. Revisa tu conexión e inténtalo de nuevo.')
+      console.error('Error sending message:', e)
+    }
   }
 
   const formatTime = (ts?: { seconds: number; nanoseconds: number }) => {
@@ -78,6 +77,11 @@ export default function AdminChat() {
   }
 
   const selectedConv = conversations.find((c) => c.id === selectedId)
+  const needle = search.trim().toLowerCase()
+  const visible = needle
+    ? conversations.filter((conv) => `${conv.customerName ?? ''} ${conv.customerPhone ?? ''}`.toLowerCase().includes(needle))
+    : conversations
+  const unreadTotal = conversations.reduce((total, conv) => total + (conv.unreadAdmin > 0 ? conv.unreadAdmin : 0), 0)
 
   return (
     <div className="flex flex-col h-full" style={{ minHeight: '400px' }}>
@@ -133,9 +137,12 @@ export default function AdminChat() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="flex items-center gap-2 p-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex flex-col gap-2 p-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
+            {sendError && <p role="alert" className="text-xs text-red-700">{sendError}</p>}
+            <div className="flex items-center gap-2">
             <input
               value={input}
+              maxLength={CHAT_MESSAGE_MAX_LENGTH}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
               placeholder="Escribe un mensaje..."
@@ -158,15 +165,29 @@ export default function AdminChat() {
             >
               <Send size={14} className="text-white" />
             </button>
+            </div>
           </div>
         </>
       ) : (
         <>
-          <div className="px-4 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
+          <div className="px-4 py-3 border-b shrink-0 space-y-2" style={{ borderColor: 'var(--border)' }}>
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <MessagesSquare size={14} style={{ color: 'var(--text-secondary)' }} />
               Conversaciones
+              {unreadTotal > 0 && (
+                <span className="text-2xs rounded-full bg-danger-500 px-2 py-0.5 font-bold text-white">{unreadTotal} sin leer</span>
+              )}
             </h3>
+            {conversations.length > 4 && (
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar por nombre o teléfono"
+                aria-label="Buscar una conversación"
+                className="min-h-11 w-full rounded-xl border border-ink/10 bg-surface px-3 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              />
+            )}
           </div>
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 && (
@@ -174,7 +195,12 @@ export default function AdminChat() {
                 No hay conversaciones aún
               </p>
             )}
-            {conversations.map((conv) => (
+            {conversations.length > 0 && visible.length === 0 && (
+              <p className="text-xs text-center py-12" style={{ color: 'var(--text-muted)' }}>
+                Ninguna conversación coincide con &ldquo;{search}&rdquo;.
+              </p>
+            )}
+            {visible.map((conv) => (
               <button
                 key={conv.id}
                 onClick={() => setSelectedId(conv.id)}

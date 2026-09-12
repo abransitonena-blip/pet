@@ -1297,11 +1297,15 @@ service cloud.firestore {
         && (isConversationParticipant() || isAdmin());
       allow delete: if false;
 
+      // Dentro de messages, `resource` es el mensaje, no la conversación: los
+      // mensajes no tienen `participants`, así que preguntarles por ese campo
+      // denegaba todo. Una familia no podía leer ni enviar nada en su propio
+      // hilo; sólo pasaba el administrador, por su rol. Hay que mirar la
+      // conversación de arriba.
       match /messages/{msgId} {
-        allow read: if isAuthenticated()
-          && (isConversationParticipant() || isAdmin());
-        allow create: if isAuthenticated()
-          && (isConversationParticipant() || isAdmin());
+        allow read: if isParticipantOfConversation(convId) || isAdmin();
+        allow create: if (isParticipantOfConversation(convId) || isAdmin())
+          && validChatMessage(request.resource.data);
         allow update, delete: if false;
       }
     }
@@ -1309,6 +1313,26 @@ service cloud.firestore {
     function isConversationParticipant() {
       return isAuthenticated()
         && request.auth.uid in resource.data.participants;
+    }
+
+    function isParticipantOfConversation(convId) {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/conversations/$(convId))
+        && request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants;
+    }
+
+    // Un mensaje lo firma quien lo manda: nadie puede escribir a nombre de otro
+    // ni hacerse pasar por administración dentro de su propio hilo.
+    function validChatMessage(data) {
+      return data.keys().hasOnly(['text', 'senderId', 'senderRole', 'timestamp'])
+        && data.keys().hasAll(['text', 'senderId', 'senderRole', 'timestamp'])
+        && data.text is string
+        && data.text.size() > 0
+        && data.text.size() <= 2000
+        && data.senderId == request.auth.uid
+        && data.senderRole in ['admin', 'customer', 'walker']
+        && (data.senderRole != 'admin' || isAdmin())
+        && data.timestamp == request.time;
     }
 
     // ═══════════════════════════════════════════

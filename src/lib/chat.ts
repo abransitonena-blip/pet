@@ -27,6 +27,9 @@ import { db } from '@/firebase/config'
 
 export type ChatSenderRole = 'admin' | 'customer' | 'walker'
 
+/** El mismo tope que comprueban las reglas. */
+export const CHAT_MESSAGE_MAX_LENGTH = 2000
+
 export interface ConversationIdentity {
   uid: string
   name: string
@@ -69,12 +72,22 @@ export async function startConversationAsAdmin(identity: ConversationIdentity): 
   return conversationRef.id
 }
 
+/**
+ * Manda un mensaje y sube el contador del otro lado.
+ *
+ * El mensaje lo firma quien lo manda -- las reglas comprueban que `senderId`
+ * sea su propio uid, así que nadie puede escribir a nombre de otro ni hacerse
+ * pasar por administración. Los dos paneles pasan por aquí para que el mensaje
+ * tenga la misma forma se mande de donde se mande.
+ */
 export async function sendChatMessage(
   conversationId: string,
   message: { text: string; senderId: string; senderRole: ChatSenderRole },
 ): Promise<void> {
   const text = message.text.trim()
   if (!text) return
+  if (text.length > CHAT_MESSAGE_MAX_LENGTH) throw new Error('chat-message-too-long')
+  if (!message.senderId) throw new Error('chat-sender-required')
 
   await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
     text,

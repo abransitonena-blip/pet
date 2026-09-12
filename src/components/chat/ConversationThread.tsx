@@ -6,7 +6,7 @@ import { Send, MessagesSquare } from 'lucide-react'
 import { db } from '@/firebase/config'
 import Card from '@/components/ui/Card'
 import ErrorState from '@/components/ui/ErrorState'
-import { markConversationRead, openConversation, sendChatMessage, type ConversationIdentity } from '@/lib/chat'
+import { CHAT_MESSAGE_MAX_LENGTH, markConversationRead, openConversation, sendChatMessage, type ConversationIdentity } from '@/lib/chat'
 import type { ChatMessage } from '@/types'
 
 /**
@@ -20,7 +20,6 @@ interface ConversationThreadProps {
   description: string
 }
 
-const MAX_MESSAGE_LENGTH = 1000
 
 export default function ConversationThread({ identity, title, description }: ConversationThreadProps) {
   const [conversationId, setConversationId] = useState<string | null>(null)
@@ -129,7 +128,7 @@ export default function ConversationThread({ identity, title, description }: Con
         >
           <textarea
             value={input}
-            onChange={(event) => setInput(event.target.value.slice(0, MAX_MESSAGE_LENGTH))}
+            onChange={(event) => setInput(event.target.value.slice(0, CHAT_MESSAGE_MAX_LENGTH))}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault()
