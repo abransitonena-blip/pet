@@ -42,6 +42,24 @@ export interface WalkReport extends WalkReportContent {
   schemaVersion: typeof WALK_REPORT_SCHEMA_VERSION
 }
 
+/** Un borrador sin capturar nada: el punto de partida de cualquier reporte. */
+export const EMPTY_WALK_REPORT: WalkReportContent = Object.freeze({
+  summary: '', behaviorNotes: '', bathroomNotes: '', waterProvided: false, incidentsSummary: '', mediaReferences: [],
+})
+
+/** Lo editable de un reporte guardado, sin los campos que pone el servidor. */
+export function walkReportContentOf(report: WalkReport | null): WalkReportContent {
+  if (!report) return { ...EMPTY_WALK_REPORT }
+  return {
+    summary: report.summary,
+    behaviorNotes: report.behaviorNotes,
+    bathroomNotes: report.bathroomNotes,
+    waterProvided: report.waterProvided,
+    incidentsSummary: report.incidentsSummary,
+    mediaReferences: report.mediaReferences ?? [],
+  }
+}
+
 export type WalkReportValidationError =
   | 'summary-required'
   | 'summary-too-long'

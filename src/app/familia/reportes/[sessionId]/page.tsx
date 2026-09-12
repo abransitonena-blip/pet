@@ -9,8 +9,18 @@ import { Card, ErrorState, LoadingState } from '@/components/ui'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { useWalkReport } from '@/lib/useWalkReport'
 import { ReportReadOnly } from '@/components/walker/WalkReportEditor'
-import { formatWalkPoint, mapsUrlForPoint } from '@/lib/walkLocation'
+import WalkRouteMap from '@/components/family/WalkRouteMap'
 import type { WalkPoint } from '@/types'
+
+function millis(value: unknown): number | null {
+  const stamp = value as { seconds?: unknown } | undefined
+  return typeof stamp?.seconds === 'number' ? stamp.seconds * 1000 : null
+}
+
+function formatHour(at: number | null): string {
+  if (at === null) return 'Hora no registrada'
+  return new Date(at).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
 
 function point(value: unknown): WalkPoint | undefined {
   if (!value || typeof value !== 'object') return undefined
@@ -25,9 +35,13 @@ function point(value: unknown): WalkPoint | undefined {
  * Read straight from the session rather than from the report: the walker's
  * phone writes the two points as part of the state transition, so they exist
  * even for a walk whose written report is still a draft.
+ *
+ * Las coordenadas ya no se muestran: un par de números no le dice a nadie por
+ * dónde anduvo su perro. Lo que se ve es la hora de cada momento, y el mapa del
+ * recorrido debajo.
  */
 function WalkLocations({ sessionId }: { sessionId: string }) {
-  const [points, setPoints] = useState<{ start?: WalkPoint; end?: WalkPoint } | null>(null)
+  const [times, setTimes] = useState<{ start?: WalkPoint; end?: WalkPoint; startedAt: number | null; completedAt: number | null } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -35,33 +49,29 @@ function WalkLocations({ sessionId }: { sessionId: string }) {
       .then((snapshot) => {
         if (cancelled || !snapshot.exists()) return
         const data = snapshot.data()
-        setPoints({ start: point(data.startLocation), end: point(data.endLocation) })
+        setTimes({
+          start: point(data.startLocation),
+          end: point(data.endLocation),
+          startedAt: millis(data.startedAt),
+          completedAt: millis(data.completedAt),
+        })
       })
       .catch(() => { /* the report itself is the point of this page */ })
     return () => { cancelled = true }
   }, [sessionId])
 
-  if (!points?.start && !points?.end) return null
+  if (!times?.start && !times?.end) return null
 
   return (
     <Card className="mt-3 p-4 shadow-none">
-      <h2 className="text-sm font-semibold text-ink">Ubicación del paseo</h2>
-      <p className="mt-0.5 text-xs text-muted">Solo se registran el inicio y el final, no el recorrido.</p>
+      <h2 className="text-sm font-semibold text-ink">Horario del paseo</h2>
       <dl className="mt-3 grid gap-2 sm:grid-cols-2">
-        {([['Inicio', points.start], ['Fin', points.end]] as const).map(([label, value]) => (
+        {([['Empezó', times.start, times.startedAt], ['Terminó', times.end, times.completedAt]] as const).map(([label, place, at]) => (
           <div key={label} className="rounded-xl bg-ink/[0.03] px-3 py-2">
             <dt className="text-2xs font-medium uppercase tracking-wide text-muted">{label}</dt>
-            <dd className="mt-0.5 text-xs text-ink">
-              {value ? (
-                <a
-                  href={mapsUrlForPoint(value)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 underline decoration-dotted underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  <MapPin size={11} aria-hidden="true" /> {formatWalkPoint(value)}
-                </a>
-              ) : 'Sin ubicación registrada'}
+            <dd className="mt-0.5 flex items-center gap-1 text-xs text-ink">
+              <MapPin size={11} className="text-muted" aria-hidden="true" />
+              {place ? formatHour(at) : 'Sin registrar'}
             </dd>
           </div>
         ))}
@@ -85,6 +95,7 @@ export default function FamilyReportPage() {
           <p className="mt-1 text-sm text-muted">El reporte aparecerá cuando el paseador lo envíe.</p>
         </Card>
         <WalkLocations sessionId={params.sessionId} />
+        <WalkRouteMap sessionId={params.sessionId} />
       </div>
     )
   }
@@ -92,6 +103,7 @@ export default function FamilyReportPage() {
     <div>
       <ReportReadOnly report={report} sessionId={params.sessionId} />
       <WalkLocations sessionId={params.sessionId} />
+      <WalkRouteMap sessionId={params.sessionId} />
     </div>
   )
 }

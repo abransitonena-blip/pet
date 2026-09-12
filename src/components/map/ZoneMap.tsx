@@ -37,6 +37,12 @@ interface ZoneMapProps {
   /** The zone being edited: drawn dashed, on top of the others. */
   draft?: { center: LatLng | null; radiusKm: number } | null
   points?: readonly MapPoint[]
+  /**
+   * El recorrido en orden. Se dibuja punteado a propósito: entre dos lecturas
+   * nadie registró por dónde caminó, y una línea continua lo haría parecer
+   * medido.
+   */
+  path?: readonly LatLng[]
   onPick?: (point: LatLng) => void
   height?: number
 }
@@ -49,6 +55,9 @@ const MUTED = '#808897'
 const DRAFT = '#0f766e'
 const INSIDE = '#185abc'
 const OUTSIDE = '#b42318'
+const TRAIL = '#185abc'
+const START = '#15803d'
+const END = '#172033'
 
 function textNode(text: string): HTMLElement {
   const element = document.createElement('span')
@@ -56,7 +65,7 @@ function textNode(text: string): HTMLElement {
   return element
 }
 
-export default function ZoneMap({ label, zones = [], draft = null, points = [], onPick, height = 260 }: ZoneMapProps) {
+export default function ZoneMap({ label, zones = [], draft = null, points = [], path = [], onPick, height = 260 }: ZoneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LeafletMap | null>(null)
   const layerRef = useRef<LayerGroup | null>(null)
@@ -134,6 +143,31 @@ export default function ZoneMap({ label, zones = [], draft = null, points = [], 
       L.circleMarker([draft.center.lat, draft.center.lng], { radius: 5, color: DRAFT, fillColor: DRAFT, fillOpacity: 1 }).addTo(layer)
     }
 
+    if (path.length > 1) {
+      const line = L.polyline(path.map((step) => [step.lat, step.lng] as [number, number]), {
+        color: TRAIL,
+        weight: 3,
+        opacity: 0.8,
+        dashArray: '8 6',
+        lineCap: 'round',
+      }).addTo(layer)
+      bounds.extend(line.getBounds())
+    }
+
+    // Inicio y fin del recorrido, para leer la dirección en la que caminó.
+    for (const [index, edge] of [[0, 'Inicio'], [path.length - 1, 'Fin']] as const) {
+      const step = path[index]
+      if (!step || (edge === 'Fin' && path.length < 2)) continue
+      L.circleMarker([step.lat, step.lng], {
+        radius: 7,
+        weight: 2,
+        color: '#ffffff',
+        fillColor: edge === 'Inicio' ? START : END,
+        fillOpacity: 1,
+      }).bindTooltip(() => textNode(edge)).addTo(layer)
+      bounds.extend([step.lat, step.lng])
+    }
+
     for (const point of points) {
       const marker = L.circleMarker([point.lat, point.lng], {
         radius: 4,
@@ -149,12 +183,12 @@ export default function ZoneMap({ label, zones = [], draft = null, points = [], 
 
     // Fit once per set of things shown, not on every click: re-centering while
     // the admin is placing a zone would move the ground under their finger.
-    const fitKey = `${zones.map((zone) => zone.id).join(',')}|${points.length}|${hasDraft ? 'draft' : ''}`
+    const fitKey = `${zones.map((zone) => zone.id).join(',')}|${points.length}|${path.length}|${hasDraft ? 'draft' : ''}`
     if (bounds.isValid() && fittedKeyRef.current !== fitKey) {
       map.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 })
       fittedKeyRef.current = fitKey
     }
-  }, [ready, zones, draft, points])
+  }, [ready, zones, draft, points, path])
 
   return (
     <div

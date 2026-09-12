@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AlertTriangle, CalendarDays, Check, ClipboardList, Clock, Dog, FileText, MapPin, Stethoscope } from 'lucide-react'
 import { Button, Card, StatusBadge } from '@/components/ui'
 import WalkSheet from '@/components/walker/WalkSheet'
+import WalkPhotoButton from '@/components/walker/WalkPhotoButton'
 import type { WalkSession } from '@/types'
 import {
   getWalkerTransition,
@@ -14,7 +15,6 @@ import {
   walkerSessionStatus,
   walkerTimelinePosition,
 } from '@/lib/walkerPanel'
-import { formatWalkPoint } from '@/lib/walkLocation'
 
 interface WalkerSessionCardProps {
   session: WalkSession
@@ -89,16 +89,13 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
           )}
           {!compact && (session.startLocation || session.endLocation) && (
             <dl className="mt-3 grid gap-1 rounded-xl bg-ink/[0.03] px-3 py-2 text-xs sm:grid-cols-2">
-              <div className="flex items-center gap-1.5">
-                <MapPin size={12} className="shrink-0 text-muted" aria-hidden="true" />
-                <dt className="text-muted">Inicio:</dt>
-                <dd className="text-ink">{formatWalkPoint(session.startLocation)}</dd>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <MapPin size={12} className="shrink-0 text-muted" aria-hidden="true" />
-                <dt className="text-muted">Fin:</dt>
-                <dd className="text-ink">{formatWalkPoint(session.endLocation)}</dd>
-              </div>
+              {([['startLocation', 'Inicio'], ['endLocation', 'Fin']] as const).map(([field, heading]) => (
+                <div key={field} className="flex items-center gap-1.5">
+                  <MapPin size={12} className="shrink-0 text-muted" aria-hidden="true" />
+                  <dt className="text-muted">{heading}:</dt>
+                  <dd className="text-ink">{session[field] ? 'ubicación registrada' : 'sin registrar'}</dd>
+                </div>
+              ))}
             </dl>
           )}
 
@@ -125,6 +122,7 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
               >
                 <AlertTriangle size={16} aria-hidden="true" /> Reportar incidencia
               </Link>
+              <WalkPhotoButton sessionId={session.id} />
               <Link href={`/walker/reportes/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary/10 px-5 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 <ClipboardList size={16} aria-hidden="true" /> Bitácora del paseo
               </Link>

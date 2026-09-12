@@ -15,7 +15,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import { Button, ConfirmDialog } from '@/components/ui'
 import { useToast } from '@/context/ToastContext'
 import { type Zone, type ZoneSpot } from '@/types'
-import ZoneMap from '@/components/admin/ZoneMap'
+import ZoneMap from '@/components/map/ZoneMap'
 import { ZONE_SPOT_KINDS, ZONE_SPOT_LABELS, duplicatedPostalCodes, parsePostalCodes } from '@/lib/zoneMatching'
 
 interface ZoneForm {

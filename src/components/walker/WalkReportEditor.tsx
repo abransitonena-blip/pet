@@ -11,9 +11,11 @@ import { persistWalkReport, useWalkReport } from '@/lib/useWalkReport'
 import { uploadWalkPhoto, walkPhotoErrorMessage } from '@/lib/media/walkPhotoUpload'
 import { applyWalkLog, type WalkLogEvent } from '@/lib/walkLog'
 import {
+  EMPTY_WALK_REPORT,
   MAX_WALK_PHOTOS,
   WALK_REPORT_TEXT_LIMITS,
   validateWalkReportContent,
+  walkReportContentOf,
   type WalkReportContent,
   type WalkReportValidationError,
 } from '@/lib/walkReports'
@@ -26,10 +28,6 @@ import {
  * is completed), and afterwards writes the summary and submits. The family
  * sees nothing -- text or photos -- until the report is submitted.
  */
-
-const EMPTY_REPORT: WalkReportContent = {
-  summary: '', behaviorNotes: '', bathroomNotes: '', waterProvided: false, incidentsSummary: '', mediaReferences: [],
-}
 
 const LOG_BUTTONS: { event: Exclude<WalkLogEvent, 'incidente'>; label: string; icon: typeof PawPrint }[] = [
   { event: 'pipi', label: 'Pipí', icon: PawPrint },
@@ -60,7 +58,7 @@ function saveErrorMessage(code: string): string {
 
 export default function WalkReportEditor({ sessionId }: { sessionId: string }) {
   const { report, state } = useWalkReport(sessionId, 'live')
-  const [content, setContent] = useState<WalkReportContent>(EMPTY_REPORT)
+  const [content, setContent] = useState<WalkReportContent>(EMPTY_WALK_REPORT)
   const [sessionStatus, setSessionStatus] = useState<string | null>(null)
   const [incident, setIncident] = useState('')
   const [saving, setSaving] = useState(false)
@@ -72,14 +70,7 @@ export default function WalkReportEditor({ sessionId }: { sessionId: string }) {
 
   useEffect(() => {
     if (!report) return
-    setContent({
-      summary: report.summary,
-      behaviorNotes: report.behaviorNotes,
-      bathroomNotes: report.bathroomNotes,
-      waterProvided: report.waterProvided,
-      incidentsSummary: report.incidentsSummary,
-      mediaReferences: report.mediaReferences ?? [],
-    })
+    setContent(walkReportContentOf(report))
   }, [report])
 
   useEffect(() => {

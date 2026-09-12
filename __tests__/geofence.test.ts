@@ -63,7 +63,7 @@ describe('rastreo y alertas', () => {
   })
 
   test('el mapa no pide llave y escapa los nombres de zona', () => {
-    const map = read('src/components/admin/ZoneMap.tsx')
+    const map = read('src/components/map/ZoneMap.tsx')
     expect(map).toContain('https://tile.openstreetmap.org/{z}/{x}/{y}.png')
     expect(map).toContain('element.textContent = text')
     expect(read('security-headers.js')).toContain('https://tile.openstreetmap.org')

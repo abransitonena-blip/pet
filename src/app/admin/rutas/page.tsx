@@ -12,9 +12,10 @@ import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
-import ZoneMap, { type MapPoint, type MapZone } from '@/components/admin/ZoneMap'
+import ZoneMap, { type MapPoint, type MapZone } from '@/components/map/ZoneMap'
 import { distanceMeters, isUsableCenter } from '@/lib/geo'
-import { formatWalkPoint, mapsUrlForPoint } from '@/lib/walkLocation'
+import { mapsUrlForPoint } from '@/lib/walkLocation'
+import { summarizeWalkPath } from '@/lib/walkPath'
 import { canonicalReadErrorMessage, classifyCanonicalReadError, type CanonicalReadError } from '@/lib/useCanonicalWalkSessions'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { WalkPoint } from '@/types'
@@ -24,8 +25,12 @@ import type { WalkPoint } from '@/types'
  *
  * During a walk in progress the walker's phone reports a point every ~2
  * minutes (owner decision) and the server raises an alert if it is outside
- * the walk's zone. What is drawn is exactly those samples -- a line joining
- * them would suggest a measured path between samples that nobody recorded.
+ * the walk's zone.
+ *
+ * El recorrido se dibuja como una línea punteada entre esas lecturas: quien
+ * despacha necesita ver por dónde anduvo el paseo, no una lista de coordenadas.
+ * Punteada, y con la distancia llamada "aproximada", porque entre dos lecturas
+ * nadie registró el camino -- la línea une lo que sí se midió, no lo inventa.
  */
 
 // firestore.rules only lets a walkSessions list ask for 100 (validListLimit);
@@ -92,7 +97,7 @@ export default function AdminRutasPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<CanonicalReadError | null>(null)
   const [filterWalker, setFilterWalker] = useState('all')
-  const [selected, setSelected] = useState<{ sessionId: string; title: string; zone: MapZone | null } | null>(null)
+  const [selected, setSelected] = useState<{ sessionId: string; title: string; zone: MapZone | null; start?: WalkPoint; end?: WalkPoint } | null>(null)
   const [track, setTrack] = useState<{ state: 'idle' | 'loading' | 'ready' | 'error'; points: MapPoint[] }>({ state: 'idle', points: [] })
 
   useEffect(() => {
@@ -174,6 +179,18 @@ export default function AdminRutasPage() {
     await updateDoc(doc(db, 'geofenceAlerts', id), { status: 'acknowledged', acknowledgedBy: uid, acknowledgedAt: serverTimestamp() }).catch(() => {})
   }
 
+  // El inicio y el fin son lecturas del mismo teléfono, así que entran en el
+  // recorrido: son el primer y el último punto de la línea.
+  const routePath = useMemo(() => {
+    if (!selected) return []
+    return [
+      ...(selected.start ? [{ lat: selected.start.lat, lng: selected.start.lng }] : []),
+      ...track.points.map((item) => ({ lat: item.lat, lng: item.lng, outside: item.outside })),
+      ...(selected.end ? [{ lat: selected.end.lat, lng: selected.end.lng }] : []),
+    ]
+  }, [selected, track.points])
+  const routeSummary = useMemo(() => summarizeWalkPath(routePath), [routePath])
+
   const walkers = useMemo(() => Array.from(new Set(rows.map((row) => row.walkerId).filter(Boolean))), [rows])
   const filtered = useMemo(() => (filterWalker === 'all' ? rows : rows.filter((row) => row.walkerId === filterWalker)), [rows, filterWalker])
   const selectedZones = useMemo(() => (selected?.zone ? [selected.zone] : []), [selected])
@@ -244,12 +261,23 @@ export default function AdminRutasPage() {
           {track.state === 'loading' && <LoadingState rows={1} height="h-40" />}
           {track.state === 'error' && <p className="text-sm text-red-700">No pudimos cargar los puntos de este paseo.</p>}
           {track.state === 'ready' && (
-            track.points.length === 0 ? (
-              <p className="text-sm text-muted">Este paseo no tiene puntos registrados durante el recorrido.</p>
+            routePath.length === 0 ? (
+              <p className="text-sm text-muted">Este paseo no tiene ubicaciones registradas.</p>
             ) : (
               <>
-                <ZoneMap label={`Recorrido del paseo ${selected.title}`} zones={selectedZones} points={track.points} height={320} />
-                <p className="text-xs text-muted">{track.points.length} lecturas, una cada ~2 minutos. Azul: dentro de la zona · rojo: fuera.</p>
+                <ZoneMap
+                  label={`Recorrido del paseo ${selected.title}`}
+                  zones={selectedZones}
+                  points={track.points}
+                  path={routePath}
+                  height={320}
+                />
+                <p className="text-xs text-muted">
+                  {routeSummary.label}.{' '}
+                  {track.points.length > 0 ? 'Una lectura cada ~2 minutos. ' : ''}
+                  Verde: inicio · negro: fin · azul: dentro de la zona · rojo: fuera.
+                  {routePath.length > 1 && ' La línea punteada une las lecturas; entre una y otra no se registró el camino.'}
+                </p>
               </>
             )
           )}
@@ -303,23 +331,28 @@ export default function AdminRutasPage() {
                         <span className="flex items-center gap-1"><Navigation size={11} aria-hidden="true" />{formatDistance(distance)} en línea recta</span>
                       )}
                       {FEATURE_FLAGS.WALK_TRACKING_ENABLED && (
-                        <button type="button" onClick={() => setSelected({ sessionId: row.id, title: row.scheduledDate || row.id, zone: null })} className="min-h-9 rounded-full px-3 font-semibold text-primary hover:bg-primary/10">
+                        <button type="button" onClick={() => setSelected({ sessionId: row.id, title: row.scheduledDate || row.id, zone: null, start: row.startLocation, end: row.endLocation })} className="min-h-9 rounded-full px-3 font-semibold text-primary hover:bg-primary/10">
                           Ver recorrido
                         </button>
                       )}
                     </div>
                   </div>
                   <dl className="grid gap-2 sm:grid-cols-2">
-                    {(['startLocation', 'endLocation'] as const).map((field) => {
+                    {([['startLocation', 'Inicio'], ['endLocation', 'Fin']] as const).map(([field, heading]) => {
                       const value = row[field]
+                      const at = field === 'startLocation' ? row.startedAt : row.completedAt
                       return (
                         <div key={field} className="rounded-2xl bg-ink/[0.03] px-3 py-2">
-                          <dt className="text-2xs font-medium uppercase tracking-wide text-muted">{field === 'startLocation' ? 'Inicio' : 'Fin'}</dt>
+                          <dt className="text-2xs font-medium uppercase tracking-wide text-muted">{heading}</dt>
                           <dd className="mt-0.5 text-xs text-ink">
                             {value ? (
-                              <a href={mapsUrlForPoint(value)} target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">
-                                {formatWalkPoint(value)}
-                              </a>
+                              <>
+                                {at ? formatTime(at.seconds * 1000) : 'Hora no registrada'}
+                                {' · '}
+                                <a href={mapsUrlForPoint(value)} target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">
+                                  Abrir en mapas
+                                </a>
+                              </>
                             ) : 'Sin ubicación registrada'}
                           </dd>
                         </div>
