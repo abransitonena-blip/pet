@@ -24,6 +24,9 @@ const Reviews = dynamic(() => import('@/components/Reviews'), {
 const CoverageSection = dynamic(() => import('@/components/CoverageSection'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-56 rounded-2xl" /></div>,
 })
+const WalkTipsSection = dynamic(() => import('@/components/WalkTipsSection'), {
+  loading: () => <div className="section-container py-16"><div className="skeleton h-48 rounded-2xl" /></div>,
+})
 const FAQ = dynamic(() => import('@/components/FAQ'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-40 rounded-2xl" /></div>,
 })
@@ -78,6 +81,9 @@ function HomeContent() {
         </div>
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>}>
           <Gallery />
+        </Suspense>
+        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-48 rounded-2xl" /></div>}>
+          <WalkTipsSection />
         </Suspense>
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-40 rounded-2xl" /></div>}>
           <FAQ />

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { Pet } from '@/types'
 import { Button, Card, EmptyState } from '@/components/ui'
-import DogAvatar from '@/components/family/DogAvatar'
+import DogAvatar from '@/components/dogs/DogAvatar'
 import { useDogPhotos } from '@/lib/useDogPhotos'
 
 type PetTab = 'basico' | 'personalidad' | 'salud' | 'preferencias'

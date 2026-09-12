@@ -30,7 +30,7 @@ describe('el recorrido se muestra como ruta', () => {
 
   test('admin y familia dibujan el recorrido con el mismo mapa', () => {
     expect(read('src/app/admin/rutas/page.tsx')).toContain('path={routePath}')
-    expect(read('src/components/family/WalkRouteMap.tsx')).toContain('path={route.path}')
+    expect(read('src/components/walks/WalkRouteMap.tsx')).toContain('path={route.path}')
   })
 
   test('los puntos del recorrido siguen siendo del equipo en las reglas', () => {
@@ -39,10 +39,10 @@ describe('el recorrido se muestra como ruta', () => {
     expect(points.slice(0, 120)).toContain('allow read: if isStaff()')
   })
 
-  test('la familia los recibe por el servidor, y sólo los de su paseo', () => {
-    const route = read('src/app/api/family/walk-track/route.ts')
-    expect(route).toContain('verifyAuthenticatedToken')
-    expect(route).toContain("session.customerId !== uid")
+  test('los recibe por el servidor quien tiene algo que ver con ese paseo', () => {
+    const route = read('src/app/api/walks/track/route.ts')
+    expect(route).toContain('verifyTokenRole')
+    expect(route).toContain('session.customerId === caller.uid')
     expect(route).toContain("code: 'session-not-yours'")
     // Sin identidad privilegiada no contesta: falla cerrado.
     expect(route).toContain("code: 'privileged-identity-not-configured'")

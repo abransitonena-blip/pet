@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AlertTriangle, MapPinned, Pill, Stethoscope, Syringe } from 'lucide-react'
 import { VACCINE_STATUS_LABELS, type VaccineStatus } from '@/lib/dogHealth'
+import DogAvatar from '@/components/dogs/DogAvatar'
 import { ZONE_SPOT_LABELS } from '@/lib/zoneMatching'
 import type { ZoneSpot } from '@/types'
 
@@ -29,6 +30,8 @@ interface DogSheet {
   vetName: string
   vetPhone: string
   vaccines: { name: string; date: string; nextDue: string; status: VaccineStatus }[]
+  /** Enlace temporal a la foto, o '' si la familia no ha subido una. */
+  photoUrl: string
 }
 
 interface WalkSheetData {
@@ -103,9 +106,14 @@ export default function WalkSheet({ sessionId, today }: { sessionId: string; tod
 
         return (
           <div key={`${dog.name}-${index}`} className="space-y-2 rounded-xl bg-ink/[0.03] p-3">
-            <div>
-              <p className="text-sm font-semibold text-ink">{dog.name}</p>
-              {facts && <p className="text-xs text-muted">{facts}</p>}
+            {/* La foto es para reconocer al perro en la puerta; sin foto queda su
+                marca teñida, la misma que ve la familia. */}
+            <div className="flex items-center gap-3">
+              <DogAvatar name={dog.name} breed={dog.breed} photoUrl={dog.photoUrl} size={44} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">{dog.name}</p>
+                {facts && <p className="text-xs text-muted">{facts}</p>}
+              </div>
             </div>
 
             {dog.allergies.length > 0 && (

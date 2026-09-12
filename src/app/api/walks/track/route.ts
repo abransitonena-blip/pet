@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { verifyAuthenticatedToken } from '@/lib/serverAuth'
+import { verifyTokenRole } from '@/lib/serverAuth'
 import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { checkRateLimit } from '@/lib/rateLimit'
 
@@ -11,13 +11,17 @@ const RATE_LIMIT_WINDOW_MS = 10 * 60_000
 const MAX_POINTS = 300
 
 /**
- * El recorrido de un paseo, para la familia dueña de ese paseo.
+ * El recorrido de un paseo, para quien tiene algo que ver con ese paseo.
  *
  * Las reglas sólo dejan que el equipo lea `walkTracks/{id}/points`, y con razón:
  * una regla por documento tendría que consultar la sesión en cada punto del
  * recorrido, y Firestore corta esas consultas anidadas. Así que el permiso lo
- * resuelve el servidor una sola vez -- confirma que la sesión es de quien
- * pregunta -- y devuelve los puntos de ese paseo y nada más.
+ * resuelve el servidor una sola vez, contra la sesión guardada: la familia dueña
+ * del paseo, el paseador que lo hizo, o el equipo. Cualquier otro no recibe nada.
+ *
+ * El paseador ve su propio recorrido porque es lo que caminó; no le sirve de
+ * nada la lista de coordenadas, pero el mapa le dice por dónde anduvo y si se
+ * salió de la zona.
  *
  * Falla cerrado: sin identidad privilegiada no responde nada, igual que la
  * ficha del paseador.
@@ -40,10 +44,10 @@ export async function POST(request: Request) {
   const authorization = request.headers.get('authorization') ?? ''
   const idToken = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
   if (!idToken) return NextResponse.json({ code: 'auth-required' }, { status: 401, headers: noStore })
-  const uid = await verifyAuthenticatedToken(idToken)
-  if (!uid) return NextResponse.json({ code: 'auth-required' }, { status: 401, headers: noStore })
+  const caller = await verifyTokenRole(idToken)
+  if (!caller) return NextResponse.json({ code: 'invalid-token' }, { status: 401, headers: noStore })
 
-  const rateLimit = checkRateLimit(`family-walk-track:${uid}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)
+  const rateLimit = checkRateLimit(`walk-track:${caller.uid}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)
   if (!rateLimit.allowed) {
     return NextResponse.json({ code: 'rate-limited' }, { status: 429, headers: { ...noStore, 'Retry-After': String(rateLimit.retryAfterSeconds) } })
   }
@@ -67,7 +71,10 @@ export async function POST(request: Request) {
   try {
     const sessionSnapshot = await firestore.collection('walkSessions').doc(sessionId).get()
     const session = sessionSnapshot.exists ? sessionSnapshot.data() ?? {} : null
-    if (!session || session.customerId !== uid) {
+    const isStaff = caller.role === 'admin' || caller.role === 'supervisor'
+    const isAssignedWalker = session !== null && session.walkerId === caller.uid
+    const isFamily = session !== null && session.customerId === caller.uid
+    if (!session || (!isStaff && !isAssignedWalker && !isFamily)) {
       return NextResponse.json({ code: 'session-not-yours' }, { status: 403, headers: noStore })
     }
 
@@ -96,7 +103,7 @@ export async function POST(request: Request) {
       end: point(session.endLocation),
     }, { headers: noStore })
   } catch (error) {
-    console.error('family/walk-track failed:', error instanceof Error ? error.message : String(error))
+    console.error('walks/track failed:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ code: 'walk-track-failed' }, { status: 500, headers: noStore })
   }
 }

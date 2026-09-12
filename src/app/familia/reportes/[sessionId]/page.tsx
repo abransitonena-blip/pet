@@ -9,7 +9,7 @@ import { Card, ErrorState, LoadingState } from '@/components/ui'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { useWalkReport } from '@/lib/useWalkReport'
 import { ReportReadOnly } from '@/components/walker/WalkReportEditor'
-import WalkRouteMap from '@/components/family/WalkRouteMap'
+import WalkRouteMap from '@/components/walks/WalkRouteMap'
 import type { WalkPoint } from '@/types'
 
 function millis(value: unknown): number | null {

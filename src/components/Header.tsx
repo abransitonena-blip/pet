@@ -5,10 +5,13 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 
+// En el orden en que la página los presenta. "¿Llegamos?" va pronto porque es
+// la primera pregunta de quien no nos conoce.
 const navLinks = [
   { label: 'Inicio', href: '/#hero' },
   { label: 'Servicios', href: '/#servicios' },
   { label: 'Cómo funciona', href: '/#como-funciona' },
+  { label: '¿Llegamos?', href: '/#cobertura' },
   { label: 'Reseñas', href: '/#resenas' },
   { label: 'Contacto', href: '/#contacto' },
 ]

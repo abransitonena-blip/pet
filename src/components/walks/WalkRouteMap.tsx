@@ -15,8 +15,9 @@ import { summarizeWalkPath } from '@/lib/walkPath'
  * teléfono del paseador cada ~2 minutos, con el inicio en verde y el fin en
  * negro. Punteada porque entre dos lecturas nadie registró el camino.
  *
- * Los puntos los entrega el servidor, que confirma que el paseo es de quien
- * pregunta; el navegador no puede leerlos por su cuenta.
+ * Los puntos los entrega el servidor, que confirma que quien pregunta tiene algo
+ * que ver con ese paseo -- su familia, su paseador o el equipo; el navegador no
+ * puede leerlos por su cuenta.
  */
 
 interface RouteState {
@@ -46,7 +47,7 @@ export default function WalkRouteMap({ sessionId }: { sessionId: string }) {
         const { auth } = await import('@/firebase/config')
         const idToken = await auth.currentUser?.getIdToken()
         if (!idToken) throw new Error('auth-required')
-        const response = await fetch('/api/family/walk-track', {
+        const response = await fetch('/api/walks/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
           body: JSON.stringify({ sessionId }),
