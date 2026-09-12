@@ -15,11 +15,20 @@ import {
 } from '@/lib/media/galleryRecords'
 import { ROLES } from '@/lib/roles'
 import { useSessionRole } from '@/lib/useSessionRole'
+import {
+  GALLERY_UPLOAD_TYPES,
+  GALLERY_VIDEO_MAX_SECONDS,
+  galleryMaxBytesForMime,
+  galleryResourceKindForMime,
+  galleryUploadHelpText,
+  isGalleryAnimated,
+  isGalleryFormat,
+  isGalleryVideo,
+} from '@/lib/media/galleryMedia'
 
 type ReadState = 'loading' | 'ready' | 'permission' | 'network'
 
-const MAXIMUM_BYTES = 10_000_000
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const ALLOWED_TYPES = new Set(GALLERY_UPLOAD_TYPES)
 
 function isCloudinaryResult(value: unknown): value is { public_id: string; secure_url: string; width: number; height: number; format: CompatibleGalleryRecord['format'] } {
   if (!value || typeof value !== 'object') return false
@@ -28,7 +37,7 @@ function isCloudinaryResult(value: unknown): value is { public_id: string; secur
     && typeof data.secure_url === 'string' && data.secure_url.startsWith('https://res.cloudinary.com/')
     && Number.isSafeInteger(data.width) && Number(data.width) > 0
     && Number.isSafeInteger(data.height) && Number(data.height) > 0
-    && ['jpg', 'jpeg', 'png', 'webp'].includes(String(data.format))
+    && isGalleryFormat(data.format)
 }
 
 function publicProjection(record: CompatibleGalleryRecord, normalizedAltText = record.altText) {
@@ -92,8 +101,8 @@ export default function AdminGalleryManager() {
 
   const uploadDraft = async () => {
     if (!file || !canWrite || !session.uid) return
-    if (!ALLOWED_TYPES.has(file.type) || file.size > MAXIMUM_BYTES) {
-      setMessage('Usa JPG, PNG o WebP de máximo 10 MB.')
+    if (!ALLOWED_TYPES.has(file.type) || file.size > galleryMaxBytesForMime(file.type)) {
+      setMessage(galleryUploadHelpText())
       return
     }
     if (!altText.trim() || altText.trim().length > 240) {
@@ -115,7 +124,10 @@ export default function AdminGalleryManager() {
       body.set('public_id', String(signed.publicId))
       body.set('transformation', String(signed.transformation))
       body.set('overwrite', 'false')
-      const upload = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(String(signed.cloudName))}/image/upload`, { method: 'POST', body })
+      // Cloudinary guarda el video bajo otro tipo de recurso, con su propio
+      // endpoint; la firma es la misma porque firma parámetros, no la ruta.
+      const kind = galleryResourceKindForMime(file.type)
+      const upload = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(String(signed.cloudName))}/${kind}/upload`, { method: 'POST', body })
       const result = await upload.json()
       if (!upload.ok) {
         // Cloudinary's own text says far more than a generic failure -- most
@@ -125,13 +137,21 @@ export default function AdminGalleryManager() {
         throw new Error(`cloudinary:${typeof detail === 'string' ? detail : `HTTP ${upload.status}`}`)
       }
       if (!isCloudinaryResult(result)) throw new Error('upload-rejected-shape')
+      const duration = (result as { duration?: unknown }).duration
+      if (isGalleryVideo(result.format) && typeof duration === 'number' && duration > GALLERY_VIDEO_MAX_SECONDS) {
+        throw new Error('video-too-long')
+      }
       const reference = doc(collection(db, 'gallery-images'))
       await setDoc(reference, {
         schemaVersion: 1,
         publicationStatus: 'draft',
         consentRecorded: consent,
         consentVerified: consent,
-        publicGalleryAllowed: consent && rights,
+        // Nace siempre sin permiso de publicación, aunque las dos casillas estén
+        // marcadas: las reglas exigen que un registro nuevo entre como borrador
+        // privado, y publicar es el paso aparte que lo enciende. Marcar ambas
+        // casillas aquí hacía fallar la carga con "no tienes permiso".
+        publicGalleryAllowed: false,
         usageRights: rights ? 'public-gallery' : 'pending',
         assetPublicId: result.public_id,
         url: result.secure_url,
@@ -156,6 +176,7 @@ export default function AdminGalleryManager() {
         : code.startsWith('cloudinary:') && /missing permissions/i.test(code) ? 'Cloudinary rechazó la carga porque esta API Key no tiene permiso para crear archivos. En la consola de Cloudinary, sección API Keys, dale un rol con permiso de subida (o crea una llave nueva con ese permiso) y actualiza CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET en Vercel.'
         : code.startsWith('cloudinary:') ? `Cloudinary rechazó la carga: ${code.slice('cloudinary:'.length)}. Usa "Probar credenciales de Cloudinary" para ver cuál variable falla.`
         : code === 'upload-rejected-shape' ? 'Cloudinary respondió con un formato inesperado y la imagen no se registró.'
+        : code === 'video-too-long' ? `El video dura más de ${GALLERY_VIDEO_MAX_SECONDS} segundos y no se registró. Recórtalo y vuelve a subirlo.`
         : code.includes('permission') ? 'No tienes permiso para registrar esta imagen.'
         : 'No pudimos completar la carga segura.')
     } finally { setBusy('') }
@@ -274,7 +295,12 @@ export default function AdminGalleryManager() {
       <section className="space-y-4 rounded-2xl bg-surface p-4 sm:p-5" aria-labelledby="secure-gallery-upload">
         <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-primary" size={20} aria-hidden="true" /><div><h2 id="secure-gallery-upload" className="font-semibold text-ink">Carga firmada</h2><p className="mt-1 text-sm text-muted">Solo Admin. Los secretos permanecen en servidor y Cloudinary elimina el perfil de metadata mediante transformación firmada.</p></div></div>
         {!canWrite ? <p className="text-sm text-muted">Supervisor: consulta de solo lectura.</p> : <>
-          <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} aria-label="Seleccionar imagen para cargar" className="block min-h-11 w-full rounded-xl border border-border bg-canvas p-2 text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:font-semibold file:text-primary" />
+          <input ref={fileInput} type="file" accept={GALLERY_UPLOAD_TYPES.join(',')} onChange={(event) => setFile(event.target.files?.[0] ?? null)} aria-label="Seleccionar foto o video para cargar" className="block min-h-11 w-full rounded-xl border border-border bg-canvas p-2 text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:font-semibold file:text-primary" />
+          <p className="text-xs text-muted">{galleryUploadHelpText()}</p>
+          <p className="text-xs text-muted">
+            Una &ldquo;foto animada&rdquo; del iPhone se sube como foto quieta: en Fotos, ábrela y elige
+            &ldquo;Guardar como video&rdquo; para que se mueva aquí.
+          </p>
           <label className="block text-sm font-semibold text-ink">Texto alternativo<textarea value={altText} maxLength={240} onChange={(event) => setAltText(event.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-border bg-canvas px-4 py-3 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" /></label>
           <div className="grid gap-2 sm:grid-cols-2"><label className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm text-ink"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="h-5 w-5 accent-primary" />Consentimiento registrado</label><label className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm text-ink"><input type="checkbox" checked={rights} onChange={(event) => setRights(event.target.checked)} className="h-5 w-5 accent-primary" />Derechos para galería pública</label></div>
           <div className="flex flex-wrap gap-2"><Button onClick={() => void uploadDraft()} disabled={!file || busy === 'upload'} isLoading={busy === 'upload'} leftIcon={<Upload size={16} aria-hidden="true" />}>Cargar como borrador</Button><Button variant="secondary" onClick={clearDraft} disabled={busy === 'upload'} leftIcon={<X size={16} aria-hidden="true" />}>Cancelar</Button><Button variant="secondary" onClick={() => void runDiagnostics()}>Probar credenciales de Cloudinary</Button></div>
@@ -333,7 +359,13 @@ export default function AdminGalleryManager() {
               const record = entry.record
               return (
                 <article key={record.id} className="overflow-hidden rounded-2xl bg-surface">
-                  <div className="relative aspect-[4/3] bg-ink/5"><Image src={record.url} alt={record.altText} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" /></div>
+                  <div className="relative aspect-[4/3] bg-ink/5">
+                    {/* La vista previa se mueve igual que en la página: así se
+                        revisa lo que de verdad va a ver una familia. */}
+                    {isGalleryVideo(record.format)
+                      ? <video src={record.url} aria-label={record.altText} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline preload="metadata" />
+                      : <Image src={record.url} alt={record.altText} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" unoptimized={isGalleryAnimated(record.format)} />}
+                  </div>
                   <div className="space-y-3 p-4">
                     {editingId === record.id ? (
                       <div className="space-y-3">

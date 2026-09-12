@@ -7,6 +7,7 @@ import { Dog, PawPrint, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react
 import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { useEscapeKey } from '@/lib/useEscapeKey'
+import { isGalleryAnimated, isGalleryFormat, isGalleryVideo, type GalleryFormat } from '@/lib/media/galleryMedia'
 
 interface GalleryImage {
   id: string
@@ -15,6 +16,7 @@ interface GalleryImage {
   altText: string
   width: number
   height: number
+  format: GalleryFormat
 }
 
 type GalleryReadState = 'loading' | 'ready' | 'permission-denied' | 'network-error'
@@ -26,10 +28,62 @@ function isGalleryImage(id: string, value: unknown): value is Omit<GalleryImage,
     && typeof data.assetPublicId === 'string'
     && /^pet-ap-public\/[a-f0-9-]{36}$/.test(data.assetPublicId)
     && typeof data.url === 'string'
-    && /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/image\/upload\/[^?#]+$/.test(data.url)
+    && /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/(image|video)\/upload\/[^?#]+$/.test(data.url)
     && Number.isSafeInteger(data.width) && Number(data.width) > 0
     && Number.isSafeInteger(data.height) && Number(data.height) > 0
     && typeof data.altText === 'string' && data.altText.length > 0 && data.altText.length <= 240
+    && isGalleryFormat(data.format)
+}
+
+/**
+ * Una pieza de la galería: foto, GIF animado o video corto.
+ *
+ * El video va sin sonido, en bucle y sin controles: se comporta como una foto
+ * que se mueve, que es lo que se prometió. `playsInline` es lo que evita que
+ * iOS lo abra a pantalla completa él solo.
+ *
+ * Un GIF animado pasa sin optimizar a propósito: el optimizador de imágenes se
+ * queda con el primer cuadro y lo dejaría quieto.
+ */
+function GalleryMedia({
+  url,
+  format,
+  altText,
+  className,
+  fill = false,
+  width,
+  height,
+  onReady,
+}: {
+  url: string
+  format: string
+  altText: string
+  className: string
+  fill?: boolean
+  width?: number
+  height?: number
+  onReady?: () => void
+}) {
+  if (isGalleryVideo(format)) {
+    return (
+      <video
+        src={url}
+        aria-label={altText}
+        className={className}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        onLoadedData={onReady}
+        style={fill ? { position: 'absolute', inset: 0, width: '100%', height: '100%' } : undefined}
+      />
+    )
+  }
+  const common = { src: url, alt: altText, className, onLoad: onReady, unoptimized: isGalleryAnimated(format) }
+  return fill
+    ? <Image {...common} fill sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw" />
+    : <Image {...common} width={width ?? 0} height={height ?? 0} />
 }
 
 export default function Gallery() {
@@ -153,13 +207,13 @@ export default function Gallery() {
                 {!loaded.has(i) && (
                   <div className="absolute inset-0 skeleton" />
                 )}
-                <Image
-                  src={img.url}
-                  alt={img.altText}
+                <GalleryMedia
+                  url={img.url}
+                  format={img.format}
+                  altText={img.altText}
                   fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className={`object-cover transition-all duration-200 motion-reduce:transition-none motion-reduce:transform-none group-hover:scale-[1.03] ${loaded.has(i) ? 'opacity-100' : 'opacity-0'}`}
-                  onLoad={() => handleImgLoad(i)}
+                  onReady={() => handleImgLoad(i)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-400">
                   <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
@@ -229,9 +283,10 @@ export default function Gallery() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative w-full h-full flex items-center justify-center rounded-2xl overflow-hidden">
-                <Image
-                  src={images[selected].url}
-                  alt={images[selected].altText}
+                <GalleryMedia
+                  url={images[selected].url}
+                  format={images[selected].format}
+                  altText={images[selected].altText}
                   width={images[selected].width}
                   height={images[selected].height}
                   className="max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-2xl shadow-2xl"

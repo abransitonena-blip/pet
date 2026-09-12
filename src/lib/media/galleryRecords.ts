@@ -1,5 +1,7 @@
+import { GALLERY_FORMATS, type GalleryFormat } from '@/lib/media/galleryMedia'
+
 export type GalleryPublicationStatus = 'draft' | 'published' | 'withdrawn'
-export type GalleryFormat = 'jpg' | 'jpeg' | 'png' | 'webp'
+export type { GalleryFormat }
 
 export interface CompatibleGalleryRecord {
   id: string
@@ -38,7 +40,7 @@ export type ParsedGalleryRecord =
 const PUBLIC_ID = /^pet-ap-public\/[a-f0-9-]{36}$/
 const CLOUDINARY_URL = /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/image\/upload\/[^?#]+$/
 const PUBLICATION_STATUSES = new Set<GalleryPublicationStatus>(['draft', 'published', 'withdrawn'])
-const FORMATS = new Set<GalleryFormat>(['jpg', 'jpeg', 'png', 'webp'])
+const FORMATS = new Set<GalleryFormat>(GALLERY_FORMATS)
 const USAGE_RIGHTS = new Set(['pending', 'public-gallery'])
 const LEGACY_KEYS = new Set(['createdAt', 'dog', 'title', 'url'])
 const G1_KEYS = new Set([
@@ -145,6 +147,9 @@ export function galleryFormatLabel(format: GalleryFormat): string {
     jpeg: 'JPEG',
     png: 'PNG',
     webp: 'WEBP',
+    gif: 'GIF animado',
+    mp4: 'Video MP4',
+    webm: 'Video WebM',
   }
   return labels[format]
 }

@@ -399,10 +399,13 @@ service cloud.firestore {
       return data.assetPublicId is string
         && data.assetPublicId.matches('^pet-ap-public/[a-f0-9-]{36}$')
         && data.url is string
-        && data.url.matches('^https://res[.]cloudinary[.]com/[A-Za-z0-9_-]+/image/upload/[^?#]+$')
+        // Un video vive bajo otro tipo de recurso en Cloudinary, y eso cambia
+        // el URL: /video/upload/ en vez de /image/upload/. Un GIF animado sigue
+        // siendo imagen.
+        && data.url.matches('^https://res[.]cloudinary[.]com/[A-Za-z0-9_-]+/(image|video)/upload/[^?#]+$')
         && data.width is int && data.width > 0 && data.width <= 20000
         && data.height is int && data.height > 0 && data.height <= 20000
-        && data.format in ['jpg', 'jpeg', 'png', 'webp'];
+        && data.format in ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm'];
     }
 
     function validGalleryMetadata(data) {
