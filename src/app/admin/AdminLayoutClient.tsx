@@ -18,6 +18,7 @@ import AdminShell from '@/components/layout/AdminShell'
 import GeofenceAlertsBanner from '@/components/admin/GeofenceAlertsBanner'
 import { useConfig } from '@/context/ConfigContext'
 import { applyPanelPreferences } from '@/lib/adminPanels'
+import { useUnreadAdminChats } from '@/lib/useUnreadChat'
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Resumen', icon: Gauge, href: '/admin', group: 'General' },
@@ -59,6 +60,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
   const { config } = useConfig()
   const session = useSessionRole([ROLES.ADMIN, ROLES.SUPERVISOR])
+  const unreadChats = useUnreadAdminChats(session.status === 'ready')
   const { status } = session
 
   useEffect(() => {
@@ -114,6 +116,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   // un supervisor.
   const role = 'role' in session && typeof session.role === 'string' ? session.role : ROLES.ADMIN
   const navItems = applyPanelPreferences(NAV_ITEMS, config.adminPanels, role)
+    .map((item) => (item.id === 'chat' ? { ...item, badge: unreadChats } : item))
 
   return (
     <ReservationsProvider>

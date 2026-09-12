@@ -14,6 +14,7 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import TeamProvisionPanel from '@/components/admin/TeamProvisionPanel'
 import { WhatsAppIcon } from '@/components/ui/SocialIcons'
+import StartChatButton from '@/components/admin/StartChatButton'
 import { setWalkerStatus, type WalkerOperationalStatus } from '@/lib/adminWalkers'
 import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
 import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
@@ -328,6 +329,8 @@ export default function AdminPaseadoresPage() {
                         <p className="text-2xs text-muted">
                           Las cifras salen de los {MAX_SESSIONS} paseos más recientes de la operación.
                         </p>
+
+                        <StartChatButton uid={profile.uid} name={profile.name} phone={profile.phone} role="walker" />
                       </div>
                     </motion.div>
                   )}

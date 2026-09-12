@@ -47,6 +47,28 @@ export async function openConversation(identity: ConversationIdentity): Promise<
   return conversationRef.id
 }
 
+/**
+ * Administración abre la conversación primero.
+ *
+ * Hasta ahora el hilo sólo nacía cuando la familia o el paseador entraban a su
+ * pantalla de mensajes: administración no tenía a dónde escribir si el otro lado
+ * nunca había escrito. Además de crear el hilo, deja `lastTimestamp`, porque la
+ * bandeja ordena por ese campo y un hilo sin él no aparecería en la lista.
+ */
+export async function startConversationAsAdmin(identity: ConversationIdentity): Promise<string> {
+  const conversationRef = doc(db, 'conversations', identity.uid)
+  await setDoc(conversationRef, {
+    participants: [identity.uid],
+    customerId: identity.uid,
+    customerName: identity.name,
+    customerPhone: identity.phone ?? '',
+    participantRole: identity.role,
+    updatedAt: serverTimestamp(),
+    lastTimestamp: serverTimestamp(),
+  }, { merge: true })
+  return conversationRef.id
+}
+
 export async function sendChatMessage(
   conversationId: string,
   message: { text: string; senderId: string; senderRole: ChatSenderRole },

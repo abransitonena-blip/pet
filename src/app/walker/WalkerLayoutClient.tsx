@@ -10,6 +10,7 @@ import { accessPathWithRedirect, clearSessionCookie } from '@/lib/auth'
 import { useSessionRole } from '@/lib/useSessionRole'
 import { ACCESS_MESSAGES, ROLES, ROLE_HOME } from '@/lib/roles'
 import AppShell from '@/components/layout/AppShell'
+import { useUnreadOwnChat } from '@/lib/useUnreadChat'
 import WalkerHeartbeat from '@/components/WalkerHeartbeat'
 import WalkTracker from '@/components/walker/WalkTracker'
 import { Button, Card, LoadingState } from '@/components/ui'
@@ -49,6 +50,9 @@ export default function WalkerLayoutClient({ children }: { children: React.React
   const [loggingOut, setLoggingOut] = useState(false)
   const session = useSessionRole([ROLES.WALKER])
   const { status, uid } = session
+  // Igual que en el panel de familia: el menú dice si administración escribió.
+  const unreadMessages = useUnreadOwnChat(status === 'ready' && uid ? uid : '')
+  const navItems = NAV_ITEMS.map((item) => (item.id === 'chat' ? { ...item, badge: unreadMessages } : item))
 
   useEffect(() => {
     if (status === 'loading') return
@@ -158,7 +162,7 @@ export default function WalkerLayoutClient({ children }: { children: React.React
   return (
     <WalkerPanelProvider value={contextValue}>
       <AppShell
-        navItems={NAV_ITEMS}
+        navItems={navItems}
         userName={contextValue.profile.name}
         userRole="Paseador"
         onLogout={() => void handleLogout()}

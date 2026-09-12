@@ -11,6 +11,7 @@ import { useSessionRole } from '@/lib/useSessionRole'
 import { ROLES, ROLE_HOME } from '@/lib/roles'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import AppShell from '@/components/layout/AppShell'
+import { useUnreadOwnChat } from '@/lib/useUnreadChat'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 import {
@@ -58,6 +59,10 @@ export default function FamilyLayoutClient({ children }: { children: React.React
 
   const session = useSessionRole([ROLES.CUSTOMER])
   const { status, uid } = session
+  // El menú avisa de los mensajes sin leer: el chat no sirve si hay que abrirlo
+  // para descubrir que llegó algo.
+  const unreadMessages = useUnreadOwnChat(status === 'ready' && uid ? uid : '')
+  const navItems = ACCOUNT_ITEMS.map((item) => (item.id === 'mensajes' ? { ...item, badge: unreadMessages } : item))
 
   useEffect(() => {
     if (status === 'loading') return
@@ -127,7 +132,7 @@ export default function FamilyLayoutClient({ children }: { children: React.React
 
   return (
     <AppShell
-      navItems={ACCOUNT_ITEMS}
+      navItems={navItems}
       userName={userName}
       userRole="Familia PET"
       onLogout={handleLogout}

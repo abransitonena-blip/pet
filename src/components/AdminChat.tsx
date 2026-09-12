@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { db } from '@/firebase/config'
 import {
   collection, query, orderBy, onSnapshot, doc,
@@ -13,8 +14,10 @@ import type { Conversation, ChatMessage } from '@/types'
 import { notifyChatReply } from '@/lib/push/pushClient'
 
 export default function AdminChat() {
+  const searchParams = useSearchParams()
+  const requestedId = searchParams.get('c')
   const [conversations, setConversations] = useState<Conversation[]>([])
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(requestedId)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -197,11 +200,11 @@ export default function AdminChat() {
                       {formatTime(conv.lastTimestamp)}
                     </span>
                   </div>
-                  {conv.lastMessage && (
-                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {conv.lastMessage}
-                    </p>
-                  )}
+                  <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    {/* Un hilo que administración acaba de abrir todavía no tiene
+                        mensajes: decirlo es mejor que dejar el renglón vacío. */}
+                    {conv.lastMessage || 'Sin mensajes todavía'}
+                  </p>
                 </div>
                 {conv.unreadAdmin > 0 && (
                   <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"

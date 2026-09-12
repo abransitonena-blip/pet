@@ -7,6 +7,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { LogOut, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { isPanelRouteActive } from '@/lib/navigation'
+import NavBadge from '@/components/ui/NavBadge'
 
 interface NavItem {
   id: string
@@ -15,6 +16,8 @@ interface NavItem {
   icon?: React.ComponentType<{ size?: number | string }>
   color?: string
   group?: string
+  /** Cuántas cosas sin leer esperan ahí. Sin badge cuando es 0. */
+  badge?: number
 }
 
 interface AdminShellProps {
@@ -80,6 +83,7 @@ export default function AdminShell({
           </span>
         )}
         {showLabel && <span className="truncate">{item.label}</span>}
+        {showLabel && item.badge !== undefined && <NavBadge count={item.badge} label="sin leer" className="ml-auto" />}
       </Link>
     )
   }

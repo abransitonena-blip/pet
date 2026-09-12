@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Logo } from '@/components/ui/Logo'
 import { LogOut } from 'lucide-react'
 import { isPanelRouteActive } from '@/lib/navigation'
+import NavBadge from '@/components/ui/NavBadge'
 
 interface NavItem {
   id: string
@@ -14,6 +15,8 @@ interface NavItem {
   icon?: React.ComponentType<{ size?: number | string; }>
   /** Optional heading: consecutive items with the same group are listed under it. */
   group?: string
+  /** Cuántas cosas sin leer esperan ahí. Sin badge cuando es 0. */
+  badge?: number
 }
 
 function groupNavItems(items: NavItem[]): Array<{ group: string; items: NavItem[] }> {
@@ -118,6 +121,7 @@ export default function AppShell({
                   >
                     {Icon && <Icon size={15} aria-hidden="true" />}
                     <span className="truncate">{item.label}</span>
+                    {item.badge !== undefined && <NavBadge count={item.badge} label="sin leer" />}
                   </Link>
                 )
               })}
@@ -126,6 +130,12 @@ export default function AppShell({
             <details className="group rounded-xl border border-ink/10 bg-surface shadow-sm">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden">
                 <span className="truncate">{activeItem?.label ?? 'Menú de Familia PET'}</span>
+                {/* Con el menú cerrado, el aviso de adentro no se vería. */}
+                <NavBadge
+                  count={navItems.reduce((total, item) => total + (item.badge ?? 0), 0)}
+                  label="sin leer en el menú"
+                  className="group-open:hidden"
+                />
                 <span className="text-xs font-medium text-muted group-open:hidden">Abrir menú</span>
                 <span className="hidden text-xs font-medium text-muted group-open:inline">Cerrar menú</span>
               </summary>
@@ -146,6 +156,7 @@ export default function AppShell({
                           >
                             {Icon && <Icon size={16} aria-hidden="true" />}
                             <span className="truncate">{item.label}</span>
+                            {item.badge !== undefined && <NavBadge count={item.badge} label="sin leer" className="ml-auto" />}
                           </Link>
                         )
                       })}
@@ -178,6 +189,7 @@ export default function AppShell({
                       >
                         {Icon && <Icon size={16} aria-hidden="true" />}
                         {item.label}
+                        {item.badge !== undefined && <NavBadge count={item.badge} label="sin leer" className="ml-auto" />}
                       </Link>
                     )
                   })}

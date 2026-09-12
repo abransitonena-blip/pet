@@ -10,6 +10,7 @@ import ErrorState from '@/components/ui/ErrorState'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { WhatsAppIcon } from '@/components/ui/SocialIcons'
+import StartChatButton from '@/components/admin/StartChatButton'
 import { confirmWhatsAppShare } from '@/lib/utils'
 import { useCanonicalDirectory, type DirectoryCustomer, type DirectoryDog } from '@/lib/useCanonicalDirectory'
 import { useCanonicalReservations, type CanonicalReservationView } from '@/lib/useCanonicalReservations'
@@ -469,15 +470,23 @@ export default function AdminClientesPage() {
                 )}
               </div>
 
-              {selected.customer.phone && (
-                <button
-                  type="button"
-                  onClick={() => contact(selected)}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-success-500/10 py-2.5 text-sm font-medium text-success-600 transition-colors hover:bg-success-500/20"
-                >
-                  <WhatsAppIcon width={13} height={13} /> Escribir por WhatsApp
-                </button>
-              )}
+              <div className="space-y-2">
+                <StartChatButton
+                  uid={selected.customer.uid}
+                  name={selected.customer.name}
+                  phone={selected.customer.phone}
+                  role="customer"
+                />
+                {selected.customer.phone && (
+                  <button
+                    type="button"
+                    onClick={() => contact(selected)}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-success-500/10 text-sm font-medium text-success-600 transition-colors hover:bg-success-500/20"
+                  >
+                    <WhatsAppIcon width={13} height={13} /> Escribir por WhatsApp
+                  </button>
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}
