@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import AdminShell from '@/components/layout/AdminShell'
 import GeofenceAlertsBanner from '@/components/admin/GeofenceAlertsBanner'
+import { useConfig } from '@/context/ConfigContext'
+import { applyPanelPreferences } from '@/lib/adminPanels'
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Resumen', icon: Gauge, href: '/admin', group: 'General' },
@@ -55,6 +57,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     fetch('/api/version').then((r) => r.ok && r.json()).then((d) => setVersion(d)).catch(() => {})
   }, [])
 
+  const { config } = useConfig()
   const session = useSessionRole([ROLES.ADMIN, ROLES.SUPERVISOR])
   const { status } = session
 
@@ -106,9 +109,15 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     return <div className="min-h-screen flex items-center justify-center p-4"><div className="card max-w-sm p-6 text-center"><p className="text-sm text-danger" role="alert">{accessError}</p><div className="mt-4 flex flex-col gap-2"><button onClick={() => void session.refresh()} className="btn-primary">Reintentar</button><button onClick={() => void handleLogout()} className="text-sm underline underline-offset-2">Cerrar sesión</button></div></div></div>
   }
 
+  // El menú es el de fábrica hasta que alguien lo cambie en Configuración →
+  // Paneles: ahí se oculta lo que no se usa, se reordena, y se decide qué ve
+  // un supervisor.
+  const role = 'role' in session && typeof session.role === 'string' ? session.role : ROLES.ADMIN
+  const navItems = applyPanelPreferences(NAV_ITEMS, config.adminPanels, role)
+
   return (
     <ReservationsProvider>
-      <AdminShell navItems={NAV_ITEMS} onLogout={handleLogout} version={version}>
+      <AdminShell navItems={navItems} onLogout={handleLogout} version={version}>
         <GeofenceAlertsBanner />
         {children}
       </AdminShell>

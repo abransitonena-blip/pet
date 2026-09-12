@@ -3,11 +3,14 @@
 import { motion } from 'framer-motion'
 import { LogIn, CalendarCheck, PawPrint, Eye } from 'lucide-react'
 
+// Cada paso dice lo que la app hace de verdad hoy: la zona sale del código
+// postal, el aviso de salida de zona existe, y las fotos llegan cuando el
+// paseador las sube.
 const steps = [
-  { icon: LogIn, title: '1. Entra a Familia PET', description: 'Registra a tu perro y una dirección segura.' },
-  { icon: CalendarCheck, title: '2. Solicita o agenda', description: 'Elige servicio, fecha y ventana de llegada.' },
-  { icon: PawPrint, title: '3. Recibe un paseador compatible', description: 'PET Ap valida zona, disponibilidad y compatibilidad.' },
-  { icon: Eye, title: '4. Sigue el paseo', description: 'Consulta estados, fotografías y reporte desde tu cuenta.' },
+  { icon: LogIn, title: '1. Entra a Familia PET', description: 'Registra a tu perro con sus cuidados y tu dirección. Tu código postal define tu zona.' },
+  { icon: CalendarCheck, title: '2. Agenda el paseo', description: 'Eliges el plan, el día y la ventana de llegada que te acomoda.' },
+  { icon: PawPrint, title: '3. Te asignamos un paseador', description: 'Alguien de tu zona, con perfil activo y horario libre a esa hora.' },
+  { icon: Eye, title: '4. Síguelo y recibe su reporte', description: 'Durante el paseo avisamos si sale de tu zona; al terminar llega la bitácora, con fotos si el paseador las subió.' },
 ]
 
 export default function HowItWorks() {

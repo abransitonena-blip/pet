@@ -7,6 +7,13 @@ import type { SiteConfig, Announcement } from '@/lib/defaultConfig'
 import { mexicanObservanceShortcuts, type DateShortcut } from '@/lib/announcements'
 import { mergeTermsSections } from '@/lib/termsContent'
 import { mergePrivacySections } from '@/lib/privacyContent'
+import {
+  ALWAYS_VISIBLE_PANEL,
+  movePanel,
+  orderedPanels,
+  togglePanelId,
+  type AdminPanelPreferences,
+} from '@/lib/adminPanels'
 
 type EditorProps = {
   config: SiteConfig
@@ -26,7 +33,7 @@ import AdminServicePricing from '@/components/AdminServicePricing'
 import AdminBookingSchedule from '@/components/AdminBookingSchedule'
 import { BRAND } from '@/lib/brand'
 
-type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'features' | 'maintenance' | 'brand'
+type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'features' | 'maintenance' | 'brand' | 'panels'
 
 const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'prices', label: 'Precios de servicios', icon: 'MXN' },
@@ -39,6 +46,7 @@ const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: 'announcements', label: 'Anuncios y festividades', icon: '🎉' },
   { id: 'terms', label: 'Términos y condiciones', icon: '📄' },
   { id: 'privacy', label: 'Aviso de privacidad', icon: '🔒' },
+  { id: 'panels', label: 'Paneles del equipo', icon: '🧭' },
   { id: 'features', label: 'Funcionalidades', icon: '🚀' },
   { id: 'maintenance', label: 'Mantenimiento', icon: '⚠️' },
 ]
@@ -115,6 +123,8 @@ function SectionContent({
       return <TermsEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'privacy':
       return <PrivacyEditor config={config} updateConfig={updateConfig} saving={saving} />
+    case 'panels':
+      return <PanelsEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'features':
       return <FeaturesEditor config={config} updateConfig={updateConfig} saving={saving} />
     case 'maintenance':
@@ -483,6 +493,80 @@ function FeaturesEditor({ config, updateConfig, saving }: EditorProps) {
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>PET Ahora permite a clientes solicitar paseos al instante. Requiere configuración adicional de zonas, paseadores y disponibilidad.</p>
         </div>
       )}
+      <SaveButton onClick={save} saving={saving} />
+    </div>
+  )
+}
+
+/**
+ * Qué paneles ve el equipo, en qué orden y quién.
+ *
+ * Cada panel trae su explicación, porque un menú de veinticuatro entradas no
+ * se entiende solo. Configuración no se puede ocultar: sería cerrar la puerta
+ * por dentro.
+ */
+function PanelsEditor({ config, updateConfig, saving }: EditorProps) {
+  const [draft, setDraft] = useState<AdminPanelPreferences>(config.adminPanels ?? {})
+  useEffect(() => { setDraft(config.adminPanels ?? {}) }, [config.adminPanels])
+
+  const panels = orderedPanels(draft)
+  const hidden = draft.hidden ?? []
+  const supervisorHidden = draft.supervisorHidden ?? []
+  const save = () => updateConfig({ adminPanels: draft })
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted">
+        Oculta lo que no uses, acomódalo en el orden que te sirva y decide qué ve un supervisor.
+        El cambio aplica para todo el equipo.
+      </p>
+
+      <ul className="space-y-2">
+        {panels.map((panel, index) => {
+          const isHidden = hidden.includes(panel.id)
+          const isLocked = panel.id === ALWAYS_VISIBLE_PANEL
+          return (
+            <li key={panel.id} className="rounded-xl border border-ink/10 p-3" style={{ background: 'var(--glass-bg)' }}>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', opacity: isHidden ? 0.5 : 1 }}>
+                    {panel.label} <span className="text-2xs font-normal text-muted">· {panel.group}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">{panel.description}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button type="button" onClick={() => setDraft({ ...draft, order: movePanel(draft, panel.id, -1) })} disabled={index === 0} aria-label={`Subir ${panel.label}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ink/5 disabled:opacity-30">
+                    <ChevronUp size={14} />
+                  </button>
+                  <button type="button" onClick={() => setDraft({ ...draft, order: movePanel(draft, panel.id, 1) })} disabled={index === panels.length - 1} aria-label={`Bajar ${panel.label}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ink/5 disabled:opacity-30">
+                    <ChevronDown size={14} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={() => setDraft({ ...draft, hidden: togglePanelId(hidden, panel.id) })}
+                  className={`text-2xs min-h-9 rounded-full border px-3 font-medium transition-colors disabled:opacity-40 ${isHidden ? 'border-ink/15 text-muted' : 'border-success-500/40 text-success-600'}`}
+                >
+                  {isLocked ? 'Siempre visible' : isHidden ? 'Oculto' : 'Visible'}
+                </button>
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={() => setDraft({ ...draft, supervisorHidden: togglePanelId(supervisorHidden, panel.id) })}
+                  className={`text-2xs min-h-9 rounded-full border px-3 font-medium transition-colors disabled:opacity-40 ${supervisorHidden.includes(panel.id) ? 'border-ink/15 text-muted' : 'border-brand-500/40 text-brand-600'}`}
+                >
+                  {supervisorHidden.includes(panel.id) ? 'Supervisor no lo ve' : 'Supervisor lo ve'}
+                </button>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+
       <SaveButton onClick={save} saving={saving} />
     </div>
   )

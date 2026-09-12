@@ -21,6 +21,9 @@ const Gallery = dynamic(() => import('@/components/Gallery'), {
 const Reviews = dynamic(() => import('@/components/Reviews'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-48 rounded-2xl" /></div>,
 })
+const CoverageSection = dynamic(() => import('@/components/CoverageSection'), {
+  loading: () => <div className="section-container py-16"><div className="skeleton h-56 rounded-2xl" /></div>,
+})
 const FAQ = dynamic(() => import('@/components/FAQ'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-40 rounded-2xl" /></div>,
 })
@@ -58,11 +61,10 @@ function HomeContent() {
         <TrustBar />
         <Services />
         <HowItWorks />
-        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>}>
-          <Gallery />
-        </Suspense>
-        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-40 rounded-2xl" /></div>}>
-          <FAQ />
+        {/* La cobertura y lo que dicen las familias van antes que la galería y
+            las preguntas: son lo que alguien quiere saber para decidirse. */}
+        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-56 rounded-2xl" /></div>}>
+          <CoverageSection />
         </Suspense>
         <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-48 rounded-2xl" /></div>}>
           <Reviews />
@@ -74,6 +76,12 @@ function HomeContent() {
             </Suspense>
           </div>
         </div>
+        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-64 rounded-2xl" /></div>}>
+          <Gallery />
+        </Suspense>
+        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-40 rounded-2xl" /></div>}>
+          <FAQ />
+        </Suspense>
         <Suspense>
           {user ? (
             <section className="section-container py-16 sm:py-20">

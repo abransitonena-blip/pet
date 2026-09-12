@@ -82,6 +82,12 @@ export interface SiteConfig {
   privacySections?: { title: string; content: string }[]
   // Los paseadores viven en `walkerProfiles`, la colección en la que confían
   // las reglas. El registro que se guardaba aquí ya no lo lee ningún panel.
+  /**
+   * Qué paneles ve el equipo y en qué orden (ver src/lib/adminPanels.ts).
+   * Se escribe desde Configuración → Paneles; sin esto, el menú es el de
+   * fábrica.
+   */
+  adminPanels?: { hidden?: string[]; order?: string[]; supervisorHidden?: string[] }
   maintenance: boolean
   features: {
     petAhoraEnabled: boolean
