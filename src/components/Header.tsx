@@ -10,6 +10,7 @@ import { Logo } from '@/components/ui/Logo'
 const navLinks = [
   { label: 'Inicio', href: '/#hero' },
   { label: 'Servicios', href: '/#servicios' },
+  { label: 'Precios', href: '/#precios' },
   { label: 'Cómo funciona', href: '/#como-funciona' },
   { label: '¿Llegamos?', href: '/#cobertura' },
   { label: 'Reseñas', href: '/#resenas' },

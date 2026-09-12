@@ -7,6 +7,7 @@ import { db } from '@/firebase/config'
 import {
   COVERAGE_STATUS_LABELS,
   COVERAGE_URGENT_REQUESTS,
+  pendingCoverageCount,
   summarizeCoverageRequests,
   type CoverageRequestRow,
 } from '@/lib/coverageRequests'
@@ -60,6 +61,8 @@ export default function CoverageRequestsPanel({ zones }: { zones: readonly Zone[
     [rows, zones],
   )
 
+  const pending = pendingCoverageCount(summary)
+
   // Mientras nadie haya preguntado, no hay nada que mostrar ni que explicar.
   if (denied || summary.length === 0) return null
 
@@ -70,8 +73,10 @@ export default function CoverageRequestsPanel({ zones }: { zones: readonly Zone[
           <Mailbox size={15} className="text-primary" aria-hidden="true" /> Códigos postales que nos preguntaron
         </h2>
         <p className="mt-0.5 text-xs text-muted">
-          Cada vez que alguien escribe su CP en la página pública, suma aquí. Un CP sin cobertura se
-          marca urgente a partir de {COVERAGE_URGENT_REQUESTS} preguntas.
+          {pending > 0
+            ? `${pending} pregunta${pending === 1 ? '' : 's'} por colonias que todavía no cubrimos. `
+            : 'Todo lo que preguntaron ya está cubierto. '}
+          Un CP sin cobertura se marca urgente a partir de {COVERAGE_URGENT_REQUESTS} preguntas.
         </p>
       </div>
 
