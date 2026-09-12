@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithCredential, signInWithPopup } from 'firebase/auth'
+import { appleAuthProvider, appleLoginErrorMessage, isAppleAuthConfigured } from '@/lib/appleAuth'
 import { auth, authPersistenceReady } from '@/firebase/config'
 import { GOOGLE_CLIENT_ID, googleAuthProvider } from '@/lib/googleAuth'
 import { Mail, Lock, Loader2, User, Phone } from 'lucide-react'
@@ -58,6 +59,14 @@ function resolveDestination(role: Role): string {
    return resolveDestinationShared(role, getSafeRedirect())
   }
 
+function AppleMark({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.05 12.54c-.02-2.4 1.96-3.55 2.05-3.61-1.12-1.63-2.86-1.86-3.48-1.89-1.48-.15-2.89.87-3.64.87-.75 0-1.91-.85-3.14-.83-1.61.02-3.1.94-3.93 2.38-1.68 2.91-.43 7.22 1.2 9.58.8 1.16 1.75 2.46 3 2.41 1.21-.05 1.66-.78 3.13-.78 1.46 0 1.88.78 3.15.76 1.3-.02 2.12-1.18 2.92-2.34.92-1.34 1.3-2.64 1.32-2.71-.03-.01-2.53-.97-2.56-3.84zM14.7 5.4c.66-.81 1.11-1.93.99-3.05-.95.04-2.11.64-2.8 1.44-.62.71-1.16 1.85-1.02 2.94 1.06.08 2.15-.54 2.83-1.33z" />
+    </svg>
+  )
+}
+
 function GoogleMark({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
@@ -84,6 +93,7 @@ export default function LoginPage() {
   const [webView, setWebView] = useState(false)
   const googleButtonRef = useRef<HTMLDivElement | null>(null)
   const googleAttemptRef = useRef(false)
+  const appleAttemptRef = useRef(false)
   const initializedRef = useRef(false)
   const gisScriptRef = useRef<HTMLScriptElement | null>(null)
   const [authState, setAuthState] = useState<{
@@ -120,7 +130,7 @@ export default function LoginPage() {
     setWebView(isWebView())
   }, [])
 
-  const finalizeGoogle = useCallback(async (user: { uid: string; displayName: string | null; email: string | null }) => {
+  const finalizeSignIn = useCallback(async (user: { uid: string; displayName: string | null; email: string | null }) => {
     const currentUser = auth.currentUser
     if (!currentUser || currentUser.uid !== user.uid) {
       throw familyLoginError('auth', { code: 'auth/session-unavailable' })
@@ -165,7 +175,7 @@ export default function LoginPage() {
       const result = await signInWithCredential(auth, credential)
       Events.loginMethod('google')
       updateAuthState('firebase_credential_created')
-      await finalizeGoogle(result.user)
+      await finalizeSignIn(result.user)
     } catch (e) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
       const friendlyError = classifyFamilyLoginError(e)
@@ -176,7 +186,7 @@ export default function LoginPage() {
       googleAttemptRef.current = false
       setLoading(false)
     }
-  }, [finalizeGoogle])
+  }, [finalizeSignIn])
 
   const handleGooglePopup = useCallback(async () => {
     if (!GOOGLE_CLIENT_ID) {
@@ -192,7 +202,7 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, googleAuthProvider)
       Events.loginMethod('google')
       updateAuthState('firebase_credential_created')
-      await finalizeGoogle(result.user)
+      await finalizeSignIn(result.user)
     } catch (e) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
       const friendlyError = classifyFamilyLoginError(e)
@@ -203,7 +213,31 @@ export default function LoginPage() {
       googleAttemptRef.current = false
       setLoading(false)
     }
-  }, [finalizeGoogle])
+  }, [finalizeSignIn])
+
+  const handleApplePopup = useCallback(async () => {
+    if (appleAttemptRef.current) return
+    appleAttemptRef.current = true
+    setLoading(true)
+    setError('')
+    try {
+      await authPersistenceReady
+      const result = await signInWithPopup(auth, appleAuthProvider)
+      Events.loginMethod('apple')
+      updateAuthState('firebase_credential_created', null, null, 'AppleSignIn')
+      await finalizeSignIn(result.user)
+    } catch (e) {
+      const code = e && typeof e === 'object' && 'code' in e ? String((e as { code: unknown }).code) : ''
+      // Cerrar la ventana de Apple no es un error que valga la pena gritar.
+      const message = isFamilyLoginFlowError(e) ? classifyFamilyLoginError(e) : appleLoginErrorMessage(code)
+      const stage = isFamilyLoginFlowError(e) ? e.stage : 'oauth'
+      updateAuthState(`${stage}_failed`, message || null, code, 'AppleSignIn')
+      if (message) setError(message)
+    } finally {
+      appleAttemptRef.current = false
+      setLoading(false)
+    }
+  }, [finalizeSignIn])
 
   const loadGisScript = useCallback((onDone: () => void) => {
     if (typeof document === 'undefined') return
@@ -295,7 +329,7 @@ const handleEmailLogin = async () => {
       await authPersistenceReady
       const cred = await signInWithEmailAndPassword(auth, email, password)
       Events.loginMethod('email')
-      await finalizeGoogle(cred.user)
+      await finalizeSignIn(cred.user)
     } catch (e: unknown) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
       if (isFamilyLoginFlowError(e)) {
@@ -351,7 +385,7 @@ const handleEmailLogin = async () => {
       } catch (cause) {
         throw familyLoginError('profile', cause)
       }
-      await finalizeGoogle(cred.user)
+      await finalizeSignIn(cred.user)
     } catch (e: unknown) {
       const code = e && typeof e === 'object' && 'code' in e ? (e as { code: string }).code : ''
       if (isFamilyLoginFlowError(e)) setError(classifyFamilyLoginError(e))
@@ -412,6 +446,18 @@ const handleEmailLogin = async () => {
                 </div>
               ) : (
                 <div ref={googleButtonRef} className="min-h-[40px] min-w-0 max-w-full overflow-hidden flex justify-center" />
+              )}
+
+              {/* Sólo cuando el trámite con Apple está terminado: ver
+                  isAppleAuthConfigured(). */}
+              {isAppleAuthConfigured() && !webView && (
+                <button
+                  onClick={handleApplePopup}
+                  disabled={loading}
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-black py-3 text-sm font-semibold text-white transition-all disabled:opacity-40"
+                >
+                  <AppleMark /> Continuar con Apple
+                </button>
               )}
 
               <div className="flex items-center gap-3 py-1">

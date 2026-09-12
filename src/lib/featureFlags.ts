@@ -52,9 +52,11 @@ export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
   // paseo en curso, y alerta si el paseador sale de la zona.
   WALK_TRACKING_ENABLED: true,
   // J: perfil de emergencia con QR por mascota.
-  // Cada mascota tiene opt-in individual (emergencyProfile.enabled);
-  // este flag es la condición necesaria pero no suficiente para mostrarlo.
-  PET_EMERGENCY_QR_ENABLED: false,
+  // Encendido por decisión del dueño (2026-09-12), ya con las reglas de
+  // `emergency-profiles` publicadas. Cada mascota tiene además su opt-in
+  // individual (emergencyProfile.enabled): sin él no se publica nada, así que
+  // este flag habilita la función, no expone perros.
+  PET_EMERGENCY_QR_ENABLED: true,
   // K: segmentos de gasto de clientes (analítica interna, solo lectura).
   // El admin debe configurar los umbrales antes de que el panel sea útil.
   CLIENT_SPEND_SEGMENT_ANALYTICS_ENABLED: false,
