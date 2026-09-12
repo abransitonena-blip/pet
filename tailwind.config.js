@@ -5,6 +5,19 @@ module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
+      // Las capas de la interfaz, con los mismos valores que globals.css.
+      // Sin esto, `z-sticky` y compañía no generaban nada: quedaban en
+      // `z-index: auto`, y el encabezado fijo terminaba debajo de la portada,
+      // que se comía todos los clics del menú.
+      zIndex: {
+        dropdown: 'var(--z-dropdown)',
+        sticky: 'var(--z-sticky)',
+        'modal-backdrop': 'var(--z-modal-backdrop)',
+        modal: 'var(--z-modal)',
+        toast: 'var(--z-toast)',
+        overlay: 'var(--z-overlay)',
+        preloader: 'var(--z-preloader)',
+      },
       fontSize: {
         '2xs': '0.625rem',
       },

@@ -122,10 +122,19 @@ export const DEFAULT_CONFIG: SiteConfig = {
     viernes:   generateTimeSlots('viernes'),
     sabado:    generateTimeSlots('sabado'),
   },
+  // El campo `icon` guarda el nombre de un icono de WALK_TIP_ICONS. Un valor que
+  // no esté en esa lista se muestra tal cual, para no perder los emojis que ya
+  // tenga guardados quien configuró antes.
   walkTips: [
-    { title: 'Hidratación', text: 'Asegúrate de que tu perro tenga agua fresca antes y después del paseo.', icon: '💧' },
-    { title: 'Descanso', text: 'Después del paseo, deja que tu perro descanse en un lugar tranquilo.', icon: '😴' },
-    { title: 'Recompensa', text: 'Un premio después del paseo refuerza su buena conducta.', icon: '🦴' },
+    { title: 'Hidratación', text: 'Asegúrate de que tu perro tenga agua fresca antes y después del paseo.', icon: 'agua' },
+    { title: 'Descanso', text: 'Después del paseo, deja que tu perro descanse en un lugar tranquilo.', icon: 'descanso' },
+    { title: 'Recompensa', text: 'Un premio después del paseo refuerza su buena conducta.', icon: 'premio' },
+    { title: 'Cuidado con el calor', text: 'A mediodía el asfalto quema. Si no puedes dejar tu mano en el piso cinco segundos, tampoco sus patas.', icon: 'calor' },
+    { title: 'Revisa sus patas', text: 'Al volver, revisa almohadillas y entre los dedos: piedritas y vidrios se quedan ahí sin que se note.', icon: 'patas' },
+    { title: 'Placa con tu teléfono', text: 'Una placa con tu número es lo que lo regresa a casa si se suelta. El microchip ayuda, pero nadie lo lee en la calle.', icon: 'placa' },
+    { title: 'Vacunas al día', text: 'Pedimos la múltiple y la antirrábica vigentes. Anota la fecha del refuerzo en su perfil y te avisamos.', icon: 'vacunas' },
+    { title: 'Arnés antes que collar', text: 'En perros que jalan, el arnés reparte la fuerza y cuida su cuello.', icon: 'correa' },
+    { title: 'Misma hora, todos los días', text: 'Un paseo a la misma hora baja la ansiedad: tu perro deja de esperar sin saber cuándo.', icon: 'rutina' },
   ],
   faq: [
     { question: '¿En qué horario realizan los paseos?', answer: 'Operamos de Lunes a Viernes de 7:00 AM a 7:00 PM, y Sábados de 8:00 AM a 6:00 PM. Los paseos se agendan según disponibilidad.' },

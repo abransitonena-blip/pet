@@ -7,6 +7,7 @@ import type { SiteConfig, Announcement } from '@/lib/defaultConfig'
 import { mexicanObservanceShortcuts, type DateShortcut } from '@/lib/announcements'
 import { mergeTermsSections } from '@/lib/termsContent'
 import { mergePrivacySections } from '@/lib/privacyContent'
+import { WALK_TIP_ICONS, walkTipIcon } from '@/lib/walkTipIcons'
 import {
   ALWAYS_VISIBLE_PANEL,
   movePanel,
@@ -303,7 +304,7 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
 
   const save = () => updateConfig({ walkTips: tips })
 
-  const addTip = () => setTips([...tips, { title: '', text: '', icon: '🐾' }])
+  const addTip = () => setTips([...tips, { title: '', text: '', icon: 'paseo' }])
   const removeTip = (i: number) => setTips(tips.filter((_: { title: string; text: string; icon: string }, idx: number) => idx !== i))
   const updateTip = (i: number, field: string, value: string) => {
     const updated = [...tips]
@@ -313,11 +314,26 @@ function TipsEditor({ config, updateConfig, saving }: EditorProps) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted">Se muestran en el inicio del panel de familia. Un consejo sin título o sin texto no aparece.</p>
+      <p className="text-xs text-muted">
+        Se muestran en la página pública y en el inicio del panel de familia. Un consejo sin título o
+        sin texto no aparece.
+      </p>
       {tips.map((tip: { title: string; text: string; icon: string }, i: number) => (
         <div key={i} className="flex gap-2 items-start bg-ink/5 p-3 rounded-lg">
           <div className="flex-1 space-y-2">
-            <input value={tip.icon} onChange={(e) => updateTip(i, 'icon', e.target.value)} className="w-10 bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs text-center" aria-label="Icono del tip" placeholder="Icono" />
+            {/* Un emoji guardado antes sigue siendo una opción válida de la
+                lista, para no cambiarle el consejo a nadie sin avisar. */}
+            <select
+              value={tip.icon}
+              onChange={(e) => updateTip(i, 'icon', e.target.value)}
+              aria-label="Icono del consejo"
+              className="text-2xs h-11 w-full rounded border border-ink/15 bg-white px-2 text-ink"
+            >
+              {!walkTipIcon(tip.icon) && tip.icon && <option value={tip.icon}>{tip.icon} (el que tenías)</option>}
+              {WALK_TIP_ICONS.map((entry) => (
+                <option key={entry.name} value={entry.name}>{entry.label}</option>
+              ))}
+            </select>
             <input value={tip.title} onChange={(e) => updateTip(i, 'title', e.target.value)} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs" aria-label="Título del tip" placeholder="Título" />
             <textarea value={tip.text} onChange={(e) => updateTip(i, 'text', e.target.value)} rows={2} className="w-full bg-white border border-ink/15 rounded px-2 py-1 text-ink text-xs resize-none" aria-label="Texto del tip" placeholder="Texto" />
           </div>

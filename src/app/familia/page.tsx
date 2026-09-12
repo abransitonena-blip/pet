@@ -20,6 +20,7 @@ import CanonicalFamilyRequests from '@/components/family/CanonicalFamilyRequests
 import { Button, Card, EmptyState, ErrorState } from '@/components/ui'
 import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
 import { useConfig } from '@/context/ConfigContext'
+import { walkTipIcon } from '@/lib/walkTipIcons'
 import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
 import type { WalkSessionStatus } from '@/lib/domainStates'
 
@@ -32,6 +33,19 @@ interface UserProfile {
   name: string
   phone: string
   email: string
+}
+
+/** El icono del consejo: de trazo si tiene nombre, el emoji guardado si no. */
+function WalkTipMark({ icon }: { icon: string }) {
+  const Icon = walkTipIcon(icon)
+  if (Icon) {
+    return (
+      <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+        <Icon size={16} strokeWidth={1.75} />
+      </span>
+    )
+  }
+  return icon ? <span className="text-lg" aria-hidden="true">{icon}</span> : null
 }
 
 export default function DashboardPage() {
@@ -291,7 +305,7 @@ export default function DashboardPage() {
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {walkTips.map((tip, index) => (
               <li key={`${tip.title}-${index}`} className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm">
-                {tip.icon && <p className="text-lg" aria-hidden="true">{tip.icon}</p>}
+                <WalkTipMark icon={tip.icon} />
                 <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{tip.title}</p>
                 <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>{tip.text}</p>
               </li>

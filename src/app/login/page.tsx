@@ -406,7 +406,9 @@ const handleEmailLogin = async () => {
         className="w-full min-w-0 max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="mx-auto block mb-4" aria-label="Logo PET Ap">
+          {/* El mark es un bloque de ancho fijo: text-center no lo mueve y
+              mx-auto sin ancho tampoco. Se centra con flex. */}
+          <div className="mb-4 flex justify-center" aria-label="Logo PET Ap">
             <Logo size={56} rounded="rounded-2xl" className="shadow-glow" />
           </div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>

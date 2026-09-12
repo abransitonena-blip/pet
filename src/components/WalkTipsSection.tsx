@@ -1,6 +1,7 @@
 'use client'
 
 import { useConfig } from '@/context/ConfigContext'
+import { walkTipIcon } from '@/lib/walkTipIcons'
 
 /**
  * Los consejos para el paseo, en la página pública.
@@ -11,6 +12,19 @@ import { useConfig } from '@/context/ConfigContext'
  *
  * Si se borran todos, la sección desaparece en vez de dejar un hueco con título.
  */
+/** El icono del consejo: de trazo si tiene nombre, el emoji guardado si no. */
+function TipIcon({ icon }: { icon: string }) {
+  const Icon = walkTipIcon(icon)
+  if (Icon) {
+    return (
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+        <Icon size={18} strokeWidth={1.75} />
+      </span>
+    )
+  }
+  return icon ? <span aria-hidden="true" className="text-2xl">{icon}</span> : null
+}
+
 export default function WalkTipsSection() {
   const { config } = useConfig()
   const tips = (config.walkTips ?? []).filter((tip) => tip.title?.trim() && tip.text?.trim())
@@ -29,8 +43,8 @@ export default function WalkTipsSection() {
         <ul className="mx-auto mt-8 grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tips.map((tip, index) => (
             <li key={`${tip.title}-${index}`} className="card p-5">
-              {tip.icon && <p aria-hidden="true" className="text-2xl">{tip.icon}</p>}
-              <h3 className="mt-2 text-sm font-semibold text-ink">{tip.title}</h3>
+              <TipIcon icon={tip.icon} />
+              <h3 className="mt-3 text-sm font-semibold text-ink">{tip.title}</h3>
               <p className="mt-1 text-sm leading-relaxed text-muted">{tip.text}</p>
             </li>
           ))}
