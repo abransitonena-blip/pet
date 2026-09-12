@@ -35,56 +35,89 @@ import { BRAND } from '@/lib/brand'
 
 type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'features' | 'maintenance' | 'brand' | 'panels'
 
-const SECTIONS: { id: Section; label: string; icon: string }[] = [
-  { id: 'prices', label: 'Precios de servicios', icon: 'MXN' },
-  { id: 'booking', label: 'Horario de solicitudes', icon: '🕐' },
-  { id: 'brand', label: 'Diseño y marca', icon: '🎨' },
-  { id: 'hero', label: 'Textos del sitio', icon: '📝' },
-  { id: 'social', label: 'Redes sociales', icon: '📱' },
-  { id: 'tips', label: 'Consejos para el paseo', icon: '💡' },
-  { id: 'faq', label: 'FAQ', icon: '❓' },
-  { id: 'announcements', label: 'Anuncios y festividades', icon: '🎉' },
-  { id: 'terms', label: 'Términos y condiciones', icon: '📄' },
-  { id: 'privacy', label: 'Aviso de privacidad', icon: '🔒' },
-  { id: 'panels', label: 'Paneles del equipo', icon: '🧭' },
-  { id: 'features', label: 'Funcionalidades', icon: '🚀' },
-  { id: 'maintenance', label: 'Mantenimiento', icon: '⚠️' },
+/**
+ * Configuración: catorce apartados que antes eran una pila plana de títulos.
+ *
+ * Ahora van en tres grupos y cada uno dice en una línea qué se cambia adentro,
+ * así que el primer pantallazo es un mapa de lo que se puede tocar -- no una
+ * lista de nombres que hay que abrir uno por uno para saber qué tienen.
+ */
+interface ConfigSection {
+  id: Section
+  label: string
+  icon: string
+  group: (typeof SECTION_GROUPS)[number]
+  description: string
+}
+
+const SECTION_GROUPS = ['El negocio', 'Lo que ve la gente', 'El sistema'] as const
+
+const SECTIONS: ConfigSection[] = [
+  { id: 'prices', label: 'Precios de servicios', icon: 'MXN', group: 'El negocio', description: 'Cuánto cuesta cada paseo, cuánto dura y cuáles se pueden pedir.' },
+  { id: 'booking', label: 'Horario de solicitudes', icon: '🕐', group: 'El negocio', description: 'Los días y las horas en que una familia puede pedir un paseo.' },
+  { id: 'brand', label: 'Diseño y marca', icon: '🎨', group: 'Lo que ve la gente', description: 'Los colores del sitio y el logo.' },
+  { id: 'hero', label: 'Textos del sitio', icon: '📝', group: 'Lo que ve la gente', description: 'El título de la portada y los textos de las secciones.' },
+  { id: 'social', label: 'Redes sociales', icon: '📱', group: 'Lo que ve la gente', description: 'Los enlaces de Facebook, Instagram, TikTok y WhatsApp.' },
+  { id: 'tips', label: 'Consejos para el paseo', icon: '💡', group: 'Lo que ve la gente', description: 'Los consejos que aparecen en el sitio y en el panel de familia.' },
+  { id: 'faq', label: 'Preguntas frecuentes', icon: '❓', group: 'Lo que ve la gente', description: 'Las preguntas y respuestas de la página pública.' },
+  { id: 'announcements', label: 'Anuncios y festividades', icon: '🎉', group: 'Lo que ve la gente', description: 'Avisos con fecha de inicio y fin, como un cierre por día festivo.' },
+  { id: 'terms', label: 'Términos y condiciones', icon: '📄', group: 'Lo que ve la gente', description: 'El texto legal del servicio. Requiere validación de abogado en México.' },
+  { id: 'privacy', label: 'Aviso de privacidad', icon: '🔒', group: 'Lo que ve la gente', description: 'Qué datos se recaban y para qué. Requiere validación de abogado en México.' },
+  { id: 'panels', label: 'Paneles del equipo', icon: '🧭', group: 'El sistema', description: 'Qué paneles ve el equipo, en qué orden, y qué ve un supervisor.' },
+  { id: 'features', label: 'Funcionalidades', icon: '🚀', group: 'El sistema', description: 'Qué partes de la app están encendidas.' },
+  { id: 'maintenance', label: 'Mantenimiento', icon: '⚠️', group: 'El sistema', description: 'Cerrar el sitio temporalmente con un mensaje.' },
 ]
 
 export default function AdminConfig() {
   const { config, updateConfig, saving } = useConfig()
-  const [openSection, setOpenSection] = useState<Section | null>('hero')
+  const [openSection, setOpenSection] = useState<Section | null>(null)
 
   return (
-    <div className="space-y-3">
-      {SECTIONS.map((sec) => (
-        <div key={sec.id} className="glass-card overflow-hidden">
-          <button
-            onClick={() => setOpenSection(openSection === sec.id ? null : sec.id)}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-ink/5 transition-all"
-          >
-            <span className="text-sm font-semibold text-ink flex items-center gap-2">
-              <span>{sec.icon}</span> {sec.label}
-            </span>
-            {openSection === sec.id ? <ChevronUp size={10} className="text-muted" /> : <ChevronDown size={10} className="text-muted" />}
-          </button>
+    <div className="space-y-6">
+      {SECTION_GROUPS.map((group) => {
+        const sections = SECTIONS.filter((section) => section.group === group)
+        if (sections.length === 0) return null
+        return (
+          <section key={group} className="space-y-2">
+            <h2 className="text-2xs font-semibold uppercase tracking-[0.16em] text-muted">{group}</h2>
+            {sections.map((sec) => (
+              <div key={sec.id} className="glass-card overflow-hidden">
+                <button
+                  onClick={() => setOpenSection(openSection === sec.id ? null : sec.id)}
+                  aria-expanded={openSection === sec.id}
+                  className="flex w-full items-start justify-between gap-3 p-4 text-left transition-all hover:bg-ink/5"
+                >
+                  <span className="flex min-w-0 items-start gap-2">
+                    <span aria-hidden="true" className="mt-0.5 text-sm">{sec.icon}</span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-ink">{sec.label}</span>
+                      <span className="mt-0.5 block text-xs text-muted">{sec.description}</span>
+                    </span>
+                  </span>
+                  {openSection === sec.id
+                    ? <ChevronUp size={14} className="mt-0.5 shrink-0 text-muted" />
+                    : <ChevronDown size={14} className="mt-0.5 shrink-0 text-muted" />}
+                </button>
 
-          <AnimatePresence>
-            {openSection === sec.id && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="border-t border-ink/10"
-              >
-                <div className="p-4">
-                  <SectionContent section={sec.id} config={config} updateConfig={updateConfig} saving={saving} />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      ))}
+                <AnimatePresence>
+                  {openSection === sec.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="border-t border-ink/10"
+                    >
+                      <div className="p-4">
+                        <SectionContent section={sec.id} config={config} updateConfig={updateConfig} saving={saving} />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </section>
+        )
+      })}
     </div>
   )
 }

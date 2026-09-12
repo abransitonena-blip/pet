@@ -13,6 +13,7 @@ import StepV2Confirm from './StepV2Confirm'
 import { CheckCircle2 } from 'lucide-react'
 import { getReservationServiceOptions, normalizeServiceName, type ReservationPackageType } from '@/lib/walkServices'
 import { getReservationValidationIssues, type ReservationStepId } from '@/lib/reservationValidation'
+import { nextStepIndex, soleChoice } from '@/lib/reservationPrefill'
 
 const STEPS = [
   { id: 'service', label: 'Servicio' },
@@ -144,6 +145,30 @@ export default function ReservationFlow() {
     setForm(prev => ({ ...prev, ...updates }))
   }, [])
 
+  // Una familia con un perro y una dirección no tiene nada que elegir ahí: se
+  // eligen solos y el paso se salta, pero siguen a la vista en el resumen y se
+  // pueden cambiar desde ahí. Una dirección cuya zona ya no está disponible no
+  // se elige sola: ese problema tiene que verse.
+  useEffect(() => {
+    const onlyPet = soleChoice(userPets)
+    const onlyAddress = soleChoice(userAddresses)
+    setForm((prev) => {
+      const next = { ...prev }
+      if (!prev.petId && onlyPet) {
+        next.petId = onlyPet.id
+        next.petName = onlyPet.name
+        next.petType = onlyPet.type || 'perro'
+      }
+      if (!prev.addressId && onlyAddress && onlyAddress.zoneActive) {
+        next.addressId = onlyAddress.id
+        next.address = onlyAddress.address
+        next.zoneId = onlyAddress.zoneId
+        next.zoneActive = true
+      }
+      return next
+    })
+  }, [userPets, userAddresses])
+
   useEffect(() => {
     if (priceStatus !== 'ready') return
     const options = getReservationServiceOptions(prices)
@@ -205,9 +230,12 @@ export default function ReservationFlow() {
       return
     }
     setSourceError('')
-    setStep(prev => Math.min(prev + 1, STEPS.length - 1))
-  }, [step, validateAddressBeforeConfirmation])
+    const issues = getReservationValidationIssues(form)
+    setStep(prev => nextStepIndex(prev, issues, STEPS.map((item) => item.id)))
+  }, [form, step, validateAddressBeforeConfirmation])
 
+  // Hacia atrás nunca se salta nada: quien regresa es justo quien quiere
+  // cambiar el perro o la dirección que se eligieron solos.
   const prevStep = useCallback(() => {
     setStep(prev => Math.max(prev - 1, 0))
   }, [])

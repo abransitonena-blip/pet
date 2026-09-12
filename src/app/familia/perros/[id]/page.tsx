@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
-import { AlertTriangle, ArrowLeft, FileText, Pencil, Phone, Syringe } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ChevronDown, FileText, Pencil, Phone, Syringe } from 'lucide-react'
 import { auth, db } from '@/firebase/config'
 import { Card, EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import DogAvatar from '@/components/family/DogAvatar'
@@ -14,6 +14,8 @@ import { useDogPhotos } from '@/lib/useDogPhotos'
 import { isDogPhotoReference } from '@/lib/dogPhotos'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import EmergencyTagSection from '@/components/family/EmergencyTagSection'
+import { dogAlerts } from '@/lib/dogHealth'
+import { mexicoCityToday } from '@/lib/customerSegments'
 
 /**
  * Perfil de la mascota.
@@ -117,6 +119,35 @@ function Chips({ items, tone = 'primary' }: { items: string[]; tone?: 'primary' 
   )
 }
 
+/**
+ * Un apartado que empieza cerrado.
+ *
+ * El perfil traía todo abierto -- personalidad, preferencias, vacunas,
+ * veterinario, la placa QR -- y lo urgente se perdía entre lo que se consulta
+ * una vez al año. Lo que un paseador necesita saber hoy vive arriba, a la vista;
+ * el resto se abre cuando alguien lo busca.
+ */
+function Foldable({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <section className="rounded-2xl border border-ink/[0.08] bg-surface">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <span className="min-w-0">
+          <span className="block text-xs font-semibold uppercase tracking-[0.14em] text-muted">{title}</span>
+          {hint && !open && <span className="mt-0.5 block truncate text-sm text-ink">{hint}</span>}
+        </span>
+        <ChevronDown size={16} className={`shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+      </button>
+      {open && <div className="space-y-2 border-t border-ink/[0.08] px-4 py-3">{children}</div>}
+    </section>
+  )
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
@@ -190,7 +221,12 @@ export default function DogProfilePage() {
 
   const telHref = dog.vetPhone.replace(/[^\d+]/g, '')
   const hasPreferences = dog.favoriteToys.length > 0 || dog.commands.length > 0 || Boolean(dog.specialNeeds)
-  const hasHealth = dog.allergies.length > 0 || dog.medications.length > 0 || dog.vaccines.length > 0 || Boolean(dog.vetName)
+  const hasHealth = dog.vaccines.length > 0 || Boolean(dog.vetName)
+  // Lo que un paseador necesita saber hoy: sale del mismo cálculo que usa el panel.
+  const alerts = dogAlerts(
+    { allergies: dog.allergies, medications: dog.medications, vaccines: dog.vaccines.map((vaccine) => ({ name: vaccine.name, date: vaccine.date, nextDue: vaccine.nextDue ?? '' })), specialNeeds: dog.specialNeeds },
+    mexicoCityToday(),
+  )
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -235,15 +271,33 @@ export default function DogProfilePage() {
         </div>
       </dl>
 
+      {alerts.length > 0 && (
+        <ul className="space-y-1.5">
+          {alerts.map((alert) => (
+            <li
+              key={alert.key}
+              className={`flex items-start gap-2 rounded-2xl px-3 py-2 text-sm ${
+                alert.tone === 'danger' ? 'bg-danger-500/10 text-red-700'
+                  : alert.tone === 'warning' ? 'bg-warning/10 text-amber-900'
+                    : 'bg-ink/[0.04] text-ink'
+              }`}
+            >
+              <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span><span className="font-semibold">{alert.label}:</span> {alert.detail}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {(dog.temperament.length > 0 || dog.notes) && (
-        <Section title="Personalidad">
+        <Foldable title="Personalidad" hint={dog.temperament.join(', ') || 'Notas de la familia'}>
           {dog.temperament.length > 0 && <Chips items={dog.temperament} />}
           {dog.notes && <p className="text-sm leading-relaxed text-ink">{dog.notes}</p>}
-        </Section>
+        </Foldable>
       )}
 
       {hasPreferences && (
-        <Section title="Preferencias">
+        <Foldable title="Preferencias" hint="Juguetes, comandos y cuidados">
           {dog.favoriteToys.length > 0 && (
             <div className="space-y-1">
               <p className="text-xs text-muted">Juguetes favoritos</p>
@@ -257,23 +311,13 @@ export default function DogProfilePage() {
             </div>
           )}
           {dog.specialNeeds && <p className="text-sm text-ink">{dog.specialNeeds}</p>}
-        </Section>
+        </Foldable>
       )}
 
       {hasHealth && (
-        <Section title="Salud">
-          {dog.allergies.length > 0 && (
-            <p className="flex items-start gap-2 rounded-2xl bg-danger-500/10 px-3 py-2 text-sm text-red-700">
-              <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-              Alergias: {dog.allergies.join(', ')}
-            </p>
-          )}
-          {dog.medications.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted">Medicamentos</p>
-              <Chips items={dog.medications} tone="neutral" />
-            </div>
-          )}
+        // Alergias y medicamento ya están arriba, en la lista de avisos: aquí
+        // queda el expediente que se consulta, no lo que hay que saber hoy.
+        <Foldable title="Salud" hint={dog.vaccines.length > 0 ? `${dog.vaccines.length} vacuna${dog.vaccines.length === 1 ? '' : 's'} registrada${dog.vaccines.length === 1 ? '' : 's'}` : 'Expediente y veterinario'}>
           {dog.vaccines.length > 0 && (
             <ul className="space-y-1.5">
               {dog.vaccines.map((vaccine) => (
@@ -294,16 +338,18 @@ export default function DogProfilePage() {
               )}
             </p>
           )}
-        </Section>
+        </Foldable>
       )}
 
-      <EmergencyTagSection
-        dogId={dogId}
-        petName={dog.name}
-        breed={dog.breed}
-        size={dog.size}
-        petType={dog.petType}
-      />
+      <Foldable title="Placa de emergencia" hint="El QR para el collar">
+        <EmergencyTagSection
+          dogId={dogId}
+          petName={dog.name}
+          breed={dog.breed}
+          size={dog.size}
+          petType={dog.petType}
+        />
+      </Foldable>
 
       <Section title="Actividad reciente">
         {sessionsError ? (
