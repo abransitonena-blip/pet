@@ -85,6 +85,9 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" type="image/png" href="/brand/pet-ap-dog-logo.png" />
+        {/* iOS ignora el manifiesto para el ícono de inicio: sin esto usaba una
+            captura de la página. */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#FFF8F1" />
         <meta name="color-scheme" content="light only" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

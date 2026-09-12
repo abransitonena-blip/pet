@@ -165,7 +165,11 @@ describe('P0.7 routes, active content and PWA', () => {
       for (const pattern of patterns) {
         for (const match of Array.from(source.matchAll(pattern))) {
           const target = match[1].split(/[?#]/)[0] || '/'
-          if (target.startsWith('/api/') || target.startsWith('/icons/') || target.startsWith('/brand/') || target === '/manifest.json') continue
+          // Las rutas de API y los archivos estáticos no son páginas. Se
+          // reconocen por la extensión en su último segmento, en vez de una
+          // lista que hay que ampliar cada vez que se agrega un ícono.
+          const isFile = /\.[a-z0-9]{2,5}$/i.test(target)
+          if (target.startsWith('/api/') || isFile) continue
           if (!routes.has(target)) missing.add(`${path} -> ${target}`)
         }
       }

@@ -53,3 +53,36 @@ describe('la página pública', () => {
     expect(read('src/components/CoverageSection.tsx')).toContain('id="cobertura"')
   })
 })
+
+/**
+ * PET Ap se instala en el teléfono sin pasar por ninguna tienda. Lo que se
+ * rompe callado: el ícono. iOS no lee el manifiesto para la pantalla de inicio
+ * -- si falta apple-touch-icon usa una captura de la página como ícono, y nadie
+ * se entera hasta que alguien la instala.
+ */
+describe('se instala como app', () => {
+  test('el manifiesto la declara instalable y a pantalla completa', () => {
+    const manifest = JSON.parse(read('public/manifest.json')) as {
+      display?: string
+      start_url?: string
+      icons?: Array<{ sizes?: string; type?: string }>
+    }
+    expect(manifest.display).toBe('standalone')
+    expect(manifest.start_url).toBe('/')
+    const sizes = (manifest.icons ?? []).map((icon) => icon.sizes)
+    expect(sizes).toContain('192x192')
+    expect(sizes).toContain('512x512')
+    for (const icon of manifest.icons ?? []) expect(icon.type).toBe('image/png')
+  })
+
+  test('iOS tiene su propio ícono declarado y el archivo existe', () => {
+    expect(read('src/app/layout.tsx')).toContain('rel="apple-touch-icon"')
+    expect(readFileSync('public/apple-touch-icon.png').byteLength).toBeGreaterThan(1000)
+  })
+
+  test('los íconos del manifiesto existen de verdad', () => {
+    for (const path of ['public/icons/icon-192.png', 'public/icons/icon-512.png']) {
+      expect(readFileSync(path).byteLength).toBeGreaterThan(1000)
+    }
+  })
+})
