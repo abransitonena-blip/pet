@@ -1122,6 +1122,17 @@ service cloud.firestore {
       }
     }
 
+    // Demanda por código postal desde la página pública. Sólo el servidor
+    // escribe aquí (/api/coverage/request), que es quien limita las peticiones;
+    // dejarlo abierto al navegador sería un contador que cualquiera infla.
+    // Guarda el código postal y nada más: es un contador por colonia, no una
+    // lista de personas.
+    match /coverageRequests/{postalCode} {
+      allow get: if isStaff();
+      allow list: if isStaff() && validListLimit(100);
+      allow write: if false;
+    }
+
     match /geofenceAlerts/{sessionId} {
       allow read: if isStaff();
       allow update: if isStaff()

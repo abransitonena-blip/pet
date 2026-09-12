@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { collection, limit, onSnapshot, query, where } from 'firebase/firestore'
-import { CheckCircle2, MapPinned, Search } from 'lucide-react'
+import { CheckCircle2, Mailbox, MapPinned, Search } from 'lucide-react'
 import { db } from '@/firebase/config'
 import { getWhatsAppLink } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
@@ -16,6 +16,10 @@ import { normalizePostalCode, zoneForPostalCode } from '@/lib/zoneMatching'
  * su código postal y lo sabe: las zonas y sus CP son los mismos que usa el
  * panel para asignar la dirección, así que lo que dice esta sección es lo que
  * de verdad va a pasar.
+ *
+ * Cada consulta se registra -- sólo el código postal, nada de quién preguntó --
+ * para que administración vea qué colonias le están pidiendo. Si eso falla, no
+ * se le dice nada a la familia: su respuesta no depende del contador.
  */
 
 interface CoverageZone {
@@ -28,6 +32,7 @@ interface CoverageZone {
 export default function CoverageSection() {
   const [zones, setZones] = useState<CoverageZone[]>([])
   const [postalCode, setPostalCode] = useState('')
+  const reported = useRef<Set<string>>(new Set())
 
   useEffect(() => onSnapshot(
     query(collection(db, 'zones'), where('active', '==', true), limit(100)),
@@ -51,6 +56,21 @@ export default function CoverageSection() {
   const match = useMemo(() => zoneForPostalCode(zones, postalCode), [zones, postalCode])
   const withCodes = zones.filter((zone) => zone.postalCodes.length > 0)
 
+  // Se registra una sola vez por código completo, cuando la persona termina de
+  // escribirlo: no una por tecla mientras lo teclea.
+  useEffect(() => {
+    if (!typed || reported.current.has(typed)) return
+    reported.current.add(typed)
+    const timer = window.setTimeout(() => {
+      void fetch('/api/coverage/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postalCode: typed }),
+      }).catch(() => { /* el contador es nuestro, no un problema de la familia */ })
+    }, 800)
+    return () => window.clearTimeout(timer)
+  }, [typed])
+
   if (zones.length === 0) return null
 
   return (
@@ -66,6 +86,7 @@ export default function CoverageSection() {
           <label htmlFor="coverage-postal-code" className="sr-only">Código postal</label>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={16} aria-hidden="true" />
+            <Mailbox className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40" size={16} aria-hidden="true" />
             <input
               id="coverage-postal-code"
               type="text"

@@ -16,6 +16,7 @@ import { Button, ConfirmDialog } from '@/components/ui'
 import { useToast } from '@/context/ToastContext'
 import { type Zone, type ZoneSpot } from '@/types'
 import ZoneMap from '@/components/map/ZoneMap'
+import CoverageRequestsPanel from '@/components/admin/CoverageRequestsPanel'
 import { ZONE_SPOT_KINDS, ZONE_SPOT_LABELS, duplicatedPostalCodes, parsePostalCodes } from '@/lib/zoneMatching'
 
 interface ZoneForm {
@@ -178,6 +179,10 @@ export default function AdminZonasPage() {
           </Button>
         }
       />
+
+      {/* Lo que la gente pide va antes que lo que ya existe: es la razón para
+          abrir la siguiente zona. */}
+      <CoverageRequestsPanel zones={zones} />
 
       {/* Search */}
       <div className="relative">
