@@ -142,7 +142,13 @@ export const RESERVATION_SERVICE_IDS: Record<string, { id: string; packageType: 
  * service to exist in the prices document; they are simply never offered, and
  * bringing one back is a matter of adding its id here.
  */
-export const OFFERED_SERVICE_IDS: readonly string[] = ['paseo-individual', 'paseo-extendido']
+// `paseo-adiestramiento` se ofrece por decisión del dueño (2026-09-13). Su
+// definición ya existía -- una hora, uno a uno, comandos básicos con refuerzo
+// positivo, y su advertencia de que los resultados dependen del perro y de la
+// continuidad -- así que esto no inventa un servicio: enciende el que estaba
+// escrito. No se puede reservar hasta que tenga precio en Configuración →
+// Precios; sin él aparece como no disponible, con el motivo.
+export const OFFERED_SERVICE_IDS: readonly string[] = ['paseo-individual', 'paseo-extendido', 'paseo-adiestramiento']
 export const OFFERED_CATEGORY_IDS: readonly string[] = ['cotidiano', 'energia']
 
 export function isOfferedService(id: string): boolean {

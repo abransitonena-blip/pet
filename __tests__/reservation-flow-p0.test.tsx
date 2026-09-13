@@ -36,9 +36,10 @@ describe('catálogo de reserva', () => {
       'paseo-esencial': { amountCents: 0, active: false, complimentary: false, version: 1 },
     }))
 
-    // Owner decision (2026-09-10): only two plans are offered. The other five
-    // definitions still exist for the price rules, but are never listed.
-    expect(options.map((item) => item.id)).toEqual(['paseo-individual', 'paseo-extendido'])
+    // Owner decision (2026-09-10): a short catalogue; adiestramiento joined it
+    // on 2026-09-13. The remaining definitions still exist for the price rules,
+    // but are never listed.
+    expect(options.map((item) => item.id)).toEqual(['paseo-individual', 'paseo-extendido', 'paseo-adiestramiento'])
     expect(options.find((item) => item.name === 'Paseo Individual')).toMatchObject({
       id: 'paseo-individual', amountCents: 18_000, isRequestable: true,
     })

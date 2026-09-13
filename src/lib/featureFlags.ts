@@ -34,7 +34,12 @@ export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
   WALLET_MUTATIONS_ENABLED: false,
   LOYALTY_REDEMPTION_ENABLED: false,
   AUTOMATIC_REFERRALS_ENABLED: false,
-  FCM_ENABLED: false,
+  // Encendido por decisión del dueño (2026-09-13) para que un aviso llegue al
+  // teléfono y no sólo al panel. Sigue con dos llaves: sin
+  // NEXT_PUBLIC_FIREBASE_VAPID_KEY el cliente devuelve 'off' y no pide permiso
+  // a nadie, así que encenderlo aquí no notifica hasta que esa llave exista.
+  // Y el permiso del navegador lo concede cada persona, nunca la app.
+  FCM_ENABLED: true,
   AUTOMATED_REMINDERS_ENABLED: false,
   PUBLIC_REVIEWS_ENABLED: true,
   PUBLIC_PHONE_CANCELLATION_ENABLED: false,

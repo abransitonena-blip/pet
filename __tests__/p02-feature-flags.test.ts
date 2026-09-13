@@ -28,7 +28,10 @@ describe('P0.2 safe feature defaults', () => {
     // PET_EMERGENCY_QR_ENABLED: owner decision (2026-09-12), once the
     // emergency-profiles rules were published. Still double-gated: nothing is
     // published for a dog without its own emergencyProfile.enabled opt-in.
-    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED', 'PET_AHORA_ENABLED', 'BLUETOOTH_PRINTING_ENABLED', 'PRIVATE_MEDIA_UPLOADS_ENABLED', 'WALK_TRACKING_ENABLED', 'PET_EMERGENCY_QR_ENABLED'])
+    // FCM_ENABLED: owner decision (2026-09-13). Double-gated too: without
+    // NEXT_PUBLIC_FIREBASE_VAPID_KEY the client returns 'off', and the browser
+    // permission is granted by each person, never by the app.
+    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED', 'PET_AHORA_ENABLED', 'BLUETOOTH_PRINTING_ENABLED', 'PRIVATE_MEDIA_UPLOADS_ENABLED', 'WALK_TRACKING_ENABLED', 'PET_EMERGENCY_QR_ENABLED', 'FCM_ENABLED'])
     expect(Object.entries(FEATURE_FLAGS).every(([name, enabled]) => enabledByDesign.has(name) ? enabled : enabled === false)).toBe(true)
   })
 

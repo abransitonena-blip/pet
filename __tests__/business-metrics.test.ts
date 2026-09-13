@@ -45,9 +45,10 @@ describe('valor de los paseos', () => {
   })
 
   test('solo avisa de los planes que se ofrecen', () => {
-    // The five hidden plans have no price either; warning about them was
-    // noise that made every screen look broken.
-    expect(offeredPlansWithoutPrice(published)).toEqual(['Paseo Extendido'])
+    // Los planes ocultos tampoco tienen precio; avisar de ellos era ruido que
+    // hacía ver rota cualquier pantalla. El adiestramiento se ofrece desde
+    // 2026-09-13 y todavía no tiene tarifa, así que sí entra en el aviso.
+    expect(offeredPlansWithoutPrice(published)).toEqual(['Paseo Extendido', 'Paseo + Adiestramiento'])
   })
 
   test('pasar de 0 a algo no es "+100%": no hay periodo anterior con qué comparar', () => {
