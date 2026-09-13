@@ -116,3 +116,54 @@ describe('registro de la consulta', () => {
     expect(read('src/app/admin/zonas/page.tsx')).toContain('<CoverageRequestsPanel zones={zones} />')
   })
 })
+
+/**
+ * El recorrido se traza solo. Quien despacha no debería copiar coordenadas a
+ * Google Maps para saber por dónde anduvo un paseo.
+ */
+describe('rutas', () => {
+  const page = read('src/app/admin/rutas/page.tsx')
+
+  test('el mapa se dibuja dentro del paseo, no en otra parte de la pantalla', () => {
+    expect(page).toContain('{selected?.sessionId === row.id && <div className="mt-3">{routeMap}</div>}')
+  })
+
+  test('ya no manda a Google Maps', () => {
+    expect(page).not.toContain('mapsUrlForPoint')
+    expect(page).not.toContain('Abrir en mapas')
+  })
+
+  test('el botón alterna en vez de dejar el mapa pegado', () => {
+    expect(page).toContain("'Ocultar recorrido'")
+  })
+
+  test('un paseo sin lecturas explica por qué, en vez de dejar el mapa vacío', () => {
+    expect(page).toContain('el paseo duró menos de lo que tarda la primera')
+  })
+})
+
+/** El paseador anota lo del paseo sin salir de la tarjeta. */
+describe('bitácora rápida', () => {
+  const quick = read('src/components/walker/WalkQuickLog.tsx')
+
+  test('están los botones de lo que pasa en un paseo', () => {
+    for (const event of ['pipi', 'popo', 'agua', 'juego', 'descanso']) {
+      expect(quick).toContain(`event: '${event}'`)
+    }
+  })
+
+  test('el incidente no es un botón: necesita que alguien escriba qué pasó', () => {
+    expect(quick).toContain("Exclude<WalkLogEvent, 'incidente'>")
+  })
+
+  test('escribe en el mismo borrador que la bitácora', () => {
+    expect(quick).toContain('walkReportContentOf(report)')
+    expect(quick).toContain("mode: 'draft'")
+  })
+
+  test('vive en la tarjeta del paseo en curso', () => {
+    const card = read('src/components/walker/WalkerSessionCard.tsx')
+    expect(card).toContain('<WalkQuickLog sessionId={session.id} />')
+    expect(card).toContain("status === 'in_progress' && !compact")
+  })
+})

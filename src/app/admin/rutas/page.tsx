@@ -14,7 +14,6 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import ZoneMap, { type MapPoint, type MapZone } from '@/components/map/ZoneMap'
 import { distanceMeters, isUsableCenter } from '@/lib/geo'
-import { mapsUrlForPoint } from '@/lib/walkLocation'
 import { summarizeWalkPath } from '@/lib/walkPath'
 import { canonicalReadErrorMessage, classifyCanonicalReadError, type CanonicalReadError } from '@/lib/useCanonicalWalkSessions'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -195,6 +194,38 @@ export default function AdminRutasPage() {
   const filtered = useMemo(() => (filterWalker === 'all' ? rows : rows.filter((row) => row.walkerId === filterWalker)), [rows, filterWalker])
   const selectedZones = useMemo(() => (selected?.zone ? [selected.zone] : []), [selected])
 
+  // El recorrido se traza solo: quien despacha no tiene que copiar coordenadas
+  // a Google Maps para saber por dónde anduvo el paseo.
+  const routeMap = !selected ? null : (
+    <>
+      {track.state === 'loading' && <LoadingState rows={1} height="h-40" />}
+      {track.state === 'error' && <p className="text-sm text-red-700">No pudimos cargar los puntos de este paseo.</p>}
+      {track.state === 'ready' && (
+        routePath.length === 0 ? (
+          <p className="text-sm text-muted">Este paseo no tiene ubicaciones registradas.</p>
+        ) : (
+          <>
+            <ZoneMap
+              label={`Recorrido del paseo ${selected.title}`}
+              zones={selectedZones}
+              points={track.points}
+              path={routePath}
+              height={320}
+            />
+            <p className="mt-2 text-xs text-muted">
+              {routeSummary.label}.{' '}
+              {track.points.length > 0
+                ? 'Una lectura cada ~2 minutos. '
+                : 'Sin lecturas intermedias: el paseo duró menos de lo que tarda la primera. '}
+              Verde: inicio · negro: fin · azul: dentro de la zona · rojo: fuera.
+              {routePath.length > 1 && ' La línea punteada une las lecturas; entre una y otra no se registró el camino.'}
+            </p>
+          </>
+        )
+      )}
+    </>
+  )
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -252,35 +283,16 @@ export default function AdminRutasPage() {
         </section>
       )}
 
-      {selected && (
+      {/* Cuando el recorrido se pide desde una alerta, el paseo puede no estar
+          en la lista de abajo (la lista trae los 100 más recientes): ahí sí
+          hace falta dibujarlo aparte. */}
+      {selected && !filtered.some((row) => row.id === selected.sessionId) && (
         <section className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-ink">Recorrido: {selected.title}</h2>
             <button type="button" onClick={() => setSelected(null)} className="min-h-9 rounded-full px-3 text-xs font-medium text-muted hover:text-ink">Cerrar</button>
           </div>
-          {track.state === 'loading' && <LoadingState rows={1} height="h-40" />}
-          {track.state === 'error' && <p className="text-sm text-red-700">No pudimos cargar los puntos de este paseo.</p>}
-          {track.state === 'ready' && (
-            routePath.length === 0 ? (
-              <p className="text-sm text-muted">Este paseo no tiene ubicaciones registradas.</p>
-            ) : (
-              <>
-                <ZoneMap
-                  label={`Recorrido del paseo ${selected.title}`}
-                  zones={selectedZones}
-                  points={track.points}
-                  path={routePath}
-                  height={320}
-                />
-                <p className="text-xs text-muted">
-                  {routeSummary.label}.{' '}
-                  {track.points.length > 0 ? 'Una lectura cada ~2 minutos. ' : ''}
-                  Verde: inicio · negro: fin · azul: dentro de la zona · rojo: fuera.
-                  {routePath.length > 1 && ' La línea punteada une las lecturas; entre una y otra no se registró el camino.'}
-                </p>
-              </>
-            )
-          )}
+          {routeMap}
         </section>
       )}
 
@@ -331,8 +343,15 @@ export default function AdminRutasPage() {
                         <span className="flex items-center gap-1"><Navigation size={11} aria-hidden="true" />{formatDistance(distance)} en línea recta</span>
                       )}
                       {FEATURE_FLAGS.WALK_TRACKING_ENABLED && (
-                        <button type="button" onClick={() => setSelected({ sessionId: row.id, title: row.scheduledDate || row.id, zone: null, start: row.startLocation, end: row.endLocation })} className="min-h-9 rounded-full px-3 font-semibold text-primary hover:bg-primary/10">
-                          Ver recorrido
+                        <button
+                          type="button"
+                          aria-expanded={selected?.sessionId === row.id}
+                          onClick={() => setSelected(selected?.sessionId === row.id
+                            ? null
+                            : { sessionId: row.id, title: row.scheduledDate || row.id, zone: null, start: row.startLocation, end: row.endLocation })}
+                          className="min-h-9 rounded-full px-3 font-semibold text-primary hover:bg-primary/10"
+                        >
+                          {selected?.sessionId === row.id ? 'Ocultar recorrido' : 'Ver recorrido'}
                         </button>
                       )}
                     </div>
@@ -345,20 +364,15 @@ export default function AdminRutasPage() {
                         <div key={field} className="rounded-2xl bg-ink/[0.03] px-3 py-2">
                           <dt className="text-2xs font-medium uppercase tracking-wide text-muted">{heading}</dt>
                           <dd className="mt-0.5 text-xs text-ink">
-                            {value ? (
-                              <>
-                                {at ? formatTime(at.seconds * 1000) : 'Hora no registrada'}
-                                {' · '}
-                                <a href={mapsUrlForPoint(value)} target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">
-                                  Abrir en mapas
-                                </a>
-                              </>
-                            ) : 'Sin ubicación registrada'}
+                            {value
+                              ? (at ? formatTime(at.seconds * 1000) : 'Hora no registrada')
+                              : 'Sin ubicación registrada'}
                           </dd>
                         </div>
                       )
                     })}
                   </dl>
+                  {selected?.sessionId === row.id && <div className="mt-3">{routeMap}</div>}
                 </Card>
               )
             })}

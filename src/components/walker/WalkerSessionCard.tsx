@@ -6,6 +6,7 @@ import { AlertTriangle, CalendarDays, Check, ClipboardList, Clock, Dog, FileText
 import { Button, Card, StatusBadge } from '@/components/ui'
 import WalkSheet from '@/components/walker/WalkSheet'
 import WalkPhotoButton from '@/components/walker/WalkPhotoButton'
+import WalkQuickLog from '@/components/walker/WalkQuickLog'
 import type { WalkSession } from '@/types'
 import {
   getWalkerTransition,
@@ -111,6 +112,12 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
                 {sheetOpen ? 'Ocultar la ficha del paseo' : 'Ver la ficha del paseo'}
               </button>
               {sheetOpen && <WalkSheet sessionId={session.id} today={date} />}
+            </div>
+          )}
+
+          {status === 'in_progress' && !compact && (
+            <div className="mt-3">
+              <WalkQuickLog sessionId={session.id} />
             </div>
           )}
 

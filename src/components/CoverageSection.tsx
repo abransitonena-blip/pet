@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { collection, limit, onSnapshot, query, where } from 'firebase/firestore'
-import { CheckCircle2, Mailbox, MapPinned, Search } from 'lucide-react'
+import { CheckCircle2, Mailbox, MapPinned, Navigation, Search } from 'lucide-react'
 import { db } from '@/firebase/config'
 import { getWhatsAppLink } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
@@ -83,10 +83,16 @@ export default function CoverageSection() {
         </div>
 
         <div className="mx-auto mt-8 max-w-md">
+          {/* El sello de CP: da a entender de un vistazo qué se escribe aquí,
+              sin tener que leer la etiqueta. */}
+          <div className="mb-4 flex justify-center">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true">
+              <Mailbox size={24} strokeWidth={1.75} />
+            </span>
+          </div>
           <label htmlFor="coverage-postal-code" className="sr-only">Código postal</label>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={16} aria-hidden="true" />
-            <Mailbox className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40" size={16} aria-hidden="true" />
             <input
               id="coverage-postal-code"
               type="text"
@@ -100,15 +106,26 @@ export default function CoverageSection() {
           </div>
 
           {typed && match && (
-            <p role="status" className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-success-500/10 px-4 py-3 text-sm font-medium text-success-600">
-              <CheckCircle2 size={16} aria-hidden="true" />
-              Sí llegamos: tu CP {typed} está en la zona {match.name}.
-            </p>
+            <div role="status" className="mt-4 rounded-2xl border border-success-500/30 bg-success-500/[0.06] p-4 text-center">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-success-500/15 text-success-600 mx-auto" aria-hidden="true">
+                <CheckCircle2 size={20} />
+              </span>
+              <p className="mt-2 text-sm font-semibold text-success-600">Sí llegamos a tu colonia</p>
+              <p className="mt-0.5 text-xs text-muted">
+                El CP <span className="font-mono font-semibold text-ink">{typed}</span> está en la zona {match.name}.
+              </p>
+              <a
+                href="/familia/nueva-reserva"
+                className="mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white"
+              >
+                Solicitar un paseo <Navigation size={14} aria-hidden="true" />
+              </a>
+            </div>
           )}
 
           {typed && !match && (
-            <p role="status" className="mt-3 rounded-xl bg-warning/10 px-4 py-3 text-sm text-amber-900">
-              Todavía no tenemos una zona con el CP {typed}.{' '}
+            <p role="status" className="mt-4 rounded-2xl border border-warning/30 bg-warning/[0.06] px-4 py-3 text-sm text-amber-900">
+              Todavía no llegamos al CP <span className="font-mono font-semibold">{typed}</span>, pero ya quedó anotado: abrimos zonas donde más nos las piden.{' '}
               <a
                 href={getWhatsAppLink(`Hola, mi código postal es ${typed}. ¿Tienen cobertura para pasear a mi perro?`)}
                 target="_blank"
@@ -125,11 +142,18 @@ export default function CoverageSection() {
         {withCodes.length > 0 && (
           <ul className="mx-auto mt-10 grid max-w-3xl gap-3 sm:grid-cols-2">
             {withCodes.map((zone) => (
-              <li key={zone.id} className="rounded-2xl border border-ink/10 bg-surface p-4">
-                <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-                  <MapPinned size={15} className="text-primary" aria-hidden="true" /> {zone.name}
-                </p>
-                <p className="mt-1 text-xs text-muted">CP {zone.postalCodes.join(' · ')}</p>
+              <li key={zone.id} className="flex items-start gap-3 rounded-2xl border border-ink/10 bg-surface p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+                  <MapPinned size={18} strokeWidth={1.75} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink">{zone.name}</p>
+                  <ul className="mt-1.5 flex flex-wrap gap-1">
+                    {zone.postalCodes.map((code) => (
+                      <li key={code} className="text-2xs rounded-full bg-ink/[0.04] px-2 py-0.5 font-mono tabular-nums text-muted">{code}</li>
+                    ))}
+                  </ul>
+                </div>
               </li>
             ))}
           </ul>
