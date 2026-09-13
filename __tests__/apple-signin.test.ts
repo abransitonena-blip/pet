@@ -31,7 +31,7 @@ describe('acceso con Apple', () => {
 
   test('un problema de configuración no se le achaca al internet de la familia', () => {
     expect(lib).toContain("code === 'auth/invalid-credential'")
-    expect(lib).toContain('todavía no está configurado del todo')
+    expect((lib.match(/todavía no está configurado del todo/g) ?? []).length).toBeGreaterThanOrEqual(2)
     expect(lib).toContain("code === 'auth/operation-not-allowed'")
   })
 

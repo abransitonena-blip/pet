@@ -27,9 +27,6 @@ const CoverageSection = dynamic(() => import('@/components/CoverageSection'), {
 const WalkTipsSection = dynamic(() => import('@/components/WalkTipsSection'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-48 rounded-2xl" /></div>,
 })
-const PricingSection = dynamic(() => import('@/components/PricingSection'), {
-  loading: () => <div className="section-container py-16"><div className="skeleton h-56 rounded-2xl" /></div>,
-})
 const FAQ = dynamic(() => import('@/components/FAQ'), {
   loading: () => <div className="section-container py-16"><div className="skeleton h-40 rounded-2xl" /></div>,
 })
@@ -66,10 +63,6 @@ function HomeContent() {
         <Hero />
         <TrustBar />
         <Services />
-        {/* Qué hacemos, cuánto cuesta, cómo funciona: en ese orden se deciden. */}
-        <Suspense fallback={<div className="section-container py-16"><div className="skeleton h-56 rounded-2xl" /></div>}>
-          <PricingSection />
-        </Suspense>
         <HowItWorks />
         {/* La cobertura y lo que dicen las familias van antes que la galería y
             las preguntas: son lo que alguien quiere saber para decidirse. */}

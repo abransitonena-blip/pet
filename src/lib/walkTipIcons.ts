@@ -48,7 +48,38 @@ export const WALK_TIP_ICONS: readonly WalkTipIcon[] = [
 
 const BY_NAME = new Map(WALK_TIP_ICONS.map((entry) => [entry.name, entry.icon]))
 
-/** El icono de ese nombre, o null si lo guardado es un emoji u otra cosa. */
+/**
+ * Los emojis que ya estaban guardados, traducidos.
+ *
+ * Cambiar los consejos de fábrica no cambia los que ya se guardaron en la
+ * configuración: ahí siguen sus emojis, así que el sitio seguía dibujando
+ * calcomanías. En vez de pedirle a alguien que edite consejo por consejo, el
+ * emoji conocido se traduce al icono equivalente. Un emoji que no esté en esta
+ * lista se sigue mostrando tal cual.
+ */
+const BY_LEGACY_EMOJI = new Map<string, string>([
+  ['💧', 'agua'],
+  ['💦', 'agua'],
+  ['😴', 'descanso'],
+  ['🛌', 'descanso'],
+  ['🦴', 'premio'],
+  ['🍖', 'premio'],
+  ['☀️', 'calor'],
+  ['🌡️', 'temperatura'],
+  ['🐾', 'paseo'],
+  ['🏷️', 'placa'],
+  ['💉', 'vacunas'],
+  ['🦮', 'correa'],
+  ['⏰', 'rutina'],
+  ['❤️', 'salud'],
+  ['🩺', 'salud'],
+])
+
+/** El icono de ese nombre, o null si lo guardado no corresponde a ninguno. */
 export function walkTipIcon(name: string): LucideIcon | null {
-  return BY_NAME.get(name.trim().toLowerCase()) ?? null
+  const clean = name.trim().toLowerCase()
+  const resolved = BY_NAME.get(clean)
+  if (resolved) return resolved
+  const fromEmoji = BY_LEGACY_EMOJI.get(name.trim())
+  return fromEmoji ? BY_NAME.get(fromEmoji) ?? null : null
 }

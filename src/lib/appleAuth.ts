@@ -33,7 +33,10 @@ export function isAppleAuthConfigured(): boolean {
  */
 export function appleLoginErrorMessage(code: string): string {
   if (code === 'auth/operation-not-allowed') {
-    return 'El acceso con Apple no está habilitado en este momento. Usa Google o tu correo.'
+    // Firebase responde esto tanto si el proveedor está apagado como si está
+    // encendido pero sin Services ID ni llave: para quien mira la consola, la
+    // palomita verde hace parecer que ya está listo.
+    return 'El acceso con Apple todavía no está configurado del todo. Usa Google o tu correo, y avísale a administración.'
   }
   if (code === 'auth/invalid-credential' || code === 'auth/internal-error') {
     return 'El acceso con Apple todavía no está configurado del todo. Usa Google o tu correo, y avísale a administración.'

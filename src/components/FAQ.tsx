@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, HelpCircle } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
+import { faqIcon } from '@/lib/faqIcons'
 import { useConfig } from '@/context/ConfigContext'
 import { DEFAULT_CONFIG } from '@/lib/defaultConfig'
 
@@ -47,7 +48,17 @@ export default function FAQ() {
                 className="w-full glass-card p-4 sm:p-5 text-left flex items-center justify-between gap-4 transition-all hover:bg-ink/5"
               >
                 <span className="flex items-center gap-3 text-sm sm:text-base font-medium" style={{ color: 'var(--text-primary)' }}>
-                  <HelpCircle className="text-primary shrink-0" size={14} />
+                  {(() => {
+                    // El icono sale del tema de la pregunta: un reloj para el
+                    // horario, una nube para la lluvia, un calendario tachado
+                    // para las cancelaciones.
+                    const Icon = faqIcon(faq.q)
+                    return (
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                        <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
+                      </span>
+                    )
+                  })()}
                   {faq.q}
                 </span>
                 <motion.div

@@ -71,3 +71,30 @@ describe('consejos para el paseo', () => {
     expect(read('src/components/AdminConfig.tsx')).toContain('(el que tenías)')
   })
 })
+
+/**
+ * Cambiar los consejos de fábrica no cambia los ya guardados en la
+ * configuración: ahí seguían sus emojis, así que el sitio seguía dibujando
+ * calcomanías aunque el código ya tuviera iconos.
+ */
+describe('los emojis ya guardados', () => {
+  test('se traducen al icono equivalente, sin que nadie edite nada', () => {
+    const icons = read('src/lib/walkTipIcons.ts')
+    expect(icons).toContain('BY_LEGACY_EMOJI')
+    for (const emoji of ['💧', '😴', '🦴']) {
+      expect(icons).toContain(`['${emoji}'`)
+    }
+  })
+
+  test('un emoji desconocido se sigue mostrando tal cual', () => {
+    expect(read('src/lib/walkTipIcons.ts')).toContain('return fromEmoji ? BY_NAME.get(fromEmoji) ?? null : null')
+  })
+})
+
+/** Los precios salieron de la página: varían por zona y no se pueden prometer. */
+describe('sin precios en la página pública', () => {
+  test('no queda rastro de la sección', () => {
+    expect(read('src/app/HomeClient.tsx')).not.toContain('PricingSection')
+    expect(read('src/components/Header.tsx')).not.toContain("'/#precios'")
+  })
+})
