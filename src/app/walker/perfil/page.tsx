@@ -10,6 +10,7 @@ import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { Button, Card, Input, LoadingState } from '@/components/ui'
 import { daySlots, type DaySlot } from '@/lib/dispatch'
 import PushOptIn from '@/components/PushOptIn'
+import WalkerWorkCard from '@/components/walker/WalkerWorkCard'
 
 const WEEKDAYS = [
   ['monday', 'Lunes'], ['tuesday', 'Martes'], ['wednesday', 'Miércoles'],
@@ -241,6 +242,10 @@ export default function WalkerProfilePage() {
           <div className="rounded-xl bg-ink/5 p-3"><dt className="text-xs text-muted">Máximo semanal</dt><dd className="mt-1 text-sm font-bold text-ink">{profile.maxWeekly ?? 'Por definir'}</dd></div>
         </dl>
       </Card>
+
+      {/* Lo que ya hizo va antes que la configuración: es su panel, no un
+          formulario. */}
+      <WalkerWorkCard uid={uid} />
 
       <Card className="p-4 shadow-none sm:p-5">
         <div className="mb-3 flex items-center gap-2"><MapPin size={17} className="text-primary" /><h2 className="font-bold text-ink">Zonas asignadas</h2></div>
