@@ -11,6 +11,8 @@ import { Button, Card, Input, LoadingState } from '@/components/ui'
 import { daySlots, type DaySlot } from '@/lib/dispatch'
 import PushOptIn from '@/components/PushOptIn'
 import WalkerWorkCard from '@/components/walker/WalkerWorkCard'
+import WalkerPhotoButton from '@/components/walker/WalkerPhotoButton'
+import { useWalkerPhoto } from '@/lib/useWalkerPhoto'
 
 const WEEKDAYS = [
   ['monday', 'Lunes'], ['tuesday', 'Martes'], ['wednesday', 'Miércoles'],
@@ -69,6 +71,8 @@ function validateSchedule(schedule: ScheduleState): Record<string, string> {
 
 export default function WalkerProfilePage() {
   const { uid, profile, updateLocalProfile } = useWalkerPanel()
+  const [photoVersion, setPhotoVersion] = useState('')
+  const ownPhoto = useWalkerPhoto({ self: true, refresh: photoVersion })
   const [phone, setPhone] = useState(profile.phone)
   const [schedule, setSchedule] = useState<ScheduleState>(() => scheduleFromProfile(profile.schedule))
   const [zoneNames, setZoneNames] = useState<Record<string, string>>({})
@@ -212,6 +216,16 @@ export default function WalkerProfilePage() {
       </header>
 
       <Card className="p-4 shadow-none sm:p-5">
+        {/* Su cara, que es lo que la familia va a ver antes de abrir. */}
+        <div className="mb-4 border-b border-ink/[0.06] pb-4">
+          <WalkerPhotoButton
+            uid={uid}
+            photoUrl={ownPhoto?.photoUrl ?? ''}
+            hasPhoto={Boolean(ownPhoto?.photoUrl)}
+            onUploaded={(reference) => setPhotoVersion(reference)}
+          />
+        </div>
+
         <div className="flex items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary"><UserRound size={20} /></div>
           <div className="min-w-0 flex-1">

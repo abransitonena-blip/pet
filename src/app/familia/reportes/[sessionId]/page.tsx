@@ -10,6 +10,7 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { useWalkReport } from '@/lib/useWalkReport'
 import { ReportReadOnly } from '@/components/walker/WalkReportEditor'
 import WalkRouteMap from '@/components/walks/WalkRouteMap'
+import WalkerCard from '@/components/family/WalkerCard'
 import type { WalkPoint } from '@/types'
 
 function millis(value: unknown): number | null {
@@ -101,6 +102,8 @@ export default function FamilyReportPage() {
   }
   return (
     <div>
+      {/* Quién lo llevó: cara y nombre junto a lo que escribió. */}
+      <div className="mb-3"><WalkerCard sessionId={params.sessionId} /></div>
       <ReportReadOnly report={report} sessionId={params.sessionId} />
       <WalkLocations sessionId={params.sessionId} />
       <WalkRouteMap sessionId={params.sessionId} />

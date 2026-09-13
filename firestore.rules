@@ -1079,7 +1079,7 @@ service cloud.firestore {
           && request.auth.uid == uid
           && noRoleField()
           && request.resource.data.updatedAt is timestamp
-          && onlyAllowedFieldsChanged(['phone', 'schedule', 'updatedAt']))
+          && onlyAllowedFieldsChanged(['phone', 'schedule', 'photoReference', 'updatedAt']))
         || isAdmin();
     }
 

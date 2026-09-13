@@ -14,6 +14,7 @@ import LoadingState from '@/components/ui/LoadingState'
 import { getCustomerProfile } from '@/lib/customerProfile'
 import { openWalkConversation } from '@/lib/chat'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
+import WalkerCard from '@/components/family/WalkerCard'
 
 /**
  * Los mensajes de una familia van a quien lleva a su perro.
@@ -86,12 +87,16 @@ export default function FamilyMessagesPage() {
   }
 
   return (
-    <ConversationThread
-      identity={identity}
-      open={open}
-      otherName="Tu paseador"
-      title="Mensajes con tu paseador"
-      description={`Sobre el paseo del ${walk.scheduledDate}. Pregúntale cómo va, avísale algo de tu perro o cuéntale un detalle de la entrada.`}
-    />
+    <div className="space-y-3">
+      {/* Con quién está hablando: cara y nombre antes del hilo. */}
+      <WalkerCard sessionId={walk.id} />
+      <ConversationThread
+        identity={identity}
+        open={open}
+        otherName="Tu paseador"
+        title="Mensajes con tu paseador"
+        description={`Sobre el paseo del ${walk.scheduledDate}. Pregúntale cómo va, avísale algo de tu perro o cuéntale un detalle de la entrada.`}
+      />
+    </div>
   )
 }

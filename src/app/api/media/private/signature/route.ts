@@ -5,6 +5,7 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { createCloudinaryPrivateUploadSignature } from '@/lib/media/privateMediaAdmin.server'
 import { isAssignedToWalker } from '@/lib/walkerPanel'
 import { DOG_PHOTO_FOLDER } from '@/lib/dogPhotos'
+import { WALKER_PHOTO_FOLDER } from '@/lib/walkerPhotos'
 
 export const runtime = 'nodejs'
 
@@ -14,7 +15,7 @@ const noStore = { 'Cache-Control': 'private, no-store, max-age=0' }
 // MEDIA_POLICY.md). PET Ahora and incident photos stay off until they get the
 // same review.
 const WALK_REPORT_FOLDER = 'pet-ap-private/walk-reports'
-const ALLOWED_FOLDERS = new Set([WALK_REPORT_FOLDER, DOG_PHOTO_FOLDER])
+const ALLOWED_FOLDERS = new Set([WALK_REPORT_FOLDER, DOG_PHOTO_FOLDER, WALKER_PHOTO_FOLDER])
 
 /**
  * M1 signed upload for operational (private) photos. Unlike the public
@@ -82,6 +83,12 @@ export async function POST(request: Request) {
     if ((dogSnap.data() as { ownerId?: string }).ownerId !== callerUid) {
       return NextResponse.json({ code: 'dog-not-yours' }, { status: 403, headers: noStore })
     }
+  }
+
+  // La foto de un paseador la sube ese paseador, y nadie más: no hace falta id
+  // porque el único perfil que puede tocar es el suyo.
+  if (body.folder === WALKER_PHOTO_FOLDER && !adminUid && !walkerUid) {
+    return NextResponse.json({ code: 'walker-required' }, { status: 403, headers: noStore })
   }
 
   try {
