@@ -10,18 +10,26 @@ import { CHAT_MESSAGE_MAX_LENGTH, markConversationRead, openConversation, sendCh
 import type { ChatMessage } from '@/types'
 
 /**
- * Hilo de conversación con administración, visto desde el lado de la persona
- * (paseador o familia). El inbox del administrador vive en /admin/chat.
+ * Un hilo de conversación visto desde el lado de la persona.
+ *
+ * Por defecto es su hilo con administración -- el que el paseador usa, y el que
+ * el inbox de /admin/chat lista. Con `open` se puede apuntar a otro hilo ya
+ * resuelto: así la familia habla con el paseador de su paseo, que es quien puede
+ * contestarle lo que pregunta mientras el paseo ocurre.
  */
 
 interface ConversationThreadProps {
   identity: ConversationIdentity
   title: string
   description: string
+  /** Abre (o crea) el hilo y devuelve su id. Por defecto, el de administración. */
+  open?: () => Promise<string>
+  /** Cómo se llama el otro lado en los mensajes que no son míos. */
+  otherName?: string
 }
 
 
-export default function ConversationThread({ identity, title, description }: ConversationThreadProps) {
+export default function ConversationThread({ identity, title, description, open, otherName = 'Administración' }: ConversationThreadProps) {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -34,11 +42,11 @@ export default function ConversationThread({ identity, title, description }: Con
   // admin inbox -- so it happens on open, not on first message.
   useEffect(() => {
     let cancelled = false
-    openConversation(identity)
+    ;(open ? open() : openConversation(identity))
       .then((id) => { if (!cancelled) setConversationId(id) })
       .catch(() => { if (!cancelled) setError('No pudimos abrir la conversación. Revisa tu conexión e inténtalo de nuevo.') })
     return () => { cancelled = true }
-  }, [identity])
+  }, [identity, open])
 
   useEffect(() => {
     if (!conversationId) return
@@ -106,13 +114,16 @@ export default function ConversationThread({ identity, title, description }: Con
             </div>
           ) : (
             messages.map((message) => {
-              const mine = message.senderRole !== 'admin'
+              // Quién lo escribió, no qué rol tiene: en el hilo de un paseo
+              // la familia y el paseador no son administración, y con la regla
+              // vieja los mensajes de ambos se veían como propios.
+              const mine = message.senderId === identity.uid
               return (
                 <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] rounded-2xl px-3 py-2 ${mine ? 'bg-primary text-primary-foreground' : 'bg-ink/5 text-ink'}`}>
                     <p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
                     <p className={`mt-1 text-[11px] ${mine ? 'text-primary-foreground/70' : 'text-muted'}`}>
-                      {mine ? 'Tú' : 'Administración'} · {formatTime(message.timestamp)}
+                      {mine ? 'Tú' : otherName} · {formatTime(message.timestamp)}
                     </p>
                   </div>
                 </div>

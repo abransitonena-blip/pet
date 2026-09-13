@@ -38,6 +38,10 @@ describe('conversaciones con administración', () => {
 
   test('la bandeja del administrador distingue paseador de familia', () => {
     const inbox = read('src/components/AdminChat.tsx')
-    expect(inbox).toContain("conv.participantRole === 'walker' ? 'Paseador' : 'Familia'")
+    // Tres clases desde que la familia habla con su paseador: el hilo de un
+    // paseador, el de una familia, y el de un paseo.
+    for (const label of ["'Paseador'", "'Familia'", "'Paseo'"]) {
+      expect(inbox).toContain(label)
+    }
   })
 })

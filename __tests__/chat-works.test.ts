@@ -78,3 +78,46 @@ describe('la bandeja con muchos hilos', () => {
     expect(inbox).toContain('setInput(text)')
   })
 })
+
+/**
+ * La familia ya no escribe a administración: escribe a quien lleva a su perro.
+ * Administración lo sigue viendo -- eso no es espiar, es lo que le permite
+ * responder cuando un paseo sale mal.
+ */
+describe('el hilo de un paseo', () => {
+  const familia = read('src/app/familia/mensajes/page.tsx')
+
+  test('la familia escribe al paseador, no a administración', () => {
+    expect(familia).toContain('openWalkConversation')
+    expect(familia).toContain('Mensajes con tu paseador')
+    expect(familia).not.toContain('Mensajes con PET Ap')
+    expect(familia).not.toContain('desde administración')
+  })
+
+  test('sin paseo asignado se dice, en vez de abrir un hilo que nadie lee', () => {
+    expect(familia).toContain('Todavía no hay con quién escribir')
+  })
+
+  test('el hilo se identifica con el paseo, así que no mezcla días', () => {
+    const chat = read('src/lib/chat.ts')
+    const fn = chat.slice(chat.indexOf('export async function openWalkConversation'))
+    expect(fn.slice(0, 900)).toContain("doc(db, 'conversations', walk.sessionId)")
+    expect(fn.slice(0, 900)).toContain('participants: [walk.customerId, walk.walkerId]')
+  })
+
+  test('el paseador conserva su hilo con administración y gana el de cada paseo', () => {
+    const walker = read('src/app/walker/chat/page.tsx')
+    expect(walker).toContain('Mensajes con administración')
+    expect(walker).toContain('openWalkConversation')
+  })
+
+  test('un mensaje es mío por quién lo escribió, no por su rol', () => {
+    const thread = read('src/components/chat/ConversationThread.tsx')
+    expect(thread).toContain('const mine = message.senderId === identity.uid')
+    expect(thread).not.toContain("const mine = message.senderRole !== 'admin'")
+  })
+
+  test('la bandeja distingue las tres clases de hilo', () => {
+    expect(read('src/components/AdminChat.tsx')).toContain("'Paseo'")
+  })
+})

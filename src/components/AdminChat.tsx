@@ -218,8 +218,18 @@ export default function AdminChat() {
                       <span className="truncate text-sm font-medium">{conv.customerName || 'Cliente'}</span>
                       {/* Walkers and families share this inbox; without the tag
                           an operator cannot tell whose message they are reading. */}
-                      <span className={`text-2xs shrink-0 rounded-full px-1.5 py-0.5 font-medium ${conv.participantRole === 'walker' ? 'bg-blue-500/15 text-blue-700' : 'bg-ink/5 text-muted'}`}>
-                        {conv.participantRole === 'walker' ? 'Paseador' : 'Familia'}
+                      {/* Tres clases de hilo comparten esta bandeja: el de un
+                          paseador, el de una familia, y el de un paseo -- donde
+                          la familia habla directo con quien lleva a su perro.
+                          Sin la etiqueta no se distingue qué se está leyendo. */}
+                      <span className={`text-2xs shrink-0 rounded-full px-1.5 py-0.5 font-medium ${
+                        conv.participantRole === 'walker' ? 'bg-blue-500/15 text-blue-700'
+                          : conv.participantRole === 'walk' ? 'bg-primary/10 text-primary'
+                            : 'bg-ink/5 text-muted'
+                      }`}>
+                        {conv.participantRole === 'walker' ? 'Paseador'
+                          : conv.participantRole === 'walk' ? 'Paseo'
+                            : 'Familia'}
                       </span>
                     </span>
                     <span className="text-2xs shrink-0" style={{ color: 'var(--text-muted)' }}>

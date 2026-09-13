@@ -176,7 +176,12 @@ export interface Conversation {
   // UIDs authorised to read this thread by the Firestore rules. An admin is
   // authorised by their role claim instead, so they are never listed here.
   participants?: string[]
-  participantRole?: 'customer' | 'walker'
+  /**
+   * Qué clase de hilo es: el de una familia con administración, el de un
+   * paseador con administración, o el de un paseo -- donde la familia habla
+   * directo con quien lleva a su perro.
+   */
+  participantRole?: 'customer' | 'walker' | 'walk'
   customerId: string
   customerName: string
   customerPhone?: string

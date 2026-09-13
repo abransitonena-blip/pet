@@ -49,6 +49,11 @@ beforeEach(async () => {
       participants: ['paseador-1'], customerId: 'paseador-1', customerName: 'Paseador', participantRole: 'walker',
     })
     await setDoc(doc(db, 'walkerProfiles', 'paseador-1'), { status: 'active' })
+    // El hilo de un paseo: la familia y el paseador de ese paseo, nadie más.
+    await setDoc(doc(db, 'conversations', 'paseo-1'), {
+      participants: ['familia-1', 'paseador-1'], kind: 'walk', participantRole: 'walk',
+      sessionId: 'paseo-1', customerId: 'familia-1', walkerId: 'paseador-1',
+    })
   })
 })
 
@@ -84,6 +89,27 @@ describe('administración', () => {
     const admin = dbFor('admin-1', 'admin')
     await assertSucceeds(getDocs(collection(admin, 'conversations', 'familia-1', 'messages')))
     await assertSucceeds(addDoc(collection(admin, 'conversations', 'familia-1', 'messages'), message('admin-1', 'admin')))
+  })
+})
+
+describe('el hilo de un paseo', () => {
+  test('la familia y el paseador se escriben ahí', async () => {
+    const familia = dbFor('familia-1', 'customer')
+    const paseador = dbFor('paseador-1', 'walker')
+    await assertSucceeds(addDoc(collection(familia, 'conversations', 'paseo-1', 'messages'), message('familia-1', 'customer')))
+    await assertSucceeds(addDoc(collection(paseador, 'conversations', 'paseo-1', 'messages'), message('paseador-1', 'walker')))
+    await assertSucceeds(getDocs(collection(familia, 'conversations', 'paseo-1', 'messages')))
+    await assertSucceeds(getDocs(collection(paseador, 'conversations', 'paseo-1', 'messages')))
+  })
+
+  test('administración lo sigue viendo: es lo que le permite responder cuando algo sale mal', async () => {
+    await assertSucceeds(getDocs(collection(dbFor('admin-1', 'admin'), 'conversations', 'paseo-1', 'messages')))
+  })
+
+  test('otro paseador no entra al paseo de alguien más', async () => {
+    const otro = dbFor('paseador-2', 'walker')
+    await assertFails(getDocs(collection(otro, 'conversations', 'paseo-1', 'messages')))
+    await assertFails(addDoc(collection(otro, 'conversations', 'paseo-1', 'messages'), message('paseador-2', 'walker')))
   })
 })
 

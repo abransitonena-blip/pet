@@ -58,6 +58,43 @@ export async function openConversation(identity: ConversationIdentity): Promise<
  * nunca había escrito. Además de crear el hilo, deja `lastTimestamp`, porque la
  * bandeja ordena por ese campo y un hilo sin él no aparecería en la lista.
  */
+/**
+ * El hilo de un paseo: la familia y el paseador de ese paseo.
+ *
+ * La familia ya no escribe a administración -- escribe a quien lleva a su perro,
+ * que es quien puede contestar lo que de verdad pregunta durante el paseo. El
+ * hilo se identifica con el id del paseo, así que cada paseo tiene el suyo y no
+ * se mezclan conversaciones de días distintos.
+ *
+ * Administración lo sigue viendo en su bandeja: puede leer cualquier hilo por su
+ * rol. Eso no es espiar a escondidas, es lo que permite responder cuando algo
+ * sale mal en un paseo.
+ */
+export async function openWalkConversation(walk: {
+  sessionId: string
+  customerId: string
+  customerName: string
+  walkerId: string
+  walkerName: string
+  scheduledDate: string
+}): Promise<string> {
+  if (!walk.sessionId || !walk.customerId || !walk.walkerId) throw new Error('walk-conversation-incomplete')
+  const conversationRef = doc(db, 'conversations', walk.sessionId)
+  await setDoc(conversationRef, {
+    participants: [walk.customerId, walk.walkerId],
+    kind: 'walk',
+    sessionId: walk.sessionId,
+    customerId: walk.customerId,
+    customerName: walk.customerName,
+    walkerId: walk.walkerId,
+    walkerName: walk.walkerName,
+    scheduledDate: walk.scheduledDate,
+    participantRole: 'walk',
+    updatedAt: serverTimestamp(),
+  }, { merge: true })
+  return conversationRef.id
+}
+
 export async function startConversationAsAdmin(identity: ConversationIdentity): Promise<string> {
   const conversationRef = doc(db, 'conversations', identity.uid)
   await setDoc(conversationRef, {
