@@ -582,9 +582,14 @@ service cloud.firestore {
       allow create: if isActiveAccount()
         && request.resource.data.ownerId == request.auth.uid
         && noRoleField();
-      // Owner updates own pet, admin can update any
+      // Owner updates own pet, admin can update any.
+      // El dueño no cambia: `isOwner(resource.data.ownerId)` mira el documento
+      // guardado, así que sin esta línea alguien podía escribir otro ownerId y
+      // pasarle su perro -- con su expediente y su historial -- a otra cuenta.
+      // Es la misma condición que ya tenían las direcciones.
       allow update: if isAuthenticated()
         && noRoleField()
+        && request.resource.data.ownerId == resource.data.ownerId
         && (isOwner(resource.data.ownerId) || isAdmin());
       // Owner deletes own pet, admin can delete any
       allow delete: if isAuthenticated()
