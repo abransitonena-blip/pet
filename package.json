@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
-    "test:rules": "jest __tests__/p04-firestore-rules.emulator.test.ts __tests__/customer-onboarding-rules.emulator.test.ts __tests__/tickets-t2-rules.emulator.test.ts __tests__/chat-rules.emulator.test.ts --runInBand",
+    "test:rules": "jest __tests__/p04-firestore-rules.emulator.test.ts __tests__/customer-onboarding-rules.emulator.test.ts __tests__/tickets-t2-rules.emulator.test.ts __tests__/chat-rules.emulator.test.ts __tests__/walker-reviews-rules.emulator.test.ts --runInBand",
     "emulator": "firebase emulators:start --only firestore --project pet-1cb0b",
     "test:rules:all": "FIRESTORE_EMULATOR_HOST=${FIRESTORE_EMULATOR_HOST:-127.0.0.1:8081} FIRESTORE_RULES_PATH=$PWD/firestore.rules TICKET_RULES_PATH=$PWD/firestore.rules WALK_REPORT_RULES_PATH=$PWD/firestore.rules jest --testPathPatterns emulator --runInBand"
   },

@@ -1130,6 +1130,50 @@ service cloud.firestore {
       }
     }
 
+    // La calificación que una familia le deja a su paseador.
+    //
+    // El documento se identifica con el id del paseo, así que sólo puede existir
+    // una por paseo, y la regla comprueba contra la sesión guardada que ese paseo
+    // sea de quien califica, que haya terminado, y que el paseador sea el que de
+    // verdad lo llevó. No hay forma de calificar un paseo ajeno ni de inventar
+    // una reseña de un paseo que no ocurrió.
+    //
+    // No se edita ni se borra: una reseña que se puede reescribir deja de ser
+    // un registro de lo que pasó.
+    match /walkerReviews/{sessionId} {
+      allow get: if isAuthenticated()
+        && (isStaff()
+            || resource.data.walkerId == request.auth.uid
+            || resource.data.customerId == request.auth.uid);
+      // Un paseador lista las suyas (su consulta filtra por walkerId, y la regla
+      // se evalúa contra cada documento devuelto); el equipo, todas.
+      allow list: if isAuthenticated()
+        && validListLimit(100)
+        && (isStaff() || resource.data.walkerId == request.auth.uid);
+      allow create: if isActiveAccount()
+        && validWalkerReview(request.resource.data)
+        && request.resource.data.sessionId == sessionId
+        && request.resource.data.customerId == request.auth.uid
+        && walkSessionBelongsToReviewer(sessionId, request.resource.data.walkerId);
+      allow update, delete: if false;
+    }
+
+    function walkSessionBelongsToReviewer(sessionId, walkerId) {
+      return exists(/databases/$(database)/documents/walkSessions/$(sessionId))
+        && get(/databases/$(database)/documents/walkSessions/$(sessionId)).data.customerId == request.auth.uid
+        && get(/databases/$(database)/documents/walkSessions/$(sessionId)).data.status == 'completed'
+        && get(/databases/$(database)/documents/walkSessions/$(sessionId)).data.walkerId == walkerId;
+    }
+
+    function validWalkerReview(data) {
+      return data.keys().hasOnly(['sessionId', 'walkerId', 'customerId', 'rating', 'text', 'createdAt'])
+        && data.keys().hasAll(['sessionId', 'walkerId', 'customerId', 'rating', 'text', 'createdAt'])
+        && data.rating is int && data.rating >= 1 && data.rating <= 5
+        && data.text is string && data.text.size() <= 600
+        && data.walkerId is string && data.walkerId.size() > 0
+        && data.createdAt == request.time;
+    }
+
     // Demanda por código postal desde la página pública. Sólo el servidor
     // escribe aquí (/api/coverage/request), que es quien limita las peticiones;
     // dejarlo abierto al navegador sería un contador que cualquiera infla.

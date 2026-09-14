@@ -11,6 +11,7 @@ import { Button, Card, Input, LoadingState } from '@/components/ui'
 import { daySlots, type DaySlot } from '@/lib/dispatch'
 import PushOptIn from '@/components/PushOptIn'
 import WalkerWorkCard from '@/components/walker/WalkerWorkCard'
+import WalkerRatingsCard from '@/components/walker/WalkerRatingsCard'
 import WalkerPhotoButton from '@/components/walker/WalkerPhotoButton'
 import { useWalkerPhoto } from '@/lib/useWalkerPhoto'
 
@@ -260,6 +261,8 @@ export default function WalkerProfilePage() {
       {/* Lo que ya hizo va antes que la configuración: es su panel, no un
           formulario. */}
       <WalkerWorkCard uid={uid} />
+
+      <WalkerRatingsCard uid={uid} />
 
       <Card className="p-4 shadow-none sm:p-5">
         <div className="mb-3 flex items-center gap-2"><MapPin size={17} className="text-primary" /><h2 className="font-bold text-ink">Zonas asignadas</h2></div>

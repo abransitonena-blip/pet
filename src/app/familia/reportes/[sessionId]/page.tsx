@@ -11,6 +11,8 @@ import { useWalkReport } from '@/lib/useWalkReport'
 import { ReportReadOnly } from '@/components/walker/WalkReportEditor'
 import WalkRouteMap from '@/components/walks/WalkRouteMap'
 import WalkerCard from '@/components/family/WalkerCard'
+import RateWalker from '@/components/family/RateWalker'
+import { useWalkerPhoto } from '@/lib/useWalkerPhoto'
 import type { WalkPoint } from '@/types'
 
 function millis(value: unknown): number | null {
@@ -81,6 +83,41 @@ function WalkLocations({ sessionId }: { sessionId: string }) {
   )
 }
 
+/**
+ * Calificar al paseador de este paseo.
+ *
+ * Sólo tiene sentido en un paseo terminado y con paseador: las reglas lo
+ * comprueban igual, pero ofrecer el formulario cuando no se puede enviar sería
+ * prometer algo que va a fallar.
+ */
+function RateThisWalk({ sessionId }: { sessionId: string }) {
+  const [walk, setWalk] = useState<{ walkerId: string; completed: boolean } | null>(null)
+  const walker = useWalkerPhoto({ sessionId })
+
+  useEffect(() => {
+    let cancelled = false
+    getDoc(doc(db, 'walkSessions', sessionId))
+      .then((snapshot) => {
+        if (cancelled || !snapshot.exists()) return
+        const data = snapshot.data()
+        setWalk({
+          walkerId: typeof data.walkerId === 'string' ? data.walkerId : '',
+          completed: data.status === 'completed',
+        })
+      })
+      .catch(() => { /* sin sesión no se ofrece calificar */ })
+    return () => { cancelled = true }
+  }, [sessionId])
+
+  if (!walk?.completed || !walk.walkerId) return null
+
+  return (
+    <div className="mt-3">
+      <RateWalker sessionId={sessionId} walkerId={walk.walkerId} walkerName={walker?.name ?? 'tu paseador'} />
+    </div>
+  )
+}
+
 export default function FamilyReportPage() {
   const params = useParams<{ sessionId: string }>()
   const { report, state } = useWalkReport(params.sessionId)
@@ -107,6 +144,7 @@ export default function FamilyReportPage() {
       <ReportReadOnly report={report} sessionId={params.sessionId} />
       <WalkLocations sessionId={params.sessionId} />
       <WalkRouteMap sessionId={params.sessionId} />
+      <RateThisWalk sessionId={params.sessionId} />
     </div>
   )
 }
