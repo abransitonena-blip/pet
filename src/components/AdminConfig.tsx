@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useConfig } from '@/context/ConfigContext'
 import type { SiteConfig, Announcement } from '@/lib/defaultConfig'
@@ -30,8 +31,21 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { BUSINESS_HOURS, generateTimeSlots } from '@/lib/defaultConfig'
-import AdminServicePricing from '@/components/AdminServicePricing'
-import AdminBookingSchedule from '@/components/AdminBookingSchedule'
+/*
+ * Los editores pesados se cargan cuando se abre su apartado, no al entrar a
+ * Configuración.
+ *
+ * Sólo hay un apartado abierto a la vez -- y la pantalla abre con todos
+ * cerrados -- así que traerlos los tres de entrada era pagar por adelantado
+ * tres pantallas que quizá nadie abra. En un teléfono con datos, eso son
+ * segundos en blanco antes de ver nada.
+ */
+const AdminServicePricing = dynamic(() => import('@/components/AdminServicePricing'), {
+  loading: () => <div className="skeleton h-40 rounded-xl" />,
+})
+const AdminBookingSchedule = dynamic(() => import('@/components/AdminBookingSchedule'), {
+  loading: () => <div className="skeleton h-40 rounded-xl" />,
+})
 import { BRAND } from '@/lib/brand'
 
 type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'features' | 'maintenance' | 'brand' | 'panels'
@@ -179,7 +193,9 @@ function BrandEditor() {
   return <AdminBrandConfig />
 }
 
-import AdminBrandConfig from '@/components/AdminBrandConfig'
+const AdminBrandConfig = dynamic(() => import('@/components/AdminBrandConfig'), {
+  loading: () => <div className="skeleton h-40 rounded-xl" />,
+})
 
 function HeroEditor({ config, updateConfig, saving }: EditorProps) {
   const [heroTitle, setHeroTitle] = useState(config.heroTitle)

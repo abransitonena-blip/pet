@@ -1,7 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app'
 import { initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore'
 import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth'
-import { getStorage } from 'firebase/storage'
 import { requiredEnv } from '@/lib/env'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
@@ -21,7 +20,6 @@ const db = initializeFirestore(app, {
 })
 const auth = getAuth(app)
 const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
-const storage = getStorage(app)
 import type { Messaging } from 'firebase/messaging'
 
 let _messaging: Messaging | null = null
@@ -35,4 +33,7 @@ export async function getMessagingInstance() {
   return _messaging
 }
 
-export { db, auth, authPersistenceReady, storage }
+// Sin `storage`: los archivos de PET Ap viven en Cloudinary como assets
+// privados, no en Firebase Storage. Inicializarlo metía el SDK de Storage en el
+// arranque de las 92 rutas para que no lo usara nadie.
+export { db, auth, authPersistenceReady }
