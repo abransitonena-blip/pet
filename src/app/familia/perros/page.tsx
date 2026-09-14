@@ -19,6 +19,7 @@ import {
 import { Pet } from '@/types'
 import { Button, Card, EmptyState } from '@/components/ui'
 import DogAvatar from '@/components/dogs/DogAvatar'
+import { DOG_BREED_SUGGESTIONS } from '@/lib/dogBreeds'
 import { useDogPhotos } from '@/lib/useDogPhotos'
 
 type PetTab = 'basico' | 'personalidad' | 'salud' | 'preferencias'
@@ -70,12 +71,16 @@ const PET_TYPE_OPTIONS = [
  * breed. "Mestizo" leads because it is the most common answer.
  */
 const BREED_SUGGESTIONS: Record<'perro' | 'gato' | 'otro', readonly string[]> = {
+  // Las razas conocidas salen del catálogo que también decide el color del
+  // perro sin foto: una sola lista que crece en un solo lugar. Las primeras son
+  // las respuestas más comunes, que además son las que se ofrecen de un toque.
   perro: [
-    'Mestizo', 'Chihuahua', 'Labrador Retriever', 'Golden Retriever', 'Pastor Alemán',
-    'Schnauzer', 'Schnauzer Miniatura', 'Poodle', 'Yorkshire Terrier', 'Shih Tzu', 'Pug',
-    'Bulldog Francés', 'Bulldog Inglés', 'Beagle', 'Dachshund (Salchicha)', 'Husky Siberiano',
-    'Border Collie', 'Boxer', 'Rottweiler', 'Pitbull', 'Pomerania', 'Maltés', 'Cocker Spaniel',
-    'Xoloitzcuintle', 'Doberman', 'Gran Danés', 'Akita', 'Samoyedo', 'Jack Russell Terrier',
+    'Mestizo', 'Chihuahua', 'Labrador Retriever', 'Golden Retriever', 'Pastor Aleman',
+    'Schnauzer', 'Poodle', 'Shih Tzu', 'Pug', 'Bulldog Frances',
+    ...DOG_BREED_SUGGESTIONS.filter((breed) => ![
+      'Mestizo', 'Chihuahua', 'Labrador Retriever', 'Golden Retriever', 'Pastor Aleman',
+      'Schnauzer', 'Poodle', 'Shih Tzu', 'Pug', 'Bulldog Frances',
+    ].includes(breed)),
   ],
   gato: [
     'Mestizo', 'Doméstico de pelo corto', 'Doméstico de pelo largo', 'Siamés', 'Persa',

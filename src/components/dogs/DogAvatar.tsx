@@ -1,16 +1,21 @@
 import { PawMark } from '@/components/ui/Logo'
+import { BREED_GROUP_STYLES, breedGroup } from '@/lib/dogBreeds'
 
 /**
  * La imagen del perro cuando todavía no hay foto.
  *
- * En vez de un cuadro gris igual para todos, cada perro recibe siempre el
- * mismo color, elegido a partir de su nombre y su raza: así se distinguen de
- * un vistazo en la lista y el perfil deja de verse vacío.
+ * El color sale de la familia de su raza: los nórdicos en azul, los de hocico
+ * corto en terracota, los toy en rosa. Así dos huskies se ven iguales entre sí y
+ * distintos de un chihuahua, que es lo que hace útil un color.
  *
  * No es un dibujo por raza. Prometer cientos de ilustraciones (husky, pastor,
  * salchicha…) sería prometer algo que no existe en el proyecto; esto es la
- * marca de PET Ap teñida, estable para cada perro, y desaparece en cuanto la
- * familia sube una foto de verdad.
+ * marca de PET Ap teñida por grupo, y desaparece en cuanto la familia sube una
+ * foto de verdad.
+ *
+ * Una raza que no conocemos -- o un mestizo con un nombre propio -- recibe un
+ * color estable a partir de su texto, así que sigue distinguiéndose de los
+ * demás aunque no esté en el catálogo.
  */
 
 const PALETTE = [
@@ -23,11 +28,21 @@ const PALETTE = [
 ]
 
 /** El mismo perro recibe siempre el mismo color, hoy y en un mes. */
-function dogPalette(seed: string) {
+function fallbackPalette(seed: string) {
   const clean = seed.trim().toLowerCase() || 'pet'
   let total = 0
   for (let index = 0; index < clean.length; index += 1) total += clean.charCodeAt(index)
   return PALETTE[total % PALETTE.length]
+}
+
+/** El color de su grupo de raza; si no la conocemos, uno estable por su texto. */
+function dogPalette(name: string, breed: string) {
+  const group = breedGroup(breed)
+  if (group) {
+    const style = BREED_GROUP_STYLES[group]
+    return { background: style.background, ink: style.ink }
+  }
+  return fallbackPalette(`${name}${breed}`)
 }
 
 interface DogAvatarProps {
@@ -50,7 +65,7 @@ export default function DogAvatar({ name, breed = '', photoUrl = '', size = 48, 
     )
   }
 
-  const palette = dogPalette(`${name}${breed}`)
+  const palette = dogPalette(name, breed)
   return (
     <span
       role="img"
