@@ -123,7 +123,7 @@ export default function WalkerDashboard() {
           <Card key={label} className="min-h-20 p-3 shadow-none sm:p-4">
             <div className={`mb-2 flex h-7 w-7 items-center justify-center rounded-lg ${tone}`}><Icon size={15} aria-hidden="true" /></div>
             <p className="text-xl font-bold leading-none text-ink">{value}</p>
-            <p className="mt-1 truncate text-[11px] font-medium text-muted sm:text-xs">{label}</p>
+            <p className="mt-1 truncate text-2xs font-medium text-muted sm:text-xs">{label}</p>
           </Card>
         ))}
       </section>

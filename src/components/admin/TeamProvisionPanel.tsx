@@ -165,7 +165,7 @@ export default function TeamProvisionPanel({ zones, onProvisioned }: TeamProvisi
             </div>
             <div>
               <dt className="text-muted">UID</dt>
-              <dd className="font-mono text-[11px] text-ink break-all">{lookup.uid}</dd>
+              <dd className="font-mono text-2xs text-ink break-all">{lookup.uid}</dd>
             </div>
             <div>
               <dt className="text-muted">Rol actual</dt>
@@ -211,7 +211,7 @@ export default function TeamProvisionPanel({ zones, onProvisioned }: TeamProvisi
                     <option key={value} value={value}>{STATUS_LABELS[value]}</option>
                   ))}
                 </select>
-                <p className="text-[11px] text-muted">
+                <p className="text-2xs text-muted">
                   Solo un paseador con estado <strong>activo</strong> puede ser asignado a un paseo y mover su estado.
                 </p>
               </div>
@@ -232,7 +232,7 @@ export default function TeamProvisionPanel({ zones, onProvisioned }: TeamProvisi
                           onClick={() => setSelectedZones(selected
                             ? selectedZones.filter((value) => value !== zone.id)
                             : [...selectedZones, zone.id])}
-                          className={`min-h-9 rounded-full border px-3 text-[11px] font-medium transition-colors ${selected ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted'}`}
+                          className={`min-h-9 rounded-full border px-3 text-2xs font-medium transition-colors ${selected ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted'}`}
                           aria-pressed={selected}
                         >
                           {zone.name}

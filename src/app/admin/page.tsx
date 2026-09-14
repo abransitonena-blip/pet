@@ -114,9 +114,10 @@ export default function AdminDashboard() {
       >
         <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative">
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          {/* Título de la pantalla: h1. */}
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
             Resumen operativo
-          </h2>
+          </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             {stats.todayReservations > 0
               ? `${stats.todayReservations} paseo${stats.todayReservations !== 1 ? 's' : ''} programado${stats.todayReservations !== 1 ? 's' : ''} para hoy`

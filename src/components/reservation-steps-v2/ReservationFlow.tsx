@@ -366,7 +366,7 @@ export default function ReservationFlow() {
             }`}>
               {i < step ? <CheckCircle2 size={14} /> : i + 1}
             </div>
-            <span className="mt-1 hidden truncate text-[11px] text-muted sm:block">{s.label}</span>
+            <span className="mt-1 hidden truncate text-2xs text-muted sm:block">{s.label}</span>
           </li>
         ))}
       </ol>

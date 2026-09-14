@@ -231,7 +231,7 @@ export default function DireccionesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Mis Direcciones</h2>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Mis direcciones</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             {addresses.length} dirección{addresses.length !== 1 ? 'es' : ''} guardada{addresses.length !== 1 ? 's' : ''}
           </p>

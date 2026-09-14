@@ -65,10 +65,10 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
                 const current = index === timelinePosition
                 return (
                   <li key={item.status} className="min-w-0 text-center" aria-current={current ? 'step' : undefined}>
-                    <span className={`mx-auto grid h-7 w-7 place-items-center rounded-full border text-[10px] font-bold ${reached ? 'border-primary bg-primary text-white' : 'border-ink/15 bg-surface text-muted'}`}>
+                    <span className={`mx-auto grid h-7 w-7 place-items-center rounded-full border text-2xs font-bold ${reached ? 'border-primary bg-primary text-white' : 'border-ink/15 bg-surface text-muted'}`}>
                       {index < timelinePosition ? <Check size={12} aria-hidden="true" /> : index + 1}
                     </span>
-                    <span className={`mt-1 hidden truncate text-[10px] sm:block ${current ? 'font-semibold text-ink' : 'text-muted'}`}>{item.label}</span>
+                    <span className={`mt-1 hidden truncate text-2xs sm:block ${current ? 'font-semibold text-ink' : 'text-muted'}`}>{item.label}</span>
                   </li>
                 )
               })}

@@ -120,6 +120,13 @@ export default function ConfigPage() {
 
   return (
     <div className="space-y-4">
+      {/* La pantalla no tenía título propio: sus tarjetas empezaban en h2 y
+          quien navega con lector de pantalla no sabía dónde había aterrizado. */}
+      <header>
+        <h1 className="text-xl font-bold text-ink">Configuración</h1>
+        <p className="mt-0.5 text-sm text-muted">Tus datos de contacto y el acceso a tu cuenta.</p>
+      </header>
+
       <Card className="p-6">
         <h2 className="mb-1 text-lg font-semibold text-ink">Datos de contacto</h2>
         <p className="mb-4 text-xs text-muted">

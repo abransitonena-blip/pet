@@ -1,4 +1,88 @@
-# AGENTS.md — Resumen del plan maestro y continuar
+# AGENTS.md — Reglas de trabajo de PET Ap
+
+> Lo que sigue son **reglas**, no historia. El diario de fases está más abajo.
+> Si algo aquí choca con lo que dice el diario, mandan estas reglas.
+
+## 1. Lo que nunca se hace
+
+- **No inventar.** Ni métricas, ni costos, ni legislación, ni funcionalidades que
+  no existen, ni datos de usuarios. Si un número no se puede rastrear hasta un
+  documento guardado, no se muestra.
+- **Nada que pida RFC** ni datos fiscales: el proyecto no puede darlos.
+- **No tocar** facturación, comisiones ni Cloud Functions sin pedirlo antes.
+- **No subir a producción** sin aprobación explícita, cada vez. Una aprobación no
+  cubre la siguiente.
+- **No borrar ni sobrescribir** lo que no se escribió en esta sesión sin mirarlo
+  primero y decir qué se encontró.
+
+## 2. Accesibilidad — el piso, no el techo
+
+Medido en 2026-09-14 sobre este código; cada regla nace de un defecto real.
+
+| Regla | Por qué |
+|---|---|
+| Ningún texto por debajo de **12px** | Había 151 usos de 10px. Ilegibles para vista cansada. |
+| Cuerpo de texto a **16px**, secundario 14px | Convención de Apple y Material. WCAG no fija mínimo, pero 12px no es cuerpo. |
+| Todo lo que se toca mide **44×44px** | Apple HIG. Había 136 de 213 botones sin garantizarlo. |
+| Todo lo enfocable muestra `focus-visible:ring` | WCAG 2.4.7. Sólo 47 de 212 archivos lo tenían. |
+| Cada pantalla tiene **un** `<h1>` | Había 15 sin ninguno. |
+| Cada campo tiene `<label>` o `aria-label` | WCAG 1.3.1. Había 78 inputs y 15 selects sin él. |
+| El color nunca es el único indicador | Un estado lleva además texto o icono. |
+| Toda animación respeta `prefers-reduced-motion` | Había 36 archivos que la ignoraban. |
+
+El contraste ya cumple AA (texto principal 15.45:1, secundario 5.43:1 sobre el
+fondo crema). Si se cambia un color, se vuelve a medir.
+
+## 3. Cómo se escribe
+
+- **El nombre dice lo que hace.** Nada de `data`, `temp`, `handleClick2`.
+- **Los comentarios explican por qué**, no qué. El código ya dice qué.
+- **Un archivo de más de 400 líneas es una señal**, no un pecado: si se está
+  tocando, se parte.
+- **Nada de código muerto.** Una función exportada que nadie llama es tanto como
+  no haberla escrito: se usa o se borra.
+- **Se respeta el estilo de alrededor** antes que la preferencia propia.
+
+## 4. Qué se prueba, y contra qué
+
+- **Lógica pura → prueba unitaria.** Fechas, dinero, permisos, agrupaciones.
+- **Reglas de Firestore → prueba contra el emulador**, nunca leyendo el texto de
+  la regla. El error del chat de familias sobrevivió meses porque la regla *se
+  leía* razonable: `resource` dentro de `messages` es el mensaje, no la
+  conversación.
+- **Antes de cada commit:** `tsc --noEmit`, `eslint .`, `jest`, `next build`. Los
+  cuatro, y se mira el código de salida, no la última línea del log.
+- **Una prueba que falla no se ajusta para que pase.** Primero se entiende si el
+  código está mal.
+
+## 5. Firestore
+
+- Toda lista tiene `validListLimit`. Sin él, la regla acepta cualquier tamaño.
+- Un permiso se comprueba **contra el documento guardado**, nunca contra lo que
+  manda el cliente.
+- Lo que el navegador no debe escribir, se escribe desde una ruta del servidor
+  con límite de peticiones.
+- **Las reglas se despliegan aparte.** Vercel no las sube. Un commit que cambia
+  `firestore.rules` lo dice en su mensaje: `REQUIERE DESPLEGAR REGLAS`.
+
+## 6. Datos de personas
+
+- Lo privado se guarda como asset `authenticated` y se ve con enlaces que
+  caducan. Nunca un URL público.
+- La referencia guardada es un id opaco, jamás un URL ni un nombre.
+- Se entrega **lo mínimo**: con la foto de un paseador viaja su nombre, no su
+  teléfono ni sus zonas.
+- Se pregunta por el paseo, no por la persona: el servidor decide quién puede ver.
+
+## 7. Al reportar
+
+- Tabla de comprobaciones con PASS/FAIL y el código de salida real.
+- Si algo falló, se dice con su salida. Si se omitió un paso, se dice.
+- Un error propio se nombra como propio, en la primera línea.
+
+---
+
+# Diario de fases (historia)
 
 ## Resumen del plan maestro de 17 fases
 

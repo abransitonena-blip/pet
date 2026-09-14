@@ -18,8 +18,21 @@ module.exports = {
         overlay: 'var(--z-overlay)',
         preloader: 'var(--z-preloader)',
       },
+      /**
+       * La escala tipográfica, subida de piso (2026-09-14).
+       *
+       * Había 151 usos de 10px y 641 de 12px: ilegibles para vista cansada, que
+       * es la de buena parte de quien tiene perro y paga por paseos. Se sube lo
+       * que esas clases significan en vez de reescribir 800 lugares -- así sube
+       * toda la app de una vez y no queda medio proyecto en cada tamaño.
+       *
+       * El piso absoluto es 12px, y sólo para etiquetas. 14px es el secundario,
+       * 16px el cuerpo. Los de arriba no se tocan.
+       */
       fontSize: {
-        '2xs': '0.625rem',
+        '2xs': ['0.75rem', { lineHeight: '1rem' }],
+        xs: ['0.8125rem', { lineHeight: '1.125rem' }],
+        sm: ['0.9375rem', { lineHeight: '1.375rem' }],
       },
       fontFamily: {
         sans: ['Manrope', ...fontFamily.sans],

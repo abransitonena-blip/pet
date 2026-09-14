@@ -28,10 +28,13 @@ export default function PageHeader({ title, description, icon, actions, backHref
       )}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          {/* Es el título de la pantalla, así que es h1. Era h2, y como ninguna
+              pantalla del panel tenía h1, quien navega con lector de pantalla
+              aterrizaba sin saber dónde estaba. */}
+          <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             {icon && <span style={{ color: 'var(--color-primary)' }}>{icon}</span>}
             {title}
-          </h2>
+          </h1>
           {description && (
             <p className="text-sm mt-1 max-w-2xl" style={{ color: 'var(--text-muted)' }}>{description}</p>
           )}

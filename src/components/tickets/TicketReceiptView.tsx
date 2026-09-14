@@ -2,6 +2,13 @@ import type { PersistentTicketSnapshot } from '@/lib/finance/domain'
 import { shortFolio } from '@/lib/ticketFolio'
 import PetApDogMark from './PetApDogMark'
 
+/**
+ * El recibo tal como sale de la impresora térmica.
+ *
+ * Aquí el texto chico es fiel al papel, no una decisión de interfaz: esto
+ * representa un ticket de 58 mm, no una pantalla que alguien vaya a leer de
+ * corrido. Es la excepción a la escala tipográfica de AGENTS.md, y la única.
+ */
 export default function TicketReceiptView({ ticket }: { ticket: PersistentTicketSnapshot }) {
   return (
     <section className="mx-auto w-full max-w-[384px] overflow-hidden rounded-sm bg-white px-6 py-8 font-mono text-[12px] leading-relaxed text-black shadow-[0_14px_40px_rgba(15,23,42,0.14)]" aria-label="Recibo interno PET Ap">
