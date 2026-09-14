@@ -155,7 +155,8 @@ export default function AdminPetAhoraPage() {
       <div className="relative">
         <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
         <input
-          type="text"
+          type="search"
+          aria-label="Buscar una solicitud de PET Ahora"
           placeholder="Buscar por perro, paseador o ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}

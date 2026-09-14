@@ -58,6 +58,7 @@ export default function WalkerPhotoButton({ uid, photoUrl, hasPhoto, onUploaded 
         <input
           ref={fileInput}
           type="file"
+          aria-label="Elegir tu foto de perfil"
           accept={WALKER_PHOTO_TYPES.join(',')}
           className="hidden"
           onChange={(event) => {

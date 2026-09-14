@@ -61,6 +61,7 @@ export default function WalkPhotoButton({ sessionId }: WalkPhotoButtonProps) {
       <input
         ref={fileInput}
         type="file"
+        aria-label="Elegir una foto del paseo"
         accept="image/jpeg,image/png,image/webp"
         capture="environment"
         className="hidden"

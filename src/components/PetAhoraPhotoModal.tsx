@@ -118,7 +118,7 @@ export default function PetAhoraPhotoModal({ isOpen, onClose, requestId, mode, o
           </button>
         )}
 
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} className="hidden" />
+        <input ref={fileRef} type="file" aria-label="Elegir una foto del paseo" accept="image/*" capture="environment" onChange={handleFile} className="hidden" />
 
         {error && <p className="text-xs mb-3" style={{ color: 'var(--color-danger)' }}>{error}</p>}
 

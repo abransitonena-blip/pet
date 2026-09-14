@@ -136,6 +136,7 @@ function ChipInput({ items, onChange, placeholder, color }: {
       <div className="flex gap-2">
         <input
           type="text"
+          aria-label={placeholder}
           maxLength={80}
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -735,8 +736,8 @@ export default function MisPerrosPage() {
                         <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Veterinario</label>
                       </div>
                       <div className="space-y-2">
-                        <input type="text" maxLength={100} value={form.health.vetName} onChange={(e) => setField('health', { ...form.health, vetName: e.target.value })} placeholder="Contacto veterinario (opcional)" className="w-full px-3 py-2 rounded-lg text-xs border transition-all focus:outline-none" style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
-                        <input type="tel" maxLength={20} value={form.health.vetPhone} onChange={(e) => setField('health', { ...form.health, vetPhone: e.target.value })} placeholder="Teléfono (opcional)" className="w-full px-3 py-2 rounded-lg text-xs border transition-all focus:outline-none" style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                        <input type="text" aria-label="Nombre del veterinario" maxLength={100} value={form.health.vetName} onChange={(e) => setField('health', { ...form.health, vetName: e.target.value })} placeholder="Contacto veterinario (opcional)" className="w-full px-3 py-2 rounded-lg text-xs border transition-all focus:outline-none" style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
+                        <input type="tel" aria-label="Teléfono del veterinario" maxLength={20} value={form.health.vetPhone} onChange={(e) => setField('health', { ...form.health, vetPhone: e.target.value })} placeholder="Teléfono (opcional)" className="w-full px-3 py-2 rounded-lg text-xs border transition-all focus:outline-none" style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
                       </div>
                     </div>
                   </>

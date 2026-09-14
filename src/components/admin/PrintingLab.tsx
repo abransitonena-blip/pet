@@ -342,7 +342,7 @@ export default function PrintingLab() {
               {bluetoothMessage && <p role="status" className="rounded-xl bg-primary/10 px-4 py-3 text-sm text-ink">{bluetoothMessage}</p>}
               <details className="rounded-xl border border-ink/10 p-3">
                 <summary className="min-h-11 cursor-pointer select-none py-2 text-sm font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]">HEX continuo</summary>
-                <textarea readOnly value={hex} rows={8} className="mt-2 w-full resize-y break-all rounded-lg border border-border bg-canvas p-3 font-mono text-[11px] leading-relaxed text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]" />
+                <textarea readOnly aria-label="Bytes del ticket en hexadecimal" value={hex} rows={8} className="mt-2 w-full resize-y break-all rounded-lg border border-border bg-canvas p-3 font-mono text-[11px] leading-relaxed text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]" />
               </details>
             </div>
           )}

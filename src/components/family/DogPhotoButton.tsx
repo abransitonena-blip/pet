@@ -50,6 +50,7 @@ export default function DogPhotoButton({ dogId, hasPhoto, onUploaded }: DogPhoto
       <input
         ref={fileInput}
         type="file"
+        aria-label="Elegir la foto de tu perro"
         accept={DOG_PHOTO_TYPES.join(',')}
         className="hidden"
         onChange={(event) => {

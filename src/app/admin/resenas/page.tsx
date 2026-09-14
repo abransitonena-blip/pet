@@ -125,7 +125,8 @@ export default function AdminResenasPage() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
         <input
-          type="text"
+          type="search"
+          aria-label="Buscar entre las reseñas"
           placeholder="Buscar en reseñas..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

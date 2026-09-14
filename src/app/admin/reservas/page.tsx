@@ -334,7 +334,8 @@ export default function AdminReservas() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={12} style={{ color: 'var(--text-muted)' }} />
           <input
-            type="text"
+            type="search"
+            aria-label="Buscar entre las solicitudes y paseos"
             placeholder="Buscar por nombre, mascota, teléfono..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -354,6 +355,7 @@ export default function AdminReservas() {
         </select>
         <input
           type="date"
+          aria-label="Desde esta fecha"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
           className="input-field !w-auto"
@@ -361,6 +363,7 @@ export default function AdminReservas() {
         />
         <input
           type="date"
+          aria-label="Hasta esta fecha"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
           className="input-field !w-auto"
