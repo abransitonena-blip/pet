@@ -140,3 +140,38 @@ describe('reducir movimiento', () => {
     expect(css).toContain('animation-duration: 0.01ms !important')
   })
 })
+
+/**
+ * Lo que se activa es un botón, no un div con onClick.
+ *
+ * Un `<div onClick>` no se alcanza con el tabulador, no se activa con Enter y un
+ * lector de pantalla lo anuncia como texto. Tampoco lo cubre el piso táctil de
+ * 44px, que aplica a `button` y a `[role=button]`.
+ *
+ * El fondo de un modal es la excepción legítima: cerrar al tocar fuera es un
+ * atajo, nunca la única salida -- esos diálogos tienen su botón de cerrar y
+ * responden a Escape.
+ */
+describe('controles de verdad', () => {
+  test('las tarjetas del inicio de familia son botones', () => {
+    const page = read('src/app/familia/page.tsx')
+    expect(page).toContain('<motion.button')
+    expect(page).not.toContain('cursor-pointer transition-all hover:scale-[1.02]\n          onClick')
+  })
+
+  test('y traen foco visible, que un div nunca tuvo', () => {
+    const page = read('src/app/familia/page.tsx')
+    const buttons = page.split('<motion.button').slice(1)
+    expect(buttons.length).toBeGreaterThanOrEqual(2)
+    for (const button of buttons) {
+      expect(button.slice(0, 600)).toContain('focus-visible:ring')
+    }
+  })
+
+  test('una tarjeta que lleva a una función apagada no se ofrece', () => {
+    // Decía "Consulta manual" en una fila de cifras, y llevaba a una pantalla
+    // que el menú ya escondía.
+    expect(read('src/app/familia/page.tsx')).toContain('FEATURE_FLAGS.LOYALTY_REDEMPTION_ENABLED &&')
+    expect(read('src/app/familia/page.tsx')).not.toContain('Consulta manual')
+  })
+})

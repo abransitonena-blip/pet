@@ -138,11 +138,12 @@ export default function DashboardPage() {
         <p className="mt-1 text-xs text-muted">Cifras tomadas de tus paseos registrados.</p>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <motion.div
+        <motion.button
+          type="button"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.1 }}
-          className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02]"
+          className="rounded-xl border border-ink/10 bg-surface p-4 text-left shadow-sm transition-all hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           onClick={() => router.push('/familia/nueva-reserva')}
         >
           <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center mb-3">
@@ -150,13 +151,14 @@ export default function DashboardPage() {
           </div>
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{upcoming.length}</p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Próximos paseos</p>
-        </motion.div>
+        </motion.button>
 
-        <motion.div
+        <motion.button
+          type="button"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.15 }}
-          className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02]"
+          className="rounded-xl border border-ink/10 bg-surface p-4 text-left shadow-sm transition-all hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           onClick={() => router.push('/familia/historial')}
         >
           <div className="w-10 h-10 rounded-xl bg-success-500/10 flex items-center justify-center mb-3">
@@ -164,21 +166,27 @@ export default function DashboardPage() {
           </div>
           <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{completed.length}</p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Paseos completados</p>
-        </motion.div>
+        </motion.button>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, delay: 0.2 }}
-          className="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02]"
-          onClick={() => router.push('/familia/lealtad')}
-        >
-          <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center mb-3">
-            <Gift size={16} className="text-pink-400" />
-          </div>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Consulta manual</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Lealtad promocional</p>
-        </motion.div>
+        {/* En una fila de cifras, esta tarjeta no traía una: decía "Consulta
+            manual" y llevaba a una pantalla que el propio menú esconde mientras
+            nada pueda mover ese saldo. Sigue la misma regla que el menú. */}
+        {FEATURE_FLAGS.LOYALTY_REDEMPTION_ENABLED && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22, delay: 0.2 }}
+            className="rounded-xl border border-ink/10 bg-surface p-4 text-left shadow-sm transition-all hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={() => router.push('/familia/lealtad')}
+          >
+            <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center mb-3">
+              <Gift size={16} className="text-pink-400" />
+            </div>
+            <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Mi lealtad</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Tus recompensas</p>
+          </motion.button>
+        )}
       </div>
 
       {/* Wallet */}
@@ -198,7 +206,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.25 }}
           onClick={() => router.push('/familia/nueva-reserva')}
-          className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-brand-500/30"
+          className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-brand-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           style={{ background: 'linear-gradient(135deg, rgba(217,119,6,0.1), rgba(217,119,6,0.05))', border: '1px solid var(--border)' }}
         >
           <CalendarDays size={20} className="text-brand-600 mb-2" />
@@ -213,7 +221,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.3 }}
           onClick={() => router.push('/familia/perros')}
-          className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-success-500/30"
+          className="rounded-2xl p-4 text-left transition-all hover:scale-[1.02] hover:border-success-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.1), rgba(5,150,105,0.05))', border: '1px solid var(--border)' }}
         >
           <PawPrint size={20} className="text-success-400 mb-2" />
