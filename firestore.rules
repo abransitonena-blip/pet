@@ -575,8 +575,13 @@ service cloud.firestore {
     // ═══════════════════════════════════════════
 
     match /dogs/{petId} {
-      // Owner reads own pets, admin reads all
-      allow read: if isAuthenticated()
+      // Owner reads own pets, admin reads all.
+      // La lista exige límite: sin él, una consulta puede arrastrar la colección
+      // entera de quien la pida. La app nunca pide más de 50.
+      allow get: if isAuthenticated()
+        && (isOwner(resource.data.ownerId) || isAdmin());
+      allow list: if isAuthenticated()
+        && validListLimit(100)
         && (isOwner(resource.data.ownerId) || isAdmin());
       // Owner creates own pet
       allow create: if isActiveAccount()
@@ -601,7 +606,10 @@ service cloud.firestore {
     // ═══════════════════════════════════════════
 
     match /addresses/{addressId} {
-      allow read: if isAuthenticated()
+      allow get: if isAuthenticated()
+        && (isOwner(resource.data.ownerId) || isAdmin());
+      allow list: if isAuthenticated()
+        && validListLimit(100)
         && (isOwner(resource.data.ownerId) || isAdmin());
       allow create: if isActiveAccount()
         && isCustomer()
@@ -1445,8 +1453,13 @@ service cloud.firestore {
         allow read: if isAuthenticated() && request.auth.uid == uid;
         // Admin creates via Cloud Functions
         allow create: if isAdmin();
-        // Owner can mark as read
-        allow update: if isAuthenticated() && request.auth.uid == uid;
+        // El dueño marca leído -- nada más. Sin esta restricción podía
+        // reescribir el texto del aviso que le mandó administración, y un aviso
+        // que su destinatario puede editar no sirve como aviso.
+        allow update: if isAuthenticated()
+          && request.auth.uid == uid
+          && onlyAllowedFieldsChanged(['read'])
+          && request.resource.data.read is bool;
         allow delete: if isAdmin();
       }
     }
