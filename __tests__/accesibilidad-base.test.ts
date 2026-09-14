@@ -88,3 +88,55 @@ describe('las reglas están escritas', () => {
     }
   })
 })
+
+/**
+ * El piso táctil de 44×44 (Apple HIG).
+ *
+ * De 201 botones escritos a mano, 177 no lo garantizaban. Migrarlos uno por uno
+ * habría tardado semanas y habría vuelto a romperse al siguiente botón nuevo; el
+ * piso va en la hoja de estilos base, donde aplica a todos y cualquier clase de
+ * Tailwind lo puede sobreescribir cuando de verdad haga falta.
+ */
+describe('área táctil', () => {
+  const css = read('src/app/globals.css')
+
+  test('hay un piso de 44px para todo lo que se toca', () => {
+    const rule = css.slice(css.indexOf("button:not([hidden])"))
+    expect(rule.slice(0, 200)).toContain('min-height: 2.75rem')
+    expect(rule.slice(0, 200)).toContain('min-width: 2.75rem')
+    expect(rule.slice(0, 200)).toContain("[role='button']")
+  })
+
+  test('lo oculto queda fuera: no debe empezar a ocupar espacio', () => {
+    expect(css).toContain("button:not([hidden])")
+  })
+
+  test('el botón compartido ya cumplía, y se queda así', () => {
+    const button = read('src/components/ui/Button.tsx')
+    expect(button).toContain('min-h-11')
+    expect(button).toContain('focus-visible:ring')
+    expect(button).toContain('motion-reduce:')
+  })
+})
+
+/**
+ * Movimiento: quien pidió reducirlo debe recibirlo reducido.
+ *
+ * La regla CSS de globals.css apaga transiciones y animaciones declaradas en
+ * hojas de estilo, pero framer-motion anima por JavaScript -- escribe transform
+ * en línea, cuadro a cuadro -- y ninguna regla CSS lo detiene. Eran 36 archivos
+ * animando para alguien que pidió que no.
+ */
+describe('reducir movimiento', () => {
+  test('framer-motion obedece la preferencia del sistema en toda la app', () => {
+    const providers = read('src/components/Providers.tsx')
+    expect(providers).toContain('MotionConfig')
+    expect(providers).toContain('reducedMotion="user"')
+  })
+
+  test('y la regla CSS sigue cubriendo lo declarado en hojas de estilo', () => {
+    const css = read('src/app/globals.css')
+    expect(css).toContain('@media (prefers-reduced-motion: reduce)')
+    expect(css).toContain('animation-duration: 0.01ms !important')
+  })
+})

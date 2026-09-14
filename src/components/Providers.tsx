@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode, useEffect, useState } from 'react'
+import { MotionConfig } from 'framer-motion'
 import { PricesProvider } from '@/context/PricesContext'
 import { ConfigProvider } from '@/context/ConfigContext'
 import { ToastProvider } from '@/context/ToastContext'
@@ -26,6 +27,17 @@ export default function Providers({ children }: { children: ReactNode }) {
   }, [reducedMotion])
 
   return (
+    /*
+     * `reducedMotion="user"` es lo que hace que framer-motion obedezca la
+     * preferencia del sistema en toda la app.
+     *
+     * La regla CSS de más abajo en globals.css apaga las transiciones y
+     * animaciones declaradas en hojas de estilo, pero no toca a framer-motion:
+     * ése anima por JavaScript, escribiendo `transform` en línea cuadro a
+     * cuadro, y ninguna regla CSS lo detiene. Eran 36 archivos animando para
+     * alguien que pidió que no; esto los cubre a todos sin tocar ninguno.
+     */
+    <MotionConfig reducedMotion="user">
     <ConfigProvider>
       <BrandProvider>
         <PricesProvider>
@@ -38,5 +50,6 @@ export default function Providers({ children }: { children: ReactNode }) {
         </PricesProvider>
       </BrandProvider>
     </ConfigProvider>
+    </MotionConfig>
   )
 }

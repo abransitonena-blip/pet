@@ -182,6 +182,24 @@
 @layer base {
   input, select, textarea, button, a { -webkit-tap-highlight-color: transparent; }
   input, select, textarea { font-size: 16px; }
+
+  /*
+   * El piso táctil: 44×44, la medida de Apple HIG.
+   *
+   * De 201 botones escritos a mano, 177 no lo garantizaban -- dedos que fallan
+   * el blanco en un teléfono, que es donde se usa esta app. En vez de migrar
+   * 177 lugares a mano, se pone el piso aquí: es un selector de elemento, así
+   * que cualquier clase de Tailwind que fije altura lo sobreescribe, y donde no
+   * hay clase el botón crece hasta ser tocable.
+   *
+   * `[hidden]` queda fuera: un botón oculto no ocupa espacio y no debe empezar
+   * a ocuparlo por esta regla.
+   */
+  button:not([hidden]),
+  [role='button']:not([hidden]) {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
 }
 
 @layer components {
