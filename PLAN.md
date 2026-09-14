@@ -19,20 +19,11 @@ Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
 | 5 | Peso | Firebase Storage fuera (no lo usaba nadie), editores de Configuración diferidos. 340→324 kB | — |
 | 6 | Permisos | `dogs`/`addresses` exigen límite; notificaciones sólo marcan leído. Huecos 5→3 | emulador |
 | 7 | Inicio de familia | Tarjetas `div onClick` → botones; tarjeta muerta de lealtad fuera | `accesibilidad-base` |
+| 8 | Controles activables | Los 25 `onClick` restantes resultaron todos legítimos; la prueba reconoce los tres patrones válidos | `controles-interactivos` |
 
 ---
 
 ## Abiertas, en orden
-
-### 8. Controles que no son controles
-Quedan **25** elementos no interactivos con `onClick`. Hay que separarlos:
-- **Fondo de modal** — legítimo: cerrar al tocar fuera es un atajo, y esos
-  diálogos tienen botón de cerrar y responden a Escape. Se documentan y se dejan.
-- **Control principal** — se convierten a `button`. Empezar por
-  `familia/perros`, `familia/direcciones` y `admin/reservas`.
-
-Cierra cuando: ningún `onClick` fuera de un fondo de modal viva en un elemento no
-interactivo, y una prueba lo verifique.
 
 ### 9. Densidad panel por panel
 Con la letra más grande ya no cabe lo mismo. Panel por panel: decidir qué es lo
@@ -86,3 +77,8 @@ está reordenando es trabajo que se tira.
   parsear. Los detectores buenos quedaron como pruebas.
 - **La prueba encuentra más que la revisión.** Dos veces destapó defectos que no
   estaba buscando.
+- **Un clasificador incompleto acusa a código sano.** Los "25 controles
+  pendientes" de la fase 8 eran cero: el detector sólo excusaba `role="button"`,
+  y no reconocía los fondos de modal, los paneles que frenan la propagación ni
+  los `role="radio"`. Es el mismo error que la ventana de 700 caracteres del
+  historial legacy -- medir con un criterio más angosto que la realidad.
