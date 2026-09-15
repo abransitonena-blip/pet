@@ -7,7 +7,6 @@ import { auth } from '@/firebase/config'
 import { accessPathWithRedirect, clearSessionCookie } from '@/lib/auth'
 import { useSessionRole } from '@/lib/useSessionRole'
 import { ACCESS_MESSAGES, ROLES, ROLE_HOME } from '@/lib/roles'
-import { ReservationsProvider } from '@/context/ReservationsContext'
 import {
   Dog, Gauge, Calendar, Users, PawPrint, Footprints,
   MapPin, DollarSign, Tag, Star,
@@ -118,12 +117,12 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   const navItems = applyPanelPreferences(NAV_ITEMS, config.adminPanels, role)
     .map((item) => (item.id === 'chat' ? { ...item, badge: unreadChats } : item))
 
+  // Sin ReservationsProvider aquí: escuchaba `reservations` en cada panel de
+  // admin y sólo lo usa el historial anterior, que ahora lo monta al abrirse.
   return (
-    <ReservationsProvider>
-      <AdminShell navItems={navItems} onLogout={handleLogout} version={version}>
-        <GeofenceAlertsBanner />
-        {children}
-      </AdminShell>
-    </ReservationsProvider>
+    <AdminShell navItems={navItems} onLogout={handleLogout} version={version}>
+      <GeofenceAlertsBanner />
+      {children}
+    </AdminShell>
   )
 }

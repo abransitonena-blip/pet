@@ -57,7 +57,7 @@ test('Admin reviews and confirms assignment before the transaction', async () =>
   mockWalkers.mockReturnValue({ walkers: [{ uid: 'walker-1', name: 'Paseador activo', status: 'active' }], loading: false, error: null })
   render(<CanonicalDispatchPanel />)
   expect(screen.getByText('La Quebrada')).toBeTruthy()
-  fireEvent.change(screen.getByLabelText('Paseador activo'), { target: { value: 'walker-1' } })
+  fireEvent.change(screen.getByLabelText('Paseador'), { target: { value: 'walker-1' } })
   fireEvent.click(screen.getByRole('button', { name: 'Revisar asignación' }))
   expect(screen.getByRole('dialog').textContent).toContain('Confirmar asignación')
   expect(mockAssign).not.toHaveBeenCalled()

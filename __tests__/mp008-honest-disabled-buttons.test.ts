@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 
 describe('MP-008: buttons never look active while silently failing on a disabled flag', () => {
   test('admin/reservas: the on-the-way and restore actions are gated, not just their toast', () => {
-    const source = readFileSync('src/app/admin/reservas/page.tsx', 'utf8')
+    const source = readFileSync('src/components/admin/LegacyReservationsView.tsx', 'utf8')
     expect(source).toContain("disabled={!FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED} className=\"w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-purple-500/10 text-purple-400")
     expect(source).toContain("title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? 'En camino' : 'Legacy de solo lectura'}")
     expect(source).toContain("title={FEATURE_FLAGS.LEGACY_RESERVATION_WRITES_ENABLED ? 'Restaurar' : 'Legacy de solo lectura'}")

@@ -1,5 +1,5 @@
 import type { WalkSessionStatus } from '@/lib/domainStates'
-import { formatShortDate } from '@/lib/customerSegments'
+export { whenLabel } from '@/lib/dateLabels'
 
 /**
  * El inicio de la familia, ordenado para actuar.
@@ -57,13 +57,4 @@ export function planFamilyHome<T extends HomeWalk>(walks: readonly T[]): FamilyH
 
 export function hasWalker(walk: HomeWalk): boolean {
   return WITH_WALKER.includes(walk.status) && Boolean(walk.assignedWalker)
-}
-
-/** "Hoy", "Mañana" o la fecha corta. `today` va en YYYY-MM-DD, hora local. */
-export function whenLabel(date: string, today: string): string {
-  if (date === today) return 'Hoy'
-  const [year, month, day] = today.split('-').map(Number)
-  const tomorrow = new Date(Date.UTC(year, month - 1, day + 1)).toISOString().slice(0, 10)
-  if (date === tomorrow) return 'Mañana'
-  return formatShortDate(date) || date
 }

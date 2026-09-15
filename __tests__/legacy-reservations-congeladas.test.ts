@@ -13,7 +13,7 @@ const read = (path: string) => readFileSync(path, 'utf8')
  */
 describe('escrituras al historial legacy', () => {
   test('cada escritura a reservations pasa por la bandera', () => {
-    for (const file of ['src/app/admin/reservas/page.tsx', 'src/app/cancelar/page.tsx']) {
+    for (const file of ['src/components/admin/LegacyReservationsView.tsx', 'src/app/cancelar/page.tsx']) {
       const source = read(file)
       // La guardia vive al principio de la función que contiene la escritura, y
       // esa función puede ser larga: `autoAssign` pone su guardia cien líneas

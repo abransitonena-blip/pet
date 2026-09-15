@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { CalendarClock, CheckCircle2, ShieldCheck, UserRoundCheck } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { CalendarClock, CheckCircle2, ChevronDown, UserRoundCheck } from 'lucide-react'
 import { Button, Card, ConfirmDialog, EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import {
   assignCanonicalWalkSession,
@@ -14,10 +14,23 @@ import {
   type CanonicalWalkSession,
 } from '@/lib/useCanonicalWalkSessions'
 import { notifySessionEvent } from '@/lib/push/pushClient'
+import { getReservationServiceDefinitions } from '@/lib/walkServices'
+import { dispatchUrgency, orderDispatchQueue, URGENCY_LABELS, type DispatchUrgency } from '@/lib/dispatchQueue'
+import { whenLabel } from '@/lib/dateLabels'
 
 type PendingAction =
   | { type: 'assign'; session: CanonicalWalkSession; walkerId: string }
   | { type: 'reprogram'; session: CanonicalWalkSession; scheduledDate: string; scheduledStart: string }
+
+const SERVICE_NAMES = new Map(getReservationServiceDefinitions().map((service) => [service.id, service.name]))
+
+// El color no es el único aviso: cada estado lleva su palabra.
+const URGENCY_STYLES: Record<DispatchUrgency, string> = {
+  overdue: 'bg-danger-500/10 text-red-700',
+  today: 'bg-warning/10 text-amber-800',
+  tomorrow: 'bg-primary/10 text-primary',
+  later: 'bg-ink/5 text-muted',
+}
 
 function shortId(value: string): string {
   return value.length <= 12 ? value : `${value.slice(0, 6)}…${value.slice(-4)}`
@@ -43,6 +56,11 @@ export default function CanonicalDispatchPanel() {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
+  // Cambiar el horario es la acción rara; asignar es la de todos los días.
+  const [reprogramOpen, setReprogramOpen] = useState<string | null>(null)
+  const today = new Date().toLocaleDateString('en-CA')
+  const ordered = useMemo(() => orderDispatchQueue(queue.sessions), [queue.sessions])
+  const overdue = ordered.filter((session) => dispatchUrgency(session.scheduledDate, today) === 'overdue').length
 
   const confirmAction = async () => {
     if (!pendingAction || saving) return
@@ -59,6 +77,7 @@ export default function CanonicalDispatchPanel() {
           scheduledStart: pendingAction.scheduledStart,
         })
         setMessage({ tone: 'success', text: 'Horario actualizado correctamente.' })
+        setReprogramOpen(null)
       }
       setPendingAction(null)
     } catch (error) {
@@ -80,13 +99,13 @@ export default function CanonicalDispatchPanel() {
     <section aria-labelledby="canonical-dispatch-title" className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Flujo canónico</p>
-          <h2 id="canonical-dispatch-title" className="mt-1 text-lg font-bold text-ink">Solicitudes por revisar</h2>
-          <p className="text-sm text-muted">Asigna únicamente por UID a un paseador con perfil activo.</p>
+          <h2 id="canonical-dispatch-title" className="text-lg font-bold text-ink">Solicitudes por asignar</h2>
+          <p className="text-sm text-muted">La que urge primero, por la fecha del paseo.</p>
         </div>
-        <span className="self-start rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-          {queue.sessions.length} pendientes
-        </span>
+        <p className="flex flex-wrap gap-2 self-start text-xs font-semibold">
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">{queue.sessions.length} por asignar</span>
+          {overdue > 0 && <span className="rounded-full bg-danger-500/10 px-3 py-1 text-red-700">{overdue} con fecha pasada</span>}
+        </p>
       </div>
 
       {message && (
@@ -103,40 +122,42 @@ export default function CanonicalDispatchPanel() {
           <EmptyState
             icon={<CheckCircle2 size={22} />}
             title="No hay solicitudes pendientes"
-            description="Las solicitudes enviadas por Familia PET aparecerán aquí sin mezclar reservas legacy."
+            description="Cuando una familia pida un paseo, aparecerá aquí para asignarlo."
           />
         </Card>
       ) : (
         <div className="space-y-3">
-          {queue.sessions.map((session) => {
+          {ordered.map((session) => {
             const selectedWalker = selectedWalkers[session.id] ?? ''
             const schedule = scheduleDrafts[session.id] ?? { date: session.scheduledDate, time: session.scheduledStart }
+            const urgency = dispatchUrgency(session.scheduledDate, today)
+            const reprogramming = reprogramOpen === session.id
             return (
               <Card key={session.id} className="p-4 shadow-none sm:p-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-warning/10 px-2.5 py-1 text-xs font-semibold text-amber-800">Solicitud enviada</span>
-                      <span className="font-mono text-xs text-muted">{shortId(session.id)}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${URGENCY_STYLES[urgency]}`}>{URGENCY_LABELS[urgency]}</span>
+                      <span className="font-mono text-xs text-muted" title={session.id}>{shortId(session.id)}</span>
                     </div>
                     <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
-                      <div><dt className="text-xs text-muted">Fecha</dt><dd className="mt-1 font-semibold text-ink">{session.scheduledDate}</dd></div>
+                      <div><dt className="text-xs text-muted">Fecha</dt><dd className="mt-1 font-semibold text-ink">{session.scheduledDate ? whenLabel(session.scheduledDate, today) : 'Sin fecha'}</dd></div>
                       <div><dt className="text-xs text-muted">Horario</dt><dd className="mt-1 font-semibold text-ink">{session.scheduledStart}</dd></div>
-                      <div><dt className="text-xs text-muted">Servicio</dt><dd className="mt-1 truncate font-semibold text-ink">{session.serviceId}</dd></div>
+                      <div><dt className="text-xs text-muted">Servicio</dt><dd className="mt-1 truncate font-semibold text-ink">{SERVICE_NAMES.get(session.serviceId) || session.serviceId}</dd></div>
                       <div><dt className="text-xs text-muted">Perros</dt><dd className="mt-1 font-semibold text-ink">{session.dogIds.length}</dd></div>
                       <div><dt className="text-xs text-muted">Zona</dt><dd className="mt-1 truncate font-semibold text-ink">{addressZones.zonesByAddress[session.addressId] || 'Consultando…'}</dd></div>
                     </dl>
                   </div>
 
                   <div className="w-full space-y-3 lg:w-80">
-                    <label className="block text-xs font-semibold text-ink" htmlFor={`walker-${session.id}`}>Paseador activo</label>
+                    <label className="block text-xs font-semibold text-ink" htmlFor={`walker-${session.id}`}>Paseador</label>
                     <select
                       id={`walker-${session.id}`}
                       value={selectedWalker}
                       onChange={(event) => setSelectedWalkers((current) => ({ ...current, [session.id]: event.target.value }))}
                       className="input-field min-h-11 w-full"
                     >
-                      <option value="">Selecciona por UID</option>
+                      <option value="">Elige un paseador activo</option>
                       {walkerOptions.walkers.map((walker) => <option key={walker.uid} value={walker.uid}>{walker.name}</option>)}
                     </select>
                     <Button
@@ -150,7 +171,17 @@ export default function CanonicalDispatchPanel() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-[1fr_1fr_auto]">
+                <button
+                  type="button"
+                  onClick={() => setReprogramOpen(reprogramming ? null : session.id)}
+                  aria-expanded={reprogramming}
+                  aria-controls={`reprogram-${session.id}`}
+                  className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-semibold text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <CalendarClock size={16} aria-hidden="true" /> Cambiar fecha u hora
+                  <ChevronDown size={16} aria-hidden="true" className={`transition-transform motion-reduce:transition-none ${reprogramming ? 'rotate-180' : ''}`} />
+                </button>
+                <div id={`reprogram-${session.id}`} hidden={!reprogramming} className="mt-2 grid gap-3 border-t border-border pt-4 sm:grid-cols-[1fr_1fr_auto]">
                   <div>
                     <label htmlFor={`date-${session.id}`} className="text-xs font-semibold text-ink">Nueva fecha</label>
                     <input
@@ -189,10 +220,9 @@ export default function CanonicalDispatchPanel() {
         </div>
       )}
 
-      <div className="flex items-start gap-2 rounded-xl bg-ink/5 px-4 py-3 text-xs text-muted">
-        <ShieldCheck size={16} className="mt-0.5 shrink-0 text-primary" />
-        <p>La transacción vuelve a comprobar que la sesión siga solicitada y que el perfil elegido continúe activo. Un segundo intento concurrente no sobrescribe la primera asignación.</p>
-      </div>
+      <p className="text-xs text-muted">
+        Al confirmar se vuelve a comprobar que la solicitud siga sin asignar y que el paseador siga activo. Si alguien más la asignó primero, se te avisa y no se sobrescribe.
+      </p>
 
       <ConfirmDialog
         open={Boolean(pendingAction)}

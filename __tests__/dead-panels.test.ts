@@ -27,7 +27,7 @@ describe('paneles viejos o sin función', () => {
     // Solo el historial legacy de admin y la cancelación por teléfono, ambos apagados.
     expect(readers.sort()).toEqual([
       'src/app/cancelar/page.tsx',
-      'src/app/admin/reservas/page.tsx',
+      'src/components/admin/LegacyReservationsView.tsx',
       'src/context/ReservationsContext.tsx',
     ].sort())
   })
