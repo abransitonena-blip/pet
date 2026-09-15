@@ -1,6 +1,6 @@
 # Plan de rediseño de PET Ap
 
-Estado al 2026-09-14. Cada fase se cierra por completo antes de abrir la
+Estado al 2026-09-15. Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
 Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
@@ -20,30 +20,54 @@ Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
 | 6 | Permisos | `dogs`/`addresses` exigen límite; notificaciones sólo marcan leído. Huecos 5→3 | emulador |
 | 7 | Inicio de familia | Tarjetas `div onClick` → botones; tarjeta muerta de lealtad fuera | `accesibilidad-base` |
 | 8 | Controles activables | Los 25 `onClick` restantes resultaron todos legítimos; la prueba reconoce los tres patrones válidos | `controles-interactivos` |
+| 9 | Densidad de los cuatro paneles de operación | `/walker` abre en el paseo que toca; `/familia` en su próximo paseo; Solicitudes en la que urge; Resumen en lo que falta asignar. Lo demás, a un toque. De paso, seis defectos de datos (lista abajo) | `walker-jornada`, `family-home`, `admin-solicitudes`, `admin-resumen`, emulador |
+
+**Los seis defectos que encontró la fase 9**, todos con prueba:
+1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
+2. "Reportes pendientes de cierre" listaba completados aunque su reporte ya se hubiera enviado.
+3. "Solicitudes actuales" de la familia mostraba los cinco paseos más antiguos de la cuenta.
+4. Pendientes del Resumen: sólo contaba solicitudes con fecha hasta hoy; las de mañana en adelante no aparecían.
+5. "Hoy" del Resumen se calculaba en UTC: en México, pasadas las 18:00, ya era mañana.
+6. La tarjeta de trabajo del paseador decía "tus 100 paseos más recientes"; eran los más antiguos.
+
+Y dos de peso: el layout de admin escuchaba `reservations` en cada panel, y el
+Resumen leía 100 perfiles de familia para un conteo que no mostraba.
 
 ---
 
 ## Abiertas, en orden
 
-### 9. Densidad panel por panel
-Con la letra más grande ya no cabe lo mismo. Panel por panel: decidir qué es lo
-importante y esconder el resto detrás de un toque, como ya se hizo en el perfil
-del perro y en Configuración.
+### 10. Consultas que traen lo más viejo
+La fase 9 encontró el mismo defecto tres veces: una consulta en orden de fecha
+**ascendente** con tope de 100 devuelve los 100 paseos **más antiguos**. Con más
+de cien -- una familia con paseo diario llega en tres meses --, lo nuevo
+desaparece. Ya corregido donde bastaba poner piso a la fecha (jornada del
+paseador, inicio de familia, Resumen). Falta donde se necesita lo más reciente:
 
-Orden por uso: `/walker` (se usa en la calle, en un teléfono) → `/familia` →
-`/admin/reservas` (662 líneas, el más denso) → el resto.
+- `useCustomerWalkSessions` → Mensajes (busca el paseo abierto: con más de cien,
+  no lo encuentra), Fotos y reportes, Historial, Notificaciones, ficha del perro.
+- `useWalkerSessions` sin `since` → Historial del paseador, su chat, su tarjeta
+  de trabajo (que ya dice la verdad sobre su ventana, pero no ve lo nuevo).
 
-Cierra cuando: cada panel abre mostrando lo que se necesita para actuar, y lo
-demás está a un toque.
+La corrección limpia es orden descendente, y eso pide índices
+(`walkerId`, `scheduledDate` DESC) y (`customerId`, `scheduledDate` DESC).
+Antes de tocar `firestore.indexes.json`, alguien con acceso corre
+`firebase firestore:indexes --project pet-1cb0b` para ver qué hay desplegado:
+desplegar el archivo puede ofrecer borrar índices creados desde la consola.
+**REQUIERE DESPLEGAR ÍNDICES**, y esperar a que terminen de construirse antes
+de desplegar el código que los usa.
 
-### 10. Peso de verdad: bajar de 200 kB
+Cierra cuando: ninguna pantalla que muestra "lo reciente" lea en ascendente con
+tope, y una prueba lo vigile.
+
+### 11. Peso de verdad: bajar de 250 kB
 Lo que queda pesado es el SDK de Firestore, que los paneles sí usan para escuchar
 cambios en vivo. Pide separarlo por ruta y cargar las pantallas que no escuchan
 nada sin él.
 
 Cierra cuando: ninguna ruta pase de 250 kB de primera carga.
 
-### 11. Las tres decisiones de arquitectura
+### 12. Las tres decisiones de arquitectura
 No son descuidos; son decisiones del dueño, y cada una es trabajo real:
 - **PET Ahora** se despacha desde el navegador → mover a ruta de servidor.
 - **Bitácora administrativa** se escribe desde el navegador → un registro que un
@@ -53,14 +77,21 @@ No son descuidos; son decisiones del dueño, y cada una es trabajo real:
 
 Cierra cuando: la suite del emulador no reporte ningún permiso concedido de más.
 
-### 12. Las 11 pruebas de reglas desactualizadas
+### 13. Las 11 pruebas de reglas desactualizadas
 Once casos de `p04-firestore-rules` esperan permisos que las reglas ya no dan.
 Cada uno hay que entenderlo antes de tocarlo: puede ser prueba vieja o regla
 demasiado apretada.
 
 Cierra cuando: la suite del emulador pase entera.
 
-### 13. Animaciones
+### 14. Densidad del resto de los paneles
+La fase 9 cubrió los cuatro con los que se opera a diario. Quedan los demás, en
+este orden por tamaño y uso: Mis perros (789 líneas), Mis direcciones (613),
+Zonas (584), Familias (496), Perros de admin (409), Rutas (384), perfil del
+paseador (362). Mismo criterio y mismo método: primero lo que se necesita para
+actuar, y cada panel con su prueba.
+
+### 15. Animaciones
 Desbloqueada por la fase 3: ahora se puede animar sin dañar a quien pidió no
 recibir movimiento. Va al final a propósito -- animar una interfaz que todavía se
 está reordenando es trabajo que se tira.
@@ -77,6 +108,12 @@ está reordenando es trabajo que se tira.
   parsear. Los detectores buenos quedaron como pruebas.
 - **La prueba encuentra más que la revisión.** Dos veces destapó defectos que no
   estaba buscando.
+- **Un tope sin orden correcto miente en silencio.** Tres consultas
+  ascendentes con `limit(100)` enseñaban lo más viejo como si fuera lo actual,
+  y una prueba exigía la frase falsa ("tus 100 paseos más recientes"). No se ve
+  con datos de prueba chicos: sólo aparece cuando alguien usa la app en serio.
+- **Una cifra que siempre dice "—" no es una cifra.** Ocupaba el mejor lugar del
+  Resumen, junto a una lectura de 100 perfiles que nadie mostraba.
 - **Un clasificador incompleto acusa a código sano.** Los "25 controles
   pendientes" de la fase 8 eran cero: el detector sólo excusaba `role="button"`,
   y no reconocía los fondos de modal, los paneles que frenan la propagación ni
