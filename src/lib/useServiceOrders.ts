@@ -88,11 +88,19 @@ export function useServiceOrders(opts?: { customerId?: string; status?: string; 
   return { orders, loading, error }
 }
 
-export function useWalkerSessions(walkerId: string, _walkerName = '') {
+/**
+ * Los paseos de un paseador, en orden de fecha y con tope de 100.
+ *
+ * El orden ascendente con tope devuelve los 100 MÁS ANTIGUOS: sin `since`, un
+ * paseador con más de 100 paseos deja de ver los de hoy. `since` (YYYY-MM-DD)
+ * recorta la ventana por abajo y usa el mismo índice (walkerId, scheduledDate).
+ */
+export function useWalkerSessions(walkerId: string, options: { since?: string } = {}) {
   const [sessions, setSessions] = useState<(WalkSession & { orderId: string })[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<WalkerReadError | null>(null)
   const [revision, setRevision] = useState(0)
+  const { since } = options
 
   useEffect(() => {
     if (!walkerId) {
@@ -108,6 +116,7 @@ export function useWalkerSessions(walkerId: string, _walkerName = '') {
     const q = query(
       collection(db, 'walkSessions'),
       where('walkerId', '==', walkerId),
+      ...(since ? [where('scheduledDate', '>=', since)] : []),
       orderBy('scheduledDate', 'asc'),
       fsLimit(100),
     )
@@ -130,7 +139,7 @@ export function useWalkerSessions(walkerId: string, _walkerName = '') {
     })
 
     return unsub
-  }, [walkerId, revision])
+  }, [walkerId, since, revision])
 
   return { sessions, loading, error, retry: () => setRevision((value) => value + 1) }
 }

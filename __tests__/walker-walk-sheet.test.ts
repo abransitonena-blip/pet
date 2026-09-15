@@ -40,7 +40,7 @@ describe('ficha del paseo para el paseador', () => {
 
   test('el panel del paseador muestra su carga de la semana y su horario', () => {
     const dashboard = read('src/app/walker/page.tsx')
-    expect(dashboard).toContain('Últimos 7 días')
+    expect(dashboard).toContain('últimos 7 días')
     expect(dashboard).toContain('const weekStart =')
     expect(dashboard).toContain('Tu horario registrado')
   })

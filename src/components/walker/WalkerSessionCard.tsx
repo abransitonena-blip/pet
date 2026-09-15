@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, CalendarDays, Check, ClipboardList, Clock, Dog, FileText, MapPin, Stethoscope } from 'lucide-react'
+import { AlertTriangle, CalendarDays, Check, ChevronDown, ClipboardList, Clock, Dog, FileText, MapPin, Stethoscope } from 'lucide-react'
 import { Button, Card, StatusBadge } from '@/components/ui'
 import WalkSheet from '@/components/walker/WalkSheet'
 import WalkPhotoButton from '@/components/walker/WalkPhotoButton'
@@ -22,10 +22,15 @@ interface WalkerSessionCardProps {
   onAdvance?: (session: WalkSession) => void
   updating?: boolean
   compact?: boolean
+  /** Empieza compacta y se abre con un toque: para los paseos que no tocan ahora. */
+  collapsible?: boolean
 }
 
-export default function WalkerSessionCard({ session, onAdvance, updating = false, compact = false }: WalkerSessionCardProps) {
+export default function WalkerSessionCard({ session, onAdvance, updating = false, compact: alwaysCompact = false, collapsible = false }: WalkerSessionCardProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const compact = alwaysCompact || (collapsible && !expanded)
+  const detailsId = `walk-details-${session.id}`
   const status = walkerSessionStatus(session)
   const transition = getWalkerTransition(status)
   const date = walkerSessionDate(session)
@@ -35,8 +40,24 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
     ? `${session.arrivalWindowStart}${session.arrivalWindowEnd ? `–${session.arrivalWindowEnd}` : ''}`
     : ''
 
+  // Mientras el paseo está en curso, completar va al final: la bitácora y las
+  // fotos se usan muchas veces y no deben quedar debajo del botón que lo cierra.
+  const advanceButton = onAdvance && transition ? (
+    <div className="mt-4 flex justify-end">
+      <Button
+        size="sm"
+        className="h-11 w-full text-white sm:w-auto"
+        onClick={() => onAdvance(session)}
+        isLoading={updating}
+        aria-label={`${transition.label} para ${session.dogName || 'el paseo asignado'}`}
+      >
+        {transition.label}
+      </Button>
+    </div>
+  ) : null
+
   return (
-    <Card className={`p-4 shadow-none hover:shadow-sm ${compact ? 'sm:p-4' : 'sm:p-5'}`}>
+    <Card id={detailsId} className={`p-4 shadow-none hover:shadow-sm ${compact ? 'sm:p-4' : 'sm:p-5'}`}>
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
           <Dog size={18} />
@@ -68,38 +89,21 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
                     <span className={`mx-auto grid h-7 w-7 place-items-center rounded-full border text-2xs font-bold ${reached ? 'border-primary bg-primary text-white' : 'border-ink/15 bg-surface text-muted'}`}>
                       {index < timelinePosition ? <Check size={12} aria-hidden="true" /> : index + 1}
                     </span>
-                    <span className={`mt-1 hidden truncate text-2xs sm:block ${current ? 'font-semibold text-ink' : 'text-muted'}`}>{item.label}</span>
+                    {/* En teléfono la etiqueta sólo se oculta a la vista: el lector
+                        de pantalla la sigue leyendo. */}
+                    <span className={`sr-only sm:not-sr-only sm:mt-1 sm:block sm:truncate sm:text-2xs ${current ? 'font-semibold text-ink' : 'text-muted'}`}>{item.label}</span>
                   </li>
                 )
               })}
             </ol>
           )}
-
-          {onAdvance && transition && (
-            <div className="mt-4 flex justify-end">
-              <Button
-                size="sm"
-                className="h-11 w-full text-white sm:w-auto"
-                onClick={() => onAdvance(session)}
-                isLoading={updating}
-                aria-label={`${transition.label} para ${session.dogName || 'el paseo asignado'}`}
-              >
-                {transition.label}
-              </Button>
-            </div>
-          )}
-          {!compact && (session.startLocation || session.endLocation) && (
-            <dl className="mt-3 grid gap-1 rounded-xl bg-ink/[0.03] px-3 py-2 text-xs sm:grid-cols-2">
-              {([['startLocation', 'Inicio'], ['endLocation', 'Fin']] as const).map(([field, heading]) => (
-                <div key={field} className="flex items-center gap-1.5">
-                  <MapPin size={12} className="shrink-0 text-muted" aria-hidden="true" />
-                  <dt className="text-muted">{heading}:</dt>
-                  <dd className="text-ink">{session[field] ? 'ubicación registrada' : 'sin registrar'}</dd>
-                </div>
-              ))}
-            </dl>
+          {!compact && timelinePosition >= 0 && (
+            <p className="mt-1 text-xs text-muted sm:hidden" aria-hidden="true">
+              Paso {timelinePosition + 1} de {WALKER_TIMELINE.length}: <span className="font-semibold text-ink">{WALKER_TIMELINE[timelinePosition].label}</span>
+            </p>
           )}
 
+          {status !== 'in_progress' && advanceButton}
           {!compact && (
             <div className="mt-3 space-y-2">
               <button
@@ -111,6 +115,17 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
                 <Stethoscope size={15} aria-hidden="true" />
                 {sheetOpen ? 'Ocultar la ficha del paseo' : 'Ver la ficha del paseo'}
               </button>
+              {sheetOpen && (session.startLocation || session.endLocation) && (
+                <dl className="grid gap-1 rounded-xl bg-ink/[0.03] px-3 py-2 text-xs sm:grid-cols-2">
+                  {([['startLocation', 'Inicio'], ['endLocation', 'Fin']] as const).map(([field, heading]) => (
+                    <div key={field} className="flex items-center gap-1.5">
+                      <MapPin size={12} className="shrink-0 text-muted" aria-hidden="true" />
+                      <dt className="text-muted">{heading}:</dt>
+                      <dd className="text-ink">{session[field] ? 'ubicación registrada' : 'sin registrar'}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
               {sheetOpen && <WalkSheet sessionId={session.id} today={date} />}
             </div>
           )}
@@ -136,6 +151,8 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
             </div>
           )}
 
+          {status === 'in_progress' && advanceButton}
+
           {status === 'completed' && (
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <Link href={`/walker/reportes/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary/10 px-4 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto">
@@ -147,6 +164,18 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
                 Ticket interno
               </Link>
             </div>
+          )}
+          {collapsible && !alwaysCompact && (
+            <button
+              type="button"
+              onClick={() => setExpanded((open) => !open)}
+              aria-expanded={expanded}
+              aria-controls={detailsId}
+              className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {expanded ? 'Menos detalles' : 'Más detalles'}
+              <ChevronDown size={16} aria-hidden="true" className={`transition-transform motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`} />
+            </button>
           )}
         </div>
       </div>

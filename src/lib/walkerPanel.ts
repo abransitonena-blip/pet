@@ -79,3 +79,59 @@ export function sortWalkerSessions(sessions: WalkSession[], direction: 'asc' | '
     return left.localeCompare(right) * multiplier
   })
 }
+
+/** Estados de un paseo de hoy que todavía piden algo al paseador. */
+const OPEN_TODAY: ReadonlySet<SessionStatus> = new Set<SessionStatus>(['assigned', 'confirmed', 'on_the_way', 'arrived'])
+/** Lo que ya está en marcha va antes que lo que sólo está agendado. */
+const UNDERWAY: readonly SessionStatus[] = ['in_progress', 'arrived', 'on_the_way']
+const CLOSED: ReadonlySet<SessionStatus> = new Set<SessionStatus>(['completed', 'cancelled', 'no_show'])
+
+export interface WalkerDay {
+  /** El paseo que toca atender ahora, o null si hoy no queda nada abierto. */
+  focus: WalkSession | null
+  /** Los demás paseos de hoy, en orden de hora. */
+  restOfToday: WalkSession[]
+  pendingToday: number
+  activeToday: number
+  completedToday: number
+  /** Los siguientes tres paseos después de hoy. */
+  upcoming: WalkSession[]
+  /** Completados desde `weekStart` y antes de hoy, el más reciente primero. */
+  recentCompleted: WalkSession[]
+  /** Paseos de los últimos siete días sin contar cancelados ni ausencias. */
+  lastWeekCount: number
+}
+
+/**
+ * Ordena la jornada para una pantalla de teléfono: primero lo que hay que
+ * hacer, luego lo demás. Espera sesiones ya ordenadas por fecha y hora.
+ */
+export function planWalkerDay(sorted: readonly WalkSession[], today: string, weekStart: string): WalkerDay {
+  const todaySessions = sorted.filter((session) => walkerSessionDate(session) === today)
+  const underway = UNDERWAY
+    .map((status) => todaySessions.find((session) => walkerSessionStatus(session) === status))
+    .find(Boolean)
+  const focus = underway ?? todaySessions.find((session) => OPEN_TODAY.has(walkerSessionStatus(session))) ?? null
+
+  return {
+    focus,
+    restOfToday: todaySessions.filter((session) => session !== focus),
+    pendingToday: todaySessions.filter((session) => OPEN_TODAY.has(walkerSessionStatus(session))).length,
+    activeToday: todaySessions.filter((session) => walkerSessionStatus(session) === 'in_progress').length,
+    completedToday: todaySessions.filter((session) => walkerSessionStatus(session) === 'completed').length,
+    upcoming: sorted
+      .filter((session) => walkerSessionDate(session) > today && !CLOSED.has(walkerSessionStatus(session)))
+      .slice(0, 3),
+    recentCompleted: sorted
+      .filter((session) => {
+        const date = walkerSessionDate(session)
+        return date >= weekStart && date < today && walkerSessionStatus(session) === 'completed'
+      })
+      .reverse(),
+    lastWeekCount: sorted.filter((session) => {
+      const date = walkerSessionDate(session)
+      const status = walkerSessionStatus(session)
+      return date >= weekStart && date <= today && status !== 'cancelled' && status !== 'no_show'
+    }).length,
+  }
+}

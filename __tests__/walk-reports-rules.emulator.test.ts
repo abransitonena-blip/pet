@@ -2,7 +2,7 @@
 
 import { readFileSync } from 'node:fs'
 import { assertFails, assertSucceeds, initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing'
-import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc, Timestamp, updateDoc, type Firestore } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, Timestamp, updateDoc, where, type Firestore } from 'firebase/firestore'
 
 const PROJECT_ID = 'demo-pet-walk-reports'
 const NOW = Timestamp.fromMillis(1_700_000_000_000)
@@ -156,5 +156,24 @@ describe('canonical walk report rules', () => {
     })
     await assertFails(getDoc(doc(dbFor('customer-1'), 'walkReports', 'session-completed')))
     await assertFails(getDoc(doc(dbFor('customer-1'), 'walkReports', 'missing-session')))
+  })
+})
+
+describe('la jornada del paseador pregunta qué reportes ya salieron', () => {
+  // Es la consulta de useSubmittedReports: sus propios reportes, por paseo.
+  const lookup = (db: Firestore, walkerId: string) => getDocs(query(
+    collection(db, 'walkReports'),
+    where('walkerId', '==', walkerId),
+    where('walkSessionId', 'in', ['session-completed', 'session-active']),
+    limit(10),
+  ))
+
+  test('el paseador asignado puede hacerla; otro paseador o una familia no', async () => {
+    await assertSucceeds(setDoc(doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-completed'), report('session-completed', 'submitted')))
+    const own = await assertSucceeds(lookup(dbFor('walker-1', 'walker'), 'walker-1'))
+    expect(own.docs.map((item) => item.data().status)).toEqual(['submitted'])
+    await assertFails(lookup(dbFor('walker-2', 'walker'), 'walker-1'))
+    await assertFails(lookup(dbFor('walker-suspended', 'walker'), 'walker-suspended'))
+    await assertFails(lookup(dbFor('customer-1'), 'walker-1'))
   })
 })

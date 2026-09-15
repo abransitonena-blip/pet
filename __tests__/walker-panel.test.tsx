@@ -73,7 +73,9 @@ describe('Walker panel — consultas, estado y listeners', () => {
     const history = readFileSync('src/app/walker/historial/page.tsx', 'utf8')
     expect(dashboard).not.toContain("collection(db, 'reservations')")
     expect(history).not.toContain("collection(db, 'reservations')")
-    expect(dashboard).toContain('useWalkerSessions(uid)')
+    // La jornada recorta la consulta a su semana: sin piso, el orden ascendente
+    // con tope devolvía los 100 paseos más antiguos y dejaba fuera los de hoy.
+    expect(dashboard).toContain('useWalkerSessions(uid, { since: weekStart })')
     expect(history).toContain('useWalkerSessions(uid)')
   })
 
@@ -156,7 +158,8 @@ describe('Walker panel — asignación y transiciones', () => {
     expect(screen.getByText('Luna')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Confirmar paseo para Luna/i })).toHaveClass('h-11', 'text-white')
     expect(screen.getByRole('list', { name: /Progreso del paseo/i })).toBeInTheDocument()
-    expect(screen.getAllByText('Asignado')).toHaveLength(2)
+    // La insignia, la etiqueta del paso y la línea "Paso 1 de 6" que se ve en teléfono.
+    expect(screen.getAllByText('Asignado')).toHaveLength(3)
     expect(screen.getByText('Completado')).toBeInTheDocument()
     expect(screen.queryByText(/cliente satisfecho|calificación/i)).not.toBeInTheDocument()
   })
@@ -174,11 +177,13 @@ describe('Walker panel — asignación y transiciones', () => {
     expect(history).toContain("value: 'completed'")
   })
 
-  it('mantiene visibles los paseos completados anteriores para crear o consultar su reporte', () => {
+  it('lista como reportes por enviar sólo los completados cuyo reporte no salió', () => {
     const dashboard = readFileSync('src/app/walker/page.tsx', 'utf8')
-    expect(dashboard).toContain('recentCompleted')
-    expect(dashboard).toContain('Reportes pendientes de cierre')
-    expect(dashboard).toContain('<WalkerSessionCard key={session.id} session={session} compact />')
+    expect(dashboard).toContain('useSubmittedReports(uid, day.recentCompleted.map((session) => session.id))')
+    expect(dashboard).toContain("reports.state === 'ready'")
+    expect(dashboard).toContain('!reports.submitted.has(session.id)')
+    expect(dashboard).toContain('Reportes por enviar')
+    expect(dashboard).not.toContain('Reportes pendientes de cierre')
   })
 })
 
