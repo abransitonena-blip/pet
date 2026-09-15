@@ -153,25 +153,27 @@ describe('reducir movimiento', () => {
  * responden a Escape.
  */
 describe('controles de verdad', () => {
-  test('las tarjetas del inicio de familia son botones', () => {
+  test('el inicio de familia actúa con enlaces y botones, y todos traen foco visible', () => {
+    // Las tarjetas de cifras eran div con onClick; luego botones; en la fase 9
+    // se fueron: el inicio abre con el próximo paseo. Lo que queda son enlaces.
     const page = read('src/app/familia/page.tsx')
-    expect(page).toContain('<motion.button')
-    expect(page).not.toContain('cursor-pointer transition-all hover:scale-[1.02]\n          onClick')
-  })
-
-  test('y traen foco visible, que un div nunca tuvo', () => {
-    const page = read('src/app/familia/page.tsx')
-    const buttons = page.split('<motion.button').slice(1)
-    expect(buttons.length).toBeGreaterThanOrEqual(2)
-    for (const button of buttons) {
-      expect(button.slice(0, 600)).toContain('focus-visible:ring')
+    expect(page).not.toMatch(/<div[^>]*onClick/)
+    expect(page).toContain("const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'")
+    const controls = page.split(/<(?:Link|button)\b/).slice(1)
+    expect(controls.length).toBeGreaterThanOrEqual(5)
+    for (const control of controls) {
+      // El fin de la etiqueta de apertura: un `>` que no sea parte de `=>`.
+      expect(control.slice(0, control.search(/[^=]>/) + 1)).toMatch(/FOCUS_RING|focus-visible:ring/)
     }
   })
 
   test('una tarjeta que lleva a una función apagada no se ofrece', () => {
     // Decía "Consulta manual" en una fila de cifras, y llevaba a una pantalla
     // que el menú ya escondía.
-    expect(read('src/app/familia/page.tsx')).toContain('FEATURE_FLAGS.LOYALTY_REDEMPTION_ENABLED &&')
-    expect(read('src/app/familia/page.tsx')).not.toContain('Consulta manual')
+    const page = read('src/app/familia/page.tsx')
+    if (page.includes('/familia/lealtad')) expect(page).toContain('FEATURE_FLAGS.LOYALTY_REDEMPTION_ENABLED &&')
+    expect(page).not.toContain('Consulta manual')
+    // Lo mismo para PET Ahora: si está apagado, el inicio no lo ofrece.
+    expect(page).toContain('petAhoraAvailable && (')
   })
 })

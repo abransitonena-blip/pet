@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import CanonicalDispatchPanel from '@/components/admin/CanonicalDispatchPanel'
-import CanonicalFamilyRequests from '@/components/family/CanonicalFamilyRequests'
+import { planFamilyHome } from '@/lib/familyHome'
+import { STATUS_LABELS } from '@/lib/sessionMachine'
 
 const mockRequested = jest.fn()
 const mockWalkers = jest.fn()
@@ -64,14 +65,15 @@ test('Admin reviews and confirms assignment before the transaction', async () =>
   await waitFor(() => expect(mockAssign).toHaveBeenCalledWith(session.id, 'walker-1'))
 })
 
-test('Familia distinguishes empty canonical state from an existing request', () => {
-  const { rerender } = render(<CanonicalFamilyRequests customerId="customer-1" />)
-  expect(screen.getByText('Aún no tienes solicitudes canónicas')).toBeTruthy()
-
-  mockCustomer.mockReturnValue({ sessions: [session], loading: false, error: null, retry: jest.fn() })
-  rerender(<CanonicalFamilyRequests customerId="customer-1" />)
-  expect(screen.getByText('walk-30')).toBeTruthy()
-  expect(screen.getByText('Solicitado')).toBeTruthy()
+test('Familia: una solicitud nueva es su próximo paseo y se ve como Solicitado', () => {
+  // El inicio ya no tiene su propia lista de solicitudes: leía en orden
+  // ascendente con tope y mostraba los cinco paseos más antiguos de la cuenta.
+  expect(planFamilyHome([]).next).toBeNull()
+  const requested = { id: session.id, status: 'requested' as const, date: '2026-09-20', time: '10:00', assignedWalker: '' }
+  const home = planFamilyHome([requested])
+  expect(home.next).toBe(requested)
+  expect(STATUS_LABELS[home.next!.status]).toBe('Solicitado')
+  expect(readFileSync('src/app/familia/page.tsx', 'utf8')).toContain('No tienes paseos por delante')
 })
 
 test('frontend uses bounded canonical queries and does not submit payment data', () => {
