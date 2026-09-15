@@ -15,9 +15,10 @@ import { activeDays, summarizeWalkerWork } from '@/lib/walkerStats'
  * puntajes ni medallas: una "puntuación" con fórmula propia se ve bonita y no le
  * dice a nadie qué hacer distinto mañana.
  *
- * Sale de la misma ventana que ya carga el panel, y la tarjeta lo dice: son los
- * 100 paseos más recientes, no toda su historia. Decir "23 paseos" cuando son
- * "23 de los últimos 100" empieza a mentir en cuanto alguien pase de cien.
+ * Sale de la misma consulta que ya carga el panel: tope de 100 en orden de fecha
+ * ASCENDENTE. Esta tarjeta los llamaba "los más recientes", y era al revés:
+ * con más de cien, son los cien más antiguos. Ahora dice lo que es en cada caso;
+ * contar los más nuevos pide un índice descendente (ver PLAN.md, fase 10).
  */
 
 // El mismo tope que usa la consulta del panel.
@@ -58,7 +59,9 @@ export default function WalkerWorkCard({ uid }: { uid: string }) {
         <h2 className="font-bold text-ink">Mi trabajo</h2>
       </div>
       <p className="mb-4 text-xs text-muted">
-        De tus {WINDOW} paseos más recientes. No es toda tu historia: es la ventana que carga tu panel.
+        {sessions.length < WINDOW
+          ? 'De todos tus paseos registrados.'
+          : `De tus primeros ${WINDOW} paseos registrados. No es toda tu historia: los más nuevos todavía no entran en esta cuenta.`}
       </p>
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">

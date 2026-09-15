@@ -77,9 +77,15 @@ const read = (path: string) => readFileSync(path, 'utf8')
 describe('la tarjeta de trabajo', () => {
   const card = read('src/components/walker/WalkerWorkCard.tsx')
 
-  test('dice de dónde salen los números', () => {
-    expect(card).toContain('paseos más recientes')
+  test('dice de dónde salen los números, y lo dice bien', () => {
+    // La consulta es ascendente con tope: con más de cien paseos, la ventana son
+    // los cien MÁS ANTIGUOS. La tarjeta decía "más recientes" y esta prueba lo
+    // exigía.
+    expect(card).not.toContain('paseos más recientes')
+    expect(card).toContain('sessions.length < WINDOW')
+    expect(card).toContain('De todos tus paseos registrados.')
     expect(card).toContain('No es toda tu historia')
+    expect(read('src/lib/useServiceOrders.ts')).toContain("orderBy('scheduledDate', 'asc'),\n      fsLimit(100)")
   })
 
   test('lo que muestra son paseos contados, no un puntaje', () => {

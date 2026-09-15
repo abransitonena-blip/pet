@@ -1,249 +1,136 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
-import { collection, query, getDocs, limit } from 'firebase/firestore'
-import { db } from '@/firebase/config'
-import { useCanonicalReservations, type CanonicalReservationView } from '@/lib/useCanonicalReservations'
-import type { WalkSessionStatus } from '@/lib/domainStates'
-import { motion } from 'framer-motion'
-import { CalendarDays,
-  Dog, Clock, PersonStanding,
-  ChartLine, Tag, Settings, UserPlus,
-  DollarSign } from 'lucide-react'
-import StatCard from '@/components/ui/StatCard'
+import { ArrowRight, CalendarDays, CheckCircle2, Dog } from 'lucide-react'
+import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
+import { useRequestedWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import AdminWalkerStatus from '@/components/AdminWalkerStatus'
 import DataCard from '@/components/ui/DataCard'
-import StatusBadge from '@/components/ui/StatusBadge'
 import EmptyState from '@/components/ui/EmptyState'
 import LoadingState from '@/components/ui/LoadingState'
-import Button from '@/components/ui/Button'
-import { confirmWhatsAppShare } from '@/lib/utils'
+import { dispatchUrgency, orderDispatchQueue, URGENCY_LABELS, type DispatchUrgency } from '@/lib/dispatchQueue'
+import { whenLabel } from '@/lib/dateLabels'
+import { monthStart, summarizeDay } from '@/lib/adminSummary'
+import { getReservationServiceDefinitions } from '@/lib/walkServices'
 
-/** Awaiting a dispatch decision. */
-const PENDING_STATUSES: WalkSessionStatus[] = ['requested', 'pending_assignment']
-/** Anything still in flight today — not finished, cancelled or missed. */
-const ACTIVE_STATUSES: WalkSessionStatus[] = [
-  'requested', 'pending_assignment', 'assigned', 'confirmed', 'on_the_way', 'arrived', 'in_progress',
-]
+const SERVICE_NAMES = new Map(getReservationServiceDefinitions().map((service) => [service.id, service.name]))
 
-interface Stats {
-  todayReservations: number
-  pendingReservations: number
-  monthReservations: number
-  totalRevenue: number
-  totalClients: number
-  completedToday: number
+const URGENCY_STYLES: Record<DispatchUrgency, string> = {
+  overdue: 'bg-danger-500/10 text-red-700',
+  today: 'bg-warning/10 text-amber-800',
+  tomorrow: 'bg-primary/10 text-primary',
+  later: 'bg-ink/5 text-muted',
 }
 
+/**
+ * El Resumen: lo primero que abre quien opera. Arriba va lo que pide una
+ * decisión -- las solicitudes sin paseador --, luego el día y el equipo.
+ *
+ * Lo que se fue, y por qué:
+ * - "Pendientes" y "Próximos paseos" salían de paseos con fecha de este mes
+ *   HASTA HOY, así que una solicitud para mañana nunca aparecía. Ahora salen de
+ *   la misma cola que Solicitudes.
+ * - "Ingresos del mes" mostraba siempre "—": los paseos no traen precio.
+ * - Se leían hasta 100 perfiles de familia para un conteo que no se mostraba.
+ * - Los accesos rápidos repetían el menú y se saltaban lo que Configuración →
+ *   Paneles oculta, también a un supervisor.
+ */
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({
-    todayReservations: 0,
-    monthReservations: 0,
-    pendingReservations: 0,
-    totalRevenue: 0,
-    totalClients: 0,
-    completedToday: 0,
-  })
-  const [upcomingReservations, setUpcomingReservations] = useState<CanonicalReservationView[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const { monthStartStr, today } = useMemo(() => {
-    const now = new Date()
-    return {
-      today: now.toISOString().split('T')[0],
-      monthStartStr: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0],
-    }
-  }, [])
-
+  const today = new Date().toLocaleDateString('en-CA')
+  const queue = useRequestedWalkSessions()
   const { reservations, loading: sessionsLoading } = useCanonicalReservations({
-    fromDate: monthStartStr,
+    fromDate: monthStart(today),
     toDate: today,
   })
 
-  useEffect(() => {
-    const todayDocs = reservations.filter((item) => item.date === today)
-    const pendingDocs = reservations
-      .filter((item) => PENDING_STATUSES.includes(item.status))
-      .sort((a, b) => (a.date > b.date ? 1 : -1))
-
-    setStats((prev) => ({
-      ...prev,
-      todayReservations: todayDocs.filter((item) => ACTIVE_STATUSES.includes(item.status)).length,
-      pendingReservations: pendingDocs.length,
-      monthReservations: reservations.length,
-      // Canonical walkSessions carry no price; revenue stays unavailable until
-      // payments exist rather than showing a fabricated zero.
-      totalRevenue: 0,
-      completedToday: todayDocs.filter((item) => item.status === 'completed').length,
-    }))
-    setUpcomingReservations(pendingDocs.slice(0, 10))
-    setLoading(sessionsLoading)
-  }, [reservations, sessionsLoading, today])
-
-  useEffect(() => {
-    // One-shot clients count (no real-time needed for a counter)
-    getDocs(query(collection(db, 'customerProfiles'), limit(100))).then((snap) => {
-      setStats((prev) => ({ ...prev, totalClients: snap.size }))
-    }).catch(() => {})
-  }, [])
+  const day = useMemo(() => summarizeDay(reservations, today), [reservations, today])
+  const ordered = useMemo(() => orderDispatchQueue(queue.sessions), [queue.sessions])
+  const overdue = ordered.filter((session) => dispatchUrgency(session.scheduledDate, today) === 'overdue').length
 
   const statCards = [
-    { label: 'Paseos hoy', value: stats.todayReservations, icon: CalendarDays, color: '#D97706' },
-    { label: 'Pendientes', value: stats.pendingReservations, icon: Clock, color: '#3b82f6' },
-    { label: 'Reservas del mes', value: stats.monthReservations, icon: Dog, color: '#059669' },
-    { label: 'Ingresos del mes', value: stats.totalRevenue > 0 ? `$${stats.totalRevenue.toLocaleString()}` : '—', icon: DollarSign, color: '#7C3AED' },
-  ]
-
-  const quickActions = [
-    { label: 'Reservas', icon: CalendarDays, href: '/admin/reservas', color: '#D97706' },
-    { label: 'Paseadores', icon: PersonStanding, href: '/admin/paseadores', color: '#059669' },
-    { label: 'Finanzas', icon: ChartLine, href: '/admin/finanzas', color: '#7C3AED' },
-    { label: 'Cupones', icon: Tag, href: '/admin/cupones', color: '#EC4899' },
-    { label: 'Referidos', icon: UserPlus, href: '/admin/referidos', color: '#3b82f6' },
-    { label: 'Config', icon: Settings, href: '/admin/config', color: '#64748B' },
+    { label: 'Paseos hoy', value: day.today, icon: CalendarDays, color: '#D97706' },
+    { label: 'Completados hoy', value: day.completedToday, icon: CheckCircle2, color: '#059669' },
+    { label: 'Paseos del mes', value: day.monthToDate, icon: Dog, color: '#0F766E' },
   ]
 
   return (
     <div className="space-y-6">
-      {/* Welcome */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl border border-ink/10 bg-surface p-5 sm:p-6 relative overflow-hidden shadow-sm"
-      >
-        <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="relative">
-          {/* Título de la pantalla: h1. */}
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            Resumen operativo
-          </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            {stats.todayReservations > 0
-              ? `${stats.todayReservations} paseo${stats.todayReservations !== 1 ? 's' : ''} programado${stats.todayReservations !== 1 ? 's' : ''} para hoy`
-              : 'Sin paseos programados para hoy'
-            }
-            {stats.pendingReservations > 0 && ` · ${stats.pendingReservations} pendiente${stats.pendingReservations !== 1 ? 's' : ''}`}
-          </p>
-        </div>
-      </motion.div>
+      <div>
+        <h1 className="text-2xl font-bold text-ink">Resumen</h1>
+        <p className="mt-1 text-sm text-muted">
+          {sessionsLoading ? 'Consultando el día…' : day.today > 0
+            ? `${day.today} paseo${day.today !== 1 ? 's' : ''} en marcha para hoy`
+            : 'Sin paseos en marcha para hoy'}
+        </p>
+      </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {statCards.map((stat, i) => {
+      <DataCard
+        title="Por asignar"
+        action={(
+          <Link href="/admin/reservas" className="inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-brand-600 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            Asignar <ArrowRight size={14} aria-hidden="true" />
+          </Link>
+        )}
+      >
+        {queue.loading ? (
+          <LoadingState rows={2} height="h-12" />
+        ) : queue.error ? (
+          <p className="text-sm text-red-700" role="alert">No pudimos consultar las solicitudes. Ábrelas desde Solicitudes y paseos.</p>
+        ) : ordered.length === 0 ? (
+          <EmptyState
+            icon={<CheckCircle2 size={22} />}
+            title="Todo asignado"
+            description="Cuando una familia pida un paseo, aparecerá aquí."
+          />
+        ) : (
+          <div className="space-y-3">
+            <p className="flex flex-wrap gap-2 text-sm">
+              <span className="font-semibold text-ink">{ordered.length} sin paseador</span>
+              {overdue > 0 && <span className="rounded-full bg-danger-500/10 px-2.5 py-0.5 text-xs font-semibold text-red-700">{overdue} con fecha pasada</span>}
+            </p>
+            <ul className="space-y-2">
+              {ordered.slice(0, 3).map((session) => {
+                const urgency = dispatchUrgency(session.scheduledDate, today)
+                return (
+                  <li key={session.id} className="flex items-center justify-between gap-3 rounded-xl border border-ink/10 p-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-ink">{SERVICE_NAMES.get(session.serviceId) || session.serviceId}</p>
+                      <p className="text-xs text-muted">
+                        {session.scheduledDate ? whenLabel(session.scheduledDate, today) : 'Sin fecha'}
+                        {session.scheduledStart ? ` · ${session.scheduledStart}` : ''}
+                        {` · ${session.dogIds.length} perro${session.dogIds.length === 1 ? '' : 's'}`}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${URGENCY_STYLES[urgency]}`}>{URGENCY_LABELS[urgency]}</span>
+                  </li>
+                )
+              })}
+            </ul>
+            {ordered.length > 3 && (
+              <p className="text-xs text-muted">Y {ordered.length - 3} más en Solicitudes y paseos.</p>
+            )}
+          </div>
+        )}
+      </DataCard>
+
+      {/* Tres cifras en una fila que cabe en un teléfono; las tarjetas grandes
+          partían "Completados hoy" en dos renglones. */}
+      <dl className="grid grid-cols-3 gap-2 sm:gap-3">
+        {statCards.map((stat) => {
           const Icon = stat.icon
           return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.22, delay: i * 0.05 }}
-            >
-              <StatCard
-                label={stat.label}
-                value={loading ? '—' : stat.value}
-                icon={<Icon size={18} />}
-                color={stat.color}
-              />
-            </motion.div>
+            <div key={stat.label} className="rounded-xl border border-ink/10 bg-surface p-3 sm:p-4">
+              <dt className="flex items-center gap-1.5 text-xs text-muted">
+                <Icon size={14} aria-hidden="true" style={{ color: stat.color }} /> {stat.label}
+              </dt>
+              <dd className="mt-1 text-2xl font-bold tabular-nums text-ink">{sessionsLoading ? '—' : stat.value}</dd>
+            </div>
           )
         })}
-      </div>
+      </dl>
 
-      {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, delay: 0.2 }}
-      >
-        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Accesos rápidos</h3>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          {quickActions.map((action) => {
-            const Icon = action.icon
-            return (
-              <a
-                key={action.label}
-                href={action.href}
-                className="flex flex-col items-center gap-2 p-3 rounded-xl border border-ink/10 transition-all hover:bg-ink/5 hover:scale-[1.03]"
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${action.color}15` }}>
-                  <Icon size={16} style={{ color: action.color }} />
-                </div>
-                <span className="text-2xs font-medium" style={{ color: 'var(--text-secondary)' }}>{action.label}</span>
-              </a>
-            )
-          })}
-        </div>
-      </motion.div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Upcoming reservations */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, delay: 0.25 }}
-        >
-          <DataCard
-            title="Próximos paseos"
-            action={
-              <Link href="/admin/reservas" className="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors">
-                Ver todos →
-              </Link>
-            }
-          >
-            {loading ? (
-              <LoadingState rows={3} height="h-14" />
-            ) : upcomingReservations.length === 0 ? (
-              <EmptyState
-                icon={<Dog size={22} />}
-                title="No hay paseos pendientes"
-                description="Cuando un cliente solicite un paseo aparecerá aquí."
-              />
-            ) : (
-              <div className="space-y-2">
-                {upcomingReservations.slice(0, 5).map((res) => (
-                  <div
-                    key={res.id}
-                    className="flex items-center justify-between p-3 rounded-xl border border-ink/10 transition-colors hover:bg-ink/5"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand-500/10">
-                        <Dog size={14} className="text-brand-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {res.petName || 'Sin nombre'}
-                        </p>
-                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {res.service} · {res.time || '—'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StatusBadge status={res.status} />
-                      {res.phone && (
-                        <Button
-                          variant="icon"
-                          onClick={() => confirmWhatsAppShare(`521${res.phone}`, `Solicitud PET ${res.id}: solicito ponerme en contacto sobre la fecha ${res.date}.`)}
-                          className="text-success-400 hover:bg-success-500/10"
-                          aria-label="Revisar mensaje antes de abrir WhatsApp"
-                        >
-                          <WhatsAppIcon width={12} height={12} />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </DataCard>
-        </motion.div>
-
-        {/* Walker Live Status */}
-        <AdminWalkerStatus />
-      </div>
+      <AdminWalkerStatus />
     </div>
   )
 }
-
-import { WhatsAppIcon } from '@/components/ui/SocialIcons'
