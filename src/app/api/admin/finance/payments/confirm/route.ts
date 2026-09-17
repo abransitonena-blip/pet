@@ -50,16 +50,18 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ code: 'invalid-json' }, { status: 400, headers: noStore })
   }
-  if (typeof body.paymentId !== 'string' || !body.paymentId) {
+  if (typeof body.paymentId !== 'string' || !body.paymentId || body.paymentId.includes('/') || body.paymentId.length > 128) {
     return NextResponse.json({ code: 'invalid-payment-id' }, { status: 400, headers: noStore })
   }
 
   const requestHash = parseRequestHash(createHash('sha256').update(`confirm:${body.paymentId}:${idempotencyKey}`).digest('hex'))
-  const keyHash = parseRequestHash(createHash('sha256').update(idempotencyKey).digest('hex'))
+  const keyHash = parseRequestHash(createHash('sha256').update(`confirm:${adminUid}:${idempotencyKey}`).digest('hex'))
   const idempotencyRef = firestore.collection('financeIdempotency').doc(keyHash)
 
   try {
-    const existingReceipt = await idempotencyRef.get()
+    const paymentRef = firestore.collection('payments').doc(body.paymentId)
+    return await firestore.runTransaction(async (tx) => {
+    const existingReceipt = await tx.get(idempotencyRef)
     const receipt = existingReceipt.exists ? (existingReceipt.data() as IdempotencyReceipt<{ movementId: string }>) : null
     const decision = evaluateIdempotency<{ movementId: string }>(receipt, requestHash)
     if (decision.kind === 'replay') {
@@ -69,19 +71,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ code: 'idempotency-rejected' }, { status: 409, headers: noStore })
     }
 
-    const paymentRef = firestore.collection('payments').doc(body.paymentId)
     const sequenceRef = firestore.collection('financeCounters').doc('movementSequence')
     const movementId = randomUUID()
     const movementRef = firestore.collection('financialMovements').doc(movementId)
     const now = new Date().toISOString()
 
-    const movement = await firestore.runTransaction(async (tx) => {
       const paymentSnap = await tx.get(paymentRef)
       if (!paymentSnap.exists) {
         throw new FinancialDomainError('INVALID_SNAPSHOT', 'Payment does not exist')
       }
-      const receipt = paymentSnap.data() as IdempotencyReceipt<Payment>
-      const payment = receipt.result
+      const paymentReceipt = paymentSnap.data() as IdempotencyReceipt<Payment>
+      const payment = paymentReceipt.result
       if (!payment) throw new FinancialDomainError('INVARIANT_VIOLATION', 'Payment record has no result payload')
 
       assertPaymentTransition(payment.status, 'confirmed')
@@ -122,13 +122,11 @@ export async function POST(request: Request) {
         completedAt: now,
       } satisfies IdempotencyReceipt<{ movementId: string }> & { operationId: string })
 
-      return createdMovement
+    return NextResponse.json({ code: 'ok', replay: false, result: { movementId: createdMovement.movementId } }, { headers: noStore })
     })
-
-    return NextResponse.json({ code: 'ok', replay: false, result: { movementId: movement.movementId } }, { headers: noStore })
   } catch (cause) {
     if (cause instanceof FinancialDomainError) {
-      return NextResponse.json({ code: 'invalid-confirmation', reason: cause.code }, { status: 400, headers: noStore })
+      return NextResponse.json({ code: 'invalid-confirmation', reason: cause.code }, { status: cause.code === 'IDEMPOTENCY_CONFLICT' ? 409 : 400, headers: noStore })
     }
     return NextResponse.json({ code: 'confirmation-failed' }, { status: 500, headers: noStore })
   }

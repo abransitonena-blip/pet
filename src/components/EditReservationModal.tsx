@@ -7,7 +7,7 @@ import { db } from '@/firebase/config'
 import { X } from 'lucide-react'
 import type { Reservation } from '@/types'
 import { SERVICE_NAMES, normalizeServiceName } from '@/lib/walkServices'
-import { logChange } from '@/lib/audit'
+import { logAudit } from '@/lib/auditLog'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import { useFocusTrap } from '@/lib/useFocusTrap'
 import { useToast } from '@/context/ToastContext'
@@ -61,7 +61,7 @@ export default function EditReservationModal({
       }
       await updateDoc(doc(db, "reservations", reservation.id), updates)
       if (Object.keys(changes).length > 0) {
-        logChange("edit", reservation.id, changes)
+        void logAudit({ action: 'update', entity: 'reservation', entityId: reservation.id, meta: changes })
       }
       onClose()
       toast('Reserva guardada')

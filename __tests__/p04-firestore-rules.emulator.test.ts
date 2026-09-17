@@ -435,10 +435,16 @@ describe('reviews, promotions, notifications and privileged logs', () => {
     await assertFails(updateDoc(doc(customer, 'referrals', 'ref-1'), { status: 'rewarded' }))
   })
 
-  test('PET Ahora requests, offers and leases reject browser writes', async () => {
-    await assertFails(setDoc(doc(dbFor('customer-1', 'customer'), 'petAhoraRequests', 'request-1'), { customerId: 'customer-1' }))
+  test('a customer creates their own PET Ahora request; offers and leases are server-only', async () => {
+    // Requests stay client-created by design -- dispatch and acceptance moved
+    // server-side (/api/pet-ahora/dispatch, /respond via the T3 privileged
+    // client), but the customer still creates the request itself.
+    await assertSucceeds(setDoc(doc(dbFor('customer-1', 'customer'), 'petAhoraRequests', 'request-1'), { clientId: 'customer-1', status: 'pending' }))
+    await assertFails(setDoc(doc(dbFor('customer-2', 'customer'), 'petAhoraRequests', 'request-2'), { clientId: 'customer-1', status: 'pending' }))
     await assertFails(setDoc(doc(dbFor('walker-1', 'walker'), 'petAhoraOffers', 'offer-1'), { walkerId: 'walker-1' }))
+    await assertFails(setDoc(doc(dbFor('admin-1', 'admin'), 'petAhoraOffers', 'offer-1'), { walkerId: 'walker-1' }))
     await assertFails(setDoc(doc(dbFor('walker-1', 'walker'), 'petAhoraLeases', 'lease-1'), { walkerId: 'walker-1' }))
+    await assertFails(setDoc(doc(dbFor('admin-1', 'admin'), 'petAhoraLeases', 'lease-1'), { walkerId: 'walker-1' }))
   })
 
   test('notification owner can only mark read', async () => {

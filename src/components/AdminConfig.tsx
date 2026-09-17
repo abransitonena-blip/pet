@@ -84,11 +84,13 @@ const SECTIONS: ConfigSection[] = [
 ]
 
 export default function AdminConfig() {
-  const { config, updateConfig, saving } = useConfig()
+  const { config, updateConfig, saving, saveError, saved } = useConfig()
   const [openSection, setOpenSection] = useState<Section | null>(null)
 
   return (
     <div className="space-y-6">
+      {saveError ? <p role="alert" className="text-base text-red-700">{saveError}</p> : null}
+      {saved && !saveError ? <p role="status" className="text-base text-green-800">Cambios guardados.</p> : null}
       {SECTION_GROUPS.map((group) => {
         const sections = SECTIONS.filter((section) => section.group === group)
         if (sections.length === 0) return null

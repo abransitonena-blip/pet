@@ -2,6 +2,7 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { ROLES } from '@/lib/roles'
+import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 
 /**
  * Server-side verification of Firebase ID tokens (P0.8 layer: endpoint
@@ -37,6 +38,7 @@ export async function verifyWalkerToken(idToken: string): Promise<string | null>
   try {
     const decoded = await getAuth(adminApp()).verifyIdToken(idToken)
     if (decoded.role !== ROLES.WALKER) return null
+    if (!await hasActiveWalkerProfile(decoded.uid)) return null
     return decoded.uid
   } catch {
     return null
@@ -77,10 +79,21 @@ export async function verifyTokenRole(idToken: string): Promise<{ uid: string; r
   if (!idToken) return null
   try {
     const decoded = await getAuth(adminApp()).verifyIdToken(idToken)
+    // An unknown or malformed claim must never become a customer fallback.
+    if (decoded.role !== undefined && !['customer', 'client', 'walker', 'admin', 'supervisor'].includes(decoded.role)) return null
+    if (decoded.role === ROLES.WALKER && !await hasActiveWalkerProfile(decoded.uid)) return null
     return { uid: decoded.uid, role: typeof decoded.role === 'string' ? decoded.role : null }
   } catch {
     return null
   }
+}
+
+async function hasActiveWalkerProfile(uid: string): Promise<boolean> {
+  const firestore = getPrivilegedFirestore()
+  if (!firestore) return false
+  // Do not cache status: a still-valid token must not outlive a suspension.
+  const profile = await firestore.collection('walkerProfiles').doc(uid).get()
+  return profile.exists && profile.data()?.status === 'active'
 }
 
 export function getServerFirestore() {

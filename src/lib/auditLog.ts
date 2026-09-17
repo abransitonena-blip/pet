@@ -1,8 +1,7 @@
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { getAuth } from 'firebase/auth'
 
 export type AuditAction = 'create' | 'update' | 'delete' | 'assign' | 'cancel' | 'complete'
-export type AuditEntity = 'reservation' | 'serviceOrder' | 'walkSession' | 'coupon' | 'customer' | 'walker'
+export type AuditEntity = 'reservation' | 'serviceOrder' | 'walkSession' | 'coupon' | 'customer' | 'walker' | 'review'
 
 interface AuditLogParams {
   action: AuditAction
@@ -13,33 +12,17 @@ interface AuditLogParams {
   meta?: Record<string, unknown>
 }
 
+/** Writes through /api/admin/audit-log -- see that route for why this isn't a direct Firestore write. */
 export async function logAudit({ action, entity, entityId, before, after, meta }: AuditLogParams): Promise<void> {
   try {
-    await addDoc(collection(db, 'audit-logs'), {
-      actor: {
-        uid: typeof window !== 'undefined' ? (await import('firebase/auth')).getAuth().currentUser?.uid || 'system' : 'system',
-      },
-      action,
-      entity,
-      entityId,
-      before: before ? sanitize(before) : null,
-      after: after ? sanitize(after) : null,
-      meta: meta ? sanitize(meta) : null,
-      timestamp: serverTimestamp(),
+    const token = await getAuth().currentUser?.getIdToken()
+    if (!token) return
+    await fetch('/api/admin/audit-log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action, entity, entityId, before, after, meta }),
     })
   } catch {
     console.warn('[audit] Failed to write audit log')
   }
-}
-
-function sanitize(obj: Record<string, unknown>): Record<string, unknown> {
-  const clean: Record<string, unknown> = {}
-  const skipKeys = ['notes', 'internalNotes', 'walkNotes', 'photos', 'history']
-  for (const [k, v] of Object.entries(obj)) {
-    if (skipKeys.includes(k)) continue
-    if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' || v === null) {
-      clean[k] = v
-    }
-  }
-  return clean
 }

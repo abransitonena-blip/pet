@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    if (typeof body.paymentId !== 'string' || typeof body.customerId !== 'string' || typeof body.serviceOrderId !== 'string') {
+    if (![body.paymentId, body.customerId, body.serviceOrderId].every((id) => typeof id === 'string' && id.length > 0 && id.length <= 128 && !id.includes('/'))) {
       throw new FinancialDomainError('INVALID_SNAPSHOT', 'paymentId, customerId, and serviceOrderId are required strings')
     }
     if (!Number.isSafeInteger(body.amountCents)) {
@@ -84,34 +84,51 @@ export async function POST(request: Request) {
     }
 
     const draft: Payment = {
-      paymentId: body.paymentId,
-      customerId: body.customerId,
-      serviceOrderId: body.serviceOrderId,
+      paymentId: body.paymentId as string,
+      customerId: body.customerId as string,
+      serviceOrderId: body.serviceOrderId as string,
       amount: money(body.amountCents as number),
       method: parseMethod(body.method),
       status: 'pending',
       idempotencyKey: idempotencyKey as Payment['idempotencyKey'],
-      requestHash: parseRequestHash(createHash('sha256').update(JSON.stringify(body)).digest('hex')),
+      requestHash: parseRequestHash(createHash('sha256').update(JSON.stringify({
+        operation: 'record-payment', adminUid, paymentId: body.paymentId, customerId: body.customerId,
+        serviceOrderId: body.serviceOrderId, amountCents: body.amountCents, method: parseMethod(body.method),
+      })).digest('hex')),
       createdAt: new Date().toISOString(),
       createdByUid: adminUid,
     }
     const validated = validatePayment(draft)
 
-    const keyHash = parseRequestHash(createHash('sha256').update(idempotencyKey).digest('hex'))
+    const keyHash = parseRequestHash(createHash('sha256').update(`record:${adminUid}:${idempotencyKey}`).digest('hex'))
     const docRef = firestore.collection('payments').doc(validated.paymentId)
-    const existing = await docRef.get()
+    const keyRef = firestore.collection('financeIdempotency').doc(keyHash)
+    return await firestore.runTransaction(async (tx) => {
+    const keySnapshot = await tx.get(keyRef)
+    const existing = await tx.get(docRef)
+    const keyDecision = evaluateIdempotency<Payment>(keySnapshot.exists ? keySnapshot.data() as IdempotencyReceipt<Payment> : null, validated.requestHash)
+    if (keyDecision.kind === 'replay') return NextResponse.json({ code: 'ok', replay: true, payment: keyDecision.result }, { headers: noStore })
+    if (keyDecision.kind === 'rejected') return NextResponse.json({ code: 'idempotency-rejected' }, { status: 409, headers: noStore })
     const receipt = existing.exists ? (existing.data() as IdempotencyReceipt<Payment>) : null
     const decision = evaluateIdempotency<Payment>(receipt, validated.requestHash)
 
     if (decision.kind === 'replay') {
+      // Reserve this key even when it replays an already existing payment.
+      // Otherwise the same key could subsequently create a different payment.
+      tx.create(keyRef, { ...receipt, keyHash })
       return NextResponse.json({ code: 'ok', replay: true, payment: decision.result }, { headers: noStore })
     }
     if (decision.kind === 'rejected') {
       return NextResponse.json({ code: 'idempotency-rejected' }, { status: 409, headers: noStore })
     }
 
+    const order = await tx.get(firestore.collection('serviceOrders').doc(validated.serviceOrderId))
+    if (!order.exists || order.data()?.customerId !== validated.customerId) {
+      throw new FinancialDomainError('INVALID_SNAPSHOT', 'Order/customer mismatch')
+    }
+
     const now = new Date().toISOString()
-    await docRef.set({
+    const stored = {
       operationId: validated.paymentId,
       keyHash,
       requestHash: validated.requestHash,
@@ -119,12 +136,15 @@ export async function POST(request: Request) {
       result: validated,
       createdAt: now,
       completedAt: now,
-    } satisfies IdempotencyReceipt<Payment> & { operationId: string })
+    } satisfies IdempotencyReceipt<Payment> & { operationId: string }
+    tx.create(docRef, stored)
+    tx.create(keyRef, stored)
 
     return NextResponse.json({ code: 'ok', replay: false, payment: validated }, { headers: noStore })
+    })
   } catch (cause) {
     if (cause instanceof FinancialDomainError) {
-      return NextResponse.json({ code: 'invalid-payment', reason: cause.code }, { status: 400, headers: noStore })
+      return NextResponse.json({ code: 'invalid-payment', reason: cause.code }, { status: cause.code === 'IDEMPOTENCY_CONFLICT' ? 409 : 400, headers: noStore })
     }
     return NextResponse.json({ code: 'payment-record-failed' }, { status: 500, headers: noStore })
   }

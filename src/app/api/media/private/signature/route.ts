@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { verifyAdminToken, verifyAuthenticatedToken, verifyWalkerToken } from '@/lib/serverAuth'
+import { verifyTokenRole } from '@/lib/serverAuth'
 import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { createCloudinaryPrivateUploadSignature } from '@/lib/media/privateMediaAdmin.server'
@@ -32,10 +32,11 @@ export async function POST(request: Request) {
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
   if (!token) return NextResponse.json({ code: 'auth-required' }, { status: 401, headers: noStore })
 
-  const adminUid = await verifyAdminToken(token)
-  const walkerUid = adminUid ? null : await verifyWalkerToken(token)
-  const callerUid = adminUid ?? walkerUid ?? await verifyAuthenticatedToken(token)
-  if (!callerUid) return NextResponse.json({ code: 'auth-required' }, { status: 401, headers: noStore })
+  const caller = await verifyTokenRole(token)
+  if (!caller) return NextResponse.json({ code: 'auth-required' }, { status: 401, headers: noStore })
+  const adminUid = caller.role === 'admin' ? caller.uid : null
+  const walkerUid = caller.role === 'walker' ? caller.uid : null
+  const callerUid = caller.uid
 
   if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
     return NextResponse.json({ code: 'private-media-uploads-not-enabled' }, { status: 503, headers: noStore })

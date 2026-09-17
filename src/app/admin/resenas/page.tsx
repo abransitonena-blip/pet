@@ -8,7 +8,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'
 import Button from '@/components/ui/Button'
-import { logChange } from '@/lib/audit'
+import { logAudit } from '@/lib/auditLog'
 import { useToast } from '@/context/ToastContext'
 
 interface AdminReview {
@@ -61,7 +61,7 @@ export default function AdminResenasPage() {
   const handleDelete = async (id: string) => {
     setDeleting(id)
     try {
-      logChange('delete', id, { col: 'reviews' })
+      void logAudit({ action: 'delete', entity: 'review', entityId: id })
       await deleteDoc(doc(db, 'reviews', id))
       toast('Reseña eliminada')
     } catch { toast('Error al eliminar reseña', 'error') }

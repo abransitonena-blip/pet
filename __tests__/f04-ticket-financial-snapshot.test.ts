@@ -15,10 +15,11 @@ describe('F4 ticket financial snapshot: read-only, never touches an immutable ti
     expect(route).toContain('status: 503')
   })
 
-  test('only counts confirmed payments, never pending/rejected ones, and invents no discount or tip', () => {
-    expect(route).toContain("payment.status === 'confirmed'")
-    expect(route).toContain('discount: money(0)')
-    expect(route).toContain('tip: null')
+  test('does not mistake collected payments for a reliable session price or settled balance', () => {
+    expect(route).toContain('cloneFinancialSnapshot(null)')
+    expect(route).toContain('allocation-snapshot-unavailable')
+    expect(route).not.toContain("paymentStatus: 'paid'")
+    expect(route).not.toContain('sumMoney')
   })
 
   test('validates the computed snapshot through the same F1 invariant used by real ticket creation', () => {

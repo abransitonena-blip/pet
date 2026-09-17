@@ -22,6 +22,7 @@ Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
 | 8 | Controles activables | Los 25 `onClick` restantes resultaron todos legítimos; la prueba reconoce los tres patrones válidos | `controles-interactivos` |
 | 9 | Densidad de los cuatro paneles de operación | `/walker` abre en el paseo que toca; `/familia` en su próximo paseo; Solicitudes en la que urge; Resumen en lo que falta asignar. Lo demás, a un toque. De paso, seis defectos de datos (lista abajo) | `walker-jornada`, `family-home`, `admin-solicitudes`, `admin-resumen`, emulador |
 | 10 | Consultas que traían lo más viejo | Cada pantalla pide su rango de fechas (14, 30, 31 o 60 días; los historiales, un mes a la vez). Los ganchos aceptan `since`/`until` y avisan con `capped` | `ventanas-recientes` |
+| 12 | Las tres decisiones de arquitectura | PET Ahora ya despachaba desde `dispatchServer.ts` server-side (transacciones, sin duplicar oferta); faltaba cerrar la regla de `petAhoraOffers`/`petAhoraLeases`, ahora `if false`. Bitácora administrativa: `/api/admin/audit-log` nuevo, verifica admin por token y escribe con el T3 privilegiado -- el actor ya no lo declara el navegador; los tres call sites (`resenas`, `EditReservationModal`, `LegacyReservationsView`) migrados, `lib/audit.ts` duplicado eliminado, regla de `audit-logs` cerrada. Historial legacy: `reservations` ahora sólo lee, cerrado `create/update/delete` en la regla (todo el código ya estaba detrás de `LEGACY_RESERVATION_WRITES_ENABLED`, permanentemente apagada) | emulador (11 fallas quedan, todas de la fase 13) |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -44,16 +45,6 @@ cambios en vivo. Pide separarlo por ruta y cargar las pantallas que no escuchan
 nada sin él.
 
 Cierra cuando: ninguna ruta pase de 250 kB de primera carga.
-
-### 12. Las tres decisiones de arquitectura
-No son descuidos; son decisiones del dueño, y cada una es trabajo real:
-- **PET Ahora** se despacha desde el navegador → mover a ruta de servidor.
-- **Bitácora administrativa** se escribe desde el navegador → un registro que un
-  admin puede fabricar desde su consola vale poco.
-- **Historial legacy** acepta escrituras en las reglas, aunque el código las tenga
-  apagadas con bandera → cerrar la regla también.
-
-Cierra cuando: la suite del emulador no reporte ningún permiso concedido de más.
 
 ### 13. Las 11 pruebas de reglas desactualizadas
 Once casos de `p04-firestore-rules` esperan permisos que las reglas ya no dan.

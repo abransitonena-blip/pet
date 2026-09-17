@@ -22,7 +22,7 @@ import Button from '@/components/ui/Button'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import EditReservationModal from '@/components/EditReservationModal'
 import WalkSessionModal from '@/components/WalkSessionModal'
-import { logChange } from '@/lib/audit'
+import { logAudit } from '@/lib/auditLog'
 import type { Reservation } from '@/types'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { confirmWhatsAppShare } from '@/lib/utils'
@@ -108,7 +108,7 @@ function LegacyReservationsView() {
     }
     const newStatus = current === 'paid' ? 'pending' : 'paid'
     try {
-      logChange('payment_toggle', id, { from: current, to: newStatus })
+      void logAudit({ action: 'update', entity: 'reservation', entityId: id, meta: { from: current, to: newStatus } })
       await updateDoc(doc(db, 'reservations', id), { paymentStatus: newStatus })
       toast('Pago actualizado')
     } catch { toast('Error al actualizar pago', 'error') }
@@ -123,7 +123,7 @@ function LegacyReservationsView() {
     }
     setDeletingReservation(true)
     try {
-      logChange('delete', confirmDelete, { col: 'reservations' })
+      void logAudit({ action: 'delete', entity: 'reservation', entityId: confirmDelete })
       await deleteDoc(doc(db, 'reservations', confirmDelete))
       setConfirmDelete(null)
       toast('Reserva eliminada')

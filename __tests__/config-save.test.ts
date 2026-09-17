@@ -29,6 +29,6 @@ describe('guardado de Configuración', () => {
   })
 
   test('el contexto limpia la configuración antes de escribirla', () => {
-    expect(readFileSync('src/context/ConfigContext.tsx', 'utf8')).toContain('...withoutUndefined(next)')
+    expect(readFileSync('src/context/ConfigContext.tsx', 'utf8')).toContain('withoutUndefined(next)')
   })
 })

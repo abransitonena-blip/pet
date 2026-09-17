@@ -20,7 +20,8 @@ describe('M1 private media: signed authenticated uploads, fail-closed, ownership
   })
 
   test('a Walker can only sign for a session verified server-side as assigned to them', () => {
-    expect(route).toContain('verifyWalkerToken')
+    expect(route).toContain('verifyTokenRole(token)')
+    expect(route).toContain("caller.role === 'walker'")
     expect(route).toContain("collection('walkSessions')")
     expect(route).toContain('isAssignedToWalker(')
     expect(route).toContain("status: 403")

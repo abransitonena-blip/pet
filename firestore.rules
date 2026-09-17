@@ -1013,34 +1013,18 @@ service cloud.firestore {
     // ═══════════════════════════════════════════
 
     match /reservations/{resId} {
-      // READ: owner, assigned walker (by uid only), admin, supervisor (active accounts)
+      // Legacy collection, superseded by serviceOrders/walkSessions. Read-only:
+      // every client write path is already gated behind
+      // LEGACY_RESERVATION_WRITES_ENABLED, which is permanently false -- this
+      // closes the rule to match so flipping that flag alone can never reopen
+      // writes here.
       allow read: if isAuthenticated()
         && isActiveAccount()
         && (isReservationClient()
             || isAssignedWalker(resource.data.assignment.walkerId)
             || isAdmin()
             || isSupervisor());
-
-      // CREATE: customer books for self, admin creates for any
-      allow create: if isActiveAccount()
-        && isValidReservation()
-        && noRoleField()
-        && (request.resource.data.customer.uid == request.auth.uid || isAdmin());
-
-      // UPDATE: admin always; walker only status/state transitions on assigned;
-      // client can cancel own non-terminal reservation
-      allow update: if isAuthenticated()
-        && isActiveAccount()
-        && (isAdmin()
-            || isAssignedWalkerInUpdate()
-            || (isReservationClient()
-                && request.resource.data.status == 'cancelled'
-                && resource.data.status != 'completed'
-                && resource.data.status != 'cancelled'
-                && resource.data.status != 'no_show'));
-
-      // DELETE: admin only
-      allow delete: if isAdmin();
+      allow create, update, delete: if false;
     }
 
     function isReservationClient() {
@@ -1493,16 +1477,10 @@ service cloud.firestore {
       allow read: if isAuthenticated()
         && (resource.data.walkerId == request.auth.uid
             || isAdmin());
-      // Walker creates own offer, admin creates any
-      allow create: if isAuthenticated()
-        && isActiveAccount()
-        && noRoleField()
-        && (request.resource.data.walkerId == request.auth.uid || isAdmin());
-      // Walker responds (accept/decline)
-      allow update: if isAuthenticated()
-        && noRoleField()
-        && (resource.data.walkerId == request.auth.uid
-            || isAdmin());
+      // Server-only: dispatchRequest()/respondToOffer() write via the T3
+      // privileged client (/api/pet-ahora/dispatch, /api/pet-ahora/respond),
+      // which bypasses these rules. No client, admin included, writes here.
+      allow create, update: if false;
       allow delete: if false;
     }
 
@@ -1512,13 +1490,9 @@ service cloud.firestore {
         && (resource.data.walkerId == request.auth.uid
             || resource.data.clientId == request.auth.uid
             || isAdmin());
-      // Walker or system creates on acceptance, admin creates any
-      allow create: if isAuthenticated()
-        && isActiveAccount()
-        && noRoleField()
-        && (request.resource.data.walkerId == request.auth.uid || isAdmin());
-      // Admin can unlock
-      allow update: if isAdmin();
+      // Server-only: respondToOffer() creates a lease on acceptance via the
+      // T3 privileged client. No client, admin included, writes here.
+      allow create, update: if false;
       allow delete: if false;
     }
 
@@ -1527,9 +1501,11 @@ service cloud.firestore {
     // ═══════════════════════════════════════════
 
     match /audit-logs/{docId} {
-      allow create: if isAdmin();
+      // Server-only: /api/admin/audit-log writes via the T3 privileged
+      // client with a token-verified actor. A browser-authored entry proves
+      // nothing -- no client, admin included, writes here directly.
       allow read: if isAdmin();
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     // ═══════════════════════════════════════════
