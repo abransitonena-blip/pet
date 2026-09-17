@@ -3,7 +3,8 @@
 Estado al 2026-09-17 (segunda vuelta). Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
-Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
+Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md); lo que puede
+romper la operación, en [CRITICO.md](CRITICO.md).
 
 ---
 
@@ -25,6 +26,7 @@ Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
 | 12 | Las tres decisiones de arquitectura | PET Ahora ya despachaba desde `dispatchServer.ts` server-side (transacciones, sin duplicar oferta); faltaba cerrar la regla de `petAhoraOffers`/`petAhoraLeases`, ahora `if false`. Bitácora administrativa: `/api/admin/audit-log` nuevo, verifica admin por token y escribe con el T3 privilegiado -- el actor ya no lo declara el navegador; los tres call sites (`resenas`, `EditReservationModal`, `LegacyReservationsView`) migrados, `lib/audit.ts` duplicado eliminado, regla de `audit-logs` cerrada. Historial legacy: `reservations` ahora sólo lee, cerrado `create/update/delete` en la regla (todo el código ya estaba detrás de `LEGACY_RESERVATION_WRITES_ENABLED`, permanentemente apagada) | emulador |
 | 13 | Las 11 pruebas de reglas desactualizadas | La mayoría eran la prueba, no la regla: faltaba el claim de `email` en el helper de autenticación, o `serverTimestamp()` donde la regla exige `request.time` en `createdAt`/`updatedAt`. Dos sí eran huecos reales: `serviceOrders` no reconocía el campo legacy `clientId` en lectura (mismo patrón que `isReservationClient()`), y no tenía ninguna vía para que Admin corrigiera una orden atascada (ahora sólo `status: 'confirmed'` + `paymentStatus: 'under_review'`, nada más). Y una sorpresa: `privacyRequests` no tenía ningún bloque de reglas -- las solicitudes ARCO desde Familia PET se habían estado rechazando en silencio; ahora tiene su regla, calcada del payload real que ya escribe la página | emulador |
 | 11 | Peso de la primera carga | `db` salió de `@/firebase/config`: el SDK de Firestore ya no viaja con las pantallas que sólo necesitan sesión. Portada 297→190 kB, acceso de familia 279→171, acceso del equipo 284→177. Los paneles no bajan: ahí se usa | `peso-primera-carga` |
+| 14 | Densidad del resto de los paneles | Mis perros 789→206 líneas, Mis direcciones 613→184, Zonas 584→217: el formulario se carga al abrirlo, no al entrar. Familias, Perros de admin y Rutas se revisaron y ya abrían bien | `densidad-paneles` |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -40,22 +42,6 @@ Resumen leía 100 perfiles de familia para un conteo que no mostraba.
 ---
 
 ## Abiertas, en orden
-
-### 14. Densidad del resto de los paneles
-La fase 9 cubrió los cuatro con los que se opera a diario. De los demás:
-
-- **Hecho.** Mis perros (789→206 líneas: la tarjeta muestra al perro y sus
-  alergias, el formulario se carga al abrirlo) y Mis direcciones (613→184: igual,
-  y sin escuchar las zonas hasta que alguien edita). Prueba: `densidad-paneles`.
-- **Revisados, sin cambio.** Familias, Perros de admin y Rutas ya abren con lo
-  que se necesita para actuar y dicen de dónde salen sus cifras, incluida la
-  ventana de 500 paseos. El perfil del paseador sólo mentía en una cosa: decía
-  "Activo" siempre, ahora dice su estado.
-- **Pendiente.** Zonas (584 líneas): su formulario todavía viaja con la pantalla,
-  como viajaban los otros dos.
-
-Y una regla que salió de aquí y ya se vigila en `densidad-paneles`: la fecha de
-hoy se calcula en la zona del negocio, nunca con `toISOString()`.
 
 ### 15. Animaciones
 Desbloqueada por la fase 3: ahora se puede animar sin dañar a quien pidió no
@@ -88,6 +74,14 @@ qué ese piso no se puede bajar sin romper algo.
   mismo sin tocar la infraestructura: si el rango cabe en el tope de 100, el
   orden deja de importar. Y donde no cabe -- un mes con más de cien paseos --,
   la pantalla lo dice (`capped`) en lugar de enseñar números que no cuadran.
+- **Un tope en las reglas no recorta: rechaza.** Pedir 600 perros donde la
+  regla permite 100 no devuelve cien: deja la pantalla vacía con un mensaje de
+  permisos. Perros, Familias e Insights vivieron así desde la fase 6 porque
+  ninguna prueba listaba como admin contra las reglas de verdad.
+- **Medir con una ventana de caracteres vuelve a mentir.** Buscando consultas
+  sin límite, un detector con ventana de 400 caracteres acusó a veinte consultas
+  sanas. Con paréntesis balanceados, los infractores eran cero. Es la cuarta vez
+  que el mismo tipo de atajo produce un número inventado.
 - **Un tope sin orden correcto miente en silencio.** Tres consultas
   ascendentes con `limit(100)` enseñaban lo más viejo como si fuera lo actual,
   y una prueba exigía la frase falsa ("tus 100 paseos más recientes"). No se ve
