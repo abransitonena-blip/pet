@@ -56,3 +56,23 @@ describe('Mis direcciones', () => {
     expect(modal).toContain('isDefault: isFirst,')
   })
 })
+
+describe('la fecha de hoy se calcula en la zona del negocio, no en UTC', () => {
+  it('ninguna pantalla ni ruta viva toma "hoy" de toISOString()', () => {
+    // En México, a partir de las 18:00, la fecha UTC ya es la de mañana: así
+    // el Resumen contaba los paseos del día equivocado.
+    const files = [
+      'src/app/admin/page.tsx',
+      'src/app/walker/page.tsx',
+      'src/app/familia/page.tsx',
+      'src/components/EditReservationModal.tsx',
+      'src/app/api/walker/walk-sheet/route.ts',
+    ]
+    for (const file of files) {
+      const source = read(file)
+      const usesUtcDate = /new Date\(\)\.toISOString\(\)\.(split|slice)/.test(source)
+      expect({ file, usesUtcDate }).toEqual({ file, usesUtcDate: false })
+    }
+    expect(read('src/app/api/walker/walk-sheet/route.ts')).toContain('dateInTimezone(Date.now())')
+  })
+})

@@ -118,7 +118,7 @@ export default function EditReservationModal({
                   <input
                     id="edit-res-date"
                     type="date"
-                    min={new Date().toISOString().split("T")[0]}
+                    min={new Date().toLocaleDateString('en-CA')}
                     value={form.date}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
                     className="w-full bg-white border border-ink/15 rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-primary"

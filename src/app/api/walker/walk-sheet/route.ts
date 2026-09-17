@@ -6,6 +6,7 @@ import { vaccineStatus, type VaccineStatus } from '@/lib/dogHealth'
 import { isDogPhotoReference } from '@/lib/dogPhotos'
 import { createPrivateDownloadUrl } from '@/lib/media/privateMediaAdmin.server'
 import type { ZoneSpot } from '@/types'
+import { dateInTimezone } from '@/lib/bookingSchedule'
 
 export const runtime = 'nodejs'
 
@@ -159,7 +160,9 @@ export async function POST(request: Request) {
   const sessionId = typeof body.sessionId === 'string' ? body.sessionId.trim() : ''
   const today = typeof body.today === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.today)
     ? body.today
-    : new Date().toISOString().slice(0, 10)
+    // Sin fecha del cliente, la del negocio: en UTC, a partir de las seis de la
+    // tarde en México "hoy" ya sería mañana.
+    : dateInTimezone(Date.now())
   if (!sessionId || sessionId.includes('/')) {
     return NextResponse.json({ code: 'invalid-session-id' }, { status: 400, headers: noStore })
   }
