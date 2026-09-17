@@ -57,6 +57,22 @@ describe('Mis direcciones', () => {
   })
 })
 
+describe('Zonas', () => {
+  const page = read('src/app/admin/zonas/page.tsx')
+
+  it('mirar la cobertura no carga el formulario ni su segundo mapa', () => {
+    expect(page).toContain("dynamic(() => import('@/components/admin/ZoneFormModal')")
+    expect(page).not.toContain('EMPTY_FORM')
+    expect(page).not.toContain('ZONE_SPOT_KINDS')
+  })
+
+  it('el panel conserva su mapa, su buscador y el aviso de códigos repetidos', () => {
+    expect(page).toContain('<ZoneMap label="Mapa de todas las zonas"')
+    expect(page).toContain('duplicatedPostalCodes(zones)')
+    expect(page).toContain('<CoverageRequestsPanel zones={zones} />')
+  })
+})
+
 describe('la fecha de hoy se calcula en la zona del negocio, no en UTC', () => {
   it('ninguna pantalla ni ruta viva toma "hoy" de toISOString()', () => {
     // En México, a partir de las 18:00, la fecha UTC ya es la de mañana: así

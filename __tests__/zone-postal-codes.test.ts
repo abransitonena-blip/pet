@@ -56,10 +56,13 @@ describe('zonas por código postal', () => {
   })
 
   test('el panel de zonas guarda los CP y los lugares, y explica el límite del aviso', () => {
+    // El formulario salió del panel a su propio componente, que se carga al
+    // crear o editar; el panel conserva el aviso de CP repetidos.
     const page = read('src/app/admin/zonas/page.tsx')
-    expect(page).toContain('postalCodes: parsePostalCodes(form.postalCodes)')
-    expect(page).toContain('spots: form.spots')
+    const form = read('src/components/admin/ZoneFormModal.tsx')
+    expect(form).toContain('postalCodes: parsePostalCodes(form.postalCodes)')
+    expect(form).toContain('spots: form.spots')
     expect(page).toContain('duplicatedPostalCodes(zones)')
-    expect(page).toContain('sigue usando el círculo')
+    expect(form).toContain('sigue usando el círculo')
   })
 })
