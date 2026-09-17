@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import { AlertTriangle, Download, PawPrint, Phone } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { BRAND } from '@/lib/brand'
 import { EMERGENCY_PROFILES_COLLECTION, type PublicEmergencyProfile } from '@/lib/emergencyProfile'
 import { WhatsAppIcon } from '@/components/ui/SocialIcons'

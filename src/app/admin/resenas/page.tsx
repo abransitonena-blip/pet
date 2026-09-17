@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, limit } from 'firebase/firestore'
 import { Star, Trash2, Download, Search } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'

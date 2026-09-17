@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       return privateJson({ error: 'Forbidden: walker only' }, 403)
     }
 
-    const { db } = await import('@/firebase/config')
+    const { db } = await import('@/firebase/db')
     const base = collection(db, 'presenceOffline')
     let q = query(base, where('processed', '==', false), where('walkerId', '==', uid))
 

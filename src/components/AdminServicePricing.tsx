@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { doc, onSnapshot, runTransaction, serverTimestamp } from 'firebase/firestore'
 import { AlertTriangle, CheckCircle2, CircleDollarSign, RefreshCw } from 'lucide-react'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { getReservationServiceDefinitions } from '@/lib/walkServices'
 import {
   buildServicePriceDocuments,

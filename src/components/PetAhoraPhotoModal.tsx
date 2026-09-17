@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { uploadToCloudinary, getCurrentPosition } from '@/lib/cloudinary'
 import { Camera, X, Check, Loader2 } from 'lucide-react'
 import { PET_AHORA_PHOTOS_ENABLED } from '@/lib/media/mediaPolicy'

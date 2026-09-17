@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore'
 import { CHAT_MESSAGE_MAX_LENGTH, sendChatMessage } from '@/lib/chat'
 import {

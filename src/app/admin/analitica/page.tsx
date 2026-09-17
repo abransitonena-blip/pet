@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { Banknote, CalendarDays, PersonStanding, Star, Users } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import ErrorState from '@/components/ui/ErrorState'

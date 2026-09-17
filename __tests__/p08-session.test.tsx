@@ -9,6 +9,7 @@ jest.mock('firebase/auth', () => ({
     return jest.fn()
   }),
 }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 jest.mock('firebase/firestore', () => ({
   doc: jest.fn(() => ({})),

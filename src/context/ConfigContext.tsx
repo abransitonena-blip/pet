@@ -2,8 +2,8 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
-import { doc, onSnapshot, setDoc, serverTimestamp, type DocumentSnapshot, type DocumentData } from 'firebase/firestore'
-import { db, auth } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { loadFirestore, watchDocument } from '@/firebase/lazyFirestore'
 import { DEFAULT_CONFIG, type SiteConfig } from '@/lib/defaultConfig'
 import { brand } from '@/lib/brand'
 import { withoutUndefined } from '@/lib/withoutUndefined'
@@ -66,33 +66,17 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const saveLocked = useRef(false)
 
   useEffect(() => {
-    let unsub: () => void = () => {}
-    let cancelled = false
-
-    const onSnap = (snap: DocumentSnapshot<DocumentData>) => {
-      if (cancelled) return
-      if (snap.exists()) {
-        setConfig(normalizeConfig(snap.data() as Partial<SiteConfig>))
-        setConfigError(null)
-      } else {
+    return watchDocument(['appSettings', 'public'], (data) => {
+      if (!data) {
         setConfigError(CONFIG_STALE_MESSAGE)
+        return
       }
-    }
-
-    try {
-      unsub = onSnapshot(doc(db, 'appSettings', 'public'), onSnap, (err) => {
-        console.error('Error loading appSettings/public:', err)
-        if (!cancelled) setConfigError(CONFIG_STALE_MESSAGE)
-      })
-    } catch (err) {
-      console.error('Error subscribing to appSettings/public:', err)
+      setConfig(normalizeConfig(data as Partial<SiteConfig>))
+      setConfigError(null)
+    }, (err) => {
+      console.error('Error loading appSettings/public:', err)
       setConfigError(CONFIG_STALE_MESSAGE)
-    }
-
-    return () => {
-      cancelled = true
-      unsub()
-    }
+    })
   }, [])
 
   const updateConfig = useCallback(
@@ -104,6 +88,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       setSaved(false)
       try {
         if (!auth.currentUser) throw new Error('auth-required')
+        const { db, doc, setDoc, serverTimestamp } = await loadFirestore()
         const next = normalizeConfig({ ...config, ...partial })
         // Only replace explicitly edited top-level fields. A stale local copy
         // must not overwrite another administrator's unrelated sections.

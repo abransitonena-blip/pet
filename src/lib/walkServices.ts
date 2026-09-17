@@ -251,7 +251,7 @@ const QUOTE_VALIDITY_HOURS = 2
 async function getZoneData(zoneId: string): Promise<{ basePrice: number; fixedAdjustment: number; percentAdjustment: number }> {
   try {
     const { doc, getDoc } = await import('firebase/firestore')
-    const { db } = await import('@/firebase/config')
+    const { db } = await import('@/firebase/db')
     const snap = await getDoc(doc(db, 'zones', zoneId))
     if (snap.exists()) {
       const d = snap.data()

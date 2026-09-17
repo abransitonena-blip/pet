@@ -86,6 +86,7 @@ jest.mock('firebase/firestore', () => ({
 }))
 
 jest.mock('@/firebase/config', () => ({ db: {} }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 import { getDoc, runTransaction, setDoc } from 'firebase/firestore'
 import { ensureCanonicalCustomerProfile, getCustomerProfile, updateCustomerProfile } from '../src/lib/customerProfile'

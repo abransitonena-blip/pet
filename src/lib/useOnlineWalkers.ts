@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import type { WalkerPresence } from '@/types'
 
 const STALE_THRESHOLD_SECONDS = 60

@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { collection, doc, limit, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { AlertTriangle } from 'lucide-react'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 /**

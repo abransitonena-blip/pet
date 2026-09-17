@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { Dog, PawPrint, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react'
 import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { useEscapeKey } from '@/lib/useEscapeKey'
 import { isGalleryAnimated, isGalleryFormat, isGalleryVideo, type GalleryFormat } from '@/lib/media/galleryMedia'
 

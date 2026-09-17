@@ -1,5 +1,4 @@
 import { initializeApp, getApps } from 'firebase/app'
-import { initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore'
 import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth'
 import { requiredEnv } from '@/lib/env'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -13,11 +12,7 @@ const firebaseConfig = {
   appId: requiredEnv(process.env.NEXT_PUBLIC_FIREBASE_APP_ID, 'NEXT_PUBLIC_FIREBASE_APP_ID'),
 }
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0]
-const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-  cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-})
+export const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0]
 const auth = getAuth(app)
 const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
 import type { Messaging } from 'firebase/messaging'
@@ -36,4 +31,9 @@ export async function getMessagingInstance() {
 // Sin `storage`: los archivos de PET Ap viven en Cloudinary como assets
 // privados, no en Firebase Storage. Inicializarlo metía el SDK de Storage en el
 // arranque de las 92 rutas para que no lo usara nadie.
-export { db, auth, authPersistenceReady }
+//
+// Sin `db` tampoco: Firestore vive en `@/firebase/db`. Este módulo lo importa
+// cualquier pantalla que necesite saber quién entró, incluidas las públicas, y
+// mientras `db` estuvo aquí el SDK de Firestore (unos 90 kB comprimidos) se
+// cargaba en la primera pantalla del sitio para no usarse.
+export { auth, authPersistenceReady }

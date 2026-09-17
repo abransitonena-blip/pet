@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { collection, getDocs, limit, orderBy, query, type FirestoreError } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { Button, Card, EmptyState, ErrorState, LoadingState, StatusBadge } from '@/components/ui'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { WalkReport } from '@/lib/walkReports'

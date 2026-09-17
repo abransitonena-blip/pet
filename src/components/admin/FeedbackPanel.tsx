@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { collection, getDocs, limit, orderBy, query, type DocumentData, type FirestoreError } from 'firebase/firestore'
 import { MessageSquareHeart } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import { ROLES } from '@/lib/roles'
 import { useSessionRole } from '@/lib/useSessionRole'

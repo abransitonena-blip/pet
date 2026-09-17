@@ -8,7 +8,7 @@ import {
   query,
   type FirestoreError,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { classifyCanonicalReadError, type CanonicalReadError } from '@/lib/useCanonicalWalkSessions'
 import type { DogVaccine } from '@/lib/dogHealth'
 

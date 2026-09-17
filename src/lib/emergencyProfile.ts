@@ -13,7 +13,7 @@
  */
 
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 
 // ---------------------------------------------------------------------------
 // Types

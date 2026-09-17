@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { db, auth } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import {
   collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, limit,
 } from 'firebase/firestore'

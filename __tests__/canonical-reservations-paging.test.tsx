@@ -42,6 +42,7 @@ jest.mock('@/firebase/config', () => ({ db: {} }))
 jest.mock('@/lib/useCanonicalWalkSessions', () => ({
   classifyCanonicalReadError: () => 'unknown',
 }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 jest.mock('firebase/firestore', () => ({
   collection: (_db: unknown, name: string) => ({ name }),
   documentId: () => '__name__',

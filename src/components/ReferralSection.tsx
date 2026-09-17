@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 import { Share2, Check, Copy, Users, Loader2 } from 'lucide-react'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'

@@ -4,7 +4,8 @@ import { useState } from 'react'
 import {
   collection, addDoc, updateDoc, deleteField, doc, serverTimestamp,
 } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { motion } from 'framer-motion'
 import {
   PawPrint, Plus, X, Check, Brain, HeartPulse, SlidersHorizontal,

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { collection, doc, getDocs, limit as firestoreLimit, onSnapshot, orderBy, query } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { auth } from '@/firebase/config'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 

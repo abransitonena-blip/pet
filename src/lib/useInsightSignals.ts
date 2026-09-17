@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { collection, getDocs, limit, onSnapshot, query, where } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import type { OpenGeofenceAlertInput } from '@/lib/insights'
 
 /**

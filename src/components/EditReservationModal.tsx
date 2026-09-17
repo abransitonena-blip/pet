@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { X } from 'lucide-react'
 import type { Reservation } from '@/types'
 import { SERVICE_NAMES, normalizeServiceName } from '@/lib/walkServices'

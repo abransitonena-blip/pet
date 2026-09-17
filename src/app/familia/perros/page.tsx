@@ -7,7 +7,8 @@ import dynamic from 'next/dynamic'
 import {
   collection, query, where, onSnapshot, deleteDoc, doc, limit,
 } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { onAuthStateChanged } from 'firebase/auth'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PawPrint, Plus, Pencil, Trash2, ArrowLeft, AlertTriangle } from 'lucide-react'

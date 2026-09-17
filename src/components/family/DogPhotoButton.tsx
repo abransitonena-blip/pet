@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { Camera } from 'lucide-react'
 import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { DOG_PHOTO_TYPES, dogPhotoErrorMessage } from '@/lib/dogPhotos'
 import { uploadDogPhoto } from '@/lib/media/dogPhotoUpload'

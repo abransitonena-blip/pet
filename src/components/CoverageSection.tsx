@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { collection, limit, onSnapshot, query, where } from 'firebase/firestore'
 import { CheckCircle2, Mailbox, MapPinned, Navigation, Search } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { getWhatsAppLink } from '@/lib/utils'
 import { BRAND } from '@/lib/brand'
 import { normalizePostalCode, zoneForPostalCode } from '@/lib/zoneMatching'

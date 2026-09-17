@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 
 // chat.ts arrastra la configuración de Firebase, que no arranca en jest.
 jest.mock('@/firebase/config', () => ({ db: {}, auth: {} }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 import { CHAT_MESSAGE_MAX_LENGTH } from '@/lib/chat'
 

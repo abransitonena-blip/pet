@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import type { Walker } from '@/types'
 import { daySlots } from '@/lib/dispatch'

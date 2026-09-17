@@ -2,7 +2,8 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { db, auth } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { collection, query, orderBy, onSnapshot, limit, startAfter, getDocs, DocumentSnapshot } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import { dedupeById } from '@/lib/collectionUtils'

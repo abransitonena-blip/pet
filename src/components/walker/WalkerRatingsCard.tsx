@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, limit, onSnapshot, query, where } from 'firebase/firestore'
 import { Star } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import Card from '@/components/ui/Card'
 import { summarizeWalkerRatings } from '@/lib/walkerReviews'
 

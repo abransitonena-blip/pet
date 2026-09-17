@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { AlertTriangle, MapPinOff, MessageSquare, Star, XCircle } from 'lucide-react'
 import { Card, EmptyState, ErrorState, LoadingState, PageHeader } from '@/components/ui'
 import { useCanonicalReservations } from '@/lib/useCanonicalReservations'

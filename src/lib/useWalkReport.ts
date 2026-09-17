@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { doc, getDoc, onSnapshot, runTransaction, serverTimestamp, type DocumentData, type DocumentSnapshot, type FirestoreError } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import {
   WALK_REPORT_SCHEMA_VERSION,

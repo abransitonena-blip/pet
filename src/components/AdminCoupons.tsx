@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { Tag, Plus, Trash2, Loader2, Percent, DollarSign, ToggleLeft, ToggleRight, Pencil, Check, X } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
 

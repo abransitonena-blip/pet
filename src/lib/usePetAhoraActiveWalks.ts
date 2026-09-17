@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import type { PetAhoraRequest } from '@/types'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 

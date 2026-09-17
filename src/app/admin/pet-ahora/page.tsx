@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, Timestamp, limit } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { motion } from 'framer-motion'
 import { Zap, Ban, CheckCircle2, Loader2, Dog, Search } from 'lucide-react'
 import type { PetAhoraRequest } from '@/types'

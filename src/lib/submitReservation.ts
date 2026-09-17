@@ -1,4 +1,5 @@
-import { db, auth } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { collection, serverTimestamp, doc, getDoc, writeBatch } from 'firebase/firestore'
 import { WHATSAPP_NUMBER } from '@/lib/utils'
 import type { ReservationPackageType } from '@/lib/walkServices'

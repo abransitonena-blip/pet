@@ -5,7 +5,8 @@ import {
   collection, doc, getDocs, limit as fsLimit, onSnapshot, orderBy, query, serverTimestamp, updateDoc, type FirestoreError,
 } from 'firebase/firestore'
 import { AlertTriangle, Dog, Filter, MapPinned, Navigation, User } from 'lucide-react'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
 import EmptyState from '@/components/ui/EmptyState'

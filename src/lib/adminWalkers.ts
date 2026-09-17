@@ -1,5 +1,5 @@
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 
 export type WalkerOperationalStatus = 'active' | 'inactive' | 'suspended'
 

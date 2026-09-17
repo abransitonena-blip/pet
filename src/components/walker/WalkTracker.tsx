@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { collection, limit, onSnapshot, query, where } from 'firebase/firestore'
 import { AlertTriangle, LocateFixed, MapPinOff } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 /**

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, limit } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { motion } from 'framer-motion'
 import { Footprints, Wifi, WifiOff, MapPin, Clock } from 'lucide-react'
 

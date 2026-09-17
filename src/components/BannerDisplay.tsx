@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { doc, onSnapshot } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { watchDocument } from '@/firebase/lazyFirestore'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 
@@ -13,19 +12,16 @@ export default function BannerDisplay() {
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    try {
-      const unsub = onSnapshot(doc(db, 'admin', 'banner'), (snap) => {
-        if (snap.exists()) {
-          const data = snap.data() as { message: string; active: boolean }
-          setBanner(data)
-          if (data.active && data.message) {
-            const prev = localStorage.getItem(DISMISS_KEY)
-            if (prev === data.message) setDismissed(true)
-          }
-        }
-      })
-      return unsub
-    } catch { return () => {} }
+    return watchDocument(['admin', 'banner'], (raw) => {
+      if (!raw) return
+      const data = raw as { message: string; active: boolean }
+      setBanner(data)
+      if (data.active && data.message) {
+        try {
+          if (localStorage.getItem(DISMISS_KEY) === data.message) setDismissed(true)
+        } catch { /* modo privado */ }
+      }
+    }, () => { /* sin banner, la pantalla sigue igual */ })
   }, [])
 
   const dismiss = () => {

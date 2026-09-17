@@ -12,7 +12,7 @@ import {
   type DocumentData,
   type FirestoreError,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import {
   buildPersistentTicketSnapshot,
   persistentTicketFingerprint,

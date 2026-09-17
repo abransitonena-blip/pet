@@ -10,6 +10,7 @@ jest.mock('firebase/firestore', () => ({
 }))
 
 jest.mock('@/firebase/config', () => ({ db: {} }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 import { onSnapshot } from 'firebase/firestore'
 import { useOnlineWalkers } from '../src/lib/useOnlineWalkers'

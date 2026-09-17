@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { Camera, UserRound } from 'lucide-react'
 import { doc, serverTimestamp, updateDoc } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { WALKER_PHOTO_TYPES, walkerPhotoErrorMessage } from '@/lib/walkerPhotos'
 import { uploadWalkerPhoto } from '@/lib/media/walkerPhotoUpload'

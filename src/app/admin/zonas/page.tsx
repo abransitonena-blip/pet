@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import {
   collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, limit,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   MapPinned, Plus, Pencil, Trash2, X, Check,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import type { PresenceStatus } from '@/types'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 

@@ -2,8 +2,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { doc, onSnapshot } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { watchDocument } from '@/firebase/lazyFirestore'
 import { getReservationServiceDefinitions, normalizeServiceName, RESERVATION_SERVICE_IDS } from '@/lib/walkServices'
 import {
   createEmptyServicePrices,
@@ -40,14 +39,14 @@ export function PricesProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<PriceDocumentStatus>('loading')
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, 'appSettings', 'servicePrices'), (snapshot) => {
-      if (!snapshot.exists()) {
+    return watchDocument(['appSettings', 'servicePrices'], (data) => {
+      if (!data) {
         setServices(EMPTY_SERVICE_PRICES)
         setVersion(0)
         setStatus('empty')
         return
       }
-      const parsed = parsePublicServicePricesDocument(snapshot.data(), SERVICE_DEFINITIONS)
+      const parsed = parsePublicServicePricesDocument(data, SERVICE_DEFINITIONS)
       if (!parsed) {
         setServices(EMPTY_SERVICE_PRICES)
         setVersion(0)
@@ -61,7 +60,6 @@ export function PricesProvider({ children }: { children: ReactNode }) {
       const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
       setStatus(code.includes('permission-denied') ? 'permission-denied' : 'network-error')
     })
-    return unsubscribe
   }, [])
 
   const findByLegacyName = (serviceName: string): PublicServicePrice | null => {

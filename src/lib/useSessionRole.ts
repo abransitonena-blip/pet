@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
-import { auth, authPersistenceReady, db } from '@/firebase/config'
+import { auth, authPersistenceReady } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { roleClaimFromToken, hasRole, isTeamRole, type Role } from '@/lib/roles'
 
 export const SESSION_LOADING_TIMEOUT_MS = 12_000

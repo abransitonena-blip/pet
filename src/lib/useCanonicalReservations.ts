@@ -15,7 +15,7 @@ import {
   type QueryConstraint,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import type { WalkSessionStatus } from '@/lib/domainStates'
 import { classifyCanonicalReadError, type CanonicalReadError } from '@/lib/useCanonicalWalkSessions'
 import { getReservationServiceDefinitions } from '@/lib/walkServices'

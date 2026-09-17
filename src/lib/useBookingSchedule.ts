@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { parseBookingSchedule, type BookingSchedule, type BookingScheduleStatus } from '@/lib/bookingSchedule'
 
 export function useBookingSchedule(): { schedule: BookingSchedule | null; status: BookingScheduleStatus } {

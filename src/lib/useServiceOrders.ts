@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import {
   collection, query, orderBy, onSnapshot, where, limit as fsLimit, getDocs,
   doc, runTransaction, serverTimestamp, type FirestoreError, type QueryConstraint,

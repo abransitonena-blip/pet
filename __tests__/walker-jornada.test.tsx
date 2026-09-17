@@ -15,6 +15,7 @@ jest.mock('firebase/firestore', () => ({
   runTransaction: jest.fn(),
   serverTimestamp: jest.fn(),
 }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 // Las herramientas del paseo tienen sus propias pruebas; aquí sólo importa dónde quedan.
 jest.mock('@/components/walker/WalkQuickLog', () => ({ __esModule: true, default: () => <div data-testid="quick-log" /> }))
 jest.mock('@/components/walker/WalkPhotoButton', () => ({ __esModule: true, default: () => <button type="button">Foto</button> }))

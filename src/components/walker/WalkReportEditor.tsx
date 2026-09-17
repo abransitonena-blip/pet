@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { AlertTriangle, Camera, Droplets, PawPrint, Smile, Timer } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { Button, Card, ErrorState, LoadingState } from '@/components/ui'
 import WalkPhotos from '@/components/walker/WalkPhotos'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'

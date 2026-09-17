@@ -5,6 +5,7 @@ jest.mock('@/lib/env', () => ({
 jest.mock('@/firebase/config', () => ({
   db: {}
 }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 jest.mock('firebase/firestore', () => {
   const mockFn = () => jest.fn()

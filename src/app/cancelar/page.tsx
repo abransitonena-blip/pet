@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { Phone, Loader2, CheckCircle2, X, Dog, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { Reservation } from '@/types'

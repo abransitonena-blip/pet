@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Dog, CalendarCheck, Star, Gift } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, limit } from 'firebase/firestore'
 
 interface Notification {

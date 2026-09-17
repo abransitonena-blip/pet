@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { motion } from 'framer-motion'
 import { UserPlus, Plus, Trash2, Copy, Check } from 'lucide-react'
 import PageHeader from '@/components/ui/PageHeader'

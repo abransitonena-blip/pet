@@ -4,6 +4,7 @@ import { emergencyProfileUrl, generatePublicSlug, isEmergencySlug } from '@/lib/
 // El módulo toca Firestore para escribir el espejo; aquí solo se prueban sus
 // ayudantes puros y el contrato de las reglas, así que la app no se inicializa.
 jest.mock('@/firebase/config', () => ({ db: {}, auth: {} }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 const read = (path: string) => readFileSync(path, 'utf8')
 

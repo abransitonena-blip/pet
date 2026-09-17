@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { collection, doc, limit, onSnapshot, query, where } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 
 /**
  * Cuántos mensajes sin leer esperan a quien está viendo la pantalla.

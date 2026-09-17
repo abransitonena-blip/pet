@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { Star } from 'lucide-react'
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import Card from '@/components/ui/Card'
 import { WALKER_REVIEW_TEXT_LIMIT, validateWalkerReview, walkerReviewErrorMessage } from '@/lib/walkerReviews'
 

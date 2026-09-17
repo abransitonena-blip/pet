@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import Image from 'next/image'
 import { Camera, MapPin, X, Check, Square, Loader2, Image as ImageIcon } from 'lucide-react'

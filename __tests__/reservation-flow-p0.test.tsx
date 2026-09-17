@@ -22,6 +22,7 @@ jest.mock('firebase/firestore', () => ({
   serverTimestamp: jest.fn(() => 'server-timestamp'),
   writeBatch: () => mockWriteBatch(),
 }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 describe('catálogo de reserva', () => {
   const configuredPrices = (overrides: Record<string, Partial<PublicServicePrice>> = {}) => {

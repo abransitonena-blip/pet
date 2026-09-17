@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from 'react'
 import { collection, addDoc, doc, updateDoc, Timestamp } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import type { Address } from '@/types'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 

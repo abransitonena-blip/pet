@@ -26,6 +26,7 @@ jest.mock('firebase/firestore', () => ({
   serverTimestamp: jest.fn(() => timestamp),
   getDocs: jest.fn(),
 }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 import { limit, onSnapshot, orderBy, runTransaction, setDoc, where } from 'firebase/firestore'
 import { advanceWalkerSession, useWalkerSessions } from '../src/lib/useServiceOrders'

@@ -13,6 +13,7 @@ jest.mock('firebase/firestore', () => ({
   collection: jest.fn(() => ({})),
   serverTimestamp: jest.fn(() => ({ seconds: 1 })),
 }))
+jest.mock('@/firebase/db', () => ({ db: {} }))
 
 import { ConsentProvider, CONSENT_KEY } from '../src/components/analytics/ConsentProvider'
 import { trackEvent } from '../src/lib/analytics'

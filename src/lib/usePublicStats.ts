@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, query, getDocs, where, limit } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { loadFirestore } from '@/firebase/lazyFirestore'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 interface PublicStats {
@@ -25,6 +24,9 @@ export function usePublicStats(): PublicStats & { loading: boolean } {
         return
       }
       try {
+        // El SDK llega aparte: esta cifra adorna la portada, no vale que retrase
+        // su primera carga. Ver firebase/lazyFirestore.ts.
+        const { db, collection, query, getDocs, where, limit } = await loadFirestore()
         const reviewsSnap = await getDocs(query(
           collection(db, 'reviews'),
           where('moderationStatus', '==', 'published'),

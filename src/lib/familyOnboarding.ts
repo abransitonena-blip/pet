@@ -8,7 +8,7 @@ import {
   serverTimestamp,
   where,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { getCanonicalCustomerProfile, updateCustomerProfile } from '@/lib/customerProfile'
 import type { FamilyOnboardingSnapshot, OnboardingZone } from '@/lib/familyOnboardingState'
 

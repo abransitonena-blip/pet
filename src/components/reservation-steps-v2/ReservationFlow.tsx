@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { db, auth } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { collection, doc, query, where, limit, getDoc, getDocs } from 'firebase/firestore'
 import { useSearchParams } from 'next/navigation'
 import { submitReservation } from '@/lib/submitReservation'

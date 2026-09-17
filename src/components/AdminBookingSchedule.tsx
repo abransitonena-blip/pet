@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import { CalendarClock, Save } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { Button, ConfirmDialog, ErrorState, LoadingState } from '@/components/ui'
 import {
   BOOKING_DAY_KEYS,

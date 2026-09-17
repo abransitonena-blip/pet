@@ -15,7 +15,8 @@ import {
   where,
   type FirestoreError,
 } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import type { WalkSessionStatus } from '@/lib/domainStates'
 import { WALK_WINDOW_CAP } from '@/lib/recentWindow'
 import type { WalkPoint } from '@/types'

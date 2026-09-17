@@ -3,8 +3,8 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { doc, onSnapshot, setDoc, serverTimestamp, type DocumentSnapshot, type DocumentData } from 'firebase/firestore'
-import { db, auth } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { loadFirestore, watchDocument } from '@/firebase/lazyFirestore'
 import {
   DEFAULT_BRAND_DOC,
   normalizeBrandDoc,
@@ -57,32 +57,17 @@ export function BrandProvider({ children }: { children: ReactNode }) {
 
   // Subscribe to appSettings/public.brand
   useEffect(() => {
-    let unsub: () => void = () => {}
-    let cancelled = false
-
-    const onSnap = (snap: DocumentSnapshot<DocumentData>) => {
-      if (cancelled) return
-      const raw = snap.exists() ? snap.data()?.brand : null
-      const doc = raw ? normalizeBrandDoc(raw) : DEFAULT_BRAND_DOC
-      setPublished(doc.published)
-      setDraft(doc.draft)
-      setPublishedVersion(doc.publishedVersion)
-      setDraftVersion(doc.draftVersion)
-      setEditing(doc.draft || doc.published)
-    }
-
-    try {
-      unsub = onSnapshot(doc(db, 'appSettings', 'public'), onSnap, (err) => {
-        console.error('Error loading brand settings:', err)
-      })
-    } catch (err) {
-      console.error('Error subscribing to brand settings:', err)
-    }
-
-    return () => {
-      cancelled = true
-      unsub()
-    }
+    return watchDocument(['appSettings', 'public'], (data) => {
+      const raw = data?.brand ?? null
+      const brandDoc = raw ? normalizeBrandDoc(raw) : DEFAULT_BRAND_DOC
+      setPublished(brandDoc.published)
+      setDraft(brandDoc.draft)
+      setPublishedVersion(brandDoc.publishedVersion)
+      setDraftVersion(brandDoc.draftVersion)
+      setEditing(brandDoc.draft || brandDoc.published)
+    }, (err) => {
+      console.error('Error loading brand settings:', err)
+    })
   }, [])
 
   // Apply effective preset (published normally, editing while previewing)
@@ -94,6 +79,7 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   const persist = useCallback(async (brand: Partial<BrandDoc>) => {
     setSaving(true)
     try {
+      const { db, doc, setDoc, serverTimestamp } = await loadFirestore()
       await setDoc(
         doc(db, 'appSettings', 'public'),
         { brand, updatedAt: serverTimestamp(), updatedBy: auth.currentUser?.uid ?? null },

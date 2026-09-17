@@ -4,8 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signInWithEmailAndPassword, signInWithPopup, signOut, type User } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
-import { auth, authPersistenceReady, db } from '@/firebase/config'
+import { auth, authPersistenceReady } from '@/firebase/config'
+import { loadFirestore } from '@/firebase/lazyFirestore'
 import { Mail, Lock, Loader2 } from 'lucide-react'
 import { Events } from '@/lib/analytics'
 import { classifyGoogleError, classifyLoginError, clearSessionCookie, setSessionCookie } from '@/lib/auth'
@@ -45,6 +45,8 @@ export default function TeamLoginForm() {
     }
 
     if (access.role === 'walker') {
+      // Firestore se carga al entrar, no al pintar la pantalla de acceso.
+      const { db, doc, getDoc } = await loadFirestore()
       const profileSnap = await getDoc(doc(db, 'walkerProfiles', user.uid))
       const profileAccess = evaluateWalkerProfileAccess(profileSnap.exists() ? profileSnap.data() : null)
       if (!profileAccess.allowed) {

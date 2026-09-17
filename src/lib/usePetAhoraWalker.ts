@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { usePetAhoraDispatch } from './usePetAhoraDispatch'
 import { playOfferChime } from './notificationSound'
 import type { PetAhoraOffer, PetAhoraRequest } from '@/types'

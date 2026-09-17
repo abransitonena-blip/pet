@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { collection, onSnapshot, orderBy, query, type FirestoreError } from 'firebase/firestore'
 import { Send, MessagesSquare } from 'lucide-react'
-import { db } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import Card from '@/components/ui/Card'
 import ErrorState from '@/components/ui/ErrorState'
 import { CHAT_MESSAGE_MAX_LENGTH, markConversationRead, openConversation, sendChatMessage, type ConversationIdentity } from '@/lib/chat'

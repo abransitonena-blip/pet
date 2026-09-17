@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { Check, Copy, Download, QrCode } from 'lucide-react'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
+import { db } from '@/firebase/db'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import {
   activateEmergencyProfile,
