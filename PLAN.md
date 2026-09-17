@@ -1,6 +1,6 @@
 # Plan de rediseño de PET Ap
 
-Estado al 2026-09-17. Cada fase se cierra por completo antes de abrir la
+Estado al 2026-09-17 (segunda vuelta). Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
 Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
@@ -24,6 +24,7 @@ Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
 | 10 | Consultas que traían lo más viejo | Cada pantalla pide su rango de fechas (14, 30, 31 o 60 días; los historiales, un mes a la vez). Los ganchos aceptan `since`/`until` y avisan con `capped` | `ventanas-recientes` |
 | 12 | Las tres decisiones de arquitectura | PET Ahora ya despachaba desde `dispatchServer.ts` server-side (transacciones, sin duplicar oferta); faltaba cerrar la regla de `petAhoraOffers`/`petAhoraLeases`, ahora `if false`. Bitácora administrativa: `/api/admin/audit-log` nuevo, verifica admin por token y escribe con el T3 privilegiado -- el actor ya no lo declara el navegador; los tres call sites (`resenas`, `EditReservationModal`, `LegacyReservationsView`) migrados, `lib/audit.ts` duplicado eliminado, regla de `audit-logs` cerrada. Historial legacy: `reservations` ahora sólo lee, cerrado `create/update/delete` en la regla (todo el código ya estaba detrás de `LEGACY_RESERVATION_WRITES_ENABLED`, permanentemente apagada) | emulador |
 | 13 | Las 11 pruebas de reglas desactualizadas | La mayoría eran la prueba, no la regla: faltaba el claim de `email` en el helper de autenticación, o `serverTimestamp()` donde la regla exige `request.time` en `createdAt`/`updatedAt`. Dos sí eran huecos reales: `serviceOrders` no reconocía el campo legacy `clientId` en lectura (mismo patrón que `isReservationClient()`), y no tenía ninguna vía para que Admin corrigiera una orden atascada (ahora sólo `status: 'confirmed'` + `paymentStatus: 'under_review'`, nada más). Y una sorpresa: `privacyRequests` no tenía ningún bloque de reglas -- las solicitudes ARCO desde Familia PET se habían estado rechazando en silencio; ahora tiene su regla, calcada del payload real que ya escribe la página | emulador |
+| 11 | Peso de la primera carga | `db` salió de `@/firebase/config`: el SDK de Firestore ya no viaja con las pantallas que sólo necesitan sesión. Portada 297→190 kB, acceso de familia 279→171, acceso del equipo 284→177. Los paneles no bajan: ahí se usa | `peso-primera-carga` |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -40,24 +41,35 @@ Resumen leía 100 perfiles de familia para un conteo que no mostraba.
 
 ## Abiertas, en orden
 
-### 11. Peso de verdad: bajar de 250 kB
-Lo que queda pesado es el SDK de Firestore, que los paneles sí usan para escuchar
-cambios en vivo. Pide separarlo por ruta y cargar las pantallas que no escuchan
-nada sin él.
-
-Cierra cuando: ninguna ruta pase de 250 kB de primera carga.
-
 ### 14. Densidad del resto de los paneles
-La fase 9 cubrió los cuatro con los que se opera a diario. Quedan los demás, en
-este orden por tamaño y uso: Mis perros (789 líneas), Mis direcciones (613),
-Zonas (584), Familias (496), Perros de admin (409), Rutas (384), perfil del
-paseador (362). Mismo criterio y mismo método: primero lo que se necesita para
-actuar, y cada panel con su prueba.
+La fase 9 cubrió los cuatro con los que se opera a diario. De los demás:
+
+- **Hecho.** Mis perros (789→206 líneas: la tarjeta muestra al perro y sus
+  alergias, el formulario se carga al abrirlo) y Mis direcciones (613→184: igual,
+  y sin escuchar las zonas hasta que alguien edita). Prueba: `densidad-paneles`.
+- **Revisados, sin cambio.** Familias, Perros de admin y Rutas ya abren con lo
+  que se necesita para actuar y dicen de dónde salen sus cifras, incluida la
+  ventana de 500 paseos. El perfil del paseador sólo mentía en una cosa: decía
+  "Activo" siempre, ahora dice su estado.
+- **Pendiente.** Zonas (584 líneas): su formulario todavía viaja con la pantalla,
+  como viajaban los otros dos.
+
+Y una regla que salió de aquí y ya se vigila en `densidad-paneles`: la fecha de
+hoy se calcula en la zona del negocio, nunca con `toISOString()`.
 
 ### 15. Animaciones
 Desbloqueada por la fase 3: ahora se puede animar sin dañar a quien pidió no
 recibir movimiento. Va al final a propósito -- animar una interfaz que todavía se
 está reordenando es trabajo que se tira.
+
+### 16. Peso de los paneles: bajar de 250 kB
+Lo que queda pesado en los paneles es el SDK de Firestore, que sí usan para
+escuchar cambios en vivo (unos 90 kB comprimidos de los ~320 de cada panel).
+Bajar de 250 pide otra cosa: cargar la pantalla sin él y conectar las escuchas
+después, como ya hacen los contextos públicos.
+
+Cierra cuando: ninguna ruta pase de 250 kB de primera carga, o quede escrito por
+qué ese piso no se puede bajar sin romper algo.
 
 ---
 
