@@ -1,6 +1,6 @@
 # Plan de rediseño de PET Ap
 
-Estado al 2026-09-15. Cada fase se cierra por completo antes de abrir la
+Estado al 2026-09-17. Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
 Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
@@ -21,6 +21,7 @@ Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
 | 7 | Inicio de familia | Tarjetas `div onClick` → botones; tarjeta muerta de lealtad fuera | `accesibilidad-base` |
 | 8 | Controles activables | Los 25 `onClick` restantes resultaron todos legítimos; la prueba reconoce los tres patrones válidos | `controles-interactivos` |
 | 9 | Densidad de los cuatro paneles de operación | `/walker` abre en el paseo que toca; `/familia` en su próximo paseo; Solicitudes en la que urge; Resumen en lo que falta asignar. Lo demás, a un toque. De paso, seis defectos de datos (lista abajo) | `walker-jornada`, `family-home`, `admin-solicitudes`, `admin-resumen`, emulador |
+| 10 | Consultas que traían lo más viejo | Cada pantalla pide su rango de fechas (14, 30, 31 o 60 días; los historiales, un mes a la vez). Los ganchos aceptan `since`/`until` y avisan con `capped` | `ventanas-recientes` |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -36,29 +37,6 @@ Resumen leía 100 perfiles de familia para un conteo que no mostraba.
 ---
 
 ## Abiertas, en orden
-
-### 10. Consultas que traen lo más viejo
-La fase 9 encontró el mismo defecto tres veces: una consulta en orden de fecha
-**ascendente** con tope de 100 devuelve los 100 paseos **más antiguos**. Con más
-de cien -- una familia con paseo diario llega en tres meses --, lo nuevo
-desaparece. Ya corregido donde bastaba poner piso a la fecha (jornada del
-paseador, inicio de familia, Resumen). Falta donde se necesita lo más reciente:
-
-- `useCustomerWalkSessions` → Mensajes (busca el paseo abierto: con más de cien,
-  no lo encuentra), Fotos y reportes, Historial, Notificaciones, ficha del perro.
-- `useWalkerSessions` sin `since` → Historial del paseador, su chat, su tarjeta
-  de trabajo (que ya dice la verdad sobre su ventana, pero no ve lo nuevo).
-
-La corrección limpia es orden descendente, y eso pide índices
-(`walkerId`, `scheduledDate` DESC) y (`customerId`, `scheduledDate` DESC).
-Antes de tocar `firestore.indexes.json`, alguien con acceso corre
-`firebase firestore:indexes --project pet-1cb0b` para ver qué hay desplegado:
-desplegar el archivo puede ofrecer borrar índices creados desde la consola.
-**REQUIERE DESPLEGAR ÍNDICES**, y esperar a que terminen de construirse antes
-de desplegar el código que los usa.
-
-Cierra cuando: ninguna pantalla que muestra "lo reciente" lea en ascendente con
-tope, y una prueba lo vigile.
 
 ### 11. Peso de verdad: bajar de 250 kB
 Lo que queda pesado es el SDK de Firestore, que los paneles sí usan para escuchar
@@ -108,6 +86,11 @@ está reordenando es trabajo que se tira.
   parsear. Los detectores buenos quedaron como pruebas.
 - **La prueba encuentra más que la revisión.** Dos veces destapó defectos que no
   estaba buscando.
+- **La ventana era mejor arreglo que el índice.** La fase 10 iba a pedir
+  índices descendentes y un despliegue. Acotar el rango de fechas resuelve lo
+  mismo sin tocar la infraestructura: si el rango cabe en el tope de 100, el
+  orden deja de importar. Y donde no cabe -- un mes con más de cien paseos --,
+  la pantalla lo dice (`capped`) en lugar de enseñar números que no cuadran.
 - **Un tope sin orden correcto miente en silencio.** Tres consultas
   ascendentes con `limit(100)` enseñaban lo más viejo como si fuera lo actual,
   y una prueba exigía la frase falsa ("tus 100 paseos más recientes"). No se ve
