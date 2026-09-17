@@ -13,6 +13,7 @@ import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCan
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { formatShortDate } from '@/lib/customerSegments'
 import { isWalkPhotoReference } from '@/lib/walkReports'
+import { daysAgo } from '@/lib/recentWindow'
 
 /**
  * Fotos y reporte de cada paseo terminado.
@@ -35,7 +36,9 @@ export default function FotosPage() {
   const router = useRouter()
   const [uid, setUid] = useState('')
   const [checkingAuth, setCheckingAuth] = useState(true)
-  const { sessions, loading, error, retry } = useCustomerWalkSessions(uid)
+  // Los últimos 60 días: sin ventana, la consulta devolvía los paseos más
+  // antiguos de la cuenta y las fotos nuevas no aparecían.
+  const { sessions, loading, error, retry } = useCustomerWalkSessions(uid, { since: daysAgo(new Date().toLocaleDateString('en-CA'), 60) })
   const [reports, setReports] = useState<Record<string, ReportSummary>>({})
 
   useEffect(() => {
@@ -104,13 +107,17 @@ export default function FotosPage() {
             ? 'Las fotos y el reporte de cada paseo aparecen en cuanto el paseador envía su reporte.'
             : 'Las fotos de paseo todavía no están habilitadas. Mientras tanto, cada paseo terminado tiene su reporte escrito por el paseador.'}
         </p>
+        <p className="mt-1 text-xs text-muted">
+          De tus paseos de los últimos 60 días. Los anteriores están en{' '}
+          <Link href="/familia/historial" className="font-semibold text-primary underline-offset-2 hover:underline">Mi historial</Link>, mes por mes.
+        </p>
       </div>
 
       {completed.length === 0 ? (
         <Card>
           <EmptyState
             icon={<Camera size={28} />}
-            title="Todavía no tienes paseos terminados"
+            title="Sin paseos terminados en los últimos 60 días"
             description="Cuando un paseo se complete, sus fotos y su reporte aparecerán aquí."
             action={<Button size="sm" onClick={() => router.push('/familia/nueva-reserva')}>Reservar un paseo</Button>}
           />

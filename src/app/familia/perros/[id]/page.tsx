@@ -16,6 +16,7 @@ import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCan
 import EmergencyTagSection from '@/components/family/EmergencyTagSection'
 import { dogAlerts } from '@/lib/dogHealth'
 import { mexicoCityToday } from '@/lib/customerSegments'
+import { daysAgo } from '@/lib/recentWindow'
 
 /**
  * Perfil de la mascota.
@@ -164,7 +165,9 @@ export default function DogProfilePage() {
   const [uid, setUid] = useState('')
   const [dog, setDog] = useState<DogProfile | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'not-found' | 'error'>('loading')
-  const { sessions, error: sessionsError, retry } = useCustomerWalkSessions(uid)
+  // Sus paseos de los últimos 60 días y los que vienen; el historial completo
+  // vive en Mi historial, mes por mes.
+  const { sessions, error: sessionsError, retry } = useCustomerWalkSessions(uid, { since: daysAgo(new Date().toLocaleDateString('en-CA'), 60) })
   const photoUrl = useDogPhotos(dog?.photoReference ? [{ id: dogId, reference: dog.photoReference }] : [])[dogId] ?? ''
 
   useEffect(() => {

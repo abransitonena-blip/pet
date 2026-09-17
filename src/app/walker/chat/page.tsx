@@ -6,6 +6,7 @@ import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
 import { walkerSessionDate, walkerSessionStatus } from '@/lib/walkerPanel'
 import { openWalkConversation } from '@/lib/chat'
+import { daysAgo } from '@/lib/recentWindow'
 
 /**
  * Los mensajes del paseador: con administración, y con la familia de cada paseo.
@@ -21,7 +22,10 @@ const OPEN_STATUSES = new Set(['assigned', 'confirmed', 'on_the_way', 'arrived',
 
 export default function WalkerChatPage() {
   const { uid, profile } = useWalkerPanel()
-  const { sessions } = useWalkerSessions(uid)
+  // Los paseos abiertos son de estos días; sin piso, la consulta traía los 100
+  // más antiguos, donde ya no queda ninguno abierto.
+  const since = daysAgo(new Date().toLocaleDateString('en-CA'), 14)
+  const { sessions } = useWalkerSessions(uid, { since })
   const [selected, setSelected] = useState<string>('admin')
 
   const identity = useMemo(

@@ -37,7 +37,7 @@ describe('walk report runtime containment', () => {
     expect(history).toContain('useCanonicalReservations')
     expect(history).not.toContain("collection(db, 'reservations')")
     expect(history).toContain('/familia/reportes/')
-    expect(canonical).toContain('useCustomerWalkSessions(customerId)')
+    expect(canonical).toContain('useCustomerWalkSessions(customerId, {')
     expect(canonical).toContain('/familia/reportes/')
     expect(canonical).not.toContain("collection(db, 'walkReports')")
   })

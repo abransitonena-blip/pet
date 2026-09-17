@@ -11,6 +11,7 @@ import { Button, EmptyState, ErrorState } from '@/components/ui'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import { deriveWalkActivity } from '@/lib/walkActivity'
 import PushOptIn from '@/components/PushOptIn'
+import { daysAgo } from '@/lib/recentWindow'
 
 /**
  * Notificaciones de la familia.
@@ -107,7 +108,8 @@ export default function NotificacionesPage() {
   const [pendingReplies, setPendingReplies] = useState<{ count: number; at: number } | null>(null)
   const [lastSeen, setLastSeen] = useState<number | null>(null)
   const [retryKey, setRetryKey] = useState(0)
-  const { sessions, loading: sessionsLoading, error: sessionsError, retry: retrySessions } = useCustomerWalkSessions(uid)
+  // Un aviso viejo no es un aviso: la actividad sale de los últimos 30 días.
+  const { sessions, loading: sessionsLoading, error: sessionsError, retry: retrySessions } = useCustomerWalkSessions(uid, { since: daysAgo(new Date().toLocaleDateString('en-CA'), 30) })
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {

@@ -15,6 +15,7 @@ import { getCustomerProfile } from '@/lib/customerProfile'
 import { openWalkConversation } from '@/lib/chat'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import WalkerCard from '@/components/family/WalkerCard'
+import { daysAgo } from '@/lib/recentWindow'
 
 /**
  * Los mensajes de una familia van a quien lleva a su perro.
@@ -51,7 +52,11 @@ export default function FamilyMessagesPage() {
     })
   }, [router])
 
-  const { sessions, error, retry } = useCustomerWalkSessions(identity?.uid ?? '')
+  // Desde hace dos semanas en adelante: un paseo abierto nunca es más viejo, y
+  // sin piso la consulta traía los 100 paseos más antiguos de la cuenta, donde
+  // ya no hay ninguno abierto.
+  const since = daysAgo(new Date().toLocaleDateString('en-CA'), 14)
+  const { sessions, error, retry } = useCustomerWalkSessions(identity?.uid ?? '', { since })
 
   const walk = useMemo(
     () => sessions.find((session) => OPEN_STATUSES.has(session.status) && session.walkerId),

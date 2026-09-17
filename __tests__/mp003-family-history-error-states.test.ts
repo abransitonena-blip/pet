@@ -24,9 +24,13 @@ describe('MP-003 familia/historial: the list distinguishes error from empty', ()
     expect(errorBranchIndex).toBeLessThan(emptyBranchIndex)
   })
 
-  test('the canonical section already separates loading/error/empty (reference behaviour kept intact)', () => {
-    expect(canonicalHistory).toContain('if (loading) return <LoadingState')
-    expect(canonicalHistory).toContain('if (error) return')
+  test('the canonical section separates loading/error/empty, now inside its month view', () => {
+    const loadingBranch = canonicalHistory.indexOf('loading ? (')
+    const errorBranch = canonicalHistory.indexOf('error ? (')
+    const emptyBranch = canonicalHistory.indexOf('sorted.length === 0 ? (')
+    expect(loadingBranch).toBeGreaterThan(-1)
+    expect(errorBranch).toBeGreaterThan(loadingBranch)
+    expect(emptyBranch).toBeGreaterThan(errorBranch)
     expect(canonicalHistory).toContain('canonicalReadErrorMessage')
   })
 })

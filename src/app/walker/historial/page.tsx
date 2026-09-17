@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, History } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, History } from 'lucide-react'
 import { Button, Card, EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import WalkerSessionCard from '@/components/walker/WalkerSessionCard'
 import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
 import { sortWalkerSessions, walkerReadErrorMessage, walkerSessionDate, walkerSessionStatus } from '@/lib/walkerPanel'
+import { monthWindow } from '@/lib/recentWindow'
 
 type HistoryFilter = 'all' | 'today' | 'upcoming' | 'completed'
 
@@ -15,9 +16,22 @@ function todayKey(): string {
   return new Date().toLocaleDateString('en-CA')
 }
 
+/**
+ * El historial del paseador, un mes a la vez.
+ *
+ * Pedía "todos" sus paseos: orden ascendente con tope de 100, o sea los cien
+ * MÁS ANTIGUOS. Quien sale cinco veces al día perdía de vista lo suyo en tres
+ * semanas. En el mes en curso la ventana no tiene techo, para que "Próximos"
+ * siga mostrando lo que viene.
+ */
 export default function WalkerHistoryPage() {
   const { uid } = useWalkerPanel()
-  const { sessions, loading, error, retry } = useWalkerSessions(uid)
+  const [offset, setOffset] = useState(0)
+  const month = monthWindow(todayKey(), offset)
+  const { sessions, loading, error, capped, retry } = useWalkerSessions(uid, {
+    since: month.since,
+    until: offset < 0 ? month.until : undefined,
+  })
   const [filter, setFilter] = useState<HistoryFilter>('all')
   const sorted = useMemo(() => sortWalkerSessions(sessions, 'desc'), [sessions])
   const today = todayKey()
@@ -51,9 +65,25 @@ export default function WalkerHistoryPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Actividad</p>
           <h1 className="text-2xl font-bold tracking-tight text-ink">Historial</h1>
-          <p className="text-sm text-muted">{completed.length} paseos completados</p>
+          <p className="text-sm text-muted">{completed.length} completados en <span className="capitalize">{month.label}</span></p>
         </div>
       </header>
+
+      <div className="flex items-center justify-between gap-2">
+        <Button type="button" variant="ghost" size="sm" className="h-11 shrink-0" onClick={() => setOffset((current) => current - 1)}>
+          <ChevronLeft size={16} aria-hidden="true" /> Mes anterior
+        </Button>
+        <p className="text-sm font-semibold capitalize text-ink" aria-live="polite">{month.label}</p>
+        <Button type="button" variant="ghost" size="sm" className="h-11 shrink-0" disabled={offset >= 0} onClick={() => setOffset((current) => current + 1)}>
+          Mes siguiente <ChevronRight size={16} aria-hidden="true" />
+        </Button>
+      </div>
+
+      {capped && (
+        <p className="rounded-xl bg-warning/10 px-4 py-3 text-sm text-amber-800" role="status">
+          Este mes tiene más paseos de los que cabe mostrar aquí. Los más recientes del mes podrían faltar.
+        </p>
+      )}
 
       <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrar historial">
         {filters.map((item) => (
@@ -75,8 +105,8 @@ export default function WalkerHistoryPage() {
         <Card className="shadow-none">
           <EmptyState
             icon={<History size={21} />}
-            title={filter === 'all' ? 'Todavía no hay paseos en tu historial' : 'No hay resultados para este filtro'}
-            description="Las sesiones asignadas aparecerán aquí sin mezclar reservas legacy."
+            title={filter === 'all' ? `Sin paseos en ${month.label}` : 'No hay resultados para este filtro'}
+            description="Cambia de mes para ver otros."
             action={filter !== 'all' ? <Button variant="secondary" onClick={() => setFilter('all')}>Ver todos</Button> : undefined}
           />
         </Card>

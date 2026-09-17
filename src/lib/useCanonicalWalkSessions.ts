@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 import type { WalkSessionStatus } from '@/lib/domainStates'
+import { WALK_WINDOW_CAP } from '@/lib/recentWindow'
 import type { WalkPoint } from '@/types'
 
 export type CanonicalReadError = 'permission-denied' | 'network-error' | 'unavailable'
@@ -134,11 +135,20 @@ function withTransitions(transitions: Partial<Record<SessionStep, number>>) {
   return Object.keys(transitions).length > 0 ? { transitions } : {}
 }
 
-export function useCustomerWalkSessions(customerId: string) {
+/**
+ * Los paseos de una familia dentro de una ventana de fechas.
+ *
+ * Sin ventana son los 100 MÁS ANTIGUOS (orden ascendente con tope), así que una
+ * familia con paseo diario dejaba de ver lo suyo a los tres meses. Cada pantalla
+ * pide el rango que necesita; ver recentWindow.ts.
+ */
+export function useCustomerWalkSessions(customerId: string, options: { since?: string; until?: string } = {}) {
   const [sessions, setSessions] = useState<CanonicalWalkSession[]>([])
   const [loading, setLoading] = useState(Boolean(customerId))
   const [error, setError] = useState<CanonicalReadError | null>(null)
+  const [capped, setCapped] = useState(false)
   const [revision, setRevision] = useState(0)
+  const { since, until } = options
 
   useEffect(() => {
     if (!customerId) {
@@ -151,11 +161,14 @@ export function useCustomerWalkSessions(customerId: string) {
     const sessionsQuery = query(
       collection(db, 'walkSessions'),
       where('customerId', '==', customerId),
+      ...(since ? [where('scheduledDate', '>=', since)] : []),
+      ...(until ? [where('scheduledDate', '<=', until)] : []),
       orderBy('scheduledDate', 'asc'),
-      limit(100),
+      limit(WALK_WINDOW_CAP),
     )
     return onSnapshot(sessionsQuery, (snapshot) => {
       setSessions(snapshot.docs.map((item) => sessionFromSnapshot(item.id, item.data())))
+      setCapped(snapshot.docs.length === WALK_WINDOW_CAP)
       setError(null)
       setLoading(false)
     }, (readError: FirestoreError) => {
@@ -163,9 +176,9 @@ export function useCustomerWalkSessions(customerId: string) {
       setError(classifyCanonicalReadError(readError))
       setLoading(false)
     })
-  }, [customerId, revision])
+  }, [customerId, since, until, revision])
 
-  return { sessions, loading, error, retry: () => setRevision((value) => value + 1) }
+  return { sessions, loading, error, capped, retry: () => setRevision((value) => value + 1) }
 }
 
 export function useRequestedWalkSessions() {

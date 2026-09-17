@@ -6,6 +6,7 @@ import Card from '@/components/ui/Card'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
 import { walkerSessionDate, walkerSessionStatus } from '@/lib/walkerPanel'
 import { activeDays, summarizeWalkerWork } from '@/lib/walkerStats'
+import { daysAgo } from '@/lib/recentWindow'
 
 /**
  * Lo que este paseador ha hecho, contado de sus propios paseos.
@@ -15,14 +16,14 @@ import { activeDays, summarizeWalkerWork } from '@/lib/walkerStats'
  * puntajes ni medallas: una "puntuación" con fórmula propia se ve bonita y no le
  * dice a nadie qué hacer distinto mañana.
  *
- * Sale de la misma consulta que ya carga el panel: tope de 100 en orden de fecha
- * ASCENDENTE. Esta tarjeta los llamaba "los más recientes", y era al revés:
- * con más de cien, son los cien más antiguos. Ahora dice lo que es en cada caso;
- * contar los más nuevos pide un índice descendente (ver PLAN.md, fase 10).
+ * Cuenta una ventana de 31 días, no "todo": la consulta pide orden ascendente
+ * con tope de 100, así que "todo" eran en realidad los cien paseos MÁS
+ * ANTIGUOS -- esta tarjeta los llamaba "los más recientes". Un mes cabe de
+ * sobra en el tope para casi cualquier carga; si aun así lo llena, la tarjeta
+ * lo dice en vez de enseñar números que no cuadran.
  */
 
-// El mismo tope que usa la consulta del panel.
-const WINDOW = 100
+const WINDOW_DAYS = 31
 
 function todayKey(): string {
   return new Date().toLocaleDateString('en-CA')
@@ -34,7 +35,8 @@ function formatDate(date: string): string {
 }
 
 export default function WalkerWorkCard({ uid }: { uid: string }) {
-  const { sessions, loading } = useWalkerSessions(uid)
+  const since = daysAgo(todayKey(), WINDOW_DAYS)
+  const { sessions, loading, capped } = useWalkerSessions(uid, { since })
 
   const rows = useMemo(
     () => sessions.map((session) => ({ date: walkerSessionDate(session), status: walkerSessionStatus(session) })),
@@ -46,11 +48,28 @@ export default function WalkerWorkCard({ uid }: { uid: string }) {
   if (loading || rows.length === 0) return null
 
   const tiles = [
-    { label: 'Paseos completados', value: summary.completed, icon: Footprints },
+    { label: 'Completados', value: summary.completed, icon: Footprints },
     { label: 'Esta semana', value: summary.completedThisWeek, icon: TrendingUp },
     { label: 'Este mes', value: summary.completedThisMonth, icon: CalendarDays },
     { label: 'Días que saliste', value: days, icon: CalendarCheck },
   ]
+
+  // Con la ventana llena, los paseos que trae son los más viejos de esos 31
+  // días: contar con ellos diría "0 esta semana" a alguien que salió ayer.
+  if (capped) {
+    return (
+      <Card className="p-4 shadow-none sm:p-5">
+        <div className="mb-1 flex items-center gap-2">
+          <Footprints size={17} className="text-primary" aria-hidden="true" />
+          <h2 className="font-bold text-ink">Mi trabajo</h2>
+        </div>
+        <p className="text-sm text-muted">
+          Hiciste más de 100 paseos en los últimos 31 días: son más de los que esta cuenta puede leer de una vez, así que
+          prefiere no darte un número antes que darte uno equivocado.
+        </p>
+      </Card>
+    )
+  }
 
   return (
     <Card className="p-4 shadow-none sm:p-5">
@@ -59,9 +78,7 @@ export default function WalkerWorkCard({ uid }: { uid: string }) {
         <h2 className="font-bold text-ink">Mi trabajo</h2>
       </div>
       <p className="mb-4 text-xs text-muted">
-        {sessions.length < WINDOW
-          ? 'De todos tus paseos registrados.'
-          : `De tus primeros ${WINDOW} paseos registrados. No es toda tu historia: los más nuevos todavía no entran en esta cuenta.`}
+        De tus paseos de los últimos {WINDOW_DAYS} días. No es toda tu historia: es la ventana que cuenta esta tarjeta.
       </p>
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">

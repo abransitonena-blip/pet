@@ -76,7 +76,10 @@ describe('Walker panel — consultas, estado y listeners', () => {
     // La jornada recorta la consulta a su semana: sin piso, el orden ascendente
     // con tope devolvía los 100 paseos más antiguos y dejaba fuera los de hoy.
     expect(dashboard).toContain('useWalkerSessions(uid, { since: weekStart })')
-    expect(history).toContain('useWalkerSessions(uid)')
+    // El historial pide un mes; sin ventana traía los 100 paseos más antiguos.
+    expect(history).toContain('monthWindow(todayKey(), offset)')
+    expect(history).toContain('since: month.since')
+    expect(history).toContain("until: offset < 0 ? month.until : undefined")
   })
 
   it('distingue loading, vacío, permiso y red', () => {

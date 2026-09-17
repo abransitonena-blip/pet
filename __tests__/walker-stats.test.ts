@@ -82,17 +82,24 @@ describe('la tarjeta de trabajo', () => {
     // los cien MÁS ANTIGUOS. La tarjeta decía "más recientes" y esta prueba lo
     // exigía.
     expect(card).not.toContain('paseos más recientes')
-    expect(card).toContain('sessions.length < WINDOW')
-    expect(card).toContain('De todos tus paseos registrados.')
+    expect(card).toContain('const WINDOW_DAYS = 31')
+    expect(card).toContain('daysAgo(todayKey(), WINDOW_DAYS)')
+    expect(card).toContain('últimos {WINDOW_DAYS} días')
     expect(card).toContain('No es toda tu historia')
-    expect(read('src/lib/useServiceOrders.ts')).toContain("orderBy('scheduledDate', 'asc'),\n      fsLimit(100)")
+  })
+
+  test('si la ventana se llena, no inventa números', () => {
+    // La consulta es ascendente con tope: con la ventana llena, lo que trae son
+    // los paseos más VIEJOS del mes, y "esta semana" saldría en cero.
+    expect(card).toContain('if (capped) {')
+    expect(card).toContain('prefiere no darte un número antes que darte uno equivocado')
   })
 
   test('lo que muestra son paseos contados, no un puntaje', () => {
     // Se miran las etiquetas que de verdad se dibujan: el comentario del
     // archivo sí menciona los puntajes, justo para explicar por qué no los hay.
     const labels = Array.from(card.matchAll(/label: '([^']+)'/g)).map((match) => match[1])
-    expect(labels).toEqual(['Paseos completados', 'Esta semana', 'Este mes', 'Días que saliste'])
+    expect(labels).toEqual(['Completados', 'Esta semana', 'Este mes', 'Días que saliste'])
     for (const value of ['summary.completed', 'summary.completedThisWeek', 'summary.completedThisMonth', 'days']) {
       expect(card).toContain(`value: ${value}`)
     }

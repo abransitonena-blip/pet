@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore'
 import type { ServiceOrder, WalkSession } from '@/types'
 import { classifyWalkerReadError, getWalkerTransition, type WalkerReadError } from '@/lib/walkerPanel'
+import { WALK_WINDOW_CAP } from '@/lib/recentWindow'
 import { captureWalkPoint, locationFieldForTransition } from '@/lib/walkLocation'
 import { notifySessionEvent } from '@/lib/push/pushClient'
 
@@ -91,16 +92,19 @@ export function useServiceOrders(opts?: { customerId?: string; status?: string; 
 /**
  * Los paseos de un paseador, en orden de fecha y con tope de 100.
  *
- * El orden ascendente con tope devuelve los 100 MÁS ANTIGUOS: sin `since`, un
- * paseador con más de 100 paseos deja de ver los de hoy. `since` (YYYY-MM-DD)
- * recorta la ventana por abajo y usa el mismo índice (walkerId, scheduledDate).
+ * El orden ascendente con tope devuelve los 100 MÁS ANTIGUOS: sin ventana, un
+ * paseador con más de 100 paseos deja de ver los de hoy. `since` y `until`
+ * (YYYY-MM-DD) recortan el rango sobre el mismo índice (walkerId,
+ * scheduledDate), y `capped` avisa cuando el rango llegó al tope y por tanto
+ * puede estar dejando fuera lo más nuevo de ese rango.
  */
-export function useWalkerSessions(walkerId: string, options: { since?: string } = {}) {
+export function useWalkerSessions(walkerId: string, options: { since?: string; until?: string } = {}) {
   const [sessions, setSessions] = useState<(WalkSession & { orderId: string })[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<WalkerReadError | null>(null)
+  const [capped, setCapped] = useState(false)
   const [revision, setRevision] = useState(0)
-  const { since } = options
+  const { since, until } = options
 
   useEffect(() => {
     if (!walkerId) {
@@ -117,10 +121,12 @@ export function useWalkerSessions(walkerId: string, options: { since?: string } 
       collection(db, 'walkSessions'),
       where('walkerId', '==', walkerId),
       ...(since ? [where('scheduledDate', '>=', since)] : []),
+      ...(until ? [where('scheduledDate', '<=', until)] : []),
       orderBy('scheduledDate', 'asc'),
-      fsLimit(100),
+      fsLimit(WALK_WINDOW_CAP),
     )
     const unsub = onSnapshot(q, (snap) => {
+      setCapped(snap.docs.length === WALK_WINDOW_CAP)
       setSessions(snap.docs.map((sessionDoc) => {
         const data = sessionDoc.data()
         return {
@@ -139,9 +145,9 @@ export function useWalkerSessions(walkerId: string, options: { since?: string } 
     })
 
     return unsub
-  }, [walkerId, since, revision])
+  }, [walkerId, since, until, revision])
 
-  return { sessions, loading, error, retry: () => setRevision((value) => value + 1) }
+  return { sessions, loading, error, capped, retry: () => setRevision((value) => value + 1) }
 }
 
 export async function advanceWalkerSession(session: WalkSession): Promise<void> {
