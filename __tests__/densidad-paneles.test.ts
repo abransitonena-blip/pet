@@ -38,3 +38,21 @@ describe('Mis perros', () => {
     expect(modal).toContain("collection(db, 'dogs')")
   })
 })
+
+describe('Mis direcciones', () => {
+  const page = read('src/app/familia/direcciones/page.tsx')
+  const modal = read('src/components/family/AddressFormModal.tsx')
+
+  it('mirar lo guardado no carga el formulario ni escucha las zonas', () => {
+    expect(page).toContain("dynamic(() => import('@/components/family/AddressFormModal')")
+    expect(page).not.toContain("collection(db, 'zones')")
+    expect(page).not.toContain('usePostalCodeLookup')
+    expect(modal).toContain("collection(db, 'zones')")
+    expect(modal).toContain('usePostalCodeLookup(form.zip)')
+  })
+
+  it('la nueva dirección sigue quedando como predeterminada cuando es la primera', () => {
+    expect(page).toContain('isFirst={addresses.length === 0}')
+    expect(modal).toContain('isDefault: isFirst,')
+  })
+})

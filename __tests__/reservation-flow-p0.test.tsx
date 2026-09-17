@@ -193,11 +193,14 @@ describe('validación final de reserva', () => {
   })
 
   test('el editor actualiza el documento existente, conserva ownerId y usa un retorno cerrado', () => {
-    const editor = readFileSync('src/app/familia/direcciones/page.tsx', 'utf8')
+    // El formulario salió de la pantalla a su propio componente; el retorno
+    // cerrado sigue en la pantalla, que es la que navega.
+    const editor = readFileSync('src/components/family/AddressFormModal.tsx', 'utf8')
+    const page = readFileSync('src/app/familia/direcciones/page.tsx', 'utf8')
     const addressStep = readFileSync('src/components/reservation-steps-v2/StepV2Address.tsx', 'utf8')
-    expect(editor).toContain("updateDoc(doc(db, 'addresses', editing.id), data)")
+    expect(editor).toContain("updateDoc(doc(db, 'addresses', address.id), data)")
     expect(editor).toContain('ownerId: user.uid')
-    expect(editor).toContain("searchParams.get('returnTo') === '/familia/nueva-reserva'")
+    expect(page).toContain("searchParams.get('returnTo') === '/familia/nueva-reserva'")
     expect(addressStep).toContain('/familia/direcciones?returnTo=/familia/nueva-reserva')
   })
 
