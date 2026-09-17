@@ -232,7 +232,7 @@ export default function WalkerProfilePage() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="truncate font-bold text-ink">{profile.name}</p>
-              <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success-700">Activo</span>
+              <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success-700">{profile.status === 'active' ? 'Activo' : profile.status}</span>
             </div>
             <p className="truncate text-sm text-muted">{profile.email}</p>
           </div>
