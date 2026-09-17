@@ -629,17 +629,34 @@ service cloud.firestore {
     // SERVICE ORDERS (multi-session purchases)
     // ═══════════════════════════════════════════
 
+    // Legacy documents were written with `clientId` before the field was
+    // renamed to `customerId`; .get() with a default avoids the "property
+    // undefined" evaluation error a direct field access would throw on those
+    // older docs. Mirrors isReservationClient()'s legacy-field handling above.
+    function isServiceOrderOwner(data) {
+      return data.get('customerId', null) == request.auth.uid
+        || data.get('clientId', null) == request.auth.uid;
+    }
+
     match /serviceOrders/{orderId} {
       allow get: if isAuthenticated()
-        && (resource.data.customerId == request.auth.uid || isStaff());
+        && (isServiceOrderOwner(resource.data) || isStaff());
       allow list: if isAuthenticated()
-        && (resource.data.customerId == request.auth.uid || isStaff())
+        && (isServiceOrderOwner(resource.data) || isStaff())
         && validListLimit(100);
       allow create: if isActiveAccount()
         && isCustomer()
         && noRoleField()
         && validCustomerServiceOrder(request.resource.data);
-      allow update, delete: if false;
+      // Narrow admin correction: move a stuck order to the canonical
+      // confirmed/under_review pair when payment proof needed manual review.
+      // Not a general editor -- any other status/paymentStatus combination,
+      // or any other field, stays closed.
+      allow update: if isAdmin()
+        && onlyAllowedFieldsChanged(['status', 'paymentStatus'])
+        && request.resource.data.status == 'confirmed'
+        && request.resource.data.paymentStatus == 'under_review';
+      allow delete: if false;
 
       match /sessions/{sessionId} {
         allow read: if isAuthenticated()
@@ -1261,6 +1278,39 @@ service cloud.firestore {
       allow delete: if isAdmin()
         && existsAfter(/databases/$(database)/documents/gallery-images/$(docId))
         && getAfter(/databases/$(database)/documents/gallery-images/$(docId)).data.publicationStatus != 'published';
+    }
+
+    // ═══════════════════════════════════════════
+    // PRIVACY REQUESTS (ARCO, P0.6)
+    // Customer files a request from src/app/familia/privacidad/page.tsx;
+    // requestType is the enum from src/lib/privacyConfig.ts. Read-only after
+    // creation -- there is no client update path, ARCO requests are closed
+    // out manually.
+    // ═══════════════════════════════════════════
+
+    match /privacyRequests/{requestId} {
+      allow get: if isAuthenticated()
+        && (resource.data.requesterUid == request.auth.uid || isStaff());
+      allow create: if isActiveAccount()
+        && isCustomer()
+        && noRoleField()
+        && request.resource.data.requesterUid == request.auth.uid
+        && request.resource.data.channel == 'customer-portal'
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.requestType in [
+          'access', 'rectification', 'cancellation', 'opposition',
+          'consent-revocation', 'photo-removal', 'photo-consent-update'
+        ]
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 500
+        && (request.resource.data.consentVersion == null || request.resource.data.consentVersion is string)
+        && (request.resource.data.requestedPhotoConsent == null || request.resource.data.requestedPhotoConsent is map)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.keys().hasOnly([
+          'requestType', 'requesterUid', 'channel', 'status', 'description',
+          'consentVersion', 'requestedPhotoConsent', 'createdAt'
+        ]);
+      allow update, delete: if false;
     }
 
     // ═══════════════════════════════════════════

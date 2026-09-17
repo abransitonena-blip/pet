@@ -31,7 +31,11 @@ const NOW = Timestamp.fromMillis(1_700_000_000_000)
 let env: RulesTestEnvironment
 
 function dbFor(uid: string, role?: string): Firestore {
-  const claims = role ? { role } : undefined
+  // A real Firebase ID token for an email-auth account always carries `email`
+  // as a standard claim; customerProfiles' create rule checks it against the
+  // profile being written, so a fake auth context without it fails every
+  // create even when the rule and the data are both correct.
+  const claims = { email: 'p@example.test', ...(role ? { role } : {}) }
   return env.authenticatedContext(uid, claims).firestore() as unknown as Firestore
 }
 
@@ -56,6 +60,9 @@ const order = {
   packageType: 'individual',
   numberOfSessions: 1,
   addressId: 'address-1',
+  // validCustomerServiceOrder requires 'notes' in keys().hasAll -- it mirrors
+  // src/lib/submitReservation.ts, which always writes notes (even empty).
+  notes: '',
   status: 'pending_confirmation',
   paymentStatus: 'pending',
   requestedSchedule: [{ date: '2026-08-10', time: '10:00-11:00' }],
@@ -126,16 +133,19 @@ describe('claims and profile ownership', () => {
   })
 
   test('customer creates and edits only an allowlisted own profile', async () => {
+    // createdAt must equal request.time -- only serverTimestamp() resolves to
+    // that server-side; a fixed client Timestamp (like the shared `profile`
+    // fixture's NOW) can never match it.
     const customer = dbFor('customer-1', 'customer')
-    await assertSucceeds(setDoc(doc(customer, 'customerProfiles', 'customer-1'), profile))
-    await assertSucceeds(updateDoc(doc(customer, 'customerProfiles', 'customer-1'), { phone: '5511111111' }))
+    await assertSucceeds(setDoc(doc(customer, 'customerProfiles', 'customer-1'), { ...profile, createdAt: serverTimestamp() }))
+    await assertSucceeds(updateDoc(doc(customer, 'customerProfiles', 'customer-1'), { phone: '5511111111', updatedAt: serverTimestamp() }))
     await assertFails(updateDoc(doc(customer, 'customerProfiles', 'customer-1'), { role: 'admin' }))
-    await assertFails(setDoc(doc(customer, 'customerProfiles', 'customer-2'), profile))
+    await assertFails(setDoc(doc(customer, 'customerProfiles', 'customer-2'), { ...profile, createdAt: serverTimestamp() }))
   })
 
   test('missing claim and legacy client remain customer-only', async () => {
-    await assertSucceeds(setDoc(doc(dbFor('customer-1'), 'customerProfiles', 'customer-1'), profile))
-    await assertSucceeds(setDoc(doc(dbFor('legacy-1', 'client'), 'customerProfiles', 'legacy-1'), profile))
+    await assertSucceeds(setDoc(doc(dbFor('customer-1'), 'customerProfiles', 'customer-1'), { ...profile, createdAt: serverTimestamp() }))
+    await assertSucceeds(setDoc(doc(dbFor('legacy-1', 'client'), 'customerProfiles', 'legacy-1'), { ...profile, createdAt: serverTimestamp() }))
     await assertFails(getDocs(query(collection(dbFor('customer-1'), 'users'), limit(10))))
   })
 
@@ -196,7 +206,7 @@ describe('dogs, addresses and walker profiles', () => {
 
   test('walker safe profile edit succeeds, labor fields fail', async () => {
     const walker = dbFor('walker-1', 'walker')
-    await assertSucceeds(updateDoc(doc(walker, 'walkerProfiles', 'walker-1'), { phone: '5512345678' }))
+    await assertSucceeds(updateDoc(doc(walker, 'walkerProfiles', 'walker-1'), { phone: '5512345678', updatedAt: serverTimestamp() }))
     await assertFails(updateDoc(doc(walker, 'walkerProfiles', 'walker-1'), { zones: ['north'] }))
     await assertFails(updateDoc(doc(walker, 'walkerProfiles', 'walker-1'), { status: 'suspended' }))
     await assertFails(updateDoc(doc(walker, 'walkerProfiles', 'walker-2'), { phone: '5512345678' }))
@@ -358,11 +368,16 @@ describe('service orders and canonical walk sessions', () => {
   })
 
   test('supervisor assigns by UID; walker and customer cannot assign', async () => {
-    const pending = { ...assignedSession, status: 'pending_assignment' }
+    // validStaffAssignment() requires the source status to be 'requested' --
+    // matching assignCanonicalWalkSession's own precondition
+    // (src/lib/useCanonicalWalkSessions.ts:305, `session.status !== 'requested'`
+    // throws 'conflict') -- and requires assignedBy == request.auth.uid, which
+    // that same transaction always sets (line 311).
+    const pending = { ...assignedSession, status: 'requested' }
     delete (pending as Partial<typeof assignedSession>).walkerId
     await seed((db) => setDoc(doc(db, 'walkSessions', 'session-1'), pending))
     await assertSucceeds(updateDoc(doc(dbFor('supervisor-1', 'supervisor'), 'walkSessions', 'session-1'), {
-      status: 'assigned', walkerId: 'walker-1', assignedAt: NOW, updatedAt: NOW,
+      status: 'assigned', walkerId: 'walker-1', assignedBy: 'supervisor-1', assignedAt: NOW, updatedAt: NOW,
     }))
     await assertFails(updateDoc(doc(dbFor('customer-1', 'customer'), 'walkSessions', 'session-1'), { walkerId: 'customer-1' }))
   })
@@ -383,13 +398,36 @@ describe('service orders and canonical walk sessions', () => {
       await setDoc(doc(db, 'walkSessions', 'session-1'), assignedSession)
       await setDoc(doc(db, 'walkSessions', 'session-photos'), assignedSession)
     })
+    // The walkReports create rule (validReportIdentity/validReportText/
+    // validReportStatus) needs this exact contract now -- a flat
+    // {sessionId, notes} shape predates it entirely. mediaReferences must be
+    // private asset-path references, never raw/public URLs.
     const report = {
-      sessionId: 'session-1', customerId: 'customer-1', walkerId: 'walker-1',
-      notes: 'Paseo sin incidentes', createdAt: NOW,
+      walkSessionId: 'session-1',
+      orderId: assignedSession.orderId,
+      customerId: assignedSession.customerId,
+      walkerId: 'walker-1',
+      dogIds: assignedSession.dogIds,
+      status: 'draft',
+      summary: 'Paseo sin incidentes',
+      behaviorNotes: '',
+      bathroomNotes: '',
+      waterProvided: true,
+      incidentsSummary: '',
+      mediaReferences: [] as string[],
+      createdBy: 'walker-1',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      submittedAt: null,
+      schemaVersion: 1,
     }
     await assertSucceeds(setDoc(doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-1'), report))
     await assertFails(setDoc(doc(dbFor('walker-2', 'walker'), 'walkReports', 'session-1'), { ...report, walkerId: 'walker-2' }))
-    await assertFails(setDoc(doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-photos'), { ...report, sessionId: 'session-photos', photos: ['https://public.example/photo.jpg'] }))
+    await assertFails(setDoc(doc(dbFor('walker-1', 'walker'), 'walkReports', 'session-photos'), {
+      ...report,
+      walkSessionId: 'session-photos',
+      mediaReferences: ['https://public.example/photo.jpg'],
+    }))
   })
 })
 

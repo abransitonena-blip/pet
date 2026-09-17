@@ -22,7 +22,8 @@ Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md).
 | 8 | Controles activables | Los 25 `onClick` restantes resultaron todos legítimos; la prueba reconoce los tres patrones válidos | `controles-interactivos` |
 | 9 | Densidad de los cuatro paneles de operación | `/walker` abre en el paseo que toca; `/familia` en su próximo paseo; Solicitudes en la que urge; Resumen en lo que falta asignar. Lo demás, a un toque. De paso, seis defectos de datos (lista abajo) | `walker-jornada`, `family-home`, `admin-solicitudes`, `admin-resumen`, emulador |
 | 10 | Consultas que traían lo más viejo | Cada pantalla pide su rango de fechas (14, 30, 31 o 60 días; los historiales, un mes a la vez). Los ganchos aceptan `since`/`until` y avisan con `capped` | `ventanas-recientes` |
-| 12 | Las tres decisiones de arquitectura | PET Ahora ya despachaba desde `dispatchServer.ts` server-side (transacciones, sin duplicar oferta); faltaba cerrar la regla de `petAhoraOffers`/`petAhoraLeases`, ahora `if false`. Bitácora administrativa: `/api/admin/audit-log` nuevo, verifica admin por token y escribe con el T3 privilegiado -- el actor ya no lo declara el navegador; los tres call sites (`resenas`, `EditReservationModal`, `LegacyReservationsView`) migrados, `lib/audit.ts` duplicado eliminado, regla de `audit-logs` cerrada. Historial legacy: `reservations` ahora sólo lee, cerrado `create/update/delete` en la regla (todo el código ya estaba detrás de `LEGACY_RESERVATION_WRITES_ENABLED`, permanentemente apagada) | emulador (11 fallas quedan, todas de la fase 13) |
+| 12 | Las tres decisiones de arquitectura | PET Ahora ya despachaba desde `dispatchServer.ts` server-side (transacciones, sin duplicar oferta); faltaba cerrar la regla de `petAhoraOffers`/`petAhoraLeases`, ahora `if false`. Bitácora administrativa: `/api/admin/audit-log` nuevo, verifica admin por token y escribe con el T3 privilegiado -- el actor ya no lo declara el navegador; los tres call sites (`resenas`, `EditReservationModal`, `LegacyReservationsView`) migrados, `lib/audit.ts` duplicado eliminado, regla de `audit-logs` cerrada. Historial legacy: `reservations` ahora sólo lee, cerrado `create/update/delete` en la regla (todo el código ya estaba detrás de `LEGACY_RESERVATION_WRITES_ENABLED`, permanentemente apagada) | emulador |
+| 13 | Las 11 pruebas de reglas desactualizadas | La mayoría eran la prueba, no la regla: faltaba el claim de `email` en el helper de autenticación, o `serverTimestamp()` donde la regla exige `request.time` en `createdAt`/`updatedAt`. Dos sí eran huecos reales: `serviceOrders` no reconocía el campo legacy `clientId` en lectura (mismo patrón que `isReservationClient()`), y no tenía ninguna vía para que Admin corrigiera una orden atascada (ahora sólo `status: 'confirmed'` + `paymentStatus: 'under_review'`, nada más). Y una sorpresa: `privacyRequests` no tenía ningún bloque de reglas -- las solicitudes ARCO desde Familia PET se habían estado rechazando en silencio; ahora tiene su regla, calcada del payload real que ya escribe la página | emulador |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -45,13 +46,6 @@ cambios en vivo. Pide separarlo por ruta y cargar las pantallas que no escuchan
 nada sin él.
 
 Cierra cuando: ninguna ruta pase de 250 kB de primera carga.
-
-### 13. Las 11 pruebas de reglas desactualizadas
-Once casos de `p04-firestore-rules` esperan permisos que las reglas ya no dan.
-Cada uno hay que entenderlo antes de tocarlo: puede ser prueba vieja o regla
-demasiado apretada.
-
-Cierra cuando: la suite del emulador pase entera.
 
 ### 14. Densidad del resto de los paneles
 La fase 9 cubrió los cuatro con los que se opera a diario. Quedan los demás, en
@@ -93,3 +87,8 @@ está reordenando es trabajo que se tira.
   y no reconocía los fondos de modal, los paneles que frenan la propagación ni
   los `role="radio"`. Es el mismo error que la ventana de 700 caracteres del
   historial legacy -- medir con un criterio más angosto que la realidad.
+- **Una colección sin bloque de reglas no es un descuido menor.** `privacyRequests`
+  caía al `catch-all: deny everything else` del final del archivo -- ni un error
+  visible, ni un log, sólo un formulario que parecía funcionar y una solicitud
+  ARCO que nunca se guardaba. La prueba de la fase 13 la encontró; nadie la
+  había reportado como rota.
