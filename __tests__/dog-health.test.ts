@@ -43,7 +43,8 @@ describe('salud del perro en admin', () => {
 })
 
 describe('formulario de perros de la familia', () => {
-  const form = read('src/app/familia/perros/page.tsx')
+  // El formulario salió de la pantalla: la lista se abre sin sus 300 líneas.
+  const form = read('src/components/family/DogFormModal.tsx')
 
   test('se puede anotar la fecha del próximo refuerzo', () => {
     expect(form).toContain("updateVaccine(i, 'nextDue', e.target.value)")
