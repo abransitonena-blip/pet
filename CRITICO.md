@@ -51,7 +51,7 @@ función en Vercel filtrando por `walker-photo`.
 
 | Qué | Por qué importa | Sin eso |
 |---|---|---|
-| Cuenta de Apple Developer + Services ID y llave | El botón "Entrar con Apple" está escrito y apagado tras `NEXT_PUBLIC_APPLE_AUTH_ENABLED` | Nadie puede entrar con Apple; el botón no se muestra |
+| Cuenta de Apple Developer + Services ID y llave | Apple quedó fuera del acceso el 18 de septiembre de 2026, a petición del dueño: `APPLE_AUTH_PAUSED` en `src/lib/appleAuth.ts` lo apaga por encima de la variable de Vercel, que sigue encendida | Nadie entra con Apple. Para volver a ofrecerlo: terminar el trámite y poner ese candado en `false` |
 | Precio de Paseo + Adiestramiento | El servicio está ofrecido y sin tarifa | Una familia puede pedirlo y el paseo no tiene precio verificable: no entra en Finanzas |
 | Confirmar que aparece la tarjeta de notificaciones push | Las notificaciones al teléfono dependen de la llave VAPID | Las familias no reciben avisos de su paseo |
 
@@ -100,7 +100,8 @@ cobran se mantienen apagadas. Los tickets internos no son CFDI.
   esqueleto un instante y luego entra el panel. El total descargado es casi el
   mismo que antes; lo que cambió es que ya no bloquea la pantalla.
 - **Apple sign-in, PET Ahora y las notificaciones** están tras banderas; lo que
-  está apagado no se ofrece en pantalla.
+  está apagado no se ofrece en pantalla. Apple, además, está apagado desde el
+  código mientras no exista la cuenta de desarrollador.
 
 ---
 

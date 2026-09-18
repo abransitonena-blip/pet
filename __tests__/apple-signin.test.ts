@@ -12,7 +12,17 @@ describe('acceso con Apple', () => {
   const lib = read('src/lib/appleAuth.ts')
   const login = read('src/app/login/page.tsx')
 
-  test('el botón sólo aparece cuando alguien lo declaró configurado', () => {
+  test('hoy no se ofrece: el dueño lo pidió fuera y el candado está en el código', () => {
+    // La variable de Vercel estaba encendida, así que apagarla desde el código
+    // es lo único que quita el botón de verdad.
+    expect(lib).toContain('const APPLE_AUTH_PAUSED = true')
+    expect(lib).toContain('if (APPLE_AUTH_PAUSED) return false')
+    // El candado va ANTES de mirar la variable: con ella encendida, igual apaga.
+    const guard = lib.indexOf('if (APPLE_AUTH_PAUSED) return false')
+    expect(guard).toBeLessThan(lib.indexOf("(process.env.NEXT_PUBLIC_APPLE_AUTH_ENABLED ?? '').trim() === '1'"))
+  })
+
+  test('cuando vuelva, el interruptor sigue siendo la variable declarada', () => {
     expect(lib).toContain('NEXT_PUBLIC_APPLE_AUTH_ENABLED')
     expect(lib).toContain("=== '1'")
     expect(login).toContain('isAppleAuthConfigured() && !webView')
