@@ -14,6 +14,7 @@ import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
 import WalletCard from '@/components/WalletCard'
 import WalkerCard from '@/components/family/WalkerCard'
 import CancelWalkButton from '@/components/family/CancelWalkButton'
+import WalkRouteMap from '@/components/walks/WalkRouteMap'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
@@ -155,6 +156,12 @@ export default function DashboardPage() {
                   </span>
                 )}
               </p>
+              {/* Mientras el paseo ocurre, la familia ve por dónde van. El
+                  teléfono del paseador manda una lectura cada ~2 minutos, así
+                  que el mapa se vuelve a pedir cada minuto y dice de cuándo es
+                  la última. */}
+              {home.live && <WalkRouteMap sessionId={next.id} refreshEveryMs={60_000} live />}
+
               {/* Cancelar estaba sólo por WhatsApp: una familia con un
                   imprevisto tenía que escribir y esperar. */}
               <CancelWalkButton sessionId={next.id} uid={customerId} status={next.status} dogName={next.petName} />

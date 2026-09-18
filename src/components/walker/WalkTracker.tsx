@@ -118,7 +118,7 @@ export default function WalkTracker({ uid }: { uid: string }) {
   return (
     <p role="status" className="mb-4 flex items-start gap-2 rounded-2xl bg-primary/[0.06] px-4 py-3 text-xs text-ink">
       <LocateFixed size={15} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
-      Paseo en curso: tu ubicación se comparte con administración cada 2 minutos, solo hasta completar el paseo. Mantén esta pantalla abierta; con el teléfono bloqueado no se puede enviar.
+      Paseo en curso: tu ubicación se comparte con administración y con la familia de este paseo cada 2 minutos, solo hasta completar el paseo. Mantén esta pantalla abierta; con el teléfono bloqueado no se puede enviar.
     </p>
   )
 }
