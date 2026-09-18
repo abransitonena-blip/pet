@@ -69,6 +69,7 @@ función en Vercel filtrando por `walker-photo`.
 |---|---|---|
 | Cuenta de Apple Developer + Services ID y llave | Apple quedó fuera del acceso el 18 de septiembre de 2026, a petición del dueño: `APPLE_AUTH_PAUSED` en `src/lib/appleAuth.ts` lo apaga por encima de la variable de Vercel, que sigue encendida | Nadie entra con Apple. Para volver a ofrecerlo: terminar el trámite y poner ese candado en `false` |
 | Precio de Paseo + Adiestramiento | El servicio está ofrecido y sin tarifa | Una familia puede pedirlo y el paseo no tiene precio verificable: no entra en Finanzas |
+| `CRON_SECRET` en Vercel | El recordatorio de la tarde anterior lo dispara la tarea programada de Vercel, y sin ese secreto la ruta responde 403 a todo el mundo, incluida la tarea | Nadie recibe el recordatorio de su paseo de mañana |
 | Confirmar que aparece la tarjeta de notificaciones push | Las notificaciones al teléfono dependen de la llave VAPID | Las familias no reciben avisos de su paseo |
 
 ---
