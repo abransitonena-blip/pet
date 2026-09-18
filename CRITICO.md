@@ -4,7 +4,7 @@ Lo que puede romper la operación o hacerle perder dinero al negocio, y lo que
 nadie más que el dueño puede destrabar. El plan completo de mejoras vive en
 [PLAN.md](PLAN.md); las reglas de trabajo, en [AGENTS.md](AGENTS.md).
 
-Estado al 2026-09-17.
+Estado al 2026-09-18.
 
 ---
 
@@ -25,7 +25,23 @@ Probado contra las reglas reales en el emulador
 **Falta:** abrir los tres paneles con una sesión de admin de verdad y confirmar
 que ya listan. No lo puedo hacer yo: piden iniciar sesión.
 
-### 1.2 El 401 de `/api/media/private/walker-photo`
+### 1.2 Los avisos al teléfono — corregido, falta que llegue uno de verdad
+**Por qué no llegaba ninguno:** la llave del navegador está guardada en Vercel
+como `NEXT_PUBLIC_FIREBASE_VAPID` y el código pedía
+`NEXT_PUBLIC_FIREBASE_VAPID_KEY`. Con ese nombre de más, la app se comportaba
+como si no hubiera llave: sin error y sin la tarjeta para activarlos, así que
+nadie registró su teléfono y no había a quién enviarle nada.
+
+**Corregido:** el código acepta los dos nombres.
+
+**Falta, y sólo lo puedes hacer tú:** entrar a Configuración → El sistema →
+Avisos al teléfono, activar los avisos en tu teléfono y darle a "Enviarme un
+aviso de prueba". Esa tarjeta dice cuál de las tres piezas falta, si falta
+alguna. Si el aviso no llega ahí, el problema está en el permiso
+`roles/firebasecloudmessaging.admin` de la identidad privilegiada, que se revisa
+en la consola de Google Cloud.
+
+### 1.3 El 401 de `/api/media/private/walker-photo`
 **Síntoma:** en la consola del navegador aparece
 `Failed to load resource: the server responded with a status of 401` para esa
 ruta.
@@ -64,9 +80,16 @@ Primero el código, y sólo cuando esté vivo, las reglas:
 
 ```bash
 git push origin HEAD:main
+npx vercel ls            # el despliegue nuevo queda "Staged"
+npx vercel promote <url-del-despliegue> --yes
 # esperar a que /api/version responda el commit nuevo
 firebase deploy --only firestore:rules --project pet-1cb0b
 ```
+
+**Un empujón a `main` ya no basta.** El proyecto quedó con despliegues de
+producción "en escalera": Vercel construye, pero la versión no sale hasta
+promoverla. Si `/api/version` sigue respondiendo el commit viejo diez minutos
+después, es esto.
 
 Al revés, las reglas nuevas rompen la versión que está corriendo. Ejemplo real:
 la fase 12 cerró las escrituras del navegador a la bitácora administrativa; si

@@ -1,6 +1,6 @@
 # Plan de rediseño de PET Ap
 
-Estado al 2026-09-17 (tercera vuelta). Cada fase se cierra por completo antes de abrir la
+Estado al 2026-09-18 (cuarta vuelta: del rediseño a lo que falta hacer). Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
 Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md); lo que puede
@@ -29,6 +29,7 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 14 | Densidad del resto de los paneles | Mis perros 789→206 líneas, Mis direcciones 613→184, Zonas 584→217: el formulario se carga al abrirlo, no al entrar. Familias, Perros de admin y Rutas se revisaron y ya abrían bien | `densidad-paneles` |
 | 16 | Peso de los paneles | Cada panel y cada armazón se piden con `dynamic`: el SDK de Firestore deja de bloquear la primera pintura. Los cuatro paneles diarios pasaron de ~323 kB a 91 kB de primera carga, y ninguna ruta pasa de 250 | `next build` |
 | 15 | Animaciones | Tres gestos en CSS -- algo llegó, algo cambió, algo está pasando -- bajo el bloque de reducir movimiento que ya existía. Sin JavaScript nuevo: la lista de perros dejó de traer un componente animado por tarjeta | `animaciones` |
+| 17 | Que el paseo se explique solo | La familia cancela desde la app y ve el recorrido mientras ocurre; el chat suena de los dos lados; los avisos al teléfono vuelven a ser posibles y hay dónde comprobarlos | `familia-cancela`, `paseo-en-vivo`, `avisos-al-telefono`, emulador |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -45,10 +46,41 @@ Resumen leía 100 perfiles de familia para un conteo que no mostraba.
 
 ## Abiertas, en orden
 
-Ninguna. El plan de rediseño está cerrado.
+El rediseño (fases 0-16) está cerrado. Lo que sigue ya no es cómo se ve la app,
+sino qué puede hacer. El criterio para elegir: **cuánto trabajo manual le quita
+al negocio, o cuánta preocupación le quita a una familia.**
 
-Lo que siga vive en [CRITICO.md](CRITICO.md): lo que falta comprobar en
-producción y lo que sólo el dueño puede destrabar.
+### 18. Reagendar sin escribirle a nadie
+Cancelar ya se puede; mover a otro día, no. Hoy una familia que no puede el
+martes tiene que cancelar y volver a solicitar, y pierde su lugar. Pide una
+regla hermana de la cancelación (sólo fecha y hora, sólo antes de que alguien
+salga, y volviendo a `requested` si ya tenía paseador) y un selector de día.
+
+Cierra cuando: mover un paseo sea un toque, y el equipo se entere.
+
+### 19. El recordatorio de la tarde anterior
+Un paseo olvidado es una puerta que nadie abre. Con los avisos ya funcionando,
+falta quien los dispare sin que nadie esté mirando: Vercel puede correr una
+tarea programada una vez al día. A las seis de la tarde, un aviso a cada familia
+con paseo mañana, y a cada paseador con paseos asignados.
+
+Cierra cuando: exista `/api/cron/recordatorios`, protegida por secreto, y una
+prueba que demuestre que no avisa dos veces del mismo paseo.
+
+### 20. Asignar en un toque, con la sugerencia puesta
+Hoy el equipo elige paseador de una lista, a ojo. Los datos para sugerir ya
+están: zona de la dirección, zonas del paseador, su carga del día y si ya paseó
+a ese perro. La sugerencia no asigna: pone al primero arriba y dice por qué.
+
+Cierra cuando: la cola de solicitudes traiga su sugerencia, con el motivo, y una
+prueba del orden.
+
+### 21. Que un paseo no se caiga en silencio
+Nadie vigila lo que no pasó: un paseo asignado que nunca se confirmó, uno que
+debió empezar hace media hora y sigue quieto, un reporte que lleva dos días sin
+enviarse. Insights ya mira algunas de estas señales; falta que avisen.
+
+Cierra cuando: las señales urgentes lleguen al teléfono de administración.
 
 ---
 
@@ -67,6 +99,11 @@ producción y lo que sólo el dueño puede destrabar.
   mismo sin tocar la infraestructura: si el rango cabe en el tope de 100, el
   orden deja de importar. Y donde no cabe -- un mes con más de cien paseos --,
   la pantalla lo dice (`capped`) en lugar de enseñar números que no cuadran.
+- **Una variable con otro nombre apaga una función entera sin decir nada.** Los
+  avisos al teléfono llevaban semanas muertos porque la llave estaba guardada
+  como `NEXT_PUBLIC_FIREBASE_VAPID` y el código pedía `..._VAPID_KEY`. Cuando
+  algo depende de una variable de entorno, tiene que haber una pantalla que diga
+  si está o no: lo que falla callado no se arregla.
 - **Diferir no es adelgazar, y hay que decirlo.** Los paneles bajaron de 323 kB
   a 91 kB de primera carga porque su código llega aparte, no porque pese menos:
   el total descargado es casi el mismo. Lo que cambia es que la pantalla se
