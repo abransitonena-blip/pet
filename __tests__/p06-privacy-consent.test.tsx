@@ -17,7 +17,8 @@ jest.mock('@/firebase/db', () => ({ db: {} }))
 
 import { ConsentProvider, CONSENT_KEY } from '../src/components/analytics/ConsentProvider'
 import { trackEvent } from '../src/lib/analytics'
-import CustomerPrivacyPage from '../src/app/familia/privacidad/page'
+// La pantalla se pide con `dynamic`; la prueba mira el panel, que es lo que se ve.
+import CustomerPrivacyPage from '../src/app/familia/privacidad/FamiliaPrivacidadPanel'
 import { RETENTION_MATRIX, STORAGE_INVENTORY } from '../src/lib/privacyConfig'
 
 const root = join(__dirname, '..')

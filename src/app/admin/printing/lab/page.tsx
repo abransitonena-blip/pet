@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import PrintingLab from '@/components/admin/PrintingLab'
+import LazyPrintingLab from './LazyPrintingLab'
 
 export const metadata: Metadata = {
   title: 'Laboratorio de impresión | PET Ap',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function AdminPrintingLabPage() {
-  return <PrintingLab />
+  return <LazyPrintingLab />
 }

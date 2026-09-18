@@ -5,7 +5,7 @@ const root = path.resolve(__dirname, '..')
 const read = (relativePath: string) => fs.readFileSync(path.join(root, relativePath), 'utf8')
 
 describe('Family onboarding UI and data contract', () => {
-  const page = read('src/app/familia/configuracion-inicial/page.tsx')
+  const page = read('src/app/familia/configuracion-inicial/FamiliaConfiguracionInicialPanel.tsx')
   const service = read('src/lib/familyOnboarding.ts')
   const shell = read('src/components/layout/AppShell.tsx')
   const familyLayout = read('src/app/familia/FamilyLayoutClient.tsx')

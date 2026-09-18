@@ -91,7 +91,7 @@ describe('lectura de paseos en páginas que las reglas aceptan', () => {
   })
 
   test('Rutas lee paseos directo y respeta el mismo tope', () => {
-    const routes = fs.readFileSync(path.resolve(__dirname, '../src/app/admin/rutas/page.tsx'), 'utf8')
+    const routes = fs.readFileSync(path.resolve(__dirname, '../src/app/admin/rutas/AdminRutasPanel.tsx'), 'utf8')
     const declared = Number(/const MAX_SESSIONS = (\d+)/.exec(routes)?.[1])
     expect(declared).toBeLessThanOrEqual(WALK_SESSIONS_PAGE_SIZE)
   })

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import FeedbackPanel from '@/components/admin/FeedbackPanel'
+import LazyFeedbackPanel from './LazyFeedbackPanel'
 import PageHeader from '@/components/ui/PageHeader'
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export default function AdminFeedbackPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Comentarios de familias" description="Mensajes privados enviados desde el centro de ayuda de Familia PET." />
-      <FeedbackPanel />
+      <LazyFeedbackPanel />
     </div>
   )
 }

@@ -63,9 +63,9 @@ describe('quién puede subirla', () => {
 
 describe('dónde se ve', () => {
   it('en su propio perfil, y en las dos pantallas donde la familia lo espera', () => {
-    expect(read('src/app/walker/perfil/page.tsx')).toContain('<WalkerPhotoButton')
-    expect(read('src/app/familia/mensajes/page.tsx')).toContain('<WalkerCard sessionId={walk.id} />')
-    expect(read('src/app/familia/reportes/[sessionId]/page.tsx')).toContain('<WalkerCard sessionId={params.sessionId} />')
+    expect(read('src/app/walker/perfil/WalkerPerfilPanel.tsx')).toContain('<WalkerPhotoButton')
+    expect(read('src/app/familia/mensajes/FamiliaMensajesPanel.tsx')).toContain('<WalkerCard sessionId={walk.id} />')
+    expect(read('src/app/familia/reportes/[sessionId]/FamiliaReportesSessionidPanel.tsx')).toContain('<WalkerCard sessionId={params.sessionId} />')
   })
 
   it('sin foto queda el nombre; sin nombre no se muestra la tarjeta', () => {

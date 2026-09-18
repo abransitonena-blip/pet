@@ -9,7 +9,7 @@ const read = (path: string) => readFileSync(path, 'utf8')
  * por elemento de una lista.
  */
 describe('Mis perros', () => {
-  const page = read('src/app/familia/perros/page.tsx')
+  const page = read('src/app/familia/perros/FamiliaPerrosPanel.tsx')
   const modal = read('src/components/family/DogFormModal.tsx')
 
   it('la lista no carga el formulario: se pide al agregar o editar', () => {
@@ -40,7 +40,7 @@ describe('Mis perros', () => {
 })
 
 describe('Mis direcciones', () => {
-  const page = read('src/app/familia/direcciones/page.tsx')
+  const page = read('src/app/familia/direcciones/FamiliaDireccionesPanel.tsx')
   const modal = read('src/components/family/AddressFormModal.tsx')
 
   it('mirar lo guardado no carga el formulario ni escucha las zonas', () => {
@@ -58,7 +58,7 @@ describe('Mis direcciones', () => {
 })
 
 describe('Zonas', () => {
-  const page = read('src/app/admin/zonas/page.tsx')
+  const page = read('src/app/admin/zonas/AdminZonasPanel.tsx')
 
   it('mirar la cobertura no carga el formulario ni su segundo mapa', () => {
     expect(page).toContain("dynamic(() => import('@/components/admin/ZoneFormModal')")
@@ -78,9 +78,9 @@ describe('la fecha de hoy se calcula en la zona del negocio, no en UTC', () => {
     // En México, a partir de las 18:00, la fecha UTC ya es la de mañana: así
     // el Resumen contaba los paseos del día equivocado.
     const files = [
-      'src/app/admin/page.tsx',
-      'src/app/walker/page.tsx',
-      'src/app/familia/page.tsx',
+      'src/app/admin/AdminPanel.tsx',
+      'src/app/walker/WalkerDashboard.tsx',
+      'src/app/familia/FamiliaPanel.tsx',
       'src/components/EditReservationModal.tsx',
       'src/app/api/walker/walk-sheet/route.ts',
     ]

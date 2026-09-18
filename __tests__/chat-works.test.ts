@@ -86,7 +86,7 @@ describe('la bandeja con muchos hilos', () => {
  * responder cuando un paseo sale mal.
  */
 describe('el hilo de un paseo', () => {
-  const familia = read('src/app/familia/mensajes/page.tsx')
+  const familia = read('src/app/familia/mensajes/FamiliaMensajesPanel.tsx')
 
   test('la familia escribe al paseador, no a administración', () => {
     expect(familia).toContain('openWalkConversation')
@@ -107,7 +107,7 @@ describe('el hilo de un paseo', () => {
   })
 
   test('el paseador conserva su hilo con administración y gana el de cada paseo', () => {
-    const walker = read('src/app/walker/chat/page.tsx')
+    const walker = read('src/app/walker/chat/WalkerChatPanel.tsx')
     expect(walker).toContain('Mensajes con administración')
     expect(walker).toContain('openWalkConversation')
   })

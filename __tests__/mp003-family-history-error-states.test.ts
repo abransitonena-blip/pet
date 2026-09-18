@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 
 describe('MP-003 familia/historial: the list distinguishes error from empty', () => {
-  const historialPage = readFileSync('src/app/familia/historial/page.tsx', 'utf8')
+  const historialPage = readFileSync('src/app/familia/historial/FamiliaHistorialPanel.tsx', 'utf8')
   const canonicalHistory = readFileSync('src/components/family/CanonicalFamilyHistory.tsx', 'utf8')
 
   test('reads the canonical walkSessions source, not the frozen legacy collection', () => {

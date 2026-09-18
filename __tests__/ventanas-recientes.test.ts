@@ -38,14 +38,14 @@ describe('las consultas de paseos piden un rango, no "todo"', () => {
 
   it('ninguna pantalla que muestra lo reciente consulta sin ventana', () => {
     const screens: [string, string][] = [
-      ['src/app/familia/mensajes/page.tsx', 'useCustomerWalkSessions'],
-      ['src/app/familia/fotos/page.tsx', 'useCustomerWalkSessions'],
-      ['src/app/familia/notificaciones/page.tsx', 'useCustomerWalkSessions'],
-      ['src/app/familia/perros/[id]/page.tsx', 'useCustomerWalkSessions'],
+      ['src/app/familia/mensajes/FamiliaMensajesPanel.tsx', 'useCustomerWalkSessions'],
+      ['src/app/familia/fotos/FamiliaFotosPanel.tsx', 'useCustomerWalkSessions'],
+      ['src/app/familia/notificaciones/FamiliaNotificacionesPanel.tsx', 'useCustomerWalkSessions'],
+      ['src/app/familia/perros/[id]/FamiliaPerrosIdPanel.tsx', 'useCustomerWalkSessions'],
       ['src/components/family/CanonicalFamilyHistory.tsx', 'useCustomerWalkSessions'],
-      ['src/app/walker/page.tsx', 'useWalkerSessions'],
-      ['src/app/walker/chat/page.tsx', 'useWalkerSessions'],
-      ['src/app/walker/historial/page.tsx', 'useWalkerSessions'],
+      ['src/app/walker/WalkerDashboard.tsx', 'useWalkerSessions'],
+      ['src/app/walker/chat/WalkerChatPanel.tsx', 'useWalkerSessions'],
+      ['src/app/walker/historial/WalkerHistorialPanel.tsx', 'useWalkerSessions'],
       ['src/components/walker/WalkerWorkCard.tsx', 'useWalkerSessions'],
     ]
     for (const [file, hook] of screens) {
@@ -59,7 +59,7 @@ describe('las consultas de paseos piden un rango, no "todo"', () => {
   })
 
   it('los historiales avisan cuando un mes no cupo entero', () => {
-    for (const file of ['src/components/family/CanonicalFamilyHistory.tsx', 'src/app/walker/historial/page.tsx']) {
+    for (const file of ['src/components/family/CanonicalFamilyHistory.tsx', 'src/app/walker/historial/WalkerHistorialPanel.tsx']) {
       expect(read(file)).toContain('Los más recientes del mes podrían faltar.')
     }
   })

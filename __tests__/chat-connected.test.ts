@@ -38,8 +38,8 @@ describe('administración puede escribir primero', () => {
   })
 
   test('el botón vive en la ficha de la familia y en la del paseador', () => {
-    expect(read('src/app/admin/clientes/page.tsx')).toContain('<StartChatButton')
-    expect(read('src/app/admin/paseadores/page.tsx')).toContain('<StartChatButton')
+    expect(read('src/app/admin/clientes/AdminClientesPanel.tsx')).toContain('<StartChatButton')
+    expect(read('src/app/admin/paseadores/AdminPaseadoresPanel.tsx')).toContain('<StartChatButton')
   })
 
   test('la bandeja abre el hilo que le piden', () => {

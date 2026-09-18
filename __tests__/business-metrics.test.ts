@@ -58,7 +58,7 @@ describe('valor de los paseos', () => {
   })
 
   test('ninguna de las tres pantallas vuelve a leer la colección legacy', () => {
-    for (const page of ['src/app/admin/finanzas/page.tsx', 'src/app/admin/analitica/page.tsx', 'src/app/admin/ia/page.tsx']) {
+    for (const page of ['src/app/admin/finanzas/AdminFinanzasPanel.tsx', 'src/app/admin/analitica/AdminAnaliticaPanel.tsx', 'src/app/admin/ia/AdminIaPanel.tsx']) {
       const source = read(page)
       expect(source).not.toContain('useReservations')
       expect(source).toContain('useCanonicalReservations')

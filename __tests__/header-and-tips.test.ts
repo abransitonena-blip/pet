@@ -65,7 +65,7 @@ describe('consejos para el paseo', () => {
   })
 
   test('un emoji guardado antes se sigue mostrando en los dos paneles', () => {
-    for (const path of ['src/components/WalkTipsSection.tsx', 'src/app/familia/page.tsx']) {
+    for (const path of ['src/components/WalkTipsSection.tsx', 'src/app/familia/FamiliaPanel.tsx']) {
       expect(read(path)).toContain('walkTipIcon(icon)')
     }
     expect(read('src/components/AdminConfig.tsx')).toContain('(el que tenías)')

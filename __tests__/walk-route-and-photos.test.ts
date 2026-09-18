@@ -20,8 +20,8 @@ describe('el recorrido se muestra como ruta', () => {
 
   test('ninguna pantalla imprime coordenadas', () => {
     for (const path of [
-      'src/app/admin/rutas/page.tsx',
-      'src/app/familia/reportes/[sessionId]/page.tsx',
+      'src/app/admin/rutas/AdminRutasPanel.tsx',
+      'src/app/familia/reportes/[sessionId]/FamiliaReportesSessionidPanel.tsx',
       'src/components/walker/WalkerSessionCard.tsx',
     ]) {
       expect(read(path)).not.toContain('formatWalkPoint')
@@ -29,7 +29,7 @@ describe('el recorrido se muestra como ruta', () => {
   })
 
   test('admin y familia dibujan el recorrido con el mismo mapa', () => {
-    expect(read('src/app/admin/rutas/page.tsx')).toContain('path={routePath}')
+    expect(read('src/app/admin/rutas/AdminRutasPanel.tsx')).toContain('path={routePath}')
     expect(read('src/components/walks/WalkRouteMap.tsx')).toContain('path={route.path}')
   })
 
@@ -104,7 +104,7 @@ describe('foto del perro', () => {
   })
 
   test('la lista pide todas las fotos de un jalón', () => {
-    expect(read('src/app/familia/perros/page.tsx')).toContain('useDogPhotos(pets.map(')
+    expect(read('src/app/familia/perros/FamiliaPerrosPanel.tsx')).toContain('useDogPhotos(pets.map(')
     expect(read('src/lib/useDogPhotos.ts')).toContain("JSON.stringify({ dogIds })")
   })
 

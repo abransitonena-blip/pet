@@ -73,7 +73,7 @@ test('Familia: una solicitud nueva es su próximo paseo y se ve como Solicitado'
   const home = planFamilyHome([requested])
   expect(home.next).toBe(requested)
   expect(STATUS_LABELS[home.next!.status]).toBe('Solicitado')
-  expect(readFileSync('src/app/familia/page.tsx', 'utf8')).toContain('No tienes paseos por delante')
+  expect(readFileSync('src/app/familia/FamiliaPanel.tsx', 'utf8')).toContain('No tienes paseos por delante')
 })
 
 test('frontend uses bounded canonical queries and does not submit payment data', () => {

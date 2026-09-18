@@ -95,7 +95,7 @@ describe('las reglas de la reseña', () => {
 
 describe('la interfaz', () => {
   test('calificar sólo se ofrece en un paseo terminado y con paseador', () => {
-    const page = read('src/app/familia/reportes/[sessionId]/page.tsx')
+    const page = read('src/app/familia/reportes/[sessionId]/FamiliaReportesSessionidPanel.tsx')
     expect(page).toContain("data.status === 'completed'")
     expect(page).toContain('if (!walk?.completed || !walk.walkerId) return null')
   })

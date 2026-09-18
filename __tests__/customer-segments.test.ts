@@ -110,7 +110,7 @@ describe('mensajes de WhatsApp por etapa', () => {
 
 describe('página de familias', () => {
   test('usa las etapas, el reloj de la Ciudad de México y no oculta un error de lectura de paseos', () => {
-    const page = readFileSync('src/app/admin/clientes/page.tsx', 'utf8')
+    const page = readFileSync('src/app/admin/clientes/AdminClientesPanel.tsx', 'utf8')
     expect(page).toContain('customerActivity(sessions, timestampToMexicoCityDate(customer.createdAt), today)')
     expect(page).not.toContain('toISOString()')
     expect(page).toContain('error ?? sessionsError')

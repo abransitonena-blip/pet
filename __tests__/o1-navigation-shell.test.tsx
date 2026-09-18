@@ -53,7 +53,7 @@ describe('O1 navegación compartida', () => {
 
     const hrefs = Array.from(layout.matchAll(/href: '([^']+)'/g), (match) => match[1])
     for (const href of hrefs) {
-      const relative = href === '/admin' ? 'src/app/admin/page.tsx' : `src/app${href}/page.tsx`
+      const relative = href === '/admin' ? 'src/app/admin/AdminPanel.tsx' : `src/app${href}/page.tsx`
       expect(fs.existsSync(path.join(root, relative))).toBe(true)
     }
   })

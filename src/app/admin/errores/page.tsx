@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel'
+import LazyErrorLogsPanel from './LazyErrorLogsPanel'
 import PageHeader from '@/components/ui/PageHeader'
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export default function AdminErrorsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Errores de aplicación" description="Fallas reportadas desde el navegador de usuarios autenticados." />
-      <ErrorLogsPanel />
+      <LazyErrorLogsPanel />
     </div>
   )
 }

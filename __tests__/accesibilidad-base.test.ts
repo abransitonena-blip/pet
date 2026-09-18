@@ -68,10 +68,10 @@ describe('encabezados', () => {
 
   test('las pantallas que no lo usan traen el suyo', () => {
     for (const page of [
-      'src/app/admin/page.tsx',
-      'src/app/familia/config/page.tsx',
-      'src/app/familia/direcciones/page.tsx',
-      'src/app/admin/chat/page.tsx',
+      'src/app/admin/AdminPanel.tsx',
+      'src/app/familia/config/FamiliaConfigPanel.tsx',
+      'src/app/familia/direcciones/FamiliaDireccionesPanel.tsx',
+      'src/app/admin/chat/AdminChatPanel.tsx',
     ]) {
       const source = read(page)
       expect(source.includes('<h1') || source.includes('PageHeader')).toBe(true)
@@ -156,7 +156,7 @@ describe('controles de verdad', () => {
   test('el inicio de familia actúa con enlaces y botones, y todos traen foco visible', () => {
     // Las tarjetas de cifras eran div con onClick; luego botones; en la fase 9
     // se fueron: el inicio abre con el próximo paseo. Lo que queda son enlaces.
-    const page = read('src/app/familia/page.tsx')
+    const page = read('src/app/familia/FamiliaPanel.tsx')
     expect(page).not.toMatch(/<div[^>]*onClick/)
     expect(page).toContain("const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'")
     const controls = page.split(/<(?:Link|button)\b/).slice(1)
@@ -170,7 +170,7 @@ describe('controles de verdad', () => {
   test('una tarjeta que lleva a una función apagada no se ofrece', () => {
     // Decía "Consulta manual" en una fila de cifras, y llevaba a una pantalla
     // que el menú ya escondía.
-    const page = read('src/app/familia/page.tsx')
+    const page = read('src/app/familia/FamiliaPanel.tsx')
     if (page.includes('/familia/lealtad')) expect(page).toContain('FEATURE_FLAGS.LOYALTY_REDEMPTION_ENABLED &&')
     expect(page).not.toContain('Consulta manual')
     // Lo mismo para PET Ahora: si está apagado, el inicio no lo ofrece.

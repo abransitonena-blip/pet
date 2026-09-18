@@ -110,6 +110,6 @@ describe('la tarjeta de trabajo', () => {
   })
 
   test('vive en el perfil del paseador', () => {
-    expect(read('src/app/walker/perfil/page.tsx')).toContain('<WalkerWorkCard uid={uid} />')
+    expect(read('src/app/walker/perfil/WalkerPerfilPanel.tsx')).toContain('<WalkerWorkCard uid={uid} />')
   })
 })

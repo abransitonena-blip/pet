@@ -8,7 +8,7 @@ describe('walk report runtime containment', () => {
   test('uses a live listener only for the walker editor', () => {
     const hook = read('src/lib/useWalkReport.ts')
     const editor = read('src/components/walker/WalkReportEditor.tsx')
-    const family = read('src/app/familia/reportes/[sessionId]/page.tsx')
+    const family = read('src/app/familia/reportes/[sessionId]/FamiliaReportesSessionidPanel.tsx')
     expect(hook).toContain("mode: 'once' | 'live' = 'once'")
     expect(editor).toContain("useWalkReport(sessionId, 'live')")
     expect(family).toContain('useWalkReport(params.sessionId)')
@@ -21,7 +21,7 @@ describe('walk report runtime containment', () => {
   })
 
   test('limits the staff query and does not keep an admin listener', () => {
-    const admin = read('src/app/admin/reportes/page.tsx')
+    const admin = read('src/app/admin/reportes/AdminReportesPanel.tsx')
     expect(admin).toContain('limit(50)')
     expect(admin).toContain('getDocs(')
     expect(admin).not.toContain('onSnapshot(')
@@ -31,7 +31,7 @@ describe('walk report runtime containment', () => {
   })
 
   test('family history reads canonical sessions only, with reports linked per session', () => {
-    const history = read('src/app/familia/historial/page.tsx')
+    const history = read('src/app/familia/historial/FamiliaHistorialPanel.tsx')
     const canonical = read('src/components/family/CanonicalFamilyHistory.tsx')
     expect(history).toContain('<CanonicalFamilyHistory customerId={customerId} />')
     expect(history).toContain('useCanonicalReservations')
@@ -47,7 +47,7 @@ describe('walk report runtime containment', () => {
     // account), so provisioning moved to /api/admin/team, which writes the claim
     // through the Identity Toolkit REST API. Accounts are still created by the
     // person signing up -- this panel must never mint one or show a password.
-    const walkers = read('src/app/admin/paseadores/page.tsx')
+    const walkers = read('src/app/admin/paseadores/AdminPaseadoresPanel.tsx')
     const panel = read('src/components/admin/TeamProvisionPanel.tsx')
     const route = read('src/app/api/admin/team/route.ts')
 

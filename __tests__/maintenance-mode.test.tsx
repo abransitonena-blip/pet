@@ -58,7 +58,7 @@ describe('modo mantenimiento', () => {
 
   test('las reservas nuevas se pausan, programadas y PET Ahora', () => {
     expect(read('src/app/layout.tsx')).toContain('<MaintenanceGate>{children}</MaintenanceGate>')
-    expect(read('src/app/familia/nueva-reserva/page.tsx')).toContain('if (config.maintenance === true) return <BookingPausedNotice />')
+    expect(read('src/app/familia/nueva-reserva/FamiliaNuevaReservaPanel.tsx')).toContain('if (config.maintenance === true) return <BookingPausedNotice />')
     expect(read('src/components/PetAhoraRequestForm.tsx')).toContain('if (config.maintenance === true) return <BookingPausedNotice />')
   })
 
@@ -71,7 +71,7 @@ describe('modo mantenimiento', () => {
 
 describe('consejos para el paseo', () => {
   test('se editan en Configuración y se muestran en el inicio de la familia', () => {
-    const home = read('src/app/familia/page.tsx')
+    const home = read('src/app/familia/FamiliaPanel.tsx')
     expect(home).toContain('Consejos para el paseo')
     expect(home).toContain('config.walkTips')
     expect(read('src/components/AdminConfig.tsx')).toContain("label: 'Consejos para el paseo'")

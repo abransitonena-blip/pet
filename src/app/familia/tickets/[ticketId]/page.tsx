@@ -1,10 +1,14 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import TicketReadOnlyPage from '@/components/tickets/TicketReadOnlyPage'
+import dynamic from 'next/dynamic'
+import PanelFallback from '@/components/layout/PanelFallback'
 
-export default function FamilyTicketPage() {
-  const params = useParams<{ ticketId: string }>()
-  return <TicketReadOnlyPage ticketId={params.ticketId} backHref="/familia/historial" />
+// El panel llega aparte: así el SDK de Firestore no bloquea la primera pintura.
+const FamiliaTicketsTicketidPanel = dynamic(() => import('./FamiliaTicketsTicketidPanel'), {
+  ssr: false,
+  loading: () => <PanelFallback />,
+})
+
+export default function Page() {
+  return <FamiliaTicketsTicketidPanel />
 }
-

@@ -68,7 +68,13 @@ export default function WalkerSessionCard({ session, onAdvance, updating = false
               <p className="truncate text-sm font-semibold text-ink">{session.dogName || 'Perro asignado'}</p>
               <p className="truncate text-xs text-muted">{session.serviceName || 'Paseo programado'}</p>
             </div>
-            <StatusBadge status={status} />
+            {/* `key` en el estado: al avanzar el paseo la insignia se vuelve a
+                montar y su animación se repite, que es lo que hace visible el
+                cambio sin mover nada más. */}
+            <span key={status} className="animate-pop inline-flex items-center gap-1.5">
+              {status === 'in_progress' && <span className="animate-live h-2 w-2 shrink-0 rounded-full bg-success-500" aria-hidden="true" />}
+              <StatusBadge status={status} />
+            </span>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted">

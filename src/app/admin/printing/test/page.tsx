@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import TicketPrintTool from '@/components/admin/TicketPrintTool'
+import LazyTicketPrintTool from './LazyTicketPrintTool'
 
 export const metadata: Metadata = {
   title: 'Prueba de impresión | PET Ap',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function AdminPrintingTestPage() {
-  return <TicketPrintTool />
+  return <LazyTicketPrintTool />
 }

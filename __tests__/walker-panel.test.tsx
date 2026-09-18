@@ -70,8 +70,8 @@ describe('Walker panel — consultas, estado y listeners', () => {
     expect(orderBy).toHaveBeenCalledWith('scheduledDate', 'asc')
     expect(limit).toHaveBeenCalledWith(100)
 
-    const dashboard = readFileSync('src/app/walker/page.tsx', 'utf8')
-    const history = readFileSync('src/app/walker/historial/page.tsx', 'utf8')
+    const dashboard = readFileSync('src/app/walker/WalkerDashboard.tsx', 'utf8')
+    const history = readFileSync('src/app/walker/historial/WalkerHistorialPanel.tsx', 'utf8')
     expect(dashboard).not.toContain("collection(db, 'reservations')")
     expect(history).not.toContain("collection(db, 'reservations')")
     // La jornada recorta la consulta a su semana: sin piso, el orden ascendente
@@ -174,7 +174,7 @@ describe('Walker panel — asignación y transiciones', () => {
   })
 
   it('mantiene filtros del historial con altura táctil mínima y contraste en el activo', () => {
-    const history = readFileSync('src/app/walker/historial/page.tsx', 'utf8')
+    const history = readFileSync('src/app/walker/historial/WalkerHistorialPanel.tsx', 'utf8')
     expect(history).toContain("className={`h-11 shrink-0 ${filter === item.value ? 'text-white' : ''}`}")
     expect(history).toContain("value: 'today'")
     expect(history).toContain("value: 'upcoming'")
@@ -182,7 +182,7 @@ describe('Walker panel — asignación y transiciones', () => {
   })
 
   it('lista como reportes por enviar sólo los completados cuyo reporte no salió', () => {
-    const dashboard = readFileSync('src/app/walker/page.tsx', 'utf8')
+    const dashboard = readFileSync('src/app/walker/WalkerDashboard.tsx', 'utf8')
     expect(dashboard).toContain('useSubmittedReports(uid, day.recentCompleted.map((session) => session.id))')
     expect(dashboard).toContain("reports.state === 'ready'")
     expect(dashboard).toContain('!reports.submitted.has(session.id)')

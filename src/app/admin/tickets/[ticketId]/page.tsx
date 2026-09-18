@@ -1,10 +1,14 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import AdminTicketDetail from '@/components/admin/AdminTicketDetail'
+import dynamic from 'next/dynamic'
+import PanelFallback from '@/components/layout/PanelFallback'
 
-export default function AdminTicketPage() {
-  const params = useParams<{ ticketId: string }>()
-  return <AdminTicketDetail ticketId={params.ticketId} />
+// El panel llega aparte: así el SDK de Firestore no bloquea la primera pintura.
+const AdminTicketsTicketidPanel = dynamic(() => import('./AdminTicketsTicketidPanel'), {
+  ssr: false,
+  loading: () => <PanelFallback />,
+})
+
+export default function Page() {
+  return <AdminTicketsTicketidPanel />
 }
-

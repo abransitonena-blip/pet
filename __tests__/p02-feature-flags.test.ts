@@ -47,7 +47,7 @@ describe('P0.2 safe feature defaults', () => {
     const files = [
       'src/lib/useWallet.ts',
       'src/components/LoyaltyProgram.tsx',
-      'src/app/admin/paseadores/page.tsx',
+      'src/app/admin/paseadores/AdminPaseadoresPanel.tsx',
       'src/firebase/config.ts',
     ]
     for (const file of files) {
@@ -82,13 +82,13 @@ describe('P0.2 safe feature defaults', () => {
 
   it('does not create pending referral conversions and states the real conditions', () => {
     expect(read('src/lib/submitReservation.ts')).not.toContain("reservationId: 'pending'")
-    const referrals = read('src/app/familia/referir/page.tsx')
+    const referrals = read('src/app/familia/referir/FamiliaReferirPanel.tsx')
     expect(referrals).toMatch(/primer paseo pagado y completado/i)
     expect(referrals).not.toContain('$20 de descuento')
   })
 
   it('blocks public cancellation, public reviews and private operational uploads', () => {
-    expect(read('src/app/cancelar/page.tsx')).toContain('PUBLIC_PHONE_CANCELLATION_ENABLED')
+    expect(read('src/app/cancelar/CancelarPanel.tsx')).toContain('PUBLIC_PHONE_CANCELLATION_ENABLED')
     expect(read('src/components/ReviewForm.tsx')).toContain('PUBLIC_REVIEWS_ENABLED')
     expect(read('src/lib/cloudinary.ts')).toContain('PRIVATE_MEDIA_UPLOADS_ENABLED')
     expect(read('src/components/WalkSessionModal.tsx')).toContain('Fotos operativas temporalmente desactivadas')
@@ -103,7 +103,7 @@ describe('P0.2 safe feature defaults', () => {
   })
 
   it('distinguishes an empty credit history from a query failure', () => {
-    const page = read('src/app/familia/billetera/page.tsx')
+    const page = read('src/app/familia/billetera/FamiliaBilleteraPanel.tsx')
     expect(page).toContain('Sin movimientos aún')
     expect(page).toContain('No pudimos consultar tus movimientos')
   })

@@ -96,8 +96,9 @@ cobran se mantienen apagadas. Los tickets internos no son CFDI.
   crece hasta ahí, hay que paginar dentro del mes.
 - **La tarjeta "Mi trabajo" del paseador** cuenta 31 días. Si en ese mes hizo
   más de cien paseos, no da números en vez de dar unos equivocados.
-- **Los paneles pesan ~320 kB** de primera carga porque cargan el SDK de
-  Firestore, que sí usan. Bajarlos es la fase 16 del plan.
+- **El código de un panel llega después de la primera pintura.** Se ve un
+  esqueleto un instante y luego entra el panel. El total descargado es casi el
+  mismo que antes; lo que cambió es que ya no bloquea la pantalla.
 - **Apple sign-in, PET Ahora y las notificaciones** están tras banderas; lo que
   está apagado no se ofrece en pantalla.
 

@@ -55,7 +55,7 @@ describe('reservar', () => {
 })
 
 describe('perfil del perro', () => {
-  const page = read('src/app/familia/perros/[id]/page.tsx')
+  const page = read('src/app/familia/perros/[id]/FamiliaPerrosIdPanel.tsx')
 
   test('lo urgente va arriba y sale del mismo cálculo que usa el panel', () => {
     expect(page).toContain('dogAlerts(')

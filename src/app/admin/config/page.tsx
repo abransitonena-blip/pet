@@ -1,18 +1,14 @@
 'use client'
 
-import AdminConfig from '@/components/AdminConfig'
-import BackupStatus from '@/components/admin/BackupStatus'
-import PageHeader from '@/components/ui/PageHeader'
+import dynamic from 'next/dynamic'
+import PanelFallback from '@/components/layout/PanelFallback'
 
-export default function AdminConfigPage() {
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Configuración"
-        description="Ajusta la configuración general del sitio y servicios"
-      />
-      <BackupStatus />
-      <AdminConfig />
-    </div>
-  )
+// El panel llega aparte: así el SDK de Firestore no bloquea la primera pintura.
+const AdminConfigPanel = dynamic(() => import('./AdminConfigPanel'), {
+  ssr: false,
+  loading: () => <PanelFallback />,
+})
+
+export default function Page() {
+  return <AdminConfigPanel />
 }

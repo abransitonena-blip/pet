@@ -1,13 +1,14 @@
 'use client'
 
-import AdminChat from '@/components/AdminChat'
-import PageHeader from '@/components/ui/PageHeader'
+import dynamic from 'next/dynamic'
+import PanelFallback from '@/components/layout/PanelFallback'
 
-export default function AdminChatPage() {
-  return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col">
-      <PageHeader title="Chat" description="Hilos con familias, paseadores y paseos en curso" />
-      <AdminChat />
-    </div>
-  )
+// El panel llega aparte: así el SDK de Firestore no bloquea la primera pintura.
+const AdminChatPanel = dynamic(() => import('./AdminChatPanel'), {
+  ssr: false,
+  loading: () => <PanelFallback />,
+})
+
+export default function Page() {
+  return <AdminChatPanel />
 }

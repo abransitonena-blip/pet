@@ -113,7 +113,7 @@ describe('registro de la consulta', () => {
   })
 
   test('el panel vive donde se actúa: en Zonas', () => {
-    expect(read('src/app/admin/zonas/page.tsx')).toContain('<CoverageRequestsPanel zones={zones} />')
+    expect(read('src/app/admin/zonas/AdminZonasPanel.tsx')).toContain('<CoverageRequestsPanel zones={zones} />')
   })
 })
 
@@ -122,7 +122,7 @@ describe('registro de la consulta', () => {
  * Google Maps para saber por dónde anduvo un paseo.
  */
 describe('rutas', () => {
-  const page = read('src/app/admin/rutas/page.tsx')
+  const page = read('src/app/admin/rutas/AdminRutasPanel.tsx')
 
   test('el mapa se dibuja dentro del paseo, no en otra parte de la pantalla', () => {
     expect(page).toContain('{selected?.sessionId === row.id && <div className="mt-3">{routeMap}</div>}')

@@ -110,7 +110,7 @@ describe('el panel de solicitudes', () => {
 
 describe('lo que Solicitudes ya no carga de entrada', () => {
   it('la página no escucha colecciones viejas: las vistas de consulta se cargan al abrirlas', () => {
-    const page = read('src/app/admin/reservas/page.tsx')
+    const page = read('src/app/admin/reservas/AdminReservasPanel.tsx')
     expect(page).not.toContain('useReservations')
     expect(page).not.toContain('useServiceOrders')
     expect(page).toContain("dynamic(() => import('@/components/admin/LegacyReservationsView')")

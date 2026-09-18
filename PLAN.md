@@ -1,6 +1,6 @@
 # Plan de rediseño de PET Ap
 
-Estado al 2026-09-17 (segunda vuelta). Cada fase se cierra por completo antes de abrir la
+Estado al 2026-09-17 (tercera vuelta). Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
 Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md); lo que puede
@@ -27,6 +27,8 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 13 | Las 11 pruebas de reglas desactualizadas | La mayoría eran la prueba, no la regla: faltaba el claim de `email` en el helper de autenticación, o `serverTimestamp()` donde la regla exige `request.time` en `createdAt`/`updatedAt`. Dos sí eran huecos reales: `serviceOrders` no reconocía el campo legacy `clientId` en lectura (mismo patrón que `isReservationClient()`), y no tenía ninguna vía para que Admin corrigiera una orden atascada (ahora sólo `status: 'confirmed'` + `paymentStatus: 'under_review'`, nada más). Y una sorpresa: `privacyRequests` no tenía ningún bloque de reglas -- las solicitudes ARCO desde Familia PET se habían estado rechazando en silencio; ahora tiene su regla, calcada del payload real que ya escribe la página | emulador |
 | 11 | Peso de la primera carga | `db` salió de `@/firebase/config`: el SDK de Firestore ya no viaja con las pantallas que sólo necesitan sesión. Portada 297→190 kB, acceso de familia 279→171, acceso del equipo 284→177. Los paneles no bajan: ahí se usa | `peso-primera-carga` |
 | 14 | Densidad del resto de los paneles | Mis perros 789→206 líneas, Mis direcciones 613→184, Zonas 584→217: el formulario se carga al abrirlo, no al entrar. Familias, Perros de admin y Rutas se revisaron y ya abrían bien | `densidad-paneles` |
+| 16 | Peso de los paneles | Cada panel y cada armazón se piden con `dynamic`: el SDK de Firestore deja de bloquear la primera pintura. Los cuatro paneles diarios pasaron de ~323 kB a 91 kB de primera carga, y ninguna ruta pasa de 250 | `next build` |
+| 15 | Animaciones | Tres gestos en CSS -- algo llegó, algo cambió, algo está pasando -- bajo el bloque de reducir movimiento que ya existía. Sin JavaScript nuevo: la lista de perros dejó de traer un componente animado por tarjeta | `animaciones` |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -43,19 +45,10 @@ Resumen leía 100 perfiles de familia para un conteo que no mostraba.
 
 ## Abiertas, en orden
 
-### 15. Animaciones
-Desbloqueada por la fase 3: ahora se puede animar sin dañar a quien pidió no
-recibir movimiento. Va al final a propósito -- animar una interfaz que todavía se
-está reordenando es trabajo que se tira.
+Ninguna. El plan de rediseño está cerrado.
 
-### 16. Peso de los paneles: bajar de 250 kB
-Lo que queda pesado en los paneles es el SDK de Firestore, que sí usan para
-escuchar cambios en vivo (unos 90 kB comprimidos de los ~320 de cada panel).
-Bajar de 250 pide otra cosa: cargar la pantalla sin él y conectar las escuchas
-después, como ya hacen los contextos públicos.
-
-Cierra cuando: ninguna ruta pase de 250 kB de primera carga, o quede escrito por
-qué ese piso no se puede bajar sin romper algo.
+Lo que siga vive en [CRITICO.md](CRITICO.md): lo que falta comprobar en
+producción y lo que sólo el dueño puede destrabar.
 
 ---
 
@@ -74,6 +67,10 @@ qué ese piso no se puede bajar sin romper algo.
   mismo sin tocar la infraestructura: si el rango cabe en el tope de 100, el
   orden deja de importar. Y donde no cabe -- un mes con más de cien paseos --,
   la pantalla lo dice (`capped`) en lugar de enseñar números que no cuadran.
+- **Diferir no es adelgazar, y hay que decirlo.** Los paneles bajaron de 323 kB
+  a 91 kB de primera carga porque su código llega aparte, no porque pese menos:
+  el total descargado es casi el mismo. Lo que cambia es que la pantalla se
+  dibuja mientras llega, en vez de después.
 - **Un tope en las reglas no recorta: rechaza.** Pedir 600 perros donde la
   regla permite 100 no devuelve cien: deja la pantalla vacía con un mensaje de
   permisos. Perros, Familias e Insights vivieron así desde la fase 6 porque

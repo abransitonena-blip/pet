@@ -10,7 +10,7 @@ const read = (path: string) => readFileSync(path, 'utf8')
  */
 describe('el paseador ve su propio paseo completo', () => {
   test('el recorrido lo pide el mismo mapa que ve la familia', () => {
-    const page = read('src/app/walker/reportes/[sessionId]/page.tsx')
+    const page = read('src/app/walker/reportes/[sessionId]/WalkerReportesSessionidPanel.tsx')
     expect(page).toContain('<WalkRouteMap sessionId={params.sessionId} />')
     expect(read('src/components/walks/WalkRouteMap.tsx')).toContain("'/api/walks/track'")
   })

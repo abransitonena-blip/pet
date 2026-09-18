@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 
 describe('FAQ search on the Familia help center', () => {
-  const page = readFileSync('src/app/familia/ayuda/page.tsx', 'utf8')
+  const page = readFileSync('src/app/familia/ayuda/FamiliaAyudaPanel.tsx', 'utf8')
 
   test('filters by matching question or answer text, case-insensitively', () => {
     expect(page).toContain('toLowerCase().includes(normalizedSearch)')

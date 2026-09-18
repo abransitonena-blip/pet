@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 
 describe('reviews get a real home inside Familia PET', () => {
   test('the historial page mounts the same gated ReviewForm, not a duplicate flow', () => {
-    const page = readFileSync('src/app/familia/historial/page.tsx', 'utf8')
+    const page = readFileSync('src/app/familia/historial/FamiliaHistorialPanel.tsx', 'utf8')
     expect(page).toContain("import ReviewForm from '@/components/ReviewForm'")
     expect(page).toContain('<ReviewForm />')
   })

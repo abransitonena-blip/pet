@@ -30,8 +30,8 @@ describe('conversaciones con administración', () => {
   })
 
   test('paseadores y familias tienen entrada al hilo', () => {
-    expect(read('src/app/walker/chat/page.tsx')).toContain('ConversationThread')
-    expect(read('src/app/familia/mensajes/page.tsx')).toContain('ConversationThread')
+    expect(read('src/app/walker/chat/WalkerChatPanel.tsx')).toContain('ConversationThread')
+    expect(read('src/app/familia/mensajes/FamiliaMensajesPanel.tsx')).toContain('ConversationThread')
     expect(read('src/app/walker/WalkerLayoutClient.tsx')).toContain("href: '/walker/chat'")
     expect(read('src/app/familia/FamilyLayoutClient.tsx')).toContain("href: '/familia/mensajes'")
   })

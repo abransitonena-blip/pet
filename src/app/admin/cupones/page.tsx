@@ -1,16 +1,14 @@
 'use client'
 
-import AdminCoupons from '@/components/AdminCoupons'
-import PageHeader from '@/components/ui/PageHeader'
+import dynamic from 'next/dynamic'
+import PanelFallback from '@/components/layout/PanelFallback'
 
-export default function AdminCuponesPage() {
-  return (
-    <div>
-      <PageHeader
-        title="Cupones de Descuento"
-        description="Crea y gestiona cupones de descuento para tus clientes"
-      />
-      <AdminCoupons />
-    </div>
-  )
+// El panel llega aparte: así el SDK de Firestore no bloquea la primera pintura.
+const AdminCuponesPanel = dynamic(() => import('./AdminCuponesPanel'), {
+  ssr: false,
+  loading: () => <PanelFallback />,
+})
+
+export default function Page() {
+  return <AdminCuponesPanel />
 }

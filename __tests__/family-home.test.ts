@@ -69,7 +69,7 @@ describe('cuándo', () => {
 })
 
 describe('lo que el inicio ya no carga de entrada', () => {
-  const page = readFileSync('src/app/familia/page.tsx', 'utf8')
+  const page = readFileSync('src/app/familia/FamiliaPanel.tsx', 'utf8')
 
   it('el formulario de PET Ahora se monta al pedirlo: lee perros y direcciones', () => {
     expect(page).toContain('{petAhoraOpen ? (\n            <PetAhoraRequestForm')

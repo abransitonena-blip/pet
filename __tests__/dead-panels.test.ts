@@ -26,7 +26,7 @@ describe('paneles viejos o sin función', () => {
     const readers = sourceFiles('src').filter((file) => read(file).includes("collection(db, 'reservations')"))
     // Solo el historial legacy de admin y la cancelación por teléfono, ambos apagados.
     expect(readers.sort()).toEqual([
-      'src/app/cancelar/page.tsx',
+      'src/app/cancelar/CancelarPanel.tsx',
       'src/components/admin/LegacyReservationsView.tsx',
       'src/context/ReservationsContext.tsx',
     ].sort())
@@ -40,20 +40,20 @@ describe('paneles viejos o sin función', () => {
     const layout = read('src/app/familia/FamilyLayoutClient.tsx')
     expect(layout).toContain("if (item.id === 'billetera') return FEATURE_FLAGS.WALLET_MUTATIONS_ENABLED")
     expect(layout).toContain("if (item.id === 'lealtad') return FEATURE_FLAGS.LOYALTY_REDEMPTION_ENABLED")
-    expect(read('src/app/familia/page.tsx')).toContain('{FEATURE_FLAGS.WALLET_MUTATIONS_ENABLED && <WalletCard compact />}')
+    expect(read('src/app/familia/FamiliaPanel.tsx')).toContain('{FEATURE_FLAGS.WALLET_MUTATIONS_ENABLED && <WalletCard compact />}')
   })
 
   test('el registro viejo de paseadores ya no se lee en ningún panel', () => {
     const offenders = sourceFiles('src').filter((file) => read(file).includes('config.walkers'))
     expect(offenders).toEqual([])
-    const page = read('src/app/admin/paseadores/page.tsx')
+    const page = read('src/app/admin/paseadores/AdminPaseadoresPanel.tsx')
     expect(page).toContain("collection(db, 'walkerProfiles')")
     expect(page).toContain('useCanonicalReservations')
     expect(page).not.toContain('useReservations')
   })
 
   test('Incidencias del supervisor mira paseos reales, no solo reseñas', () => {
-    const page = read('src/app/supervisor/incidencias/page.tsx')
+    const page = read('src/app/supervisor/incidencias/SupervisorIncidenciasPanel.tsx')
     expect(page).toContain('useCanonicalReservations')
     expect(page).toContain('useOpenGeofenceAlerts')
     expect(page).toContain("collection(db, 'walkReports')")

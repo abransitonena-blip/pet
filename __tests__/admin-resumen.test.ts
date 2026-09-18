@@ -22,7 +22,7 @@ describe('las cifras del Resumen', () => {
 })
 
 describe('el Resumen abre en lo que pide una decisión', () => {
-  const page = readFileSync('src/app/admin/page.tsx', 'utf8')
+  const page = readFileSync('src/app/admin/AdminPanel.tsx', 'utf8')
 
   it('las solicitudes por asignar salen de la misma cola que Solicitudes, no del mes hasta hoy', () => {
     expect(page).toContain('useRequestedWalkSessions()')
