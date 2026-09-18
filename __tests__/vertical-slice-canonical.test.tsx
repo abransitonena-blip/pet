@@ -16,6 +16,7 @@ jest.mock('@/lib/useCanonicalWalkSessions', () => ({
   useActiveWalkerOptions: () => mockWalkers(),
   useCustomerWalkSessions: () => mockCustomer(),
   useCanonicalAddressZones: () => mockAddressZones(),
+  useUpcomingAssignments: () => ({ assignments: [], capped: false }),
   assignCanonicalWalkSession: (...args: unknown[]) => mockAssign(...args),
   reprogramCanonicalWalkSession: (...args: unknown[]) => mockReprogram(...args),
   canonicalReadErrorMessage: (error: string) => error === 'permission-denied' ? 'Tu sesión no tiene permiso para consultar estas solicitudes.' : 'Error de red',

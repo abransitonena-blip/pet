@@ -9,6 +9,7 @@ jest.mock('@/lib/useCanonicalWalkSessions', () => ({
   useRequestedWalkSessions: () => mockRequested(),
   useActiveWalkerOptions: () => ({ walkers: [{ uid: 'walker-1', name: 'Ana', status: 'active' }], loading: false, error: null }),
   useCanonicalAddressZones: () => ({ zonesByAddress: {}, error: null }),
+  useUpcomingAssignments: () => ({ assignments: [], capped: false }),
   assignCanonicalWalkSession: jest.fn(),
   reprogramCanonicalWalkSession: (...args: unknown[]) => mockReprogram(...args),
   canonicalReadErrorMessage: () => 'Error',

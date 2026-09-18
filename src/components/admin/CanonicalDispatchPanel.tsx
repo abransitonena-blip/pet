@@ -11,12 +11,14 @@ import {
   useActiveWalkerOptions,
   useCanonicalAddressZones,
   useRequestedWalkSessions,
+  useUpcomingAssignments,
   type CanonicalWalkSession,
 } from '@/lib/useCanonicalWalkSessions'
 import { notifySessionEvent } from '@/lib/push/pushClient'
 import { getReservationServiceDefinitions } from '@/lib/walkServices'
 import { dispatchUrgency, orderDispatchQueue, URGENCY_LABELS, type DispatchUrgency } from '@/lib/dispatchQueue'
 import { whenLabel } from '@/lib/dateLabels'
+import { rankWalkers, suggestionFor } from '@/lib/dispatchSuggestion'
 
 type PendingAction =
   | { type: 'assign'; session: CanonicalWalkSession; walkerId: string }
@@ -51,6 +53,8 @@ export default function CanonicalDispatchPanel() {
   const queue = useRequestedWalkSessions()
   const walkerOptions = useActiveWalkerOptions()
   const addressZones = useCanonicalAddressZones(queue.sessions.map((session) => session.addressId))
+  // Con qué sugerir: la carga que ya tiene cada paseador en los próximos días.
+  const { assignments, capped: loadCapped } = useUpcomingAssignments()
   const [selectedWalkers, setSelectedWalkers] = useState<Record<string, string>>({})
   const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, { date: string; time: string }>>({})
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
@@ -132,6 +136,12 @@ export default function CanonicalDispatchPanel() {
             const schedule = scheduleDrafts[session.id] ?? { date: session.scheduledDate, time: session.scheduledStart }
             const urgency = dispatchUrgency(session.scheduledDate, today)
             const reprogramming = reprogramOpen === session.id
+            const ranked = rankWalkers(walkerOptions.walkers, {
+              zoneId: addressZones.zonesByAddress[session.addressId] ?? '',
+              scheduledDate: session.scheduledDate,
+              dogIds: session.dogIds,
+            }, assignments)
+            const suggested = suggestionFor(ranked)
             return (
               <Card key={session.id} className="p-4 shadow-none sm:p-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
@@ -158,8 +168,20 @@ export default function CanonicalDispatchPanel() {
                       className="input-field min-h-11 w-full"
                     >
                       <option value="">Elige un paseador activo</option>
-                      {walkerOptions.walkers.map((walker) => <option key={walker.uid} value={walker.uid}>{walker.name}</option>)}
+                      {/* Ordenados por lo que los datos ya saben: zona, si ya
+                          pasearon a ese perro, y su carga de ese día. */}
+                      {ranked.map((walker) => (
+                        <option key={walker.uid} value={walker.uid}>
+                          {walker.name} — {walker.reason}
+                        </option>
+                      ))}
                     </select>
+                    {suggested && (
+                      <p className="text-xs text-muted">
+                        Sugerido: <span className="font-semibold text-ink">{suggested.name}</span> · {suggested.reason}.
+                        {' '}La sugerencia no asigna: decide quien mira.
+                      </p>
+                    )}
                     <Button
                       className="w-full"
                       disabled={!selectedWalker}
@@ -218,6 +240,13 @@ export default function CanonicalDispatchPanel() {
             )
           })}
         </div>
+      )}
+
+      {loadCapped && (
+        <p className="text-xs text-amber-800">
+          Hay más paseos agendados de los que cabe leer de una vez: la carga que muestra cada
+          sugerencia puede quedarse corta.
+        </p>
       )}
 
       <p className="text-xs text-muted">

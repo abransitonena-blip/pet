@@ -79,6 +79,9 @@ export interface ActiveWalkerOption {
   uid: string
   name: string
   status: 'active'
+  /** Zonas que cubre y tope diario declarado: con eso se sugiere a quién asignar. */
+  zones: string[]
+  maxDaily: number | null
 }
 
 export class CanonicalOperationError extends Error {
@@ -210,6 +213,47 @@ export function useRequestedWalkSessions() {
   return { sessions, loading, error, retry: () => setRevision((value) => value + 1) }
 }
 
+/**
+ * Los paseos ya agendados de los próximos días, para saber cómo va la carga de
+ * cada paseador antes de asignarle otro. Lee una sola ventana con tope; si la
+ * llena, quien la use debe decirlo en vez de dar por buena la cuenta.
+ */
+export function useUpcomingAssignments(days = 14) {
+  const [assignments, setAssignments] = useState<{ walkerId: string; scheduledDate: string; dogIds: string[] }[]>([])
+  const [capped, setCapped] = useState(false)
+
+  useEffect(() => {
+    const today = new Date().toLocaleDateString('en-CA')
+    const [year, month, day] = today.split('-').map(Number)
+    const until = new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10)
+    const upcoming = query(
+      collection(db, 'walkSessions'),
+      where('scheduledDate', '>=', today),
+      where('scheduledDate', '<=', until),
+      orderBy('scheduledDate', 'asc'),
+      limit(100),
+    )
+    return onSnapshot(upcoming, (snapshot) => {
+      setCapped(snapshot.docs.length === 100)
+      setAssignments(snapshot.docs.flatMap((item) => {
+        const data = item.data()
+        const walkerId = typeof data.walkerId === 'string' ? data.walkerId : ''
+        if (!walkerId) return []
+        return [{
+          walkerId,
+          scheduledDate: typeof data.scheduledDate === 'string' ? data.scheduledDate : '',
+          dogIds: Array.isArray(data.dogIds) ? data.dogIds.filter((dogId: unknown): dogId is string => typeof dogId === 'string') : [],
+        }]
+      }))
+    }, () => {
+      setAssignments([])
+      setCapped(false)
+    })
+  }, [days])
+
+  return { assignments, capped }
+}
+
 export function useActiveWalkerOptions() {
   const [walkers, setWalkers] = useState<ActiveWalkerOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -222,13 +266,16 @@ export function useActiveWalkerOptions() {
       limit(100),
     )
     return onSnapshot(walkersQuery, (snapshot) => {
-      setWalkers(snapshot.docs.map((item) => ({
-        uid: item.id,
-        name: typeof item.data().name === 'string' && item.data().name.trim()
-          ? item.data().name
-          : `Paseador ${item.id.slice(0, 6)}`,
-        status: 'active' as const,
-      })))
+      setWalkers(snapshot.docs.map((item) => {
+        const data = item.data()
+        return {
+          uid: item.id,
+          name: typeof data.name === 'string' && data.name.trim() ? data.name : `Paseador ${item.id.slice(0, 6)}`,
+          status: 'active' as const,
+          zones: Array.isArray(data.zones) ? data.zones.filter((zone: unknown): zone is string => typeof zone === 'string') : [],
+          maxDaily: typeof data.maxDaily === 'number' ? data.maxDaily : null,
+        }
+      }))
       setError(null)
       setLoading(false)
     }, (readError: FirestoreError) => {
