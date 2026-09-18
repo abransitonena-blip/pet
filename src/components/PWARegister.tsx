@@ -19,8 +19,10 @@ export function showPushNotification(title: string, body: string, url = '/') {
     navigator.serviceWorker.ready.then((reg) => {
       const notifOptions: NotificationOptions & Record<string, unknown> = {
         body,
-        icon: '/brand/pet-ap-dog-logo.png',
-        badge: '/brand/pet-ap-dog-logo.png',
+        // A tamaño de aviso (24-48 px) el logo largo se vuelve una mancha; el
+        // ícono cuadrado de la app se lee.
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
         vibrate: [200, 100, 200],
         data: { url },
       }

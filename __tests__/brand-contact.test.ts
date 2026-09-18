@@ -18,20 +18,23 @@ describe('marca y contacto canónicos', () => {
     expect(BRAND.logoPath).toBe('/brand/pet-ap-dog-logo.png')
   })
 
-  test('Logo, favicon, PWA y notificaciones consumen el mismo perrito', () => {
+  test('en pantalla, el perrito; en chiquito, el cuadro naranja', () => {
     // On-page the mark is drawn as a CSS mask so it takes the brand colour,
-    // which needs the alpha-channel copy of the very same silhouette; the
-    // favicon, PWA icon and notification icon still use the original file.
+    // which needs the alpha-channel copy of the very same silhouette.
     const logo = read('src/components/ui/Logo.tsx')
     expect(logo).toContain('maskImage: `url(${BRAND.markPath})`')
     expect(logo).toContain('backgroundColor: \'currentColor\'')
     expect(logo).not.toContain('<ellipse')
     expect(BRAND.markPath).toBe('/brand/pet-ap-dog-mark.png')
     expect(existsSync(path.join(root, 'public/brand/pet-ap-dog-mark.png'))).toBe(true)
-    expect(read('src/app/layout.tsx')).toContain(BRAND.logoPath)
-    expect(read('src/components/PWARegister.tsx')).toContain(BRAND.logoPath)
-    expect(read('public/manifest.json')).toContain(BRAND.logoPath)
-    expect(read('public/sw.js')).toContain(BRAND.logoPath)
+
+    // El perrito es una silueta larga: a 16 px en la pestaña y a 24 en un aviso
+    // se vuelve una mancha. Ahí va el ícono cuadrado de la app, que es el que
+    // estaba antes y el que el dueño pidió de vuelta.
+    for (const file of ['src/app/layout.tsx', 'src/components/PWARegister.tsx', 'public/sw.js', 'public/manifest.json']) {
+      expect({ file, usaElCuadro: read(file).includes('/icons/icon-192') }).toEqual({ file, usaElCuadro: true })
+    }
+    expect(read('src/app/layout.tsx')).not.toContain(BRAND.logoPath)
   })
 
   test('la marca en pantalla ya no vive dentro de una caja blanca', () => {

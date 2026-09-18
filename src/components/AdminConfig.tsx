@@ -47,8 +47,10 @@ const AdminBookingSchedule = dynamic(() => import('@/components/AdminBookingSche
   loading: () => <div className="skeleton h-40 rounded-xl" />,
 })
 import { BRAND } from '@/lib/brand'
+import PushHealthCard from '@/components/admin/PushHealthCard'
+import PushOptIn from '@/components/PushOptIn'
 
-type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'features' | 'maintenance' | 'brand' | 'panels'
+type Section = 'prices' | 'booking' | 'hero' | 'social' | 'hours' | 'tips' | 'faq' | 'announcements' | 'terms' | 'privacy' | 'features' | 'maintenance' | 'brand' | 'panels' | 'avisos'
 
 /**
  * Configuración: catorce apartados que antes eran una pila plana de títulos.
@@ -80,6 +82,7 @@ const SECTIONS: ConfigSection[] = [
   { id: 'privacy', label: 'Aviso de privacidad', icon: '🔒', group: 'Lo que ve la gente', description: 'Qué datos se recaban y para qué. Requiere validación de abogado en México.' },
   { id: 'panels', label: 'Paneles del equipo', icon: '🧭', group: 'El sistema', description: 'Qué paneles ve el equipo, en qué orden, y qué ve un supervisor.' },
   { id: 'features', label: 'Funcionalidades', icon: '🚀', group: 'El sistema', description: 'Qué partes de la app están encendidas.' },
+  { id: 'avisos', label: 'Avisos al teléfono', icon: '🔔', group: 'El sistema', description: 'Si los avisos push pueden llegar, y una prueba a tu propio teléfono.' },
   { id: 'maintenance', label: 'Mantenimiento', icon: '⚠️', group: 'El sistema', description: 'Cerrar el sitio temporalmente con un mensaje.' },
 ]
 
@@ -151,6 +154,15 @@ function SectionContent({
   saving: boolean
 }) {
   switch (section) {
+    case 'avisos':
+      return (
+        <div className="space-y-3">
+          <PushHealthCard />
+          {/* Para que la prueba pueda probar algo, este aparato tiene que estar
+              registrado: el mismo control que usan las familias. */}
+          <PushOptIn description="Registra este dispositivo para recibir avisos de PET Ap y poder probarlos." />
+        </div>
+      )
     case 'prices':
       return <AdminServicePricing />
     case 'booking':

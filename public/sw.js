@@ -58,8 +58,8 @@ self.addEventListener('push', (e) => {
   const notification = payload.notification || {}
   e.waitUntil(self.registration.showNotification(data.title || notification.title || 'PET Ap', {
     body: data.body || notification.body || '',
-    icon: '/brand/pet-ap-dog-logo.png',
-    badge: '/brand/pet-ap-dog-mark.png',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
     tag: data.tag || undefined,
     data: { url: data.url || '/' },
   }))

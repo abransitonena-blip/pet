@@ -11,13 +11,21 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
  * servidor que anuncie un evento.
  *
  * Two switches keep this off: the FCM_ENABLED code flag and the VAPID key
- * (NEXT_PUBLIC_FIREBASE_VAPID_KEY, generated in the Firebase console under
- * Cloud Messaging → Web Push certificates). Until both exist nothing here
- * runs and the opt-in control does not render, so nothing half-configured
- * reaches anybody.
+ * (generada en la consola de Firebase, en Cloud Messaging → Web Push
+ * certificates). Hasta que existan las dos, nada de esto corre y el control
+ * para activar avisos no se dibuja, así que nada a medio configurar le llega a
+ * nadie.
+ *
+ * Se aceptan DOS nombres para esa llave. En Vercel quedó guardada como
+ * `NEXT_PUBLIC_FIREBASE_VAPID` y el código pedía `..._VAPID_KEY`: con ese
+ * nombre de más, la llave existía y la app se comportaba como si no, sin decir
+ * nada -- ninguna familia llegó a ver la tarjeta para activar sus avisos. Los
+ * dos nombres valen para que un renombre no vuelva a apagarlo en silencio.
  */
 
-const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? ''
+const VAPID_KEY = (process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
+  || process.env.NEXT_PUBLIC_FIREBASE_VAPID
+  || '').trim()
 const ENABLED_KEY = 'pet-avisos-activos'
 
 export type PushAvailability = 'off' | 'unsupported' | 'blocked' | 'enabled' | 'available'

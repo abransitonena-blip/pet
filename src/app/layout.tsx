@@ -84,7 +84,13 @@ export default function RootLayout({
     <html lang="es-MX" className={`${manrope.variable} ${inter.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" type="image/png" href="/brand/pet-ap-dog-logo.png" />
+        {/* El ícono de la pestaña y de los resultados de búsqueda vuelve al
+            anterior: el cuadro naranja con la patita. El logo del perro en
+            negro es del tamaño de una tarjeta y a 16 píxeles se ve como una
+            mancha; éste se lee. El PNG queda de respaldo para quien no dibuje
+            SVG en la pestaña. */}
+        <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
         {/* iOS ignora el manifiesto para el ícono de inicio: sin esto usaba una
             captura de la página. */}
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
