@@ -96,6 +96,30 @@ async function hasActiveWalkerProfile(uid: string): Promise<boolean> {
   return profile.exists && profile.data()?.status === 'active'
 }
 
+/**
+ * De una lista de cuentas, cuáles son del equipo.
+ *
+ * El rol vive en los claims del token, no en una colección: es lo que las
+ * reglas miran y lo único que no se puede falsificar desde un navegador. Se
+ * consulta en lote -- Firebase acepta cien por llamada -- para no hacer una
+ * petición por persona.
+ */
+export async function staffUidsAmong(uids: readonly string[]): Promise<string[]> {
+  const wanted = uids.filter(Boolean).slice(0, 100)
+  if (wanted.length === 0) return []
+  try {
+    const result = await getAuth(adminApp()).getUsers(wanted.map((uid) => ({ uid })))
+    return result.users
+      .filter((user) => {
+        const role = (user.customClaims ?? {}).role
+        return role === ROLES.ADMIN || role === ROLES.SUPERVISOR
+      })
+      .map((user) => user.uid)
+  } catch {
+    return []
+  }
+}
+
 export function getServerFirestore() {
   return getFirestore(adminApp())
 }

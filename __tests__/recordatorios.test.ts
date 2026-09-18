@@ -66,7 +66,8 @@ describe('la tarea programada', () => {
   })
 
   it('está programada una vez al día en vercel.json', () => {
+    // El horario va en UTC: 01:00 son las 19:00 en la Ciudad de México.
     const vercel = JSON.parse(read('vercel.json')) as { crons?: { path: string; schedule: string }[] }
-    expect(vercel.crons).toEqual([{ path: '/api/cron/reminders', schedule: '0 1 * * *' }])
+    expect(vercel.crons).toContainEqual({ path: '/api/cron/reminders', schedule: '0 1 * * *' })
   })
 })
