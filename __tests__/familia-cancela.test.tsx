@@ -12,7 +12,8 @@ jest.mock('firebase/firestore', () => ({
 }))
 
 import CancelWalkButton from '../src/components/family/CancelWalkButton'
-import { canCancel, cancelErrorMessage, cancelOwnWalk } from '../src/lib/familyCancellation'
+import RescheduleWalkButton from '../src/components/family/RescheduleWalkButton'
+import { canCancel, cancelErrorMessage, cancelOwnWalk, rescheduleOwnWalk } from '../src/lib/familyCancellation'
 
 const read = (path: string) => readFileSync(path, 'utf8')
 
@@ -90,5 +91,50 @@ describe('dónde aparece', () => {
   it('en el próximo paseo del inicio y en el historial', () => {
     expect(read('src/app/familia/FamiliaPanel.tsx')).toContain('<CancelWalkButton sessionId={next.id}')
     expect(read('src/components/family/CanonicalFamilyHistory.tsx')).toContain('canCancel(session.status)')
+  })
+})
+
+describe('mover el paseo a otro día', () => {
+  it('manda la fecha, la ventana de llegada, y suelta al paseador', async () => {
+    const result = await rescheduleOwnWalk({
+      sessionId: 's1', uid: 'customer-1', status: 'confirmed',
+      date: '2026-10-08', start: '12:00', end: '12:20',
+    })
+    expect(result).toEqual({ ok: true })
+    expect(mockUpdate).toHaveBeenCalledWith({ collection: 'walkSessions', id: 's1' }, {
+      scheduledDate: '2026-10-08',
+      scheduledStart: '12:00',
+      arrivalWindowStart: '12:00',
+      arrivalWindowEnd: '12:20',
+      status: 'requested',
+      walkerId: '',
+      rescheduledBy: 'customer-1',
+      rescheduledAt: 'servidor',
+      updatedAt: 'servidor',
+    })
+  })
+
+  it('no intenta mover un paseo que ya empezó', async () => {
+    expect(await rescheduleOwnWalk({
+      sessionId: 's1', uid: 'customer-1', status: 'in_progress',
+      date: '2026-10-08', start: '12:00', end: '12:20',
+    })).toEqual({ ok: false, reason: 'too-late' })
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('avisa que el paseo vuelve a la cola antes de confirmar, no después', () => {
+    render(<RescheduleWalkButton sessionId="s1" uid="customer-1" status="confirmed" currentDate="2026-10-01" />)
+    fireEvent.click(screen.getByRole('button', { name: /Cambiar de día/ }))
+    expect(screen.getByRole('dialog')).toHaveTextContent('vuelve a la lista por asignar')
+    expect(screen.getByLabelText('Nuevo día')).toHaveAttribute('min', new Date().toLocaleDateString('en-CA'))
+  })
+
+  it('las horas salen del mismo horario que usa la reserva', () => {
+    expect(read('src/components/family/RescheduleWalkButton.tsx')).toContain('generateTimeSlots(getDayOfWeek(date))')
+  })
+
+  it('está donde está cancelar: el próximo paseo y el historial', () => {
+    expect(read('src/app/familia/FamiliaPanel.tsx')).toContain('<RescheduleWalkButton sessionId={next.id}')
+    expect(read('src/components/family/CanonicalFamilyHistory.tsx')).toContain('<RescheduleWalkButton sessionId={session.id}')
   })
 })

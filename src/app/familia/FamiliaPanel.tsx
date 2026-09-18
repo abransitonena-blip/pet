@@ -14,6 +14,7 @@ import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
 import WalletCard from '@/components/WalletCard'
 import WalkerCard from '@/components/family/WalkerCard'
 import CancelWalkButton from '@/components/family/CancelWalkButton'
+import RescheduleWalkButton from '@/components/family/RescheduleWalkButton'
 import WalkRouteMap from '@/components/walks/WalkRouteMap'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
@@ -164,7 +165,10 @@ export default function DashboardPage() {
 
               {/* Cancelar estaba sólo por WhatsApp: una familia con un
                   imprevisto tenía que escribir y esperar. */}
-              <CancelWalkButton sessionId={next.id} uid={customerId} status={next.status} dogName={next.petName} />
+              <div className="flex flex-wrap gap-2">
+                <RescheduleWalkButton sessionId={next.id} uid={customerId} status={next.status} currentDate={next.date} />
+                <CancelWalkButton sessionId={next.id} uid={customerId} status={next.status} dogName={next.petName} />
+              </div>
 
               {hasWalker(next) ? (
                 <>

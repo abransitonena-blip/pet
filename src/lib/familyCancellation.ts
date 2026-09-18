@@ -56,6 +56,41 @@ export async function cancelOwnWalk(input: {
   }
 }
 
+/**
+ * Mover el paseo a otro día u hora.
+ *
+ * Mover suelta al paseador: puede no estar libre a la hora nueva, así que el
+ * paseo vuelve a la cola como solicitado y el equipo lo reasigna. Eso se le
+ * dice a la familia antes de confirmar, no después.
+ */
+export async function rescheduleOwnWalk(input: {
+  sessionId: string
+  uid: string
+  status: WalkSessionStatus
+  date: string
+  start: string
+  end: string
+}): Promise<CancelWalkResult> {
+  if (!canCancel(input.status)) return { ok: false, reason: 'too-late' }
+  try {
+    await updateDoc(doc(db, 'walkSessions', input.sessionId), {
+      scheduledDate: input.date,
+      scheduledStart: input.start,
+      arrivalWindowStart: input.start,
+      arrivalWindowEnd: input.end,
+      status: 'requested',
+      walkerId: '',
+      rescheduledBy: input.uid,
+      rescheduledAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+    return { ok: true }
+  } catch (cause) {
+    const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: unknown }).code) : ''
+    return { ok: false, reason: code.includes('permission-denied') ? 'not-allowed' : 'failed' }
+  }
+}
+
 export function cancelErrorMessage(reason: Exclude<CancelWalkResult, { ok: true }>['reason']): string {
   if (reason === 'too-late') return 'Este paseo ya empezó. Escríbele a tu paseador para avisarle.'
   if (reason === 'not-allowed') return 'El paseo cambió mientras mirabas esta pantalla. Actualízala para ver cómo quedó.'

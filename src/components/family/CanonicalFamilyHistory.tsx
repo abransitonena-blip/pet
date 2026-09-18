@@ -8,6 +8,7 @@ import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCan
 import { monthWindow } from '@/lib/recentWindow'
 import { canCancel } from '@/lib/familyCancellation'
 import CancelWalkButton from '@/components/family/CancelWalkButton'
+import RescheduleWalkButton from '@/components/family/RescheduleWalkButton'
 
 /**
  * El historial, un mes a la vez.
@@ -80,7 +81,8 @@ export default function CanonicalFamilyHistory({ customerId }: { customerId: str
                 <p className="mt-1 text-xs text-muted">{session.scheduledDate || 'Fecha pendiente'} · {session.scheduledStart || 'Hora pendiente'}</p>
               </div>
               {canCancel(session.status) && (
-                <div className="mt-3 sm:mt-0">
+                <div className="mt-3 flex flex-wrap gap-2 sm:mt-0">
+                  <RescheduleWalkButton sessionId={session.id} uid={customerId} status={session.status} currentDate={session.scheduledDate} />
                   <CancelWalkButton sessionId={session.id} uid={customerId} status={session.status} />
                 </div>
               )}

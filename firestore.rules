@@ -265,6 +265,45 @@ service cloud.firestore {
         && onlyAllowedFieldsChanged(['status', 'cancelledBy', 'cancelledAt', 'cancelReason', 'updatedAt']);
     }
 
+    // La familia mueve su propio paseo a otro día u hora.
+    //
+    // Mover suelta al paseador: puede no estar libre a la hora nueva, así que
+    // el paseo vuelve a la cola como solicitado y el equipo lo reasigna. La
+    // regla no juzga si la fecha tiene sentido -- eso lo sabe el horario de
+    // atención, que vive en la configuración y cambia; aquí se comprueba de
+    // quién es el paseo, qué campos toca y que quede firmado.
+    function validDateKey(value) {
+      return value is string && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    // Una hora de verdad: 00-23 y 00-59. Con `[0-9]{2}:[0-9]{2}` pasaba 25:99.
+    function validClock(value) {
+      return value is string && value.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+    }
+
+    function customerCanReschedule() {
+      return resource.data.customerId == request.auth.uid
+        && (resource.data.status == 'requested'
+          || resource.data.status == 'pending_assignment'
+          || resource.data.status == 'assigned'
+          || resource.data.status == 'confirmed')
+        && validDateKey(request.resource.data.scheduledDate)
+        && validClock(request.resource.data.scheduledStart)
+        && validClock(request.resource.data.arrivalWindowStart)
+        && validClock(request.resource.data.arrivalWindowEnd)
+        && (request.resource.data.scheduledDate != resource.data.scheduledDate
+          || request.resource.data.scheduledStart != resource.data.scheduledStart)
+        && request.resource.data.status == 'requested'
+        && request.resource.data.walkerId == ''
+        && request.resource.data.rescheduledBy == request.auth.uid
+        && request.resource.data.rescheduledAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && onlyAllowedFieldsChanged([
+          'scheduledDate', 'scheduledStart', 'arrivalWindowStart', 'arrivalWindowEnd',
+          'status', 'walkerId', 'rescheduledBy', 'rescheduledAt', 'updatedAt'
+        ]);
+    }
+
     function validWalkerTransition(from, to) {
       return (from == 'assigned' && to == 'confirmed')
         || (from == 'confirmed' && to == 'on_the_way')
@@ -716,6 +755,7 @@ service cloud.firestore {
       allow update: if sameSessionIdentity()
         && ((isStaff() && (validStaffAssignment() || validStaffReprogram()))
           || customerCanCancel()
+          || customerCanReschedule()
           || (isActiveWalker()
             && resource.data.walkerId == request.auth.uid
             && request.resource.data.walkerId == resource.data.walkerId
