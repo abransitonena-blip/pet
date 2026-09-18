@@ -13,6 +13,7 @@ import { getCustomerProfile } from '@/lib/customerProfile'
 import PetAhoraStatusTracker from '@/components/PetAhoraStatusTracker'
 import WalletCard from '@/components/WalletCard'
 import WalkerCard from '@/components/family/WalkerCard'
+import CancelWalkButton from '@/components/family/CancelWalkButton'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { usePetAhoraClientRequest } from '@/lib/usePetAhoraWalker'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
@@ -154,6 +155,10 @@ export default function DashboardPage() {
                   </span>
                 )}
               </p>
+              {/* Cancelar estaba sólo por WhatsApp: una familia con un
+                  imprevisto tenía que escribir y esperar. */}
+              <CancelWalkButton sessionId={next.id} uid={customerId} status={next.status} dogName={next.petName} />
+
               {hasWalker(next) ? (
                 <>
                   <WalkerCard sessionId={next.id} />

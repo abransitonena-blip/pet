@@ -14,6 +14,8 @@ interface ConfirmDialogProps {
   danger?: boolean
   loading?: boolean
   icon?: ReactNode
+  /** Lo que haga falta preguntar antes de confirmar, como un motivo. */
+  children?: ReactNode
   onConfirm: () => void
   onCancel: () => void
 }
@@ -27,6 +29,7 @@ export default function ConfirmDialog({
   danger,
   loading,
   icon,
+  children,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -80,7 +83,8 @@ export default function ConfirmDialog({
                 )}
               </div>
             </div>
-            <div className="flex gap-2 justify-end">
+            {children}
+            <div className="mt-4 flex gap-2 justify-end">
               <Button ref={cancelRef} variant="secondary" size="sm" onClick={onCancel} disabled={loading}>
                 {cancelLabel}
               </Button>

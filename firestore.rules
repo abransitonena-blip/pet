@@ -245,6 +245,26 @@ service cloud.firestore {
         ]);
     }
 
+    // La familia cancela su propio paseo, mientras nadie haya salido todavía.
+    //
+    // Sólo cambia el estado y deja constancia de quién y cuándo: ni fecha, ni
+    // paseador, ni servicio. En cuanto el paseo está en camino, ya no se cancela
+    // desde la app -- para eso está el chat con el paseador.
+    function customerCanCancel() {
+      return resource.data.customerId == request.auth.uid
+        && (resource.data.status == 'requested'
+          || resource.data.status == 'pending_assignment'
+          || resource.data.status == 'assigned'
+          || resource.data.status == 'confirmed')
+        && request.resource.data.status == 'cancelled'
+        && request.resource.data.cancelledBy == request.auth.uid
+        && request.resource.data.cancelledAt == request.time
+        && request.resource.data.get('cancelReason', '') is string
+        && request.resource.data.get('cancelReason', '').size() <= 300
+        && request.resource.data.updatedAt == request.time
+        && onlyAllowedFieldsChanged(['status', 'cancelledBy', 'cancelledAt', 'cancelReason', 'updatedAt']);
+    }
+
     function validWalkerTransition(from, to) {
       return (from == 'assigned' && to == 'confirmed')
         || (from == 'confirmed' && to == 'on_the_way')
@@ -695,6 +715,7 @@ service cloud.firestore {
         && validCustomerWalkSession(request.resource.data);
       allow update: if sameSessionIdentity()
         && ((isStaff() && (validStaffAssignment() || validStaffReprogram()))
+          || customerCanCancel()
           || (isActiveWalker()
             && resource.data.walkerId == request.auth.uid
             && request.resource.data.walkerId == resource.data.walkerId

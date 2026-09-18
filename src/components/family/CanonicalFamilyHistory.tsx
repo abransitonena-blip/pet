@@ -6,6 +6,8 @@ import { CalendarDays, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
 import { Card, EmptyState, ErrorState, LoadingState, StatusBadge } from '@/components/ui'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import { monthWindow } from '@/lib/recentWindow'
+import { canCancel } from '@/lib/familyCancellation'
+import CancelWalkButton from '@/components/family/CancelWalkButton'
 
 /**
  * El historial, un mes a la vez.
@@ -77,6 +79,11 @@ export default function CanonicalFamilyHistory({ customerId }: { customerId: str
                 </div>
                 <p className="mt-1 text-xs text-muted">{session.scheduledDate || 'Fecha pendiente'} · {session.scheduledStart || 'Hora pendiente'}</p>
               </div>
+              {canCancel(session.status) && (
+                <div className="mt-3 sm:mt-0">
+                  <CancelWalkButton sessionId={session.id} uid={customerId} status={session.status} />
+                </div>
+              )}
               {session.status === 'completed' && (
                 <div className="mt-3 flex w-full flex-col gap-2 sm:mt-0 sm:w-auto sm:flex-row">
                   <Link href={`/familia/reportes/${encodeURIComponent(session.id)}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary/10 px-4 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
