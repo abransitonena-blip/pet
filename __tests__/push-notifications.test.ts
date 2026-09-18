@@ -47,7 +47,7 @@ describe('avisos push: listos y apagados', () => {
       'src/app/api/push/register/route.ts',
       'src/app/api/push/unregister/route.ts',
       'src/app/api/push/session-event/route.ts',
-      'src/app/api/push/chat-reply/route.ts',
+      'src/app/api/push/chat-message/route.ts',
       'src/lib/push/pushServer.ts',
       'src/lib/push/pushClient.ts',
     ]) {
@@ -66,7 +66,18 @@ describe('avisos push: listos y apagados', () => {
   })
 
   test('el aviso de chat no pone el texto del mensaje en la pantalla bloqueada', () => {
-    expect(read('src/app/api/push/chat-reply/route.ts')).not.toMatch(/lastMessage|\.text\b/)
+    expect(read('src/app/api/push/chat-message/route.ts')).not.toMatch(/lastMessage|\.text\b/)
+  })
+
+  test('el aviso de chat lo dispara cualquiera de los dos lados, y el servidor decide a quién', () => {
+    const route = read('src/app/api/push/chat-message/route.ts')
+    // Quien escribe no nombra al destinatario: se saca de la conversación.
+    expect(route).toContain('participants.filter((uid) => uid !== caller.uid)')
+    expect(route).toContain("!participants.includes(caller.uid)")
+    expect(route).not.toMatch(/body\.(uid|target|to)\b/)
+    // Y los dos lados lo llaman.
+    expect(read('src/components/chat/ConversationThread.tsx')).toContain('notifyChatMessage(conversationId)')
+    expect(read('src/components/AdminChat.tsx')).toContain('notifyChatMessage(')
   })
 
   test('los tokens viven en una colección sin regla: ningún navegador los lee', () => {

@@ -128,8 +128,15 @@ export function notifySessionEvent(sessionId: string): void {
   void post('/api/push/session-event', { sessionId })
 }
 
-/** Tells the other side of a conversation that administration replied. */
-export function notifyChatReply(conversationId: string): void {
+/**
+ * Avisa al otro lado de la conversación que hay un mensaje nuevo.
+ *
+ * Sirve para los dos lados: administración, la familia y el paseador. Antes
+ * sólo avisaba administración, así que un mensaje de una familia a su paseador
+ * no sonaba en ningún teléfono y se quedaba sin leer hasta que alguien entraba
+ * a mirar.
+ */
+export function notifyChatMessage(conversationId: string): void {
   if (!FEATURE_FLAGS.FCM_ENABLED) return
-  void post('/api/push/chat-reply', { conversationId })
+  void post('/api/push/chat-message', { conversationId })
 }

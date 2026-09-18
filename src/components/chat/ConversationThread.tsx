@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card'
 import ErrorState from '@/components/ui/ErrorState'
 import { CHAT_MESSAGE_MAX_LENGTH, markConversationRead, openConversation, sendChatMessage, type ConversationIdentity } from '@/lib/chat'
 import type { ChatMessage } from '@/types'
+import { notifyChatMessage } from '@/lib/push/pushClient'
 
 /**
  * Un hilo de conversación visto desde el lado de la persona.
@@ -77,6 +78,8 @@ export default function ConversationThread({ identity, title, description, open,
     setInput('')
     try {
       await sendChatMessage(conversationId, { text, senderId: identity.uid, senderRole: identity.role })
+      // Que suene del otro lado: el servidor decide a quién y sin el texto.
+      notifyChatMessage(conversationId)
     } catch {
       setInput(text)
       setError('No pudimos enviar el mensaje. Inténtalo de nuevo.')

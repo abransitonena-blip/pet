@@ -10,7 +10,7 @@ import {
   MessagesSquare, Send, User, ChevronLeft,
 } from 'lucide-react'
 import type { Conversation, ChatMessage } from '@/types'
-import { notifyChatReply } from '@/lib/push/pushClient'
+import { notifyChatMessage } from '@/lib/push/pushClient'
 
 export default function AdminChat() {
   const searchParams = useSearchParams()
@@ -63,7 +63,7 @@ export default function AdminChat() {
       // real de quien contesta: antes decía 'admin' a secas y no quedaba quién
       // del equipo había escrito.
       await sendChatMessage(selectedId, { text, senderId: uid, senderRole: 'admin' })
-      notifyChatReply(selectedId)
+      notifyChatMessage(selectedId)
     } catch (e) {
       setInput(text)
       setSendError('No pudimos enviar el mensaje. Revisa tu conexión e inténtalo de nuevo.')
