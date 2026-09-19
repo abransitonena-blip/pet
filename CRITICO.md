@@ -131,10 +131,11 @@ cobran se mantienen apagadas. Los tickets internos no son CFDI.
 
 ## 5. Lo que ninguna prueba cubre todavía
 
-- **Los paneles con sesión real.** Las pruebas miran el código y las reglas; el
-  fallo del directorio vivió meses porque ninguna listaba como admin contra las
-  reglas de verdad. Ya hay una prueba de emulador para ese caso; faltan las de
-  los demás paneles.
+- **El recorrido completo con una sesión de verdad.** Las consultas de cada
+  panel ya se prueban contra las reglas reales en el emulador
+  (`paneles-consultan-rules.emulator`), que es lo que habría cazado el fallo del
+  directorio. Lo que sigue sin probarse es la pantalla misma: que el botón esté
+  donde debe y haga lo que dice, con alguien dentro.
 - **El recorrido completo de una familia**: registrarse, dar de alta un perro,
   pedir un paseo y verlo asignado. Hoy se prueba por partes.
 - **Las rutas de servidor con identidad privilegiada** sólo corren en
