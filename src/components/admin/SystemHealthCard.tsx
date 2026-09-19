@@ -3,14 +3,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BellRing, CheckCircle2, CircleAlert, Send } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
+import { missingCount, type HealthCheck } from '@/lib/systemHealth'
 
 /**
- * Si los avisos llegan o no, dicho en la pantalla.
+ * Qué está configurado y qué no, dicho en la pantalla.
  *
- * Un aviso que no llega no deja rastro: ni error en la consola, ni queja en el
- * panel. Estuvieron apagados semanas porque la llave del navegador estaba
- * guardada con otro nombre, y no había dónde verlo. Esta tarjeta enseña las
- * cuatro piezas y ofrece una prueba real: un aviso a tu propio teléfono.
+ * Lo que depende de una variable de entorno falla callado: ni error en la
+ * consola, ni queja en el panel. Los avisos estuvieron muertos semanas porque
+ * la llave estaba guardada con otro nombre. Aquí se lee cada dependencia --
+ * avisos, identidad del servidor, fotos privadas, tareas programadas --, qué se
+ * apaga mientras falte y cómo se arregla. Y hay una prueba real: un aviso a tu
+ * propio teléfono.
  */
 
 interface PushStatus {
@@ -20,6 +23,7 @@ interface PushStatus {
   people: number
   devices: number
   ownDevices: number
+  checks: HealthCheck[]
 }
 
 type State =
@@ -35,7 +39,7 @@ async function authorizedFetch(path: string, method: 'GET' | 'POST') {
   return fetch(path, { method, headers: { Authorization: `Bearer ${idToken}` } })
 }
 
-export default function PushHealthCard() {
+export default function SystemHealthCard() {
   const [state, setState] = useState<State>({ kind: 'loading' })
   const [sending, setSending] = useState(false)
   const [message, setMessage] = useState('')
@@ -82,35 +86,36 @@ export default function PushHealthCard() {
   }
 
   const { status } = state
-  const checks = [
-    { label: 'Función encendida en el código', ok: status.flagEnabled },
-    { label: 'El servidor puede enviar (identidad privilegiada)', ok: status.serverIdentity },
-    { label: 'Hay teléfonos registrados', ok: status.devices > 0, detail: `${status.devices} en ${status.people} cuenta${status.people === 1 ? '' : 's'}` },
-  ]
-  const allOk = checks.every((check) => check.ok)
+  const checks = status.checks ?? []
+  const missing = missingCount(checks)
 
   return (
     <Card className="p-4 shadow-none sm:p-5">
       <div className="mb-1 flex items-center gap-2">
         <BellRing size={17} className="text-primary" aria-hidden="true" />
-        <h2 className="font-bold text-ink">Avisos al teléfono</h2>
+        <h2 className="font-bold text-ink">Estado del sistema</h2>
       </div>
       <p className="mb-3 text-xs text-muted">
-        {allOk
-          ? 'Todo lo necesario está en su lugar. La prueba lo confirma de punta a punta.'
-          : 'Falta algo para que un aviso llegue. Mientras falte, nadie recibe nada y no aparece ningún error.'}
+        {missing === 0
+          ? 'Todo lo que la app necesita de fuera está en su lugar.'
+          : `Faltan ${missing} pieza${missing === 1 ? '' : 's'}. Lo que falta no da error: simplemente no ocurre.`}
       </p>
 
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {checks.map((check) => (
-          <li key={check.label} className="flex items-start gap-2 text-sm">
-            {check.ok
+          <li key={check.id} className="flex items-start gap-2 text-sm">
+            {check.state === 'ok'
               ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-success-600" aria-hidden="true" />
               : <CircleAlert size={16} className="mt-0.5 shrink-0 text-red-700" aria-hidden="true" />}
-            <span className="text-ink">
-              {check.label}
+            <span className="min-w-0">
+              <span className="text-ink">{check.label}</span>
               {check.detail && <span className="text-muted"> · {check.detail}</span>}
-              <span className="sr-only">{check.ok ? ': sí' : ': falta'}</span>
+              <span className="sr-only">{check.state === 'ok' ? ': sí' : ': falta'}</span>
+              {check.state === 'missing' && (
+                <span className="mt-0.5 block text-xs text-muted">
+                  {check.consequence}{check.fix ? ` ${check.fix}` : ''}
+                </span>
+              )}
             </span>
           </li>
         ))}

@@ -24,7 +24,7 @@ describe('la llave de los avisos', () => {
 
 describe('el estado de los avisos se puede ver y probar', () => {
   const route = read('src/app/api/push/status/route.ts')
-  const card = read('src/components/admin/PushHealthCard.tsx')
+  const card = read('src/components/admin/SystemHealthCard.tsx')
   const config = read('src/components/AdminConfig.tsx')
 
   it('sólo administración lo consulta', () => {
@@ -43,13 +43,13 @@ describe('el estado de los avisos se puede ver y probar', () => {
     for (const piece of ['flagEnabled', 'serverIdentity', 'devices', 'ownDevices']) {
       expect(route).toContain(piece)
     }
-    expect(card).toContain('Falta algo para que un aviso llegue')
+    expect(card).toContain('Lo que falta no da error: simplemente no ocurre')
     expect(card).toContain('/api/push/status')
   })
 
   it('vive en Configuración, junto al control para registrar el teléfono', () => {
     expect(config).toContain("id: 'avisos'")
-    expect(config).toContain('<PushHealthCard />')
+    expect(config).toContain('<SystemHealthCard />')
     expect(config).toContain('<PushOptIn description=')
   })
 })

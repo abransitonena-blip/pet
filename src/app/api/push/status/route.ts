@@ -6,6 +6,8 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { notifyUser } from '@/lib/push/pushServer'
 import { ROLES } from '@/lib/roles'
+import { describeCloudinaryConfig } from '@/lib/media/cloudinaryAdmin.server'
+import { buildHealthChecks } from '@/lib/systemHealth'
 
 export const runtime = 'nodejs'
 
@@ -59,6 +61,8 @@ export async function GET(request: Request) {
     }, 0)
   }
 
+  const cloudinary = describeCloudinaryConfig()
+
   return NextResponse.json({
     code: 'ok',
     flagEnabled: FEATURE_FLAGS.FCM_ENABLED,
@@ -66,6 +70,19 @@ export async function GET(request: Request) {
     firestore: Boolean(firestore),
     people,
     devices,
+    // Cada dependencia que vive fuera del código, dicha en una línea. Ningún
+    // secreto viaja: sólo si está y qué se apaga cuando no está.
+    checks: buildHealthChecks({
+      fcmEnabled: FEATURE_FLAGS.FCM_ENABLED,
+      vapidKey: Boolean((process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || process.env.NEXT_PUBLIC_FIREBASE_VAPID || '').trim()),
+      privilegedIdentity: identity,
+      serviceAccount: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_JSON),
+      cloudinaryCloud: cloudinary.cloudNameConfigured,
+      cloudinaryKey: cloudinary.apiKeyConfigured,
+      cloudinarySecret: cloudinary.apiSecretConfigured,
+      cronSecret: Boolean(process.env.CRON_SECRET),
+      registeredDevices: devices,
+    }),
     // Cuántos aparatos tiene registrados quien pregunta: si es cero, el botón
     // de prueba no puede probar nada.
     ownDevices: firestore
