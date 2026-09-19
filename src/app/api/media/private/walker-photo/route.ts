@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { verifyTokenRole } from '@/lib/serverAuth'
+import { verifyAuthenticatedToken, verifyTokenRole } from '@/lib/serverAuth'
 import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { checkRateLimit } from '@/lib/rateLimit'
@@ -55,7 +55,15 @@ export async function POST(request: Request) {
   const idToken = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
   if (!idToken) return NextResponse.json({ code: 'auth-required' }, { status: 401, headers: noStore })
   const caller = await verifyTokenRole(idToken)
-  if (!caller) return NextResponse.json({ code: 'invalid-token' }, { status: 401, headers: noStore })
+  if (!caller) {
+    // Un token válido cuyo rol no pasa -- un paseador con perfil inactivo o
+    // suspendido, por ejemplo -- no es lo mismo que una sesión caducada, y
+    // llamarlos igual deja un 401 en la consola que no explica nada.
+    const authenticated = await verifyAuthenticatedToken(idToken)
+    return authenticated
+      ? NextResponse.json({ code: 'role-not-allowed' }, { status: 403, headers: noStore })
+      : NextResponse.json({ code: 'invalid-token' }, { status: 401, headers: noStore })
+  }
 
   if (!FEATURE_FLAGS.PRIVATE_MEDIA_UPLOADS_ENABLED) {
     return NextResponse.json({ code: 'private-media-not-enabled' }, { status: 503, headers: noStore })
