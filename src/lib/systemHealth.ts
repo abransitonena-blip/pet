@@ -34,6 +34,8 @@ export interface HealthInputs {
   cloudinarySecret: boolean
   cronSecret: boolean
   registeredDevices: number
+  /** Servicios que la app ofrece pero no tienen tarifa publicada. */
+  servicesWithoutPrice: readonly string[]
 }
 
 export function buildHealthChecks(input: HealthInputs): HealthCheck[] {
@@ -84,6 +86,16 @@ export function buildHealthChecks(input: HealthInputs): HealthCheck[] {
       state: input.cronSecret ? 'ok' : 'missing',
       consequence: 'No sale el recordatorio de la tarde anterior ni la guardia de la mañana.',
       fix: 'Guardar CRON_SECRET en Vercel con un texto largo y aleatorio, y volver a publicar.',
+    },
+    {
+      id: 'prices',
+      label: 'Tarifa publicada de cada servicio ofrecido',
+      state: input.servicesWithoutPrice.length === 0 ? 'ok' : 'missing',
+      // El formulario de reserva esconde lo que no tiene tarifa, así que sin
+      // esta línea el dueño no se entera de que un plan no se puede pedir.
+      consequence: 'Un servicio sin tarifa no aparece en el formulario de reserva: nadie puede pedirlo.',
+      fix: 'Ponerle precio en Configuración → El negocio → Precios de servicios.',
+      detail: input.servicesWithoutPrice.length > 0 ? `sin tarifa: ${input.servicesWithoutPrice.join(', ')}` : undefined,
     },
     {
       id: 'devices',

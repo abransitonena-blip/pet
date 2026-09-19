@@ -8,6 +8,8 @@ import { notifyUser } from '@/lib/push/pushServer'
 import { ROLES } from '@/lib/roles'
 import { describeCloudinaryConfig } from '@/lib/media/cloudinaryAdmin.server'
 import { buildHealthChecks } from '@/lib/systemHealth'
+import { OFFERED_SERVICE_IDS, getReservationServiceDefinitions } from '@/lib/walkServices'
+import { isRequestableServicePrice, parsePublicServicePricesDocument } from '@/lib/servicePricing'
 
 export const runtime = 'nodejs'
 
@@ -63,6 +65,17 @@ export async function GET(request: Request) {
 
   const cloudinary = describeCloudinaryConfig()
 
+  // Qué servicios se ofrecen sin tarifa: el formulario de reserva los esconde,
+  // así que sin decirlo aquí, un plan puede quedarse años sin poder pedirse.
+  const servicesWithoutPrice: string[] = []
+  if (firestore) {
+    const pricesDoc = await firestore.collection('appSettings').doc('servicePrices').get()
+    const parsed = parsePublicServicePricesDocument(pricesDoc.data(), getReservationServiceDefinitions())
+    for (const id of OFFERED_SERVICE_IDS) {
+      if (!isRequestableServicePrice(parsed?.services[id])) servicesWithoutPrice.push(id)
+    }
+  }
+
   return NextResponse.json({
     code: 'ok',
     flagEnabled: FEATURE_FLAGS.FCM_ENABLED,
@@ -82,6 +95,7 @@ export async function GET(request: Request) {
       cloudinarySecret: cloudinary.apiSecretConfigured,
       cronSecret: Boolean(process.env.CRON_SECRET),
       registeredDevices: devices,
+      servicesWithoutPrice,
     }),
     // Cuántos aparatos tiene registrados quien pregunta: si es cero, el botón
     // de prueba no puede probar nada.

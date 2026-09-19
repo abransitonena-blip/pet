@@ -13,6 +13,7 @@ const todoBien: HealthInputs = {
   cloudinarySecret: true,
   cronSecret: true,
   registeredDevices: 3,
+  servicesWithoutPrice: [],
 }
 
 describe('qué depende de algo que vive fuera del código', () => {
@@ -38,6 +39,15 @@ describe('qué depende de algo que vive fuera del código', () => {
     expect(cloudinary?.detail).toBe('falta el secreto')
   })
 
+  it('un servicio ofrecido sin tarifa no se puede pedir, y por eso se dice aquí', () => {
+    // El formulario de reserva lo esconde: sin esta línea, el dueño no se entera.
+    const checks = buildHealthChecks({ ...todoBien, servicesWithoutPrice: ['paseo-adiestramiento'] })
+    const prices = checks.find((check) => check.id === 'prices')
+    expect(prices?.state).toBe('missing')
+    expect(prices?.detail).toBe('sin tarifa: paseo-adiestramiento')
+    expect(prices?.consequence).toContain('nadie puede pedirlo')
+  })
+
   it('sin teléfonos registrados no hay a quién avisarle, aunque todo lo demás esté', () => {
     const checks = buildHealthChecks({ ...todoBien, registeredDevices: 0 })
     const devices = checks.find((check) => check.id === 'devices')
@@ -54,6 +64,7 @@ describe('de dónde salen los datos', () => {
     expect(route).toContain('process.env.FIREBASE_SERVICE_ACCOUNT_JSON')
     expect(route).toContain('process.env.CRON_SECRET')
     expect(route).toContain('describeCloudinaryConfig()')
+    expect(route).toContain('isRequestableServicePrice(parsed?.services[id])')
   })
 
   it('ningún secreto viaja al navegador: sólo si está o no', () => {
