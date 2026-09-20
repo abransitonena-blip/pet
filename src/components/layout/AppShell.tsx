@@ -7,6 +7,7 @@ import { Logo } from '@/components/ui/Logo'
 import { LogOut } from 'lucide-react'
 import { isPanelRouteActive } from '@/lib/navigation'
 import NavBadge from '@/components/ui/NavBadge'
+import OfflineNotice from '@/components/layout/OfflineNotice'
 
 interface NavItem {
   id: string
@@ -62,6 +63,9 @@ export default function AppShell({
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      {/* Sin señal, lo que se ve puede estar viejo y lo que se escriba espera:
+          desde que la caché vive en el disco, eso deja de notarse solo. */}
+      <OfflineNotice />
       <header
         className="border-b sticky top-0 z-10"
         style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)' }}

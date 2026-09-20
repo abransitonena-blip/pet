@@ -8,6 +8,7 @@ import { LogOut, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { isPanelRouteActive } from '@/lib/navigation'
 import NavBadge from '@/components/ui/NavBadge'
+import OfflineNotice from '@/components/layout/OfflineNotice'
 
 interface NavItem {
   id: string
@@ -239,6 +240,9 @@ export default function AdminShell({
             </Link>
           </div>
         </div>
+
+        {/* Sin señal, lo que se ve puede estar viejo: la caché vive en disco. */}
+        <OfflineNotice />
 
         {/* Page content */}
         <main id="main-content" className="min-w-0 p-4 sm:p-6 lg:p-8">
