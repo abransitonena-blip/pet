@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { CalendarDays, ChevronDown, History } from 'lucide-react'
+import { CalendarDays, ChevronDown, History, Star } from 'lucide-react'
 import { Card, EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import WalkerSessionCard from '@/components/walker/WalkerSessionCard'
 import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { advanceWalkerSession, useWalkerSessions } from '@/lib/useServiceOrders'
 import { useSubmittedReports } from '@/lib/useSubmittedReports'
+import { useWalkerRatings } from '@/lib/useWalkerRatings'
+import { summarizeWalkerRatings } from '@/lib/walkerReviews'
 import {
   planWalkerDay,
   sortWalkerSessions,
@@ -49,6 +51,10 @@ export default function WalkerDashboard() {
 
   const sorted = useMemo(() => sortWalkerSessions(sessions), [sessions])
   const day = useMemo(() => planWalkerDay(sorted, today, weekStart), [sorted, today, weekStart])
+  // Su calificación, donde trabaja. Vivía sólo en su perfil, así que un
+  // paseador podía pasar semanas sin enterarse de lo que dicen las familias.
+  const { reviews, denied: ratingsDenied } = useWalkerRatings(uid)
+  const ratings = useMemo(() => summarizeWalkerRatings(reviews), [reviews])
   const reports = useSubmittedReports(uid, day.recentCompleted.map((session) => session.id))
   const reportsToSend = reports.state === 'ready'
     ? day.recentCompleted.filter((session) => !reports.submitted.has(session.id))
@@ -114,6 +120,25 @@ export default function WalkerDashboard() {
               </span>
             ))}
           </p>
+          {/* Con menos de tres calificaciones no hay promedio que mostrar, y se
+              dice por qué en vez de inventar una cifra. Si la lectura falla, no
+              se afirma nada. */}
+          {!ratingsDenied && (
+            <Link
+              href="/walker/perfil"
+              className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-xl px-1 text-sm text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <Star size={15} className={ratings.average === null ? 'text-muted' : 'fill-primary text-primary'} aria-hidden="true" />
+              {ratings.average === null ? (
+                <span>{ratings.pendingReason}</span>
+              ) : (
+                <span>
+                  <span className="font-semibold tabular-nums text-ink">{ratings.average.toFixed(1)}</span> de 5 ·{' '}
+                  {ratings.count} {ratings.count === 1 ? 'calificación' : 'calificaciones'}
+                </span>
+              )}
+            </Link>
+          )}
         </div>
         <Link
           href="/walker/historial"

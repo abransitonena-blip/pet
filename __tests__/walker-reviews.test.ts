@@ -110,3 +110,38 @@ describe('la interfaz', () => {
     expect(card).toContain('summary.pendingReason')
   })
 })
+
+/**
+ * La calificación vivía sólo en el perfil del paseador. Un paseador que nunca
+ * abre esa pantalla -- y en la calle no la abre -- podía pasar semanas sin
+ * enterarse de lo que dicen las familias de sus paseos.
+ */
+describe('el paseador la ve donde trabaja', () => {
+  const dashboard = read('src/app/walker/WalkerDashboard.tsx')
+  const hook = read('src/lib/useWalkerRatings.ts')
+  const card = read('src/components/walker/WalkerRatingsCard.tsx')
+
+  test('la jornada enseña su promedio y lleva a su perfil', () => {
+    expect(dashboard).toContain('useWalkerRatings(uid)')
+    expect(dashboard).toContain('summarizeWalkerRatings(reviews)')
+    expect(dashboard).toContain('href="/walker/perfil"')
+  })
+
+  test('con pocas calificaciones dice por qué no hay promedio, en vez de inventar una cifra', () => {
+    expect(dashboard).toContain('ratings.average === null')
+    expect(dashboard).toContain('ratings.pendingReason')
+  })
+
+  test('si la lectura fue rechazada no afirma nada, ni un cero', () => {
+    expect(dashboard).toContain('!ratingsDenied &&')
+    expect(hook).toContain('() => setDenied(true)')
+  })
+
+  test('la jornada y el perfil leen lo mismo, una sola vez escrito', () => {
+    expect(card).toContain("from '@/lib/useWalkerRatings'")
+    expect(hook).toContain('export const MAX_WALKER_REVIEWS = 100')
+    expect(hook).toContain('limit(MAX_WALKER_REVIEWS)')
+    // La consulta de reseñas ya no se escribe dos veces.
+    expect(card).not.toContain("collection(db, 'walkerReviews')")
+  })
+})

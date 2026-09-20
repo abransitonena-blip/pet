@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { collection, limit, onSnapshot, query, where } from 'firebase/firestore'
+import { useMemo } from 'react'
 import { Star } from 'lucide-react'
-import { db } from '@/firebase/db'
 import Card from '@/components/ui/Card'
 import { summarizeWalkerRatings } from '@/lib/walkerReviews'
+import { useWalkerRatings } from '@/lib/useWalkerRatings'
 
 /**
  * Lo que las familias dijeron de este paseador.
@@ -17,17 +16,10 @@ import { summarizeWalkerRatings } from '@/lib/walkerReviews'
  * Con menos de tres no se muestra promedio y se dice por qué. Un "5.0" con una
  * sola reseña no describe a nadie, y presentarlo como si lo hiciera es peor que
  * no mostrar nada.
+ *
+ * La lectura vive en `useWalkerRatings`: la misma que alimenta el resumen de su
+ * jornada.
  */
-
-// firestore.rules limita esta lista a 100 (validListLimit).
-const MAX_REVIEWS = 100
-
-interface Review {
-  id: string
-  rating: number
-  text: string
-  at: number | null
-}
 
 function formatDate(at: number | null): string {
   if (at === null) return ''
@@ -35,29 +27,7 @@ function formatDate(at: number | null): string {
 }
 
 export default function WalkerRatingsCard({ uid }: { uid: string }) {
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [denied, setDenied] = useState(false)
-
-  useEffect(() => {
-    if (!uid) return
-    return onSnapshot(
-      query(collection(db, 'walkerReviews'), where('walkerId', '==', uid), limit(MAX_REVIEWS)),
-      (snapshot) => {
-        setDenied(false)
-        setReviews(snapshot.docs.map((item) => {
-          const data = item.data()
-          const at = data.createdAt as { seconds?: unknown } | undefined
-          return {
-            id: item.id,
-            rating: Number(data.rating) || 0,
-            text: String(data.text ?? ''),
-            at: typeof at?.seconds === 'number' ? at.seconds * 1000 : null,
-          }
-        }))
-      },
-      () => setDenied(true),
-    )
-  }, [uid])
+  const { reviews, denied } = useWalkerRatings(uid)
 
   const summary = useMemo(() => summarizeWalkerRatings(reviews), [reviews])
   const withComment = useMemo(
