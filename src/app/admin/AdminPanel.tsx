@@ -14,6 +14,7 @@ import { whenLabel } from '@/lib/dateLabels'
 import { monthStart, summarizeDay, walksOnTheStreet } from '@/lib/adminSummary'
 import { getReservationServiceDefinitions } from '@/lib/walkServices'
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
+import PushNudge from '@/components/push/PushNudge'
 
 const SERVICE_NAMES = new Map(getReservationServiceDefinitions().map((service) => [service.id, service.name]))
 
@@ -68,6 +69,8 @@ export default function AdminDashboard() {
             : 'Sin paseos en marcha para hoy'}
         </p>
       </div>
+
+      <PushNudge message="Entérate en cuanto entre una solicitud nueva, aunque tengas la app cerrada." />
 
       <DataCard
         title="Por asignar"

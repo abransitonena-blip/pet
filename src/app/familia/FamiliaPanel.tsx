@@ -30,6 +30,7 @@ import DogAvatar from '@/components/dogs/DogAvatar'
 import { useFamilyDogs, type FamilyDog } from '@/lib/useFamilyDogs'
 import { useDogPhotos } from '@/lib/useDogPhotos'
 import { careReminderLabel, careReminders } from '@/lib/dogCareReminders'
+import PushNudge from '@/components/push/PushNudge'
 
 interface UserProfile {
   name: string
@@ -173,6 +174,10 @@ export default function DashboardPage() {
           <Plus size={16} aria-hidden="true" /> Solicitar paseo
         </Link>
       </section>
+
+      {/* El control para activar avisos vivía en Notificaciones, donde nadie
+          entra. Aquí se ofrece una vez, y quien diga que no no lo vuelve a ver. */}
+      <PushNudge message="Entérate en cuanto tu paseador salga, llegue y termine el paseo, aunque tengas la app cerrada." />
 
       {loadError ? (
         <ErrorState description={loadError} onRetry={retry} />

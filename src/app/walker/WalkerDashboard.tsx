@@ -9,6 +9,7 @@ import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { advanceWalkerSession, useWalkerSessions } from '@/lib/useServiceOrders'
 import { useSubmittedReports } from '@/lib/useSubmittedReports'
 import { useWalkerRatings } from '@/lib/useWalkerRatings'
+import PushNudge from '@/components/push/PushNudge'
 import { summarizeWalkerRatings } from '@/lib/walkerReviews'
 import {
   planWalkerDay,
@@ -147,6 +148,10 @@ export default function WalkerDashboard() {
           <History size={16} aria-hidden="true" /> Historial
         </Link>
       </section>
+
+      {/* Sin avisos, una asignación nueva no se entera hasta que alguien abre
+          la app. Se ofrece aquí una vez, no en el perfil donde nadie entra. */}
+      <PushNudge message="Entérate en cuanto te asignen un paseo o entre una solicitud de PET Ahora, aunque tengas la app cerrada." />
 
       {actionError && (
         <p className="rounded-xl bg-danger-500/10 px-4 py-3 text-sm text-red-700" role="alert">{actionError}</p>

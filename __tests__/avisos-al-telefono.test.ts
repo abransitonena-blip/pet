@@ -97,3 +97,43 @@ describe('cuando no sale ningún aviso, se dice por qué', () => {
     expect(card.indexOf('(data?.devices ?? 0) === 0')).toBeLessThan(card.indexOf("failures['not-configured']"))
   })
 })
+
+/**
+ * Los avisos no llegaban por una razón más simple que cualquier fallo técnico:
+ * nadie los había activado. El control existía en Notificaciones de la familia,
+ * en el perfil del paseador y en Configuración -- tres pantallas a las que nadie
+ * entra por su cuenta --, así que no había un solo teléfono registrado.
+ */
+describe('se ofrecen donde la gente está', () => {
+  const nudge = read('src/components/push/PushNudge.tsx')
+
+  it('sale en los tres inicios, que son las pantallas que todos abren', () => {
+    for (const panel of [
+      'src/app/familia/FamiliaPanel.tsx',
+      'src/app/walker/WalkerDashboard.tsx',
+      'src/app/admin/AdminPanel.tsx',
+    ]) {
+      expect(read(panel)).toContain('<PushNudge message=')
+    }
+  })
+
+  it('no se dibuja si no hay nada que activar', () => {
+    // Ya activados, bloqueados, sin soporte o con la función apagada: nada que ofrecer.
+    expect(nudge).toContain("pushAvailability() === 'available'")
+  })
+
+  it('quien dice que no, no lo vuelve a ver en ese teléfono', () => {
+    expect(nudge).toContain('pet-avisos-propuesta-descartada')
+    expect(nudge).toContain('aria-label="Ahora no"')
+  })
+
+  it('cuando no se puede, dice por qué -- incluido el iPhone', () => {
+    expect(nudge).toContain('agrega PET Ap a tu pantalla de inicio')
+    expect(nudge).toContain('El navegador tiene bloqueados los avisos')
+  })
+
+  it('el control de siempre sigue en su pantalla', () => {
+    expect(read('src/app/familia/notificaciones/FamiliaNotificacionesPanel.tsx')).toContain('<PushOptIn description=')
+    expect(read('src/app/walker/perfil/WalkerPerfilPanel.tsx')).toContain('<PushOptIn description=')
+  })
+})
