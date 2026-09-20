@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowRight, CalendarDays, CheckCircle2, Dog } from 'lucide-react'
+import { ArrowRight, CalendarDays, CheckCircle2, Dog, Footprints } from 'lucide-react'
 import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
 import { useRequestedWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import AdminWalkerStatus from '@/components/AdminWalkerStatus'
@@ -11,8 +11,9 @@ import EmptyState from '@/components/ui/EmptyState'
 import LoadingState from '@/components/ui/LoadingState'
 import { dispatchUrgency, orderDispatchQueue, URGENCY_LABELS, type DispatchUrgency } from '@/lib/dispatchQueue'
 import { whenLabel } from '@/lib/dateLabels'
-import { monthStart, summarizeDay } from '@/lib/adminSummary'
+import { monthStart, summarizeDay, walksOnTheStreet } from '@/lib/adminSummary'
 import { getReservationServiceDefinitions } from '@/lib/walkServices'
+import { STATUS_LABELS, STATUS_COLORS } from '@/lib/sessionMachine'
 
 const SERVICE_NAMES = new Map(getReservationServiceDefinitions().map((service) => [service.id, service.name]))
 
@@ -45,6 +46,9 @@ export default function AdminDashboard() {
   })
 
   const day = useMemo(() => summarizeDay(reservations, today), [reservations, today])
+  // Quiénes están en la calle en este momento. Sale de los mismos paseos que
+  // ya se leyeron para las cifras: no cuesta una consulta más.
+  const onTheStreet = useMemo(() => walksOnTheStreet(reservations, today), [reservations, today])
   const ordered = useMemo(() => orderDispatchQueue(queue.sessions), [queue.sessions])
   const overdue = ordered.filter((session) => dispatchUrgency(session.scheduledDate, today) === 'overdue').length
 
@@ -113,6 +117,41 @@ export default function AdminDashboard() {
           </div>
         )}
       </DataCard>
+
+      {/* El Resumen contaba los paseos de hoy y no decía cuáles. Quien opera
+          necesita ver los que ya salieron, quién los lleva y en qué van. */}
+      {onTheStreet.length > 0 && (
+        <DataCard
+          title="En la calle ahora"
+          action={(
+            <Link href="/admin/rutas" className="inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-brand-600 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              Ver en el mapa <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          )}
+        >
+          <ul className="animate-enter-list space-y-2">
+            {onTheStreet.map((walk) => (
+              <li key={walk.id} className="flex items-center gap-3 rounded-xl border border-ink/10 p-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-success-500/10 text-success-600" aria-hidden="true">
+                  <Footprints size={16} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-ink">
+                    {walk.petName || walk.service}
+                    {walk.walkerName && <span className="font-normal text-muted"> · {walk.walkerName}</span>}
+                  </p>
+                  <p className="truncate text-xs text-muted">
+                    {walk.time || 'Sin hora'}{walk.name ? ` · ${walk.name}` : ''}
+                  </p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_COLORS[walk.status]?.bg || 'bg-ink/10'} ${STATUS_COLORS[walk.status]?.text || 'text-muted'}`}>
+                  {STATUS_LABELS[walk.status] || walk.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </DataCard>
+      )}
 
       {/* Tres cifras en una fila que cabe en un teléfono; las tarjetas grandes
           partían "Completados hoy" en dos renglones. */}

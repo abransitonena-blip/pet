@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { monthStart, summarizeDay } from '../src/lib/adminSummary'
+import { monthStart, summarizeDay, walksOnTheStreet } from '../src/lib/adminSummary'
 
 const walk = (date: string, status: string) => ({ date, status }) as Parameters<typeof summarizeDay>[0][number]
 
@@ -43,5 +43,51 @@ describe('el Resumen abre en lo que pide una decisión', () => {
   it('no repite el menú: los accesos rápidos se saltaban los paneles ocultos', () => {
     expect(page).not.toContain('quickActions')
     expect(page).not.toContain("href: '/admin/config'")
+  })
+})
+
+/**
+ * El Resumen decía cuántos paseos había hoy y no cuáles. Para saber quién ya
+ * salió y en qué va, había que abrir Solicitudes y paseos y buscarlos entre
+ * todos los demás.
+ */
+describe('los paseos que ya salieron', () => {
+  const street = (id: string, date: string, status: string, time = '') =>
+    ({ id, date, status, time }) as Parameters<typeof walksOnTheStreet>[0][number] & { id: string }
+
+  it('sólo los de hoy que están en la calle', () => {
+    const list = walksOnTheStreet([
+      street('a', '2026-09-19', 'assigned'),
+      street('b', '2026-09-19', 'in_progress'),
+      street('c', '2026-09-18', 'in_progress'),
+      street('d', '2026-09-19', 'completed'),
+    ], '2026-09-19')
+    expect(list.map((walk) => walk.id)).toEqual(['b'])
+  })
+
+  it('el que ya está paseando va primero: es el que puede necesitar algo', () => {
+    const list = walksOnTheStreet([
+      street('a', '2026-09-19', 'on_the_way', '09:00'),
+      street('b', '2026-09-19', 'in_progress', '11:00'),
+      street('c', '2026-09-19', 'arrived', '10:00'),
+    ], '2026-09-19')
+    expect(list.map((walk) => walk.id)).toEqual(['b', 'c', 'a'])
+  })
+
+  it('a igual estado, manda la hora', () => {
+    const list = walksOnTheStreet([
+      street('a', '2026-09-19', 'in_progress', '11:00'),
+      street('b', '2026-09-19', 'in_progress', '08:30'),
+    ], '2026-09-19')
+    expect(list.map((walk) => walk.id)).toEqual(['b', 'a'])
+  })
+
+  it('el panel los enseña con quién los lleva, sin leer nada de más', () => {
+    const page = readFileSync('src/app/admin/AdminPanel.tsx', 'utf8')
+    expect(page).toContain('walksOnTheStreet(reservations, today)')
+    expect(page).toContain('En la calle ahora')
+    expect(page).toContain('{walk.walkerName}')
+    // Sale de los paseos que el panel ya tenía: ninguna consulta nueva.
+    expect(page.match(/useCanonicalReservations\(/g) ?? []).toHaveLength(1)
   })
 })
