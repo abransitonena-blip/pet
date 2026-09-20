@@ -3,6 +3,7 @@ import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { notifyUser } from '@/lib/push/pushServer'
 import { buildReminders, reminderMarker, tomorrowKey, type ReminderSession } from '@/lib/reminders'
+import { authorizeCronCall, isDryRun } from '@/lib/cronAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,9 +19,11 @@ const MAX_SESSIONS = 200
  * el secreto en la cabecera. El horario de esa tarea va en UTC: `0 1 * * *` son
  * las siete de la tarde en la Ciudad de México, la víspera del paseo.
  *
- * Nadie más la puede llamar: sin `CRON_SECRET` configurado, esta ruta no hace
- * nada, porque un recordatorio que cualquiera puede disparar es una forma de
- * molestar a las familias a las tres de la mañana.
+ * La otra llave es una sesión de administración, para poder probarla hoy sin
+ * esperar a la tarde; con `?dryRun=1` cuenta lo que saldría sin mandar nada.
+ * Sin una de las dos, la ruta no hace nada: un recordatorio que cualquiera
+ * puede disparar es una forma de molestar a las familias a las tres de la
+ * mañana.
  *
  * No inventa a quién avisar: lee los paseos de mañana y manda un aviso por
  * familia y, si ya tiene paseador, otro al paseador. Cada aviso deja su marca
@@ -28,11 +31,10 @@ const MAX_SESSIONS = 200
  * corrida del mismo día no vuelve a avisar.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET ?? ''
-  const authorization = request.headers.get('authorization') ?? ''
-  if (!secret || authorization !== `Bearer ${secret}`) {
-    return NextResponse.json({ code: 'forbidden' }, { status: 403, headers: noStore })
-  }
+  const caller = await authorizeCronCall(request)
+  if (!caller) return NextResponse.json({ code: 'forbidden' }, { status: 403, headers: noStore })
+  // Una prueba desde el panel cuenta lo que saldría, sin mandar ni marcar nada.
+  const dryRun = isDryRun(request)
 
   if (!FEATURE_FLAGS.FCM_ENABLED) {
     return NextResponse.json({ code: 'push-not-enabled' }, { status: 503, headers: noStore })
@@ -70,6 +72,12 @@ export async function GET(request: Request) {
     let sent = 0
     let repeated = 0
 
+    if (dryRun) {
+      return NextResponse.json({
+        code: 'ok', dryRun: true, forDate: tomorrow, walks: sessions.length, reminders: reminders.length, sent: 0, repeated: 0,
+      }, { headers: noStore })
+    }
+
     for (const reminder of reminders) {
       try {
         await firestore.collection('pushEvents').doc(reminderMarker(reminder)).create({
@@ -94,6 +102,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       code: 'ok',
+      calledBy: caller,
       forDate: tomorrow,
       walks: sessions.length,
       reminders: reminders.length,

@@ -49,10 +49,24 @@ describe('a quién se le recuerda el paseo de mañana', () => {
 describe('la tarea programada', () => {
   const route = read('src/app/api/cron/reminders/route.ts')
 
-  it('sin secreto no hace nada, y el secreto viaja en la cabecera', () => {
-    expect(route).toContain('const secret = process.env.CRON_SECRET')
-    expect(route).toContain('authorization !== `Bearer ${secret}`')
+  it('sólo la abre el secreto de la tarea o una sesión de equipo', () => {
+    const auth = read('src/lib/cronAuth.ts')
+    expect(route).toContain('await authorizeCronCall(request)')
     expect(route).toContain("{ code: 'forbidden' }, { status: 403")
+    expect(auth).toContain('const secret = process.env.CRON_SECRET')
+    expect(auth).toContain('authorization === `Bearer ${secret}`')
+    expect(auth).toContain("caller.role === ROLES.ADMIN || caller.role === ROLES.SUPERVISOR")
+  })
+
+  it('una prueba desde el panel cuenta lo que saldría, sin mandar ni marcar nada', () => {
+    expect(route).toContain('const dryRun = isDryRun(request)')
+    const dryBranch = route.indexOf('if (dryRun) {')
+    const firstSend = route.indexOf('notifyUser(')
+    const firstMark = route.indexOf('.create(')
+    expect(dryBranch).toBeGreaterThan(-1)
+    expect(dryBranch).toBeLessThan(firstSend)
+    expect(dryBranch).toBeLessThan(firstMark)
+    expect(read('src/lib/cronAuth.ts')).toContain("searchParams.get('dryRun') === '1'")
   })
 
   it('no manda dos veces el mismo recordatorio', () => {

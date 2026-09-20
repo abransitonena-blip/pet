@@ -5,6 +5,7 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { notifyUser } from '@/lib/push/pushServer'
 import { buildGuardReport, guardMarker, type GuardSession } from '@/lib/guardia'
 import { dateInTimezone } from '@/lib/bookingSchedule'
+import { authorizeCronCall, isDryRun } from '@/lib/cronAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,15 +28,16 @@ const LOOKBACK_DAYS = 21
  * claims sea admin o supervisor. El rol no se lee de una colección: se lee de
  * donde las reglas lo leen.
  *
- * Sin `CRON_SECRET` no hace nada. Si no hay nada que reportar, no manda nada:
- * un aviso diario que casi siempre dice "todo bien" se vuelve ruido y se apaga.
+ * La dispara la tarea programada con su secreto, o una sesión de
+ * administración desde el panel -- con `?dryRun=1` para ver qué saldría sin
+ * mandar nada. Sin una de las dos llaves, no hace nada. Y si no hay nada que
+ * reportar, no manda nada: un aviso diario que casi siempre dice "todo bien" se
+ * vuelve ruido y se apaga.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET ?? ''
-  const authorization = request.headers.get('authorization') ?? ''
-  if (!secret || authorization !== `Bearer ${secret}`) {
-    return NextResponse.json({ code: 'forbidden' }, { status: 403, headers: noStore })
-  }
+  const caller = await authorizeCronCall(request)
+  if (!caller) return NextResponse.json({ code: 'forbidden' }, { status: 403, headers: noStore })
+  const dryRun = isDryRun(request)
 
   if (!FEATURE_FLAGS.FCM_ENABLED) {
     return NextResponse.json({ code: 'push-not-enabled' }, { status: 503, headers: noStore })
@@ -69,6 +71,9 @@ export async function GET(request: Request) {
     })
 
     const report = buildGuardReport(sessions, today)
+    if (dryRun) {
+      return NextResponse.json({ code: 'ok', dryRun: true, forDate: today, ...report, notified: 0 }, { headers: noStore })
+    }
     if (!report.message) {
       return NextResponse.json({ code: 'ok', forDate: today, ...report, notified: 0 }, { headers: noStore })
     }

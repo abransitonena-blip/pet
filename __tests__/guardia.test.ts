@@ -46,8 +46,23 @@ describe('la guardia de la mañana', () => {
 describe('la tarea de guardia', () => {
   const route = read('src/app/api/cron/guardia/route.ts')
 
-  it('sin secreto no hace nada', () => {
-    expect(route).toContain('authorization !== `Bearer ${secret}`')
+  it('sólo la abre el secreto de la tarea o una sesión de equipo', () => {
+    expect(route).toContain('await authorizeCronCall(request)')
+    expect(route).toContain("{ code: 'forbidden' }, { status: 403")
+  })
+
+  it('en prueba no manda ni deja marca', () => {
+    const dryBranch = route.indexOf('if (dryRun) {')
+    expect(dryBranch).toBeGreaterThan(-1)
+    expect(dryBranch).toBeLessThan(route.indexOf('guardMarker(today)'))
+    expect(dryBranch).toBeLessThan(route.indexOf('notifyUser('))
+  })
+
+  it('el panel deja verlo sin esperar a mañana', () => {
+    const card = read('src/components/admin/SystemHealthCard.tsx')
+    expect(card).toContain("dryRun('reminders')")
+    expect(card).toContain("dryRun('guardia')")
+    expect(card).toContain('`/api/cron/${task}?dryRun=1`')
   })
 
   it('manda un solo aviso, no uno por paseo, y sólo a quien opera', () => {

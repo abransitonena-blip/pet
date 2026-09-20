@@ -58,6 +58,27 @@ export default function SystemHealthCard() {
 
   useEffect(() => { void load() }, [load])
 
+  const dryRun = async (task: 'reminders' | 'guardia') => {
+    setSending(true)
+    setMessage('')
+    try {
+      const response = await authorizedFetch(`/api/cron/${task}?dryRun=1`, 'GET')
+      const data = response ? await response.json().catch(() => ({})) as Record<string, unknown> : null
+      if (!response || !response.ok) {
+        setMessage(data?.code === 'privileged-identity-not-configured'
+          ? 'El servidor no tiene la identidad para leer los paseos. Esto sólo funciona en producción.'
+          : 'No pudimos hacer la prueba.')
+      } else if (task === 'reminders') {
+        setMessage(`Mañana saldrían ${data?.reminders ?? 0} recordatorio(s), de ${data?.walks ?? 0} paseo(s) agendados para el ${data?.forDate}.`)
+      } else {
+        setMessage(String(data?.message || 'Hoy no hay nada que reportar: ningún paseo sin paseador ni sin cerrar.'))
+      }
+    } catch {
+      setMessage('No pudimos hacer la prueba.')
+    }
+    setSending(false)
+  }
+
   const sendTest = async () => {
     setSending(true)
     setMessage('')
@@ -124,6 +145,14 @@ export default function SystemHealthCard() {
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Button size="sm" onClick={() => void sendTest()} isLoading={sending} leftIcon={<Send size={14} />}>
           Enviarme un aviso de prueba
+        </Button>
+        {/* Ver qué saldría sin mandar nada: así no hay que esperar a la tarde
+            para saber si los recordatorios funcionan. */}
+        <Button size="sm" variant="secondary" onClick={() => void dryRun('reminders')} disabled={sending}>
+          ¿Qué se recordaría mañana?
+        </Button>
+        <Button size="sm" variant="secondary" onClick={() => void dryRun('guardia')} disabled={sending}>
+          ¿Qué diría la guardia de hoy?
         </Button>
         <span className="text-xs text-muted">
           {status.ownDevices > 0
