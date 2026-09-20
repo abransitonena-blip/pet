@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { collection, doc, getDocs, limit, orderBy, query, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore'
-import { ShieldCheck, Upload, X } from 'lucide-react'
+import { Images, ShieldCheck, Upload, X } from 'lucide-react'
 import { auth } from '@/firebase/config'
 import { db } from '@/firebase/db'
 import { Button, EmptyState, ErrorState, LoadingState } from '@/components/ui'
@@ -329,7 +329,7 @@ export default function AdminGalleryManager() {
           </select>
         </div>
         {visible.length === 0 ? (
-          <div className="mt-4"><EmptyState title="Sin imágenes" description="No hay registros para este filtro." /></div>
+          <div className="mt-4"><EmptyState icon={<Images size={24} />} title="Sin imágenes" description="No hay registros para este filtro." /></div>
         ) : (
           <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {visible.map((entry) => {

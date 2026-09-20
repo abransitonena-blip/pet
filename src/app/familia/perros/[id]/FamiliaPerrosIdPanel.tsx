@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
-import { AlertTriangle, ArrowLeft, ChevronDown, FileText, Pencil, Phone, Syringe } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ChevronDown, Dog, FileText, Pencil, Phone, Syringe } from 'lucide-react'
 import { auth } from '@/firebase/config'
 import { db } from '@/firebase/db'
 import { Card, EmptyState, ErrorState, LoadingState } from '@/components/ui'
@@ -208,6 +208,7 @@ export default function DogProfilePage() {
     return (
       <Card className="p-4 shadow-none">
         <EmptyState
+          icon={<Dog size={24} />}
           title="Perfil no disponible"
           description="Esta mascota no existe o no pertenece a tu cuenta."
           action={<Link href="/familia/perros" className="inline-flex min-h-11 items-center rounded-xl bg-primary/10 px-4 text-sm font-semibold text-primary">Volver a Mis mascotas</Link>}

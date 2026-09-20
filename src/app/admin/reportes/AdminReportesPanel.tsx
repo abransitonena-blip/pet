@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { collection, getDocs, limit, orderBy, query, type FirestoreError } from 'firebase/firestore'
+import { FileText, SearchX } from 'lucide-react'
 import { db } from '@/firebase/db'
 import { Button, Card, EmptyState, ErrorState, LoadingState, StatusBadge } from '@/components/ui'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -74,9 +75,9 @@ export default function AdminReportsPage() {
         ))}
       </div>
       {reports.length === 0 ? (
-        <EmptyState title="Sin reportes" description="Los borradores y reportes enviados aparecerán aquí." />
+        <EmptyState icon={<FileText size={24} />} title="Sin reportes" description="Los borradores y reportes enviados aparecerán aquí." />
       ) : filteredReports.length === 0 ? (
-        <EmptyState title="Sin resultados" description="No hay reportes con este estado dentro de los últimos 50." />
+        <EmptyState icon={<SearchX size={24} />} title="Sin resultados" description="No hay reportes con este estado dentro de los últimos 50." />
       ) : (
         <div className="divide-y divide-ink/10 overflow-hidden rounded-2xl bg-surface">
           {filteredReports.map((report) => (

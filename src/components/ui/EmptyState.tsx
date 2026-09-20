@@ -20,9 +20,12 @@ export default function EmptyState({ icon, title, description, action, className
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
     >
+      {/* El cuadro del ícono era gris sobre gris y se leía como una falla.
+          Con el tinte de la casa, un hueco vacío se ve como un lugar que
+          todavía no se llena, que es lo que es. */}
       {icon && (
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-ink/5">
-          <span className="text-xl" style={{ color: 'var(--text-muted)' }}>{icon}</span>
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="text-xl">{icon}</span>
         </div>
       )}
       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{title}</p>

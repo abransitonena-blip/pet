@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, useReducedMotion } from 'framer-motion'
+import PawTrail from './PawTrail'
 
 interface LoadingStateProps {
   message?: string
@@ -23,7 +24,11 @@ export default function LoadingState({ message = 'Cargando...', rows = 3, height
           <div key={i} className={`skeleton ${height} rounded-xl`} />
         ))}
       </div>
-      <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>{message}</p>
+      {/* Las huellas dicen lo mismo que el texto, con la cara de la casa. */}
+      <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+        <PawTrail size={13} />
+        {message}
+      </p>
       <span className="sr-only">{message}</span>
     </motion.div>
   )

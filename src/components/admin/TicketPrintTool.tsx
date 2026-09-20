@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { collection, doc, getDoc, getDocs, limit, orderBy, query, type DocumentData, type FirestoreError } from 'firebase/firestore'
-import { Check, ChevronDown, Clipboard, Download, FileCode2, Printer, RotateCcw, Save } from 'lucide-react'
+import { Check, ChevronDown, Clipboard, Download, FileCode2, FileText, Printer, RotateCcw, Save } from 'lucide-react'
 import { db } from '@/firebase/db'
 import { Button, EmptyState, ErrorState, LoadingState } from '@/components/ui'
 import { ROLES } from '@/lib/roles'
@@ -413,7 +413,7 @@ export default function TicketPrintTool() {
               </aside>
             </div>
           ) : (
-            <div className="border-t border-ink/10 pt-5"><EmptyState title="Selecciona y genera una vista previa" description="La generación ocurre únicamente en memoria y no escribe en Firestore." /></div>
+            <div className="border-t border-ink/10 pt-5"><EmptyState icon={<FileText size={24} />} title="Selecciona y genera una vista previa" description="La generación ocurre únicamente en memoria y no escribe en Firestore." /></div>
           )}
         </section>
       )}
