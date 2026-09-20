@@ -12,12 +12,29 @@ describe('ficha del paseo para el paseador', () => {
     expect(route).toContain('checkRateLimit(')
   })
 
-  test('nunca devuelve la dirección de la familia ni sus datos de contacto', () => {
-    // Lee la dirección solo para saber la zona; lo que responde no la incluye.
-    for (const field of ['street', 'colony', 'zip', 'exterior', 'customerPhone', 'customerName']) {
+  test('devuelve a dónde llegar, y nada de contacto de la familia', () => {
+    // El paseador tiene que llegar a una puerta: calle, número, colonia,
+    // referencias y cómo entrar viajan. El dueño lo pidió así.
+    for (const field of ['street', 'colony', 'zip', 'exterior', 'references', 'instructions']) {
+      expect(route).toContain(field)
+    }
+    // Lo que sigue sin viajar: cómo contactar a la familia por fuera de la app.
+    for (const field of ['customerPhone', 'customerName', 'email']) {
       expect(route).not.toContain(field)
     }
     expect(route).toContain('const zone = zoneData')
+  })
+
+  test('la dirección deja de viajar en cuanto el paseo se completa', () => {
+    expect(route).toContain("String(session.status) !== 'completed'")
+    expect(route).toContain('? pickupFrom(address)')
+  })
+
+  test('el paseador puede abrirla en el mapa', () => {
+    const sheet = read('src/components/walker/WalkSheet.tsx')
+    expect(sheet).toContain('Dónde recoger')
+    expect(sheet).toContain('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.pickup.query)}')
+    expect(sheet).toContain('Abrir en Google Maps')
   })
 
   test('la ficha muestra alergias, medicamento y cuidados, y avisa si no está disponible', () => {

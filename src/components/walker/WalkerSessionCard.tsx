@@ -24,10 +24,12 @@ interface WalkerSessionCardProps {
   compact?: boolean
   /** Empieza compacta y se abre con un toque: para los paseos que no tocan ahora. */
   collapsible?: boolean
+  /** El paseo que toca ahora abre su ficha solo: ahí está a dónde llegar. */
+  openSheet?: boolean
 }
 
-export default function WalkerSessionCard({ session, onAdvance, updating = false, compact: alwaysCompact = false, collapsible = false }: WalkerSessionCardProps) {
-  const [sheetOpen, setSheetOpen] = useState(false)
+export default function WalkerSessionCard({ session, onAdvance, updating = false, compact: alwaysCompact = false, collapsible = false, openSheet = false }: WalkerSessionCardProps) {
+  const [sheetOpen, setSheetOpen] = useState(openSheet)
   const [expanded, setExpanded] = useState(false)
   const compact = alwaysCompact || (collapsible && !expanded)
   const detailsId = `walk-details-${session.id}`

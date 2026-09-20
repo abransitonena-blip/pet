@@ -27,9 +27,15 @@ const VISIBLE_STATUSES: ReadonlySet<string> = new Set([
  * saber si el perro es alérgico, si toma medicamento y qué cuidados tiene, y
  * dónde puede pasearlo.
  *
- * El servidor lo resuelve: confirma que el paseo es suyo y devuelve solo los
- * campos de cuidado del perro y los lugares marcados de la zona. Nunca la
- * dirección, ni el teléfono de la familia, ni nada del resto del expediente.
+ * El servidor lo resuelve: confirma que el paseo es suyo y devuelve los campos
+ * de cuidado del perro, los lugares marcados de la zona y la dirección de
+ * recogida -- calle, número, colonia, referencias y cómo entrar --, que es a
+ * dónde tiene que llegar. Nunca el teléfono ni el correo de la familia, ni nada
+ * más del expediente.
+ *
+ * La dirección sale sólo para el paseador de ESE paseo y sólo mientras el paseo
+ * sigue asignado o en curso; al completarse deja de viajar, porque para escribir
+ * el reporte no hace falta.
  *
  * Desde aquí también sale la foto del perro, si la familia subió una: quien va a
  * recogerlo necesita reconocerlo en la puerta. Va como enlace que caduca, igual
@@ -119,6 +125,42 @@ function dogPhotoUrl(reference: unknown): string {
   }
 }
 
+export interface PickupAddress {
+  /** Una sola línea, lista para leer de un vistazo. */
+  line: string
+  references: string
+  instructions: string
+  /** Lo que se le pasa a un mapa para buscarla. */
+  query: string
+}
+
+/**
+ * La dirección de recogida, armada de los campos que la familia guardó.
+ *
+ * Sólo lo que sirve para llegar y entrar: calle, número, colonia, ciudad,
+ * código postal, referencias y las instrucciones de entrada. Ni nombre, ni
+ * teléfono, ni correo: para eso está el chat del paseo.
+ */
+function pickupFrom(address: Record<string, unknown>): PickupAddress | null {
+  const street = text(address.street)
+  const exterior = text(address.exterior)
+  const interior = text(address.interior)
+  const colony = text(address.colony)
+  const city = text(address.city)
+  const state = text(address.state)
+  const zip = text(address.zip)
+  if (!street && !colony) return null
+
+  const streetLine = [street, exterior, interior ? `Int. ${interior}` : ''].filter(Boolean).join(' ')
+  const areaLine = [colony, city, zip ? `CP ${zip}` : ''].filter(Boolean).join(', ')
+  return {
+    line: [streetLine, areaLine].filter(Boolean).join(' · '),
+    references: text(address.references),
+    instructions: text(address.instructions) || text(address.pickupInstructions),
+    query: [streetLine, colony, city, state, zip, 'México'].filter(Boolean).join(', '),
+  }
+}
+
 function spotsFrom(value: unknown): ZoneSpot[] {
   if (!Array.isArray(value)) return []
   return value
@@ -193,7 +235,13 @@ export async function POST(request: Request) {
       ? { name: text(zoneData.name) || 'Zona', spots: spotsFrom(zoneData.spots) }
       : null
 
-    return NextResponse.json({ code: 'ok', dogs, zone }, { headers: noStore })
+    // Mientras el paseo está por delante o en curso, a dónde llegar. Al
+    // completarse ya no: el reporte no necesita el domicilio de nadie.
+    const pickup = address && String(session.status) !== 'completed'
+      ? pickupFrom(address)
+      : null
+
+    return NextResponse.json({ code: 'ok', dogs, zone, pickup }, { headers: noStore })
   } catch (error) {
     console.error('walker/walk-sheet failed:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ code: 'walk-sheet-failed' }, { status: 500, headers: noStore })

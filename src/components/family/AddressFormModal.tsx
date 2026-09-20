@@ -194,6 +194,12 @@ export default function AddressFormModal({ address, isFirst, onClose, onSaved }:
                 </button>
               </div>
 
+              {/* Quien venga por el perro necesita llegar a la puerta: se dice
+                  aquí, no en un aviso de privacidad que nadie abre. */}
+              <p className="rounded-xl bg-ink/[0.04] px-3 py-2 text-xs text-muted">
+                El paseador asignado verá esta dirección para poder llegar, sólo mientras ese paseo está en pie.
+              </p>
+
               <div>
                 <label htmlFor="address-zone" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Zona disponible *</label>
                 <select id="address-zone" value={form.zoneId} onChange={(event) => setForm({ ...form, zoneId: event.target.value })} className="input-field min-h-11 w-full" required>

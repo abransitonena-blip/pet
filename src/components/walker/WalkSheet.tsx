@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { AlertTriangle, MapPinned, Pill, Stethoscope, Syringe } from 'lucide-react'
+import { AlertTriangle, MapPinned, Navigation, Pill, Stethoscope, Syringe } from 'lucide-react'
 import { VACCINE_STATUS_LABELS, type VaccineStatus } from '@/lib/dogHealth'
 import DogAvatar from '@/components/dogs/DogAvatar'
 import { ZONE_SPOT_LABELS } from '@/lib/zoneMatching'
@@ -37,6 +37,8 @@ interface DogSheet {
 interface WalkSheetData {
   dogs: DogSheet[]
   zone: { name: string; spots: ZoneSpot[] } | null
+  /** A dónde llegar por el perro. Sólo mientras el paseo sigue en pie. */
+  pickup: { line: string; references: string; instructions: string; query: string } | null
 }
 
 const ENERGY_LABELS: Record<string, string> = { bajo: 'Tranquilo', medio: 'Activo', alto: 'Muy activo' }
@@ -58,12 +60,17 @@ export default function WalkSheet({ sessionId, today }: { sessionId: string; tod
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ sessionId, today }),
       })
-      const result = await response.json().catch(() => ({})) as { code?: string; dogs?: DogSheet[]; zone?: WalkSheetData['zone'] }
+      const result = await response.json().catch(() => ({})) as {
+        code?: string
+        dogs?: DogSheet[]
+        zone?: WalkSheetData['zone']
+        pickup?: WalkSheetData['pickup']
+      }
       if (!response.ok) {
         setState(result.code === 'privileged-identity-not-configured' ? 'unavailable' : 'error')
         return
       }
-      setData({ dogs: result.dogs ?? [], zone: result.zone ?? null })
+      setData({ dogs: result.dogs ?? [], zone: result.zone ?? null, pickup: result.pickup ?? null })
       setState('ready')
     } catch {
       setState('error')
@@ -154,6 +161,27 @@ export default function WalkSheet({ sessionId, today }: { sessionId: string; tod
         )
       })}
 
+      {/* A dónde llegar. Antes no viajaba, y el paseador tenía que pedir la
+          dirección por chat en cada paseo. */}
+      {data.pickup && (
+        <div className="space-y-1.5 rounded-xl border border-primary/20 bg-primary/[0.06] p-3">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+            <Navigation size={14} aria-hidden="true" /> Dónde recoger
+          </p>
+          <p className="text-sm text-ink">{data.pickup.line}</p>
+          {data.pickup.references && <p className="text-xs text-muted">Referencias: {data.pickup.references}</p>}
+          {data.pickup.instructions && <p className="text-xs text-muted">Para entrar: {data.pickup.instructions}</p>}
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.pickup.query)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary/10 px-3 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <Navigation size={15} aria-hidden="true" /> Abrir en Google Maps
+          </a>
+        </div>
+      )}
+
       {data.zone && data.zone.spots.length > 0 && (
         <div className="space-y-1.5 rounded-xl bg-ink/[0.03] p-3">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
@@ -177,7 +205,7 @@ export default function WalkSheet({ sessionId, today }: { sessionId: string; tod
         </div>
       )}
 
-      {data.dogs.length === 0 && !data.zone && (
+      {data.dogs.length === 0 && !data.zone && !data.pickup && (
         <p className="text-xs text-muted">Este paseo todavía no tiene ficha: falta el perro o la zona de la dirección.</p>
       )}
     </div>

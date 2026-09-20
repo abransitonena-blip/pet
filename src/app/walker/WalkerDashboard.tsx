@@ -157,6 +157,9 @@ export default function WalkerDashboard() {
                 session={day.focus}
                 onAdvance={(selected) => void advance(selected)}
                 updating={updatingId === day.focus.id}
+                // El paseo que toca abre su ficha solo: ahí está la dirección,
+                // que es lo primero que alguien necesita para salir.
+                openSheet
               />
             )}
             {day.restOfToday.map((session) => (
