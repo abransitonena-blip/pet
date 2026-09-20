@@ -22,9 +22,13 @@ interface RateWalkerProps {
   sessionId: string
   walkerId: string
   walkerName: string
+  /** En el inicio, un paseo ya calificado no ocupa espacio: desaparece. */
+  hideWhenRated?: boolean
+  /** Para nombrar al perro en la pregunta, como lo haría alguien. */
+  dogName?: string
 }
 
-export default function RateWalker({ sessionId, walkerId, walkerName }: RateWalkerProps) {
+export default function RateWalker({ sessionId, walkerId, walkerName, hideWhenRated = false, dogName }: RateWalkerProps) {
   const [existing, setExisting] = useState<{ rating: number; text: string } | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [rating, setRating] = useState(0)
@@ -46,6 +50,8 @@ export default function RateWalker({ sessionId, walkerId, walkerName }: RateWalk
   }, [sessionId])
 
   if (!loaded || !walkerId) return null
+
+  if (existing && hideWhenRated) return null
 
   if (existing) {
     return (
@@ -86,7 +92,9 @@ export default function RateWalker({ sessionId, walkerId, walkerName }: RateWalk
 
   return (
     <Card className="p-4 shadow-none">
-      <h2 className="text-sm font-semibold text-ink">¿Cómo estuvo {walkerName}?</h2>
+      <h2 className="text-sm font-semibold text-ink">
+        {dogName ? `¿Cómo estuvo el paseo de ${dogName} con ${walkerName}?` : `¿Cómo estuvo ${walkerName}?`}
+      </h2>
       <p className="mt-0.5 text-xs text-muted">Tu calificación no se puede cambiar después de enviarla.</p>
 
       <div className="mt-3 flex gap-1" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas">

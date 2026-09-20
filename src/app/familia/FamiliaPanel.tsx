@@ -24,7 +24,8 @@ import { useCanonicalReservations } from '@/lib/useCanonicalReservations'
 import { useConfig } from '@/context/ConfigContext'
 import { walkTipIcon } from '@/lib/walkTipIcons'
 import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
-import { hasWalker, planFamilyHome, whenLabel } from '@/lib/familyHome'
+import { hasWalker, planFamilyHome, walkToRate, whenLabel } from '@/lib/familyHome'
+import RateWalker from '@/components/family/RateWalker'
 
 interface UserProfile {
   name: string
@@ -114,6 +115,9 @@ export default function DashboardPage() {
   const today = new Date().toLocaleDateString('en-CA')
   const home = planFamilyHome(reservations)
   const next = home.next
+  // Al terminar un paseo se pregunta cómo estuvo, como pediría cualquiera que
+  // acaba de recibir un servicio. Si ya se calificó, la tarjeta no aparece.
+  const pendingRating = walkToRate(reservations, today)
 
   return (
     <div className="animate-enter space-y-6">
@@ -196,6 +200,16 @@ export default function DashboardPage() {
             </Link>
           )}
         </section>
+      )}
+
+      {pendingRating && (
+        <RateWalker
+          sessionId={pendingRating.id}
+          walkerId={pendingRating.assignedWalker}
+          walkerName={pendingRating.walkerName || 'tu paseador'}
+          dogName={pendingRating.petName}
+          hideWhenRated
+        />
       )}
 
       {/* PET Ahora — paseo al instante. El formulario lee perros y direcciones,

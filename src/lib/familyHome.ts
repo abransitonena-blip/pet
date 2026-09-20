@@ -25,6 +25,9 @@ export interface HomeWalk {
   assignedWalker?: string
 }
 
+/** Cuántos días después de un paseo tiene sentido pedir su calificación. */
+export const RATING_WINDOW_DAYS = 3
+
 export interface FamilyHome<T extends HomeWalk> {
   /** El paseo en curso o, si no hay, el siguiente por fecha y hora. */
   next: T | null
@@ -53,6 +56,24 @@ export function planFamilyHome<T extends HomeWalk>(walks: readonly T[]): FamilyH
       .sort((a, b) => moment(b).localeCompare(moment(a)))
       .slice(0, 3),
   }
+}
+
+/**
+ * El paseo que toca calificar: el último terminado, con paseador, y reciente.
+ *
+ * Pedir estrellas de un paseo de hace tres semanas no mejora nada y molesta;
+ * pedirlas al terminar es cuando alguien todavía recuerda cómo estuvo. Quien
+ * llame a esto decide si mostrarlo: si ya se calificó, la tarjeta se esconde
+ * sola.
+ */
+export function walkToRate<T extends HomeWalk>(walks: readonly T[], today: string): T | null {
+  const since = (() => {
+    const [year, month, day] = today.split('-').map(Number)
+    return new Date(Date.UTC(year, month - 1, day - RATING_WINDOW_DAYS)).toISOString().slice(0, 10)
+  })()
+  return walks
+    .filter((walk) => walk.status === 'completed' && Boolean(walk.assignedWalker) && walk.date >= since && walk.date <= today)
+    .sort((a, b) => `${b.date}T${b.time || '00:00'}`.localeCompare(`${a.date}T${a.time || '00:00'}`))[0] ?? null
 }
 
 export function hasWalker(walk: HomeWalk): boolean {
