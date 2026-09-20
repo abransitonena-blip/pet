@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import {
-  AlertTriangle, ArrowRight, CalendarDays, CheckCircle2, ChevronDown, Clock, Dog, MessagesSquare, Plus, Redo2, Zap,
+  AlertTriangle, ArrowRight, CalendarDays, CheckCircle2, ChevronDown, Clock, Dog, MessagesSquare, Plus, Redo2, Syringe, Zap,
 } from 'lucide-react'
 import PetAhoraRequestForm from '@/components/PetAhoraRequestForm'
 import { getCustomerProfile } from '@/lib/customerProfile'
@@ -26,6 +26,10 @@ import { walkTipIcon } from '@/lib/walkTipIcons'
 import { canonicalReadErrorMessage } from '@/lib/useCanonicalWalkSessions'
 import { hasWalker, planFamilyHome, walkToRate, whenLabel } from '@/lib/familyHome'
 import RateWalker from '@/components/family/RateWalker'
+import DogAvatar from '@/components/dogs/DogAvatar'
+import { useFamilyDogs, type FamilyDog } from '@/lib/useFamilyDogs'
+import { useDogPhotos } from '@/lib/useDogPhotos'
+import { careReminderLabel, careReminders } from '@/lib/dogCareReminders'
 
 interface UserProfile {
   name: string
@@ -46,6 +50,39 @@ function WalkTipMark({ icon }: { icon: string }) {
     )
   }
   return icon ? <span className="text-lg" aria-hidden="true">{icon}</span> : null
+}
+
+/**
+ * Las caras de los perros de un paseo.
+ *
+ * El inicio hablaba de "tu próximo paseo" sin enseñar nunca al perro: sólo su
+ * nombre escrito. Con foto sale su foto; sin foto, la marca teñida por el grupo
+ * de su raza, que es la misma que ve el paseador en su ficha.
+ */
+function WalkDogFaces({
+  ids, dogs, photos, size = 40,
+}: {
+  ids: readonly string[]
+  dogs: Record<string, FamilyDog>
+  photos: Record<string, string>
+  size?: number
+}) {
+  const known = ids.map((id) => dogs[id]).filter(Boolean).slice(0, 2)
+  if (known.length === 0) return null
+  return (
+    <span className="flex shrink-0 -space-x-2">
+      {known.map((dog) => (
+        <DogAvatar
+          key={dog.id}
+          name={dog.name}
+          breed={dog.breed}
+          photoUrl={photos[dog.id] ?? ''}
+          size={size}
+          className="ring-2 ring-surface"
+        />
+      ))}
+    </span>
+  )
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -96,6 +133,11 @@ export default function DashboardPage() {
     customerId,
     max: 50,
   })
+  // Los perros de la casa: para ponerles cara en el inicio y para recordar el
+  // refuerzo que la familia anotó y nadie le volvía a mencionar.
+  const { dogs: familyDogs } = useFamilyDogs(customerId)
+  const dogPhotos = useDogPhotos(familyDogs.map((dog) => ({ id: dog.id, reference: dog.photoReference })))
+  const dogsById = Object.fromEntries(familyDogs.map((dog) => [dog.id, dog]))
 
   useEffect(() => {
     setLoadError(sessionsError ? canonicalReadErrorMessage(sessionsError) : '')
@@ -118,6 +160,7 @@ export default function DashboardPage() {
   // Al terminar un paseo se pregunta cómo estuvo, como pediría cualquiera que
   // acaba de recibir un servicio. Si ya se calificó, la tarjeta no aparece.
   const pendingRating = walkToRate(reservations, today)
+  const reminders = careReminders(familyDogs, today)
 
   return (
     <div className="animate-enter space-y-6">
@@ -144,9 +187,12 @@ export default function DashboardPage() {
           {next ? (
             <Card className="space-y-3 p-4 shadow-none">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-ink">{next.petName || next.service}</p>
-                  {next.petName && <p className="truncate text-sm text-muted">{next.service}</p>}
+                <div className="flex min-w-0 items-center gap-3">
+                  <WalkDogFaces ids={next.dogIds} dogs={dogsById} photos={dogPhotos} size={44} />
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-ink">{next.petName || next.service}</p>
+                    {next.petName && <p className="truncate text-sm text-muted">{next.service}</p>}
+                  </div>
                 </div>
                 <StatusPill status={next.status} />
               </div>
@@ -212,6 +258,49 @@ export default function DashboardPage() {
         />
       )}
 
+      {/* El refuerzo que la familia anotó y no volvía a ver. Sólo sale cuando
+          hay algo que hacer: un refuerzo vencido o uno de los próximos 30 días.
+          La vigencia no se inventa; si no hay fecha escrita, no hay renglón. */}
+      {reminders.length > 0 && (
+        <section aria-labelledby="dog-care-title">
+          <h2 id="dog-care-title" className="mb-2 flex items-center gap-2 text-base font-bold text-ink">
+            <Syringe size={16} className="text-muted" aria-hidden="true" /> Cuidados de tus perros
+          </h2>
+          <ul className="space-y-2">
+            {reminders.map((reminder) => (
+              <li key={reminder.dogId}>
+                <Link
+                  href={`/familia/perros/${reminder.dogId}`}
+                  className={`flex items-center gap-3 rounded-xl border p-3 transition-colors motion-reduce:transition-none ${FOCUS_RING} ${
+                    reminder.urgency === 'vencida'
+                      ? 'border-danger-500/25 bg-danger-500/[0.06] hover:bg-danger-500/10'
+                      : 'border-warning/30 bg-warning/[0.08] hover:bg-warning/15'
+                  }`}
+                >
+                  <DogAvatar
+                    name={reminder.dogName}
+                    breed={reminder.breed}
+                    photoUrl={dogPhotos[reminder.dogId] ?? ''}
+                    size={40}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-ink">{reminder.dogName}</span>
+                    <span className={`block text-xs ${reminder.urgency === 'vencida' ? 'text-red-700' : 'text-amber-900'}`}>
+                      {careReminderLabel(reminder)}
+                    </span>
+                  </span>
+                  <ArrowRight size={16} className="shrink-0 text-muted" aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 px-1 text-xs text-muted">
+            La fecha es la que anotaste en el perfil de tu perro. Cuándo toca cada refuerzo lo decide su
+            veterinario.
+          </p>
+        </section>
+      )}
+
       {/* PET Ahora — paseo al instante. El formulario lee perros y direcciones,
           así que se monta cuando alguien lo pide, no al abrir el inicio. */}
       {activePetAhoraId && petAhoraRequest ? (
@@ -253,11 +342,17 @@ export default function DashboardPage() {
             <ul className="animate-enter-list space-y-2">
               {home.recent.map((res) => (
                 <li key={res.id} className="flex items-center gap-3 rounded-xl border border-ink/10 bg-surface p-3">
-                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${STATUS_COLORS[res.status]?.bg || 'bg-ink/5'}`} aria-hidden="true">
-                    {res.status === 'completed' ? <CheckCircle2 size={16} className="text-success-600" />
-                      : res.status === 'cancelled' ? <AlertTriangle size={16} className="text-danger-500" />
-                      : <Dog size={16} className="text-brand-600" />}
-                  </span>
+                  {/* La cara del perro identifica el renglón mejor que un
+                      cuadro de color; el estado ya va escrito abajo. */}
+                  {res.dogIds.some((id) => dogsById[id]) ? (
+                    <WalkDogFaces ids={res.dogIds} dogs={dogsById} photos={dogPhotos} size={40} />
+                  ) : (
+                    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${STATUS_COLORS[res.status]?.bg || 'bg-ink/5'}`} aria-hidden="true">
+                      {res.status === 'completed' ? <CheckCircle2 size={16} className="text-success-600" />
+                        : res.status === 'cancelled' ? <AlertTriangle size={16} className="text-danger-500" />
+                        : <Dog size={16} className="text-brand-600" />}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{res.petName || res.service}</p>
                     <p className="truncate text-xs text-muted">{whenLabel(res.date, today)} · {STATUS_LABELS[res.status] || res.status}</p>
