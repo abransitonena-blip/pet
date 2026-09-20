@@ -304,6 +304,30 @@ service cloud.firestore {
         ]);
     }
 
+    // El hilo de un paseo está abierto dos horas antes y hasta tres después de
+    // su hora: lo que dura el paseo más dos horas por cualquier imprevisto.
+    // Fuera de eso no se escribe -- ni la familia ni el paseador --, que es lo
+    // que el dueño pidió: el chat es para ese paseo, no un canal permanente.
+    //
+    // La app guarda fecha y hora en la hora del negocio (Ciudad de México,
+    // UTC-6 todo el año desde 2022) y `request.time` viene en UTC: por eso se
+    // suman seis horas para comparar.
+    function walkStartUtc(dateKey, clock) {
+      return timestamp.date(int(dateKey[0:4]), int(dateKey[5:7]), int(dateKey[8:10]))
+        + duration.value(int(clock[0:2]) + 6, 'h')
+        + duration.value(int(clock[3:5]), 'm');
+    }
+
+    function walkChatOpen(conversation) {
+      return conversation.get('kind', '') != 'walk'
+        || !(conversation.get('scheduledDate', '') is string)
+        || !(conversation.get('scheduledStart', '') is string)
+        || conversation.get('scheduledDate', '').size() != 10
+        || conversation.get('scheduledStart', '').size() != 5
+        || (request.time >= walkStartUtc(conversation.scheduledDate, conversation.scheduledStart) - duration.value(2, 'h')
+          && request.time <= walkStartUtc(conversation.scheduledDate, conversation.scheduledStart) + duration.value(3, 'h'));
+    }
+
     function validWalkerTransition(from, to) {
       return (from == 'assigned' && to == 'confirmed')
         || (from == 'confirmed' && to == 'on_the_way')
@@ -1457,7 +1481,9 @@ service cloud.firestore {
       match /messages/{msgId} {
         allow read: if isParticipantOfConversation(convId) || isAdmin();
         allow create: if (isParticipantOfConversation(convId) || isAdmin())
-          && validChatMessage(request.resource.data);
+          && validChatMessage(request.resource.data)
+          && (isAdmin()
+            || walkChatOpen(get(/databases/$(database)/documents/conversations/$(convId)).data));
         allow update, delete: if false;
       }
     }

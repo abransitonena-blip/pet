@@ -27,10 +27,12 @@ interface ConversationThreadProps {
   open?: () => Promise<string>
   /** Cómo se llama el otro lado en los mensajes que no son míos. */
   otherName?: string
+  /** Si el hilo no acepta mensajes ahora, por qué. Se puede seguir leyendo. */
+  closedNotice?: string
 }
 
 
-export default function ConversationThread({ identity, title, description, open, otherName = 'Administración' }: ConversationThreadProps) {
+export default function ConversationThread({ identity, title, description, open, otherName = 'Administración', closedNotice }: ConversationThreadProps) {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -136,6 +138,13 @@ export default function ConversationThread({ identity, title, description, open,
           <div ref={endRef} />
         </div>
 
+        {/* Cerrado se lee, pero no se escribe: invitar a escribir donde la
+            regla va a decir que no es peor que decirlo antes. */}
+        {closedNotice ? (
+          <p role="status" className="border-t border-border bg-ink/[0.03] p-3 text-xs text-muted">
+            {closedNotice}
+          </p>
+        ) : (
         <form
           className="flex items-end gap-2 border-t border-border p-3"
           onSubmit={(event) => { event.preventDefault(); void handleSend() }}
@@ -163,6 +172,7 @@ export default function ConversationThread({ identity, title, description, open,
             <Send size={16} />
           </button>
         </form>
+        )}
       </Card>
     </div>
   )

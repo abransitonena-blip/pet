@@ -16,6 +16,7 @@ import { openWalkConversation } from '@/lib/chat'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import WalkerCard from '@/components/family/WalkerCard'
 import { daysAgo } from '@/lib/recentWindow'
+import { chatWindowNotice, chatWindowState } from '@/lib/chatWindow'
 
 /**
  * Los mensajes de una familia van a quien lleva a su perro.
@@ -72,8 +73,12 @@ export default function FamilyMessagesPage() {
       walkerId: walk.walkerId,
       walkerName: 'Paseador',
       scheduledDate: walk.scheduledDate,
+      scheduledStart: walk.scheduledStart,
     })
   }, [identity, walk])
+
+  // El hilo se abre dos horas antes del paseo y se cierra tres después.
+  const windowState = walk ? chatWindowState(walk.scheduledDate, walk.scheduledStart) : 'unknown'
 
   if (!identity) return <LoadingState message="Abriendo tus mensajes…" rows={3} height="h-16" />
   if (error) return <Card className="p-5 shadow-none"><ErrorState description={canonicalReadErrorMessage(error)} onRetry={retry} /></Card>
@@ -101,6 +106,7 @@ export default function FamilyMessagesPage() {
         otherName="Tu paseador"
         title="Mensajes con tu paseador"
         description={`Sobre el paseo del ${walk.scheduledDate}. Pregúntale cómo va, avísale algo de tu perro o cuéntale un detalle de la entrada.`}
+        closedNotice={chatWindowNotice(windowState, walk.scheduledDate, walk.scheduledStart)}
       />
     </div>
   )

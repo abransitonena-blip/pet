@@ -4,9 +4,10 @@ import { useCallback, useMemo, useState } from 'react'
 import ConversationThread from '@/components/chat/ConversationThread'
 import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
-import { walkerSessionDate, walkerSessionStatus } from '@/lib/walkerPanel'
+import { walkerSessionDate, walkerSessionStart, walkerSessionStatus } from '@/lib/walkerPanel'
 import { openWalkConversation } from '@/lib/chat'
 import { daysAgo } from '@/lib/recentWindow'
+import { chatWindowNotice, chatWindowState } from '@/lib/chatWindow'
 
 /**
  * Los mensajes del paseador: con administración, y con la familia de cada paseo.
@@ -50,6 +51,7 @@ export default function WalkerChatPage() {
       walkerId: uid,
       walkerName: profile.name,
       scheduledDate: walkerSessionDate(walk),
+      scheduledStart: walkerSessionStart(walk),
     })
   }, [walk, uid, profile.name])
 
@@ -89,6 +91,11 @@ export default function WalkerChatPage() {
           otherName="La familia"
           title={`Mensajes con la familia de ${walk.dogName || 'este paseo'}`}
           description={`Sobre el paseo del ${walkerSessionDate(walk)}. Avísale cómo va, o pregúntale algo que necesites para salir.`}
+          closedNotice={chatWindowNotice(
+            chatWindowState(walkerSessionDate(walk), walkerSessionStart(walk)),
+            walkerSessionDate(walk),
+            walkerSessionStart(walk),
+          )}
         />
       ) : (
         <ConversationThread

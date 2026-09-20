@@ -77,6 +77,8 @@ export async function openWalkConversation(walk: {
   walkerId: string
   walkerName: string
   scheduledDate: string
+  /** La hora del paseo: con ella las reglas saben si el hilo está abierto. */
+  scheduledStart: string
 }): Promise<string> {
   if (!walk.sessionId || !walk.customerId || !walk.walkerId) throw new Error('walk-conversation-incomplete')
   const conversationRef = doc(db, 'conversations', walk.sessionId)
@@ -89,6 +91,7 @@ export async function openWalkConversation(walk: {
     walkerId: walk.walkerId,
     walkerName: walk.walkerName,
     scheduledDate: walk.scheduledDate,
+    scheduledStart: walk.scheduledStart,
     participantRole: 'walk',
     updatedAt: serverTimestamp(),
   }, { merge: true })
