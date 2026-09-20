@@ -49,16 +49,24 @@ export async function removeDeviceTokens(firestore: Firestore, uid: string, remo
   })
 }
 
+export interface NotifyResult {
+  sent: number
+  pruned: number
+  /** Por qué no salió, cuando no salió. Sin esto, un envío fallido es un cero. */
+  failures: Partial<Record<'not-configured' | 'send-failed' | 'unregistered', number>>
+  devices: number
+}
+
 export async function notifyUser(
   firestore: Firestore,
   uid: string,
   message: PushMessage,
-): Promise<{ sent: number; pruned: number }> {
-  if (!FEATURE_FLAGS.FCM_ENABLED || !uid) return { sent: 0, pruned: 0 }
+): Promise<NotifyResult> {
+  if (!FEATURE_FLAGS.FCM_ENABLED || !uid) return { sent: 0, pruned: 0, failures: {}, devices: 0 }
 
   const snapshot = await firestore.collection(COLLECTION).doc(uid).get()
   const tokens = tokensOf(snapshot.data())
-  if (tokens.length === 0) return { sent: 0, pruned: 0 }
+  if (tokens.length === 0) return { sent: 0, pruned: 0, failures: {}, devices: 0 }
 
   const results = await Promise.all(tokens.map((deviceToken) => sendPushNotification({ deviceToken, ...message })))
   // FCM reports a token as unregistered once the app is uninstalled or the
@@ -69,5 +77,16 @@ export async function notifyUser(
   }))
   await removeDeviceTokens(firestore, uid, dead)
 
-  return { sent: results.filter((result) => result.ok).length, pruned: dead.size }
+  const failures: NotifyResult['failures'] = {}
+  for (const result of results) {
+    if (result.ok) continue
+    failures[result.reason] = (failures[result.reason] ?? 0) + 1
+  }
+
+  return {
+    sent: results.filter((result) => result.ok).length,
+    pruned: dead.size,
+    failures,
+    devices: tokens.length,
+  }
 }

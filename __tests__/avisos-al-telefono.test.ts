@@ -66,3 +66,34 @@ describe('el ícono', () => {
     expect(read('src/components/PWARegister.tsx')).toContain("icon: '/icons/icon-192.png'")
   })
 })
+
+/**
+ * "0 enviados" no es un diagnóstico. La prueba de avisos decía eso tanto
+ * cuando no había ningún teléfono registrado como cuando FCM rechazaba el
+ * envío, que son dos problemas con arreglos opuestos. Ahora el motivo viaja.
+ */
+describe('cuando no sale ningún aviso, se dice por qué', () => {
+  const server = read('src/lib/push/pushServer.ts')
+  const route = read('src/app/api/push/status/route.ts')
+  const card = read('src/components/admin/SystemHealthCard.tsx')
+
+  it('el envío cuenta los motivos de fallo, no sólo los éxitos', () => {
+    expect(server).toContain('failures: NotifyResult[\'failures\'] = {}')
+    expect(server).toContain('failures[result.reason] = (failures[result.reason] ?? 0) + 1')
+    // Cuántos aparatos se intentaron: sin esto, cero enviados y cero
+    // registrados se ven igual.
+    expect(server).toContain('devices: tokens.length')
+  })
+
+  it('la respuesta de la prueba lleva ese motivo hasta la pantalla', () => {
+    expect(route).toContain("NextResponse.json({ code: 'ok', ...result }")
+  })
+
+  it('la tarjeta distingue "no hay teléfonos" de "FCM rechazó"', () => {
+    expect(card).toContain('No hay ningún teléfono tuyo registrado')
+    expect(card).toContain('FCM rechazó el envío')
+    expect(card).toContain("failures['unregistered']")
+    // El caso de cero dispositivos se decide antes de inventar un motivo.
+    expect(card.indexOf('(data?.devices ?? 0) === 0')).toBeLessThan(card.indexOf("failures['not-configured']"))
+  })
+})

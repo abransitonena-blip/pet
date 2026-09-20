@@ -84,15 +84,29 @@ export default function SystemHealthCard() {
     setMessage('')
     try {
       const response = await authorizedFetch('/api/push/status', 'POST')
-      const data = response ? await response.json().catch(() => ({})) as { code?: string; sent?: number } : null
+      const data = response ? await response.json().catch(() => ({})) as {
+        code?: string
+        sent?: number
+        devices?: number
+        failures?: Record<string, number>
+      } : null
       if (!response || !response.ok) {
         setMessage(data?.code === 'privileged-identity-not-configured'
           ? 'El servidor no tiene la identidad para enviar avisos. Esto sólo funciona en producción.'
           : 'No pudimos mandar la prueba.')
-      } else if ((data?.sent ?? 0) === 0) {
+      } else if ((data?.sent ?? 0) > 0) {
+        setMessage(`Aviso enviado a ${data?.sent} dispositivo${data?.sent === 1 ? '' : 's'}. Revisa tu teléfono.`)
+      } else if ((data?.devices ?? 0) === 0) {
         setMessage('No hay ningún teléfono tuyo registrado. Activa los avisos en este dispositivo y vuelve a probar.')
       } else {
-        setMessage(`Aviso enviado a ${data?.sent} dispositivo${data?.sent === 1 ? '' : 's'}. Revisa tu teléfono.`)
+        // Un cero sin explicación no se puede arreglar: aquí sale el motivo que
+        // dio FCM, que es lo único que dice dónde se corta la cadena.
+        const failures = data?.failures ?? {}
+        const reason = failures['not-configured'] ? 'el servidor no tiene permiso para enviar por FCM'
+          : failures['unregistered'] ? 'ese teléfono ya no acepta avisos (se desinstaló la app o se revocó el permiso)'
+          : failures['send-failed'] ? 'FCM rechazó el envío'
+          : 'no sabemos por qué'
+        setMessage(`Tienes ${data?.devices} dispositivo(s) registrado(s), pero no salió ninguno: ${reason}.`)
       }
     } catch {
       setMessage('No pudimos mandar la prueba.')
