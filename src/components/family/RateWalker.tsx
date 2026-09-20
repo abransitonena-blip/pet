@@ -26,15 +26,36 @@ interface RateWalkerProps {
   hideWhenRated?: boolean
   /** Para nombrar al perro en la pregunta, como lo haría alguien. */
   dogName?: string
+  /**
+   * Ofrece "Ahora no". Calificar es un gesto, no una obligación: quien lo
+   * omite no vuelve a ver la tarjeta de ese paseo en este teléfono. Sigue
+   * pudiendo calificarlo desde el reporte del paseo.
+   */
+  skippable?: boolean
 }
 
-export default function RateWalker({ sessionId, walkerId, walkerName, hideWhenRated = false, dogName }: RateWalkerProps) {
+const skipKey = (sessionId: string) => `pet-calificacion-omitida:${sessionId}`
+
+function wasSkipped(sessionId: string): boolean {
+  try {
+    return window.localStorage.getItem(skipKey(sessionId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+export default function RateWalker({ sessionId, walkerId, walkerName, hideWhenRated = false, dogName, skippable = false }: RateWalkerProps) {
   const [existing, setExisting] = useState<{ rating: number; text: string } | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [rating, setRating] = useState(0)
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [skipped, setSkipped] = useState(false)
+
+  useEffect(() => {
+    if (skippable) setSkipped(wasSkipped(sessionId))
+  }, [sessionId, skippable])
 
   useEffect(() => {
     let cancelled = false
@@ -52,6 +73,7 @@ export default function RateWalker({ sessionId, walkerId, walkerName, hideWhenRa
   if (!loaded || !walkerId) return null
 
   if (existing && hideWhenRated) return null
+  if (skippable && skipped && !existing) return null
 
   if (existing) {
     return (
@@ -61,6 +83,11 @@ export default function RateWalker({ sessionId, walkerId, walkerName, hideWhenRa
         {existing.text && <p className="mt-2 text-sm text-muted">{existing.text}</p>}
       </Card>
     )
+  }
+
+  const skip = () => {
+    try { window.localStorage.setItem(skipKey(sessionId), '1') } catch { /* Sin almacenamiento, vuelve a salir. */ }
+    setSkipped(true)
   }
 
   const submit = async () => {
@@ -136,6 +163,15 @@ export default function RateWalker({ sessionId, walkerId, walkerName, hideWhenRa
       >
         {saving ? 'Enviando…' : 'Enviar calificación'}
       </button>
+      {skippable && (
+        <button
+          type="button"
+          onClick={skip}
+          className="mt-1 min-h-11 w-full rounded-xl text-sm font-medium text-muted hover:bg-ink/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          Ahora no
+        </button>
+      )}
     </Card>
   )
 }

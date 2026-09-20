@@ -260,6 +260,7 @@ export default function DashboardPage() {
           walkerName={pendingRating.walkerName || 'tu paseador'}
           dogName={pendingRating.petName}
           hideWhenRated
+          skippable
         />
       )}
 

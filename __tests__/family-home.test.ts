@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { hasWalker, planFamilyHome, whenLabel, type HomeWalk } from '../src/lib/familyHome'
+import { hasWalker, planFamilyHome, walkToRate, whenLabel, RATING_WINDOW_DAYS, type HomeWalk } from '../src/lib/familyHome'
 
 const walk = (id: string, status: HomeWalk['status'], date: string, time = '10:00', assignedWalker = '') =>
   ({ id, status, date, time, assignedWalker })
@@ -79,5 +79,79 @@ describe('lo que el inicio ya no carga de entrada', () => {
     expect(page).toContain('aria-expanded={tipsOpen}')
     expect(page).not.toContain('CanonicalFamilyRequests')
     expect(page).not.toContain('Consulta abajo el estado real')
+  })
+})
+
+/**
+ * Como al terminar un viaje: se pregunta cómo estuvo cuando todavía se recuerda,
+ * y sólo si hubo alguien a quien calificar.
+ */
+describe('el paseo que toca calificar', () => {
+  const TODAY = '2026-09-19'
+
+  it('es el último terminado con paseador', () => {
+    const rated = walkToRate([
+      walk('viejo', 'completed', '2026-09-17', '10:00', 'walker-1'),
+      walk('nuevo', 'completed', '2026-09-18', '09:00', 'walker-2'),
+    ], TODAY)
+    expect(rated?.id).toBe('nuevo')
+  })
+
+  it('a igual día, el de la hora más tarde', () => {
+    const rated = walkToRate([
+      walk('temprano', 'completed', TODAY, '08:00', 'walker-1'),
+      walk('tarde', 'completed', TODAY, '17:00', 'walker-1'),
+    ], TODAY)
+    expect(rated?.id).toBe('tarde')
+  })
+
+  it('un paseo sin paseador no se califica: no hay a quién', () => {
+    expect(walkToRate([walk('a', 'completed', TODAY, '10:00', '')], TODAY)).toBeNull()
+  })
+
+  it('sólo los terminados: un cancelado o uno en curso no piden estrellas', () => {
+    expect(walkToRate([
+      walk('a', 'cancelled', TODAY, '10:00', 'walker-1'),
+      walk('b', 'in_progress', TODAY, '10:00', 'walker-1'),
+      walk('c', 'no_show', TODAY, '10:00', 'walker-1'),
+    ], TODAY)).toBeNull()
+  })
+
+  it('una ventana corta: pedir estrellas de hace tres semanas no mejora nada', () => {
+    expect(RATING_WINDOW_DAYS).toBe(3)
+    expect(walkToRate([walk('a', 'completed', '2026-09-15', '10:00', 'walker-1')], TODAY)).toBeNull()
+    // El borde cuenta: tres días atrás todavía se recuerda.
+    expect(walkToRate([walk('b', 'completed', '2026-09-16', '10:00', 'walker-1')], TODAY)?.id).toBe('b')
+  })
+
+  it('cruza el fin de mes sin tropezar', () => {
+    expect(walkToRate([walk('a', 'completed', '2026-08-30', '10:00', 'walker-1')], '2026-09-01')?.id).toBe('a')
+  })
+
+  it('un paseo de fecha futura no se califica todavía', () => {
+    expect(walkToRate([walk('a', 'completed', '2026-09-25', '10:00', 'walker-1')], TODAY)).toBeNull()
+  })
+
+  it('el inicio la enseña, nombra al perro y se esconde sola una vez calificada', () => {
+    const panel = readFileSync('src/app/familia/FamiliaPanel.tsx', 'utf8')
+    expect(panel).toContain('walkToRate(reservations, today)')
+    expect(panel).toContain('dogName={pendingRating.petName}')
+    expect(panel).toContain('hideWhenRated')
+    const rate = readFileSync('src/components/family/RateWalker.tsx', 'utf8')
+    expect(rate).toContain('if (existing && hideWhenRated) return null')
+    expect(rate).toContain('¿Cómo estuvo el paseo de ${dogName} con ${walkerName}?')
+  })
+
+  it('calificar es un gesto, no una obligación: se puede decir "ahora no"', () => {
+    const panel = readFileSync('src/app/familia/FamiliaPanel.tsx', 'utf8')
+    const rate = readFileSync('src/components/family/RateWalker.tsx', 'utf8')
+    expect(panel).toMatch(/hideWhenRated\s+skippable/)
+    expect(rate).toContain('Ahora no')
+    // Se recuerda por paseo, en ese teléfono; el reporte del paseo sigue permitiendo calificar.
+    expect(rate).toContain('pet-calificacion-omitida:${sessionId}')
+    // Sólo se omite lo que no se ha calificado: una calificación enviada nunca se esconde por esto.
+    expect(rate).toContain('if (skippable && skipped && !existing) return null')
+    // Fuera del inicio, la tarjeta no se puede omitir.
+    expect(readFileSync('src/app/familia/reportes/[sessionId]/FamiliaReportesSessionidPanel.tsx', 'utf8')).not.toContain('skippable')
   })
 })

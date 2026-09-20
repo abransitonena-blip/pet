@@ -1,6 +1,6 @@
 # Plan de rediseño de PET Ap
 
-Estado al 2026-09-18 (cuarta vuelta: del rediseño a lo que la app puede hacer). Cada fase se cierra por completo antes de abrir la
+Estado al 2026-09-19 (cuarta vuelta: del rediseño a lo que la app puede hacer). Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
 Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md); lo que puede
@@ -34,6 +34,11 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 19 | El recordatorio de la tarde anterior | Tarea programada a las 19:00: aviso a cada familia con paseo mañana y a cada paseador con paseos asignados, sin repetir | `recordatorios` |
 | 20 | Asignar con la sugerencia puesta | La cola ordena a los paseadores por zona, continuidad con el perro y carga de ese día, con el motivo en palabras; quien llegó a su tope va al final | `sugerencia-asignacion` |
 | 21 | Que un paseo no se caiga en silencio | Guardia de la mañana: un solo aviso a quien opera con los paseos de hoy sin paseador y los de días pasados sin cerrar | `guardia` |
+| 22 | El paseador ve a dónde llegar | La ficha del paseo trae la dirección de recogida (calle, colonia, referencias, cómo entrar) y la abre en Google Maps. Sólo mientras el paseo sigue en pie: al completarse ya no viaja, y nunca viajan teléfono, nombre ni correo de la familia | `walker-walk-sheet` |
+| 23 | Estrellas al terminar el paseo | Como al bajar de un viaje: el inicio de la familia pregunta "¿Cómo estuvo el paseo de {perro} con {paseador}?" durante 3 días, sólo si hubo paseador y se puede decir "ahora no". Una calificación enviada esconde la tarjeta | `family-home` |
+| 24 | El chat es sólo con el paseador, y con horario | La familia ya no escribe a administración. El chat de un paseo se abre 2 horas antes y cierra 3 después; lo aplican las reglas de Firestore, no sólo la pantalla, y la pantalla dice por qué está cerrado | `chat-ventana`, emulador |
+| 25 | Los avisos explican su fallo y se ofrecen donde la gente está | La prueba de avisos ya no dice "0 enviados": distingue "no hay teléfonos registrados" de "FCM rechazó el envío" y dice el motivo. Y los tres inicios ofrecen activarlos una vez, porque el control vivía en pantallas a las que nadie entra | `avisos-al-telefono` |
+| 26 | Los paneles muestran lo que ya sabían | La familia ve la cara de su perro y el refuerzo que anotó y nunca volvía a ver; el Resumen dice quién está en la calle; el paseador ve su calificación donde trabaja. La espera lleva huellas y ningún hueco vacío queda sin ícono | `cuidados-perro`, `admin-resumen`, `walker-reviews`, `perritos-en-la-marca` |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -111,6 +116,23 @@ no de una lista escrita de antemano.
   y no reconocía los fondos de modal, los paneles que frenan la propagación ni
   los `role="radio"`. Es el mismo error que la ventana de 700 caracteres del
   historial legacy -- medir con un criterio más angosto que la realidad.
+- **Un control que nadie encuentra es lo mismo que no tenerlo.** Los avisos
+  tenían tarjeta para activarlos en tres pantallas, y a ninguna entra nadie por
+  su cuenta: cero teléfonos registrados, cero avisos, y nada fallaba. Antes de
+  buscar el error técnico, hay que preguntar si alguien llegó a encender la
+  cosa.
+- **"0 enviados" tapa dos problemas con arreglos opuestos.** No haber a quién
+  avisarle y que el proveedor rechace el envío se veían igual. Un resultado que
+  puede significar dos cosas debe decir cuál.
+- **Un dato que se captura y no se vuelve a ver está muerto.** La familia
+  escribía la fecha del próximo refuerzo de su perro y sólo la leía
+  administración. Ahora se le devuelve a quien la escribió.
+- **Una fase sin prueba no está cerrada, ni la propia.** La calificación al
+  terminar el paseo salió sin una sola prueba de su ventana de tres días; se
+  encontró al ir a cerrarla en este documento.
+- **Un cambio de otra sesión puede romper mi verificación.** Con dos sesiones en
+  el mismo repo, un `tsc` o un `jest` rojos pueden ser ajenos. Se verifica en un
+  worktree limpio del commit, no en la carpeta compartida.
 - **Una colección sin bloque de reglas no es un descuido menor.** `privacyRequests`
   caía al `catch-all: deny everything else` del final del archivo -- ni un error
   visible, ni un log, sólo un formulario que parecía funcionar y una solicitud
