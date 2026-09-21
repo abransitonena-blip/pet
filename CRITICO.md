@@ -4,7 +4,7 @@ Lo que puede romper la operación o hacerle perder dinero al negocio, y lo que
 nadie más que el dueño puede destrabar. El plan completo de mejoras vive en
 [PLAN.md](PLAN.md); las reglas de trabajo, en [AGENTS.md](AGENTS.md).
 
-Estado al 2026-09-18.
+Estado al 2026-09-21.
 
 ---
 
@@ -34,14 +34,30 @@ nadie registró su teléfono y no había a quién enviarle nada.
 
 **Corregido:** el código acepta los dos nombres.
 
-**Falta, y sólo lo puedes hacer tú:** entrar a Configuración → El sistema →
-Avisos al teléfono, activar los avisos en tu teléfono y darle a "Enviarme un
-aviso de prueba". Esa tarjeta dice cuál de las tres piezas falta, si falta
-alguna. Si el aviso no llega ahí, el problema está en el permiso
-`roles/firebasecloudmessaging.admin` de la identidad privilegiada, que se revisa
-en la consola de Google Cloud.
+**Además:** el control para activarlos vivía en pantallas a las que nadie entra
+por su cuenta, así que ningún teléfono llegó a registrarse. Ahora los tres
+inicios (familia, paseador, administración) ofrecen activarlos una vez.
 
-### 1.3 El 401 de `/api/media/private/walker-photo`
+**Falta, y sólo lo puedes hacer tú:** en tu teléfono, entrar a Configuración →
+Estado del sistema (grupo "El sistema"), activar los avisos desde la franja del
+inicio y darle a "Enviarme un aviso de prueba". Si sale "0 enviados", ahora dice
+por qué: sin teléfonos registrados, el servidor sin permiso para FCM, o FCM
+rechazó el envío. En los dos últimos casos el problema está en el permiso
+`roles/firebasecloudmessaging.admin` de la identidad privilegiada, que se revisa
+en la consola de Google Cloud. En iPhone los avisos sólo funcionan si PET Ap
+está agregada a la pantalla de inicio.
+
+### 1.3 El chat de un paseo — corregido el 2026-09-21, falta verlo con cuentas reales
+La familia sólo le escribe a su paseador, y el hilo de un paseo se abre dos horas
+antes y cierra tres después. Las dos cosas las aplican las reglas de Firestore
+(la hora sale de la sesión del paseo, no del hilo). Probado en el emulador
+(`chat-ventana-rules`, `chat-rules`).
+
+**Falta:** con una cuenta de familia y una de paseador y un paseo asignado a una
+hora cercana, escribir de los dos lados; y fuera del horario, ver que sale el aviso
+con el WhatsApp del negocio.
+
+### 1.4 El 401 de `/api/media/private/walker-photo`
 **Síntoma:** en la consola del navegador aparece
 `Failed to load resource: the server responded with a status of 401` para esa
 ruta.
@@ -69,7 +85,7 @@ función en Vercel filtrando por `walker-photo`.
 |---|---|---|
 | Cuenta de Apple Developer + Services ID y llave | Apple quedó fuera del acceso el 18 de septiembre de 2026, a petición del dueño: `APPLE_AUTH_PAUSED` en `src/lib/appleAuth.ts` lo apaga por encima de la variable de Vercel, que sigue encendida | Nadie entra con Apple. Para volver a ofrecerlo: terminar el trámite y poner ese candado en `false` |
 | Precio de Paseo + Adiestramiento | El servicio está ofrecido y sin tarifa | Una familia puede pedirlo y el paseo no tiene precio verificable: no entra en Finanzas |
-| `CRON_SECRET` en Vercel | El recordatorio de la tarde anterior lo dispara la tarea programada de Vercel, y sin ese secreto la ruta responde 403 a todo el mundo, incluida la tarea | Nadie recibe el recordatorio de su paseo de mañana |
+| `CRON_SECRET` en Vercel (Production) y volver a publicar | El recordatorio (19:00 hora de México) y la guardia (08:00) los dispara la tarea programada de Vercel, y sin ese secreto la ruta responde 403 a todo el mundo, incluida la tarea. Ver qué saldría se puede probar hoy desde Estado del sistema, sin el secreto | Nadie recibe el recordatorio de su paseo de mañana ni el aviso de paseos sin paseador |
 | Confirmar que aparece la tarjeta de notificaciones push | Las notificaciones al teléfono dependen de la llave VAPID | Las familias no reciben avisos de su paseo |
 
 ---
