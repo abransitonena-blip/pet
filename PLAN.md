@@ -42,6 +42,7 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 27 | Guía para instalarla en el iPhone | En iPhone una pestaña de Safari no puede recibir avisos, sólo la app en la pantalla de inicio (iOS 16.4+). La franja del inicio detecta el iPhone sin instalar y enseña los tres pasos; en otro navegador de iPhone manda a Safari | `guia-iphone` |
 | 28 | Un paseo reasignado | El paseador nuevo no podía abrir el hilo (para refrescar la lista de participantes había que ya estar en ella) y el anterior seguía leyéndolo. Ahora en un hilo de paseo quien es parte lo dice la sesión | `chat-reasignado-rules` (emulador) |
 | 29 | Sin callejón en el chat | Fuera el botón de chat a familias (creaba un hilo que no podían leer); el hilo viejo queda de consulta con WhatsApp y lo que administración ya escribió se conserva. De paso: cada mensaje de un paseo subía el "sin leer" de administración | `chat-sin-callejon` |
+| 30 | El recorrido completo | La familia pide, administración asigna, el paseador avanza y termina, la familia califica y se escriben, se mueve y se cancela: con las funciones REALES de la app (`submitReservation`, `assignCanonicalWalkSession`, `advanceWalkerSession`, el chat, la cancelación) contra las reglas reales, no con datos copiados a mano. La reseña se arma ya con `buildWalkerReview`, compartido por la pantalla y la prueba | `recorrido-completo` (emulador) |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -66,7 +67,6 @@ al final lo que toca todo el código.**
 
 | # | Fase | Qué es | Notas |
 |---|---|---|---|
-| 30 | El recorrido completo, con sesiones simuladas | Una prueba de reglas que camina el paseo entero como lo haría cada rol: la familia pide, administración asigna, el paseador avanza y termina, la familia califica y escribe | Es lo que habría cazado el fallo de producción de los paneles |
 | 31 | Perritos propios | Ilustraciones de perros para huecos vacíos, bienvenida e inicio | Hoy hay huellas y la marca teñida por raza |
 | 32 | El refuerzo, al teléfono | El recordatorio de vacuna que hoy sólo se ve en la app, también como aviso, con la fecha que la familia anotó | Reutiliza la tarea de las 19:00 |
 | 33 | Meses de más de 100 paseos | Cargar más dentro de un mes, en vez de sólo avisar que no cabe | Límite conocido de `CRITICO.md` §4 |
@@ -100,7 +100,8 @@ al final lo que toca todo el código.**
   respaldo previo.
 - **Internacional toca más de lo que parece.** La hora del negocio (UTC-6) está
   escrita dentro de las reglas de Firestore y de `chatWindow.ts`; hay 56
-  archivos con moneda, zona horaria o fechas de México. Traducir los textos es
+  archivos con moneda, zona horaria o fechas de México, y las reglas de precio
+  exigen `currency == 'MXN'`. Traducir los textos es
   la parte fácil. Nada de esto se publica como "internacional" mientras el
   aviso de privacidad y los términos no tengan validación por país.
 

@@ -6,7 +6,7 @@ import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { auth } from '@/firebase/config'
 import { db } from '@/firebase/db'
 import Card from '@/components/ui/Card'
-import { WALKER_REVIEW_TEXT_LIMIT, validateWalkerReview, walkerReviewErrorMessage } from '@/lib/walkerReviews'
+import { WALKER_REVIEW_TEXT_LIMIT, buildWalkerReview, validateWalkerReview, walkerReviewErrorMessage } from '@/lib/walkerReviews'
 
 /**
  * Califica a tu paseador, una vez por paseo.
@@ -102,11 +102,7 @@ export default function RateWalker({ sessionId, walkerId, walkerName, hideWhenRa
     setError('')
     try {
       await setDoc(doc(db, 'walkerReviews', sessionId), {
-        sessionId,
-        walkerId,
-        customerId: uid,
-        rating,
-        text: text.trim(),
+        ...buildWalkerReview({ sessionId, walkerId, customerId: uid, rating, text }),
         createdAt: serverTimestamp(),
       })
       setExisting({ rating, text: text.trim() })

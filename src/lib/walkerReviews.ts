@@ -22,6 +22,28 @@ export interface WalkerReview {
   createdAt?: unknown
 }
 
+/**
+ * Lo que se escribe al calificar, menos `createdAt`, que pone el servidor. Vive
+ * aquí para que la pantalla y las pruebas de reglas escriban exactamente lo
+ * mismo: antes cada una lo armaba por su lado y podían separarse sin que nada lo
+ * notara.
+ */
+export function buildWalkerReview(input: {
+  sessionId: string
+  walkerId: string
+  customerId: string
+  rating: number
+  text: string
+}): Omit<WalkerReview, 'createdAt'> {
+  return {
+    sessionId: input.sessionId,
+    walkerId: input.walkerId,
+    customerId: input.customerId,
+    rating: input.rating,
+    text: input.text.trim(),
+  }
+}
+
 export type WalkerReviewError = 'rating-out-of-range' | 'text-too-long'
 
 export function validateWalkerReview(review: { rating: number; text: string }): WalkerReviewError[] {

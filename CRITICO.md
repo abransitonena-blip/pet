@@ -147,12 +147,13 @@ cobran se mantienen apagadas. Los tickets internos no son CFDI.
 
 ## 5. Lo que ninguna prueba cubre todavía
 
-- **El recorrido completo con una sesión de verdad.** Las consultas de cada
-  panel ya se prueban contra las reglas reales en el emulador
-  (`paneles-consultan-rules.emulator`), que es lo que habría cazado el fallo del
-  directorio. Lo que sigue sin probarse es la pantalla misma: que el botón esté
-  donde debe y haga lo que dice, con alguien dentro.
-- **El recorrido completo de una familia**: registrarse, dar de alta un perro,
-  pedir un paseo y verlo asignado. Hoy se prueba por partes.
+- **La pantalla misma.** El recorrido de un paseo -- la familia pide, administración
+  asigna, el paseador avanza y termina, la familia califica, se escriben, se
+  cancela y se mueve -- ya se prueba de punta a punta con las funciones reales de
+  la app contra las reglas reales (`recorrido-completo.emulator`), y las consultas
+  de cada panel con `paneles-consultan-rules.emulator`. Lo que sigue sin probarse
+  es que el botón esté donde debe y haga lo que dice, con alguien dentro.
+- **Registrarse y dar de alta un perro**, que arrancan el recorrido: hoy se
+  prueban por partes, no dentro del recorrido.
 - **Las rutas de servidor con identidad privilegiada** sólo corren en
   Producción; en vista previa y en local fallan por diseño.
