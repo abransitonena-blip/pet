@@ -36,6 +36,8 @@ export interface HealthInputs {
   registeredDevices: number
   /** Servicios que la app ofrece pero no tienen tarifa publicada. */
   servicesWithoutPrice: readonly string[]
+  /** Zonas activas a las que les falta el centro o el radio: no pueden avisar de una salida. */
+  zonesWithoutArea: readonly string[]
 }
 
 export function buildHealthChecks(input: HealthInputs): HealthCheck[] {
@@ -96,6 +98,16 @@ export function buildHealthChecks(input: HealthInputs): HealthCheck[] {
       consequence: 'Un servicio sin tarifa no aparece en el formulario de reserva: nadie puede pedirlo.',
       fix: 'Ponerle precio en Configuración → El negocio → Precios de servicios.',
       detail: input.servicesWithoutPrice.length > 0 ? `sin tarifa: ${input.servicesWithoutPrice.join(', ')}` : undefined,
+    },
+    {
+      id: 'zones',
+      label: 'Área recomendada de cada zona activa',
+      state: input.zonesWithoutArea.length === 0 ? 'ok' : 'missing',
+      // Sin centro y radio la ruta del seguimiento responde "sin zona" y no
+      // compara nada: un paseador puede irse lejos y nadie recibe el aviso.
+      consequence: 'Una zona sin centro y radio no puede avisar cuando un paseador sale de su área recomendada.',
+      fix: 'Ponerle centro y radio en Zonas.',
+      detail: input.zonesWithoutArea.length > 0 ? `sin área: ${input.zonesWithoutArea.join(', ')}` : undefined,
     },
     {
       id: 'devices',

@@ -14,9 +14,21 @@ const todoBien: HealthInputs = {
   cronSecret: true,
   registeredDevices: 3,
   servicesWithoutPrice: [],
+  zonesWithoutArea: [],
 }
 
 describe('qué depende de algo que vive fuera del código', () => {
+  it('una zona sin centro y radio no puede avisar de una salida, y lo dice con su nombre', () => {
+    const checks = buildHealthChecks({ ...todoBien, zonesWithoutArea: ['Roma Norte', 'Coyoacán'] })
+    const zones = checks.find((check) => check.id === 'zones')
+    expect(zones?.state).toBe('missing')
+    expect(zones?.detail).toBe('sin área: Roma Norte, Coyoacán')
+    expect(zones?.consequence).toContain('área recomendada')
+    expect(zones?.fix).toContain('centro y radio')
+    // Sin zonas problemáticas, la línea está en verde.
+    expect(buildHealthChecks(todoBien).find((check) => check.id === 'zones')?.state).toBe('ok')
+  })
+
   it('con todo en su lugar, no falta nada', () => {
     expect(missingCount(buildHealthChecks(todoBien))).toBe(0)
   })

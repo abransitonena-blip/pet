@@ -6,6 +6,8 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { isOutsideZone, isUsableCenter } from '@/lib/geo'
 import { trackingExpiryDate } from '@/lib/trackingRetention'
+import { buildGeofencePush, geofenceNotifyReason, type NotifyReason } from '@/lib/geofenceAlert'
+import { notifyStaff } from '@/lib/push/staffPush'
 
 export const runtime = 'nodejs'
 
@@ -100,10 +102,25 @@ export async function POST(request: Request) {
       const walkerName = (await firestore.collection('walkerProfiles').doc(walkerUid).get()).data()?.name
       const alertRef = firestore.collection('geofenceAlerts').doc(sessionId)
       const zoneCenter = { lat: zone.center.lat, lng: zone.center.lng }
-      await firestore.runTransaction(async (transaction) => {
+      const resolvedWalkerName = typeof walkerName === 'string' && walkerName.trim() ? walkerName.trim() : 'Paseador'
+      const notifyReason: NotifyReason | null = await firestore.runTransaction(async (transaction) => {
         const existing = await transaction.get(alertRef)
+        const existingData = existing.data()
+        const lastNotified = existingData?.lastNotifiedAt
+        // Una lectura fuera no es un aviso: la primera, la que reabre una alerta ya
+        // marcada, y el recordatorio de una que nadie atiende (ver geofenceAlert.ts).
+        const reason = geofenceNotifyReason(
+          existing.exists
+            ? {
+                status: typeof existingData?.status === 'string' ? existingData.status : undefined,
+                lastNotifiedAtMs: lastNotified && typeof lastNotified.toMillis === 'function' ? lastNotified.toMillis() : undefined,
+              }
+            : null,
+          now.toMillis(),
+        )
         const shared = {
           status: 'open',
+          ...(reason ? { lastNotifiedAt: now } : {}),
           lastOutsideAt: now,
           lastPoint: { lat: point.lat, lng: point.lng, accuracy },
           distanceMeters: verdict.distanceMeters,
@@ -115,7 +132,7 @@ export async function POST(request: Request) {
             ...shared,
             sessionId,
             walkerId: walkerUid,
-            walkerName: typeof walkerName === 'string' && walkerName.trim() ? walkerName.trim() : 'Paseador',
+            walkerName: resolvedWalkerName,
             customerId: String(session.customerId ?? ''),
             zoneId,
             zoneName,
@@ -132,7 +149,18 @@ export async function POST(request: Request) {
             ...(existing.data()?.status === 'acknowledged' ? { reopenedAt: now } : {}),
           })
         }
+        return reason
       })
+
+      // Al teléfono de quien opera. Nunca tumba el registro del punto: si el aviso
+      // falla, la alerta ya está guardada y se ve en el panel.
+      if (notifyReason) {
+        try {
+          await notifyStaff(firestore, buildGeofencePush({ walkerName: resolvedWalkerName, zoneName, sessionId, reason: notifyReason }))
+        } catch (error) {
+          console.error('tracking/point staff push failed:', error instanceof Error ? error.message : String(error))
+        }
+      }
     }
 
     return NextResponse.json({

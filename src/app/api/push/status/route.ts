@@ -10,6 +10,7 @@ import { describeCloudinaryConfig } from '@/lib/media/cloudinaryAdmin.server'
 import { buildHealthChecks } from '@/lib/systemHealth'
 import { OFFERED_SERVICE_IDS, getReservationServiceDefinitions } from '@/lib/walkServices'
 import { isRequestableServicePrice, parsePublicServicePricesDocument } from '@/lib/servicePricing'
+import { isUsableCenter } from '@/lib/geo'
 
 export const runtime = 'nodejs'
 
@@ -76,6 +77,20 @@ export async function GET(request: Request) {
     }
   }
 
+  // Qué zonas activas no pueden avisar de una salida: sin centro y radio, la ruta
+  // del seguimiento no compara nada y no dice por qué.
+  const zonesWithoutArea: string[] = []
+  if (firestore) {
+    const zones = await firestore.collection('zones').where('active', '==', true).limit(DEVICE_SCAN_LIMIT).get()
+    for (const item of zones.docs) {
+      const data = item.data()
+      const radius = data.radius
+      if (!isUsableCenter(data.center) || typeof radius !== 'number' || !(radius > 0)) {
+        zonesWithoutArea.push(typeof data.name === 'string' && data.name.trim() ? data.name.trim() : item.id)
+      }
+    }
+  }
+
   return NextResponse.json({
     code: 'ok',
     flagEnabled: FEATURE_FLAGS.FCM_ENABLED,
@@ -96,6 +111,7 @@ export async function GET(request: Request) {
       cronSecret: Boolean(process.env.CRON_SECRET),
       registeredDevices: devices,
       servicesWithoutPrice,
+      zonesWithoutArea,
     }),
     // Cuántos aparatos tiene registrados quien pregunta: si es cero, el botón
     // de prueba no puede probar nada.
