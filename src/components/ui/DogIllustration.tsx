@@ -15,7 +15,7 @@
  * fuera del perro -- zetas, correa, lupa -- toma el color del texto del tema.
  */
 
-export type DogPose = 'sentado' | 'caminando' | 'durmiendo' | 'asomando' | 'olfateando'
+import type { DogPose } from '@/lib/dogPoses'
 
 /** Lo que va SOBRE la página -- zetas, correa, lupa, el borde -- sigue al tema. */
 const INK = 'var(--text-primary)'
@@ -182,5 +182,3 @@ export default function DogIllustration({ pose, size = 112, className = '' }: Do
     </svg>
   )
 }
-
-export const DOG_POSES = Object.keys(POSES) as DogPose[]

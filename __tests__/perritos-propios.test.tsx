@@ -2,7 +2,8 @@
 
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
-import DogIllustration, { DOG_POSES } from '../src/components/ui/DogIllustration'
+import DogIllustration from '../src/components/ui/DogIllustration'
+import { DOG_POSES } from '../src/lib/dogPoses'
 
 const read = (path: string) => readFileSync(path, 'utf8')
 
@@ -14,6 +15,9 @@ const read = (path: string) => readFileSync(path, 'utf8')
 describe('los dibujos', () => {
   it('hay cinco posturas, y cada una se dibuja', () => {
     expect([...DOG_POSES].sort()).toEqual(['asomando', 'caminando', 'durmiendo', 'olfateando', 'sentado'])
+    // Cada postura de la lista tiene su dibujo, y no sobra ninguno.
+    const source = read('src/components/ui/DogIllustration.tsx')
+    for (const pose of DOG_POSES) expect(source).toContain(`  ${pose}: {`)
     for (const pose of DOG_POSES) {
       const svg = renderToStaticMarkup(<DogIllustration pose={pose} />)
       expect(svg).toContain('<svg')

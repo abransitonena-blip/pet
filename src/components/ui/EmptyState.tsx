@@ -2,7 +2,8 @@
 
 import { ReactNode } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import DogIllustration, { type DogPose } from './DogIllustration'
+import DogIllustration from './DogIllustration'
+import type { DogPose } from '@/lib/dogPoses'
 
 interface EmptyStateProps {
   icon?: ReactNode
