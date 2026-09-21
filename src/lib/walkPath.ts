@@ -45,6 +45,6 @@ export function summarizeWalkPath(points: readonly WalkPathPoint[]): WalkPathSum
   const outsideCount = points.filter((point) => point.outside === true).length
   const parts = [`${points.length} lectura${points.length === 1 ? '' : 's'}`]
   if (points.length > 1) parts.push(`recorrido aproximado ${formatWalkDistance(meters)}`)
-  if (outsideCount > 0) parts.push(`${outsideCount} fuera de zona`)
+  if (outsideCount > 0) parts.push(`${outsideCount} fuera del área`)
   return { readings: points.length, distanceMeters: meters, outsideCount, label: parts.join(' · ') }
 }

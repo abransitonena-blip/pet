@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import {
-  collection, doc, getDocs, limit as fsLimit, onSnapshot, orderBy, query, serverTimestamp, updateDoc, type FirestoreError,
+  collection, getDocs, limit as fsLimit, onSnapshot, orderBy, query, type FirestoreError,
 } from 'firebase/firestore'
 import { AlertTriangle, Dog, Filter, MapPinned, Navigation, User } from 'lucide-react'
-import { auth } from '@/firebase/config'
+import GeofenceAlertActions from '@/components/admin/GeofenceAlertActions'
 import { db } from '@/firebase/db'
 import PageHeader from '@/components/ui/PageHeader'
 import LoadingState from '@/components/ui/LoadingState'
@@ -56,6 +56,8 @@ interface AlertRow {
   zoneCenter: { lat: number; lng: number } | null
   radiusKm: number | null
   status: 'open' | 'acknowledged'
+  /** Administración ya avisó a la familia por esta alerta. */
+  familyNotified: boolean
   distanceMeters: number | null
   outsideCount: number
   lastOutsideAt: number | null
@@ -140,6 +142,7 @@ export default function AdminRutasPage() {
           zoneCenter: isUsableCenter(center) ? { lat: center.lat, lng: center.lng } : null,
           radiusKm: typeof data.radiusKm === 'number' ? data.radiusKm : null,
           status: data.status === 'open' ? 'open' : 'acknowledged',
+          familyNotified: Boolean(data.familyNotifiedAt),
           distanceMeters: typeof data.distanceMeters === 'number' ? data.distanceMeters : null,
           outsideCount: typeof data.outsideCount === 'number' ? data.outsideCount : 1,
           lastOutsideAt: typeof data.lastOutsideAt?.seconds === 'number' ? data.lastOutsideAt.seconds * 1000 : null,
@@ -165,19 +168,13 @@ export default function AdminRutasPage() {
             const data = item.data()
             if (typeof data.lat !== 'number' || typeof data.lng !== 'number') return []
             const at = typeof data.capturedAt?.seconds === 'number' ? data.capturedAt.seconds * 1000 : null
-            return [{ lat: data.lat, lng: data.lng, outside: data.outside === true, label: `${formatTime(at)}${data.outside === true ? ' · fuera de zona' : ''}` }]
+            return [{ lat: data.lat, lng: data.lng, outside: data.outside === true, label: `${formatTime(at)}${data.outside === true ? ' · fuera del área' : ''}` }]
           }),
         })
       })
       .catch(() => { if (!cancelled) setTrack({ state: 'error', points: [] }) })
     return () => { cancelled = true }
   }, [selected])
-
-  const acknowledge = async (id: string) => {
-    const uid = auth.currentUser?.uid
-    if (!uid) return
-    await updateDoc(doc(db, 'geofenceAlerts', id), { status: 'acknowledged', acknowledgedBy: uid, acknowledgedAt: serverTimestamp() }).catch(() => {})
-  }
 
   // El inicio y el fin son lecturas del mismo teléfono, así que entran en el
   // recorrido: son el primer y el último punto de la línea.
@@ -218,7 +215,7 @@ export default function AdminRutasPage() {
               {track.points.length > 0
                 ? 'Una lectura cada ~2 minutos. '
                 : 'Sin lecturas intermedias: el paseo duró menos de lo que tarda la primera. '}
-              Verde: inicio · negro: fin · azul: dentro de la zona · rojo: fuera.
+              Verde: inicio · negro: fin · azul: dentro del área recomendada · rojo: fuera.
               {routePath.length > 1 && ' La línea punteada une las lecturas; entre una y otra no se registró el camino.'}
             </p>
           </>
@@ -236,9 +233,12 @@ export default function AdminRutasPage() {
 
       {FEATURE_FLAGS.WALK_TRACKING_ENABLED && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink">Alertas de zona</h2>
+          <h2 className="text-sm font-semibold text-ink">Salidas del área recomendada</h2>
+          <p className="text-xs text-muted">
+            El área es una recomendación: salirse no detiene el paseo. Aquí se revisa primero, y sólo si hubo un percance se avisa a la familia.
+          </p>
           {alerts.length === 0 ? (
-            <p className="text-sm text-muted">Ningún paseador ha salido de la zona de su paseo.</p>
+            <p className="text-sm text-muted">Ningún paseador ha salido del área recomendada de su paseo.</p>
           ) : (
             <ul className="space-y-2">
               {alerts.map((alert) => (
@@ -251,7 +251,7 @@ export default function AdminRutasPage() {
                       <p className="text-sm font-semibold text-ink">
                         {alert.walkerName} · {alert.zoneName || 'Zona sin nombre'}
                         <span className={`ml-2 rounded-full px-2 py-0.5 text-2xs font-medium ${alert.status === 'open' ? 'bg-danger-500/10 text-red-700' : 'bg-ink/5 text-muted'}`}>
-                          {alert.status === 'open' ? 'Abierta' : 'Enterado'}
+                          {alert.familyNotified ? 'Familia avisada' : alert.status === 'open' ? 'Abierta' : 'Revisada'}
                         </span>
                       </p>
                       <p className="mt-0.5 text-xs text-muted">
@@ -274,7 +274,12 @@ export default function AdminRutasPage() {
                       >
                         Ver recorrido
                       </Button>
-                      {alert.status === 'open' && <Button size="sm" onClick={() => void acknowledge(alert.id)}>Enterado</Button>}
+                      <GeofenceAlertActions
+                        alertId={alert.id}
+                        walkerName={alert.walkerName}
+                        acknowledged={alert.status !== 'open'}
+                        familyNotified={alert.familyNotified}
+                      />
                     </div>
                   </Card>
                 </li>

@@ -196,7 +196,7 @@ export default function ZoneFormModal({ zone, zones, onClose }: {
               </div>
 
               <div>
-                <label htmlFor="zone-radius" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Radio (km)</label>
+                <label htmlFor="zone-radius" className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>Radio del área recomendada (km)</label>
                 <input
                   id="zone-radius"
                   type="number"

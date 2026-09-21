@@ -366,7 +366,7 @@ export function computeInsights(input: InsightInputs): InsightResult {
       category: 'seguridad',
       priority: 'high',
       title: `${plural(geofence.length, 'alerta', 'alertas')} de zona sin revisar`,
-      description: 'Un paseador salió de la zona del paseo. Confírmalo con él y marca la alerta como vista en el aviso de arriba.',
+      description: 'Un paseador salió del área recomendada del paseo. Revísalo con él y decide en el aviso de arriba: "Todo en orden", o avisar a la familia si hubo un percance.',
       ...listed(geofence, (alert) => ({
         label: alert.walkerName,
         detail: [
@@ -703,7 +703,7 @@ export function computeInsights(input: InsightInputs): InsightResult {
         category: 'operacion',
         priority: 'low',
         title: `${plural(withoutZone.walks, 'paseo', 'paseos')} con dirección sin zona`,
-        description: 'La dirección de la familia no tiene zona asignada. Ese paseo no cuenta en la demanda por zona y tampoco puede avisar si el paseador se sale de la zona.',
+        description: 'La dirección de la familia no tiene zona asignada. Ese paseo no cuenta en la demanda por zona y tampoco puede avisar si el paseador sale del área recomendada.',
         ...NO_ITEMS,
         action: { label: 'Ver zonas', href: '/admin/zonas' },
       })

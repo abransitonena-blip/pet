@@ -49,10 +49,10 @@ describe('summarizeWalkPath', () => {
     expect(summary.outsideCount).toBe(1)
     expect(summary.label).toContain('3 lecturas')
     expect(summary.label).toContain('recorrido aproximado')
-    expect(summary.label).toContain('1 fuera de zona')
+    expect(summary.label).toContain('1 fuera del área')
   })
 
   it('no menciona salidas cuando el paseo se mantuvo dentro', () => {
-    expect(summarizeWalkPath([A, B]).label).not.toContain('fuera de zona')
+    expect(summarizeWalkPath([A, B]).label).not.toContain('fuera del área')
   })
 })

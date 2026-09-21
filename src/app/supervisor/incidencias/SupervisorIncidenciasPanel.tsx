@@ -125,7 +125,7 @@ export default function SupervisorIncidencias() {
                 <p className="text-sm font-semibold text-ink">{alert.walkerName}</p>
                 <p className="text-muted">
                   {[alert.zoneName ? `Zona ${alert.zoneName}` : '', alert.distanceMeters !== null ? `a ${alert.distanceMeters} m del centro` : '']
-                    .filter(Boolean).join(' · ') || 'Fuera de la zona del paseo'}
+                    .filter(Boolean).join(' · ') || 'Fuera del área recomendada del paseo'}
                 </p>
               </li>
             ))}

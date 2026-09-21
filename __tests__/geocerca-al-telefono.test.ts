@@ -105,6 +105,6 @@ describe('en la ruta del seguimiento', () => {
   })
 
   it('el cartel dentro del panel sigue: el aviso lo complementa, no lo reemplaza', () => {
-    expect(read('src/components/admin/GeofenceAlertsBanner.tsx')).toContain('salió de la zona')
+    expect(read('src/components/admin/GeofenceAlertsBanner.tsx')).toContain('salió del área recomendada')
   })
 })

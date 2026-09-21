@@ -21,7 +21,14 @@ const MAX_POINTS = 300
  *
  * El paseador ve su propio recorrido porque es lo que caminó; no le sirve de
  * nada la lista de coordenadas, pero el mapa le dice por dónde anduvo y si se
- * salió de la zona.
+ * salió del área recomendada.
+ *
+ * La familia ve el recorrido, pero NO la marca de "fuera del área" de cada punto
+ * hasta que administración decide avisarle. La salida se alerta primero a
+ * administración, para que revise si fue un percance o una vuelta más larga por
+ * el parque; enseñarle a la familia un punto rojo antes de eso es asustarla con
+ * una lectura de GPS que nadie ha juzgado. El servidor lo decide, no la
+ * pantalla: lo que llega al teléfono de la familia no lleva la marca.
  *
  * Falla cerrado: sin identidad privilegiada no responde nada, igual que la
  * ficha del paseador.
@@ -78,6 +85,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ code: 'session-not-yours' }, { status: 403, headers: noStore })
     }
 
+    // Sólo la familia (y nadie más que la familia) necesita que se le oculte la marca.
+    const familyOnly = isFamily && !isStaff && !isAssignedWalker
+    let showOutside = !familyOnly
+    if (familyOnly) {
+      const alert = await firestore.collection('geofenceAlerts').doc(sessionId).get()
+      showOutside = alert.exists && Boolean(alert.data()?.familyNotifiedAt)
+    }
+
     const snapshot = await firestore
       .collection('walkTracks').doc(sessionId).collection('points')
       .orderBy('capturedAt', 'asc')
@@ -91,7 +106,7 @@ export async function POST(request: Request) {
       return [{
         lat: data.lat,
         lng: data.lng,
-        outside: data.outside === true,
+        outside: showOutside && data.outside === true,
         at: typeof capturedAt?.seconds === 'number' ? capturedAt.seconds * 1000 : null,
       }]
     })

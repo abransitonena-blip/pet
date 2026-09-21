@@ -110,7 +110,7 @@ export default function WalkTracker({ uid }: { uid: string }) {
     return (
       <p role="alert" className="mb-4 flex items-start gap-2 rounded-2xl bg-danger-500/10 px-4 py-3 text-sm text-red-700">
         <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-        Estás fuera de la zona del paseo{zone.name ? ` (${zone.name})` : ''}. Administración ya recibió el aviso; regresa a la zona.
+        Saliste del área recomendada del paseo{zone.name ? ` (${zone.name})` : ''}. Administración ya recibió el aviso por si necesitas ayuda; si todo va bien, puedes seguir.
       </p>
     )
   }

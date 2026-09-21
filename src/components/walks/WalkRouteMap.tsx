@@ -76,7 +76,7 @@ export default function WalkRouteMap({ sessionId, refreshEveryMs, live = false }
           if (typeof item.lat !== 'number' || typeof item.lng !== 'number') return []
           const outside = item.outside === true
           const at = typeof item.at === 'number' ? item.at : null
-          return [{ lat: item.lat, lng: item.lng, outside, label: `${formatTime(at)}${outside ? ' · fuera de la zona' : ''}` }]
+          return [{ lat: item.lat, lng: item.lng, outside, label: `${formatTime(at)}${outside ? ' · fuera del área recomendada' : ''}` }]
         })
         const path = [
           ...(data.start ? [data.start] : []),
