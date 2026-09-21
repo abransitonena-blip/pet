@@ -25,7 +25,7 @@ describe('MP-003 familia/historial: the list distinguishes error from empty', ()
   })
 
   test('the canonical section separates loading/error/empty, now inside its month view', () => {
-    const loadingBranch = canonicalHistory.indexOf('loading ? (')
+    const loadingBranch = canonicalHistory.indexOf('loading || loadingMore ? (')
     const errorBranch = canonicalHistory.indexOf('error ? (')
     const emptyBranch = canonicalHistory.indexOf('sorted.length === 0 ? (')
     expect(loadingBranch).toBeGreaterThan(-1)

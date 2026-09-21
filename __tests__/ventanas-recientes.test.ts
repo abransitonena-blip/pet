@@ -26,13 +26,19 @@ describe('las consultas de paseos piden un rango, no "todo"', () => {
   const walkerHook = read('src/lib/useServiceOrders.ts')
 
   it('ambas aceptan desde y hasta sobre el mismo índice, y avisan si el rango llegó al tope', () => {
+    // El rango vive en un solo constructor de consultas, que usan los dos ganchos y
+    // las páginas que siguen: si se separaran, la primera y las demás dejarían de
+    // ser la misma lista.
+    const queries = read('src/lib/walkWindowQueries.ts')
+    expect(queries).toContain("...(range.since ? [where('scheduledDate', '>=', range.since)] : [])")
+    expect(queries).toContain("...(range.until ? [where('scheduledDate', '<=', range.until)] : [])")
+    expect(queries).toContain('limit(WALK_WINDOW_CAP)')
     for (const hook of [customerHook, walkerHook]) {
-      expect(hook).toContain("...(since ? [where('scheduledDate', '>=', since)] : [])")
-      expect(hook).toContain("...(until ? [where('scheduledDate', '<=', until)] : [])")
+      expect(hook).toContain('walkWindowQuery(')
       expect(hook).toContain('WALK_WINDOW_CAP')
+      // Un rango lleno a su tope guarda su último documento: es lo que avisa que puede haber más.
+      expect(hook).toContain('docs.length === WALK_WINDOW_CAP')
     }
-    expect(customerHook).toContain('setCapped(snapshot.docs.length === WALK_WINDOW_CAP)')
-    expect(walkerHook).toContain('setCapped(snap.docs.length === WALK_WINDOW_CAP)')
     expect(WALK_WINDOW_CAP).toBe(100)
   })
 
@@ -60,7 +66,8 @@ describe('las consultas de paseos piden un rango, no "todo"', () => {
 
   it('los historiales avisan cuando un mes no cupo entero', () => {
     for (const file of ['src/components/family/CanonicalFamilyHistory.tsx', 'src/app/walker/historial/WalkerHistorialPanel.tsx']) {
-      expect(read(file)).toContain('Los más recientes del mes podrían faltar.')
+      // Sólo si ni con todas las páginas cupo, o no se pudo leer el resto (ver meses-largos.test.ts).
+      expect(read(file)).toContain('Los paseos más recientes del mes podrían faltar.')
     }
   })
 })

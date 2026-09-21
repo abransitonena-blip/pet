@@ -6,6 +6,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
 import { Card, EmptyState, ErrorState, LoadingState, StatusBadge } from '@/components/ui'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import { monthWindow } from '@/lib/recentWindow'
+import { WALK_WINDOW_MAX_PAGES } from '@/lib/walkWindowQueries'
 import { canCancel } from '@/lib/familyCancellation'
 import CancelWalkButton from '@/components/family/CancelWalkButton'
 import RescheduleWalkButton from '@/components/family/RescheduleWalkButton'
@@ -22,9 +23,11 @@ export default function CanonicalFamilyHistory({ customerId }: { customerId: str
   const [offset, setOffset] = useState(0)
   const today = new Date().toLocaleDateString('en-CA')
   const window = monthWindow(today, offset)
-  const { sessions, loading, error, capped, retry } = useCustomerWalkSessions(customerId, {
+  // Un mes con más de cien paseos sigue en más consultas, hasta 500.
+  const { sessions, loading, loadingMore, error, capped, retry } = useCustomerWalkSessions(customerId, {
     since: window.since,
     until: window.until,
+    maxPages: WALK_WINDOW_MAX_PAGES,
   })
   const sorted = [...sessions].sort((a, b) => `${b.scheduledDate}-${b.scheduledStart}`.localeCompare(`${a.scheduledDate}-${a.scheduledStart}`))
 
@@ -54,11 +57,11 @@ export default function CanonicalFamilyHistory({ customerId }: { customerId: str
       {nav}
       {capped && (
         <p className="rounded-xl bg-warning/10 px-4 py-3 text-sm text-amber-800" role="status">
-          Este mes tiene más paseos de los que cabe mostrar aquí. Los más recientes del mes podrían faltar.
+          Este mes no se pudo cargar completo. Los paseos más recientes del mes podrían faltar.
         </p>
       )}
-      {loading ? (
-        <LoadingState message="Consultando tus paseos…" rows={3} height="h-20" />
+      {loading || loadingMore ? (
+        <LoadingState message={loadingMore ? 'Cargando el resto del mes…' : 'Consultando tus paseos…'} rows={3} height="h-20" />
       ) : error ? (
         <Card className="p-4 shadow-none"><ErrorState description={canonicalReadErrorMessage(error)} onRetry={retry} /></Card>
       ) : sorted.length === 0 ? (

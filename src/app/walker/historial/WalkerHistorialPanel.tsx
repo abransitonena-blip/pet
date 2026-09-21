@@ -9,6 +9,7 @@ import { useWalkerPanel } from '@/app/walker/WalkerPanelContext'
 import { useWalkerSessions } from '@/lib/useServiceOrders'
 import { sortWalkerSessions, walkerReadErrorMessage, walkerSessionDate, walkerSessionStatus } from '@/lib/walkerPanel'
 import { monthWindow } from '@/lib/recentWindow'
+import { WALK_WINDOW_MAX_PAGES } from '@/lib/walkWindowQueries'
 
 type HistoryFilter = 'all' | 'today' | 'upcoming' | 'completed'
 
@@ -28,9 +29,11 @@ export default function WalkerHistoryPage() {
   const { uid } = useWalkerPanel()
   const [offset, setOffset] = useState(0)
   const month = monthWindow(todayKey(), offset)
-  const { sessions, loading, error, capped, retry } = useWalkerSessions(uid, {
+  // Un mes con más de cien paseos sigue en más consultas, hasta 500.
+  const { sessions, loading, loadingMore, error, capped, retry } = useWalkerSessions(uid, {
     since: month.since,
     until: offset < 0 ? month.until : undefined,
+    maxPages: WALK_WINDOW_MAX_PAGES,
   })
   const [filter, setFilter] = useState<HistoryFilter>('all')
   const sorted = useMemo(() => sortWalkerSessions(sessions, 'desc'), [sessions])
@@ -46,7 +49,8 @@ export default function WalkerHistoryPage() {
         ? upcoming
         : sorted
 
-  if (loading) return <LoadingState message="Consultando tu historial…" rows={5} height="h-20" />
+  // Con el resto del mes en camino, "Hoy" y "Próximos" estarían incompletos.
+  if (loading || loadingMore) return <LoadingState message={loadingMore ? 'Cargando el resto del mes…' : 'Consultando tu historial…'} rows={5} height="h-20" />
   if (error) return <Card className="p-4 shadow-none"><ErrorState description={walkerReadErrorMessage(error)} onRetry={retry} /></Card>
 
   const filters: Array<{ value: HistoryFilter; label: string; count: number }> = [
@@ -81,7 +85,7 @@ export default function WalkerHistoryPage() {
 
       {capped && (
         <p className="rounded-xl bg-warning/10 px-4 py-3 text-sm text-amber-800" role="status">
-          Este mes tiene más paseos de los que cabe mostrar aquí. Los más recientes del mes podrían faltar.
+          Este mes no se pudo cargar completo. Los paseos más recientes del mes podrían faltar.
         </p>
       )}
 

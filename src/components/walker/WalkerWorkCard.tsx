@@ -7,6 +7,7 @@ import { useWalkerSessions } from '@/lib/useServiceOrders'
 import { walkerSessionDate, walkerSessionStatus } from '@/lib/walkerPanel'
 import { activeDays, summarizeWalkerWork } from '@/lib/walkerStats'
 import { daysAgo } from '@/lib/recentWindow'
+import { WALK_WINDOW_MAX_PAGES } from '@/lib/walkWindowQueries'
 
 /**
  * Lo que este paseador ha hecho, contado de sus propios paseos.
@@ -36,7 +37,8 @@ function formatDate(date: string): string {
 
 export default function WalkerWorkCard({ uid }: { uid: string }) {
   const since = daysAgo(todayKey(), WINDOW_DAYS)
-  const { sessions, loading, capped } = useWalkerSessions(uid, { since })
+  // Quien sale mucho pasa de cien paseos en 31 días: se siguen leyendo las páginas que faltan.
+  const { sessions, loading, loadingMore, capped } = useWalkerSessions(uid, { since, maxPages: WALK_WINDOW_MAX_PAGES })
 
   const rows = useMemo(
     () => sessions.map((session) => ({ date: walkerSessionDate(session), status: walkerSessionStatus(session) })),
@@ -45,7 +47,8 @@ export default function WalkerWorkCard({ uid }: { uid: string }) {
   const summary = useMemo(() => summarizeWalkerWork(rows, todayKey()), [rows])
   const days = useMemo(() => activeDays(rows), [rows])
 
-  if (loading || rows.length === 0) return null
+  // Con el resto del mes todavía en camino, contar diría "0 esta semana" a quien salió ayer.
+  if (loading || loadingMore || rows.length === 0) return null
 
   const tiles = [
     { label: 'Completados', value: summary.completed, icon: Footprints },
@@ -54,8 +57,8 @@ export default function WalkerWorkCard({ uid }: { uid: string }) {
     { label: 'Días que saliste', value: days, icon: CalendarCheck },
   ]
 
-  // Con la ventana llena, los paseos que trae son los más viejos de esos 31
-  // días: contar con ellos diría "0 esta semana" a alguien que salió ayer.
+  // Si ni con todas las páginas cabe, los paseos que trae son los más viejos de
+  // esos 31 días: contar con ellos diría "0 esta semana" a alguien que salió ayer.
   if (capped) {
     return (
       <Card className="p-4 shadow-none sm:p-5">
@@ -64,7 +67,7 @@ export default function WalkerWorkCard({ uid }: { uid: string }) {
           <h2 className="font-bold text-ink">Mi trabajo</h2>
         </div>
         <p className="text-sm text-muted">
-          Hiciste más de 100 paseos en los últimos 31 días: son más de los que esta cuenta puede leer de una vez, así que
+          Hiciste más de 500 paseos en los últimos 31 días: son más de los que esta cuenta lee, así que
           prefiere no darte un número antes que darte uno equivocado.
         </p>
       </Card>

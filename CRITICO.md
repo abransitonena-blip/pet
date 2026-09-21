@@ -131,11 +131,15 @@ cobran se mantienen apagadas. Los tickets internos no son CFDI.
 
 ## 4. Límites conocidos, que no son errores
 
-- **Un mes con más de 100 paseos no cabe entero** en el historial de una familia
-  o de un paseador. La pantalla lo dice en lugar de callarlo. Si el negocio
-  crece hasta ahí, hay que paginar dentro del mes.
-- **La tarjeta "Mi trabajo" del paseador** cuenta 31 días. Si en ese mes hizo
-  más de cien paseos, no da números en vez de dar unos equivocados.
+- **Un mes con más de 500 paseos no cabe entero** en el historial de una familia
+  o de un paseador. Hasta 500 se leen en varias consultas de 100 (el tope de las
+  reglas) y se muestran completos; pasando de ahí, la pantalla lo dice en lugar
+  de callarlo. No se pidió el orden descendente a propósito: los índices de
+  `walkSessions` son ascendentes, y una consulta que necesita un índice que no
+  existe deja la pantalla vacía.
+- **La tarjeta "Mi trabajo" del paseador** cuenta 31 días con el mismo límite: si
+  en ese mes hizo más de 500 paseos, no da números en vez de dar unos
+  equivocados.
 - **El código de un panel llega después de la primera pintura.** Se ve un
   esqueleto un instante y luego entra el panel. El total descargado es casi el
   mismo que antes; lo que cambió es que ya no bloquea la pantalla.

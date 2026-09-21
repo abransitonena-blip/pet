@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { db } from '@/firebase/db'
 import {
   collection, query, orderBy, onSnapshot, where, limit as fsLimit, getDocs,
-  doc, runTransaction, serverTimestamp, type FirestoreError, type QueryConstraint,
+  doc, runTransaction, serverTimestamp, type FirestoreError, type QueryConstraint, type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import type { ServiceOrder, WalkSession } from '@/types'
 import { classifyWalkerReadError, getWalkerTransition, type WalkerReadError } from '@/lib/walkerPanel'
 import { WALK_WINDOW_CAP } from '@/lib/recentWindow'
+import { mergeById, walkWindowQuery } from '@/lib/walkWindowQueries'
+import { useFollowingPages } from '@/lib/useFollowingPages'
 import { captureWalkPoint, locationFieldForTransition } from '@/lib/walkLocation'
 import { notifySessionEvent } from '@/lib/push/pushClient'
 
@@ -97,18 +99,34 @@ export function useServiceOrders(opts?: { customerId?: string; status?: string; 
  * (YYYY-MM-DD) recortan el rango sobre el mismo índice (walkerId,
  * scheduledDate), y `capped` avisa cuando el rango llegó al tope y por tanto
  * puede estar dejando fuera lo más nuevo de ese rango.
+ *
+ * Con `maxPages` mayor que 1, un rango que no cabe en 100 sigue en más
+ * consultas (ver walkWindowQueries.ts) y `capped` sólo avisa si tampoco cupo en
+ * todas las páginas o no se pudo leer el resto.
  */
-export function useWalkerSessions(walkerId: string, options: { since?: string; until?: string } = {}) {
-  const [sessions, setSessions] = useState<(WalkSession & { orderId: string })[]>([])
+export function useWalkerSessions(walkerId: string, options: { since?: string; until?: string; maxPages?: number } = {}) {
+  const [firstPage, setFirstPage] = useState<(WalkSession & { orderId: string })[]>([])
+  const [firstLast, setFirstLast] = useState<QueryDocumentSnapshot | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<WalkerReadError | null>(null)
-  const [capped, setCapped] = useState(false)
   const [revision, setRevision] = useState(0)
-  const { since, until } = options
+  const { since, until, maxPages = 1 } = options
+  const mapSession = (sessionDoc: QueryDocumentSnapshot) => {
+    const data = sessionDoc.data()
+    return {
+      id: sessionDoc.id,
+      ...data,
+      date: data.scheduledDate,
+      startTime: data.scheduledStart,
+      sessionStatus: data.status,
+    } as WalkSession & { orderId: string }
+  }
+  const following = useFollowingPages(db, { field: 'walkerId', uid: walkerId }, { since, until }, firstLast, maxPages, mapSession)
 
   useEffect(() => {
     if (!walkerId) {
-      setSessions([])
+      setFirstPage([])
+      setFirstLast(null)
       setError(null)
       setLoading(false)
       return
@@ -117,26 +135,13 @@ export function useWalkerSessions(walkerId: string, options: { since?: string; u
     setLoading(true)
     setError(null)
 
-    const q = query(
-      collection(db, 'walkSessions'),
-      where('walkerId', '==', walkerId),
-      ...(since ? [where('scheduledDate', '>=', since)] : []),
-      ...(until ? [where('scheduledDate', '<=', until)] : []),
-      orderBy('scheduledDate', 'asc'),
-      fsLimit(WALK_WINDOW_CAP),
-    )
-    const unsub = onSnapshot(q, (snap) => {
-      setCapped(snap.docs.length === WALK_WINDOW_CAP)
-      setSessions(snap.docs.map((sessionDoc) => {
-        const data = sessionDoc.data()
-        return {
-          id: sessionDoc.id,
-          ...data,
-          date: data.scheduledDate,
-          startTime: data.scheduledStart,
-          sessionStatus: data.status,
-        } as WalkSession & { orderId: string }
-      }))
+    // La misma consulta que usan las páginas que siguen: si se separan, la
+    // primera y las demás dejan de ser la misma lista.
+    const unsub = onSnapshot(walkWindowQuery(db, { field: 'walkerId', uid: walkerId }, { since, until }), (snap) => {
+      // Un paseo lleno a su tope puede tener más detrás: se guarda el último
+      // documento para pedir lo que sigue.
+      setFirstLast(snap.docs.length === WALK_WINDOW_CAP ? snap.docs[snap.docs.length - 1] : null)
+      setFirstPage(snap.docs.map(mapSession))
       setError(null)
       setLoading(false)
     }, (readError) => {
@@ -147,7 +152,11 @@ export function useWalkerSessions(walkerId: string, options: { since?: string; u
     return unsub
   }, [walkerId, since, until, revision])
 
-  return { sessions, loading, error, capped, retry: () => setRevision((value) => value + 1) }
+  const sessions = mergeById(firstPage, following.extra)
+  // `capped`: lo que se ve puede no ser todo. Con una sola página, el tope basta
+  // para saberlo; con varias, sólo si tampoco cupo en todas o no se pudo leer el resto.
+  const capped = maxPages > 1 ? firstLast !== null && (following.beyond || following.failed) : firstLast !== null
+  return { sessions, loading, loadingMore: following.loadingMore, error, capped, retry: () => setRevision((value) => value + 1) }
 }
 
 export async function advanceWalkerSession(session: WalkSession): Promise<void> {

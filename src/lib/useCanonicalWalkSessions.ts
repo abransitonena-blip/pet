@@ -14,11 +14,14 @@ import {
   serverTimestamp,
   where,
   type FirestoreError,
+  type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { auth } from '@/firebase/config'
 import { db } from '@/firebase/db'
 import type { WalkSessionStatus } from '@/lib/domainStates'
 import { WALK_WINDOW_CAP } from '@/lib/recentWindow'
+import { mergeById, walkWindowQuery } from '@/lib/walkWindowQueries'
+import { useFollowingPages } from '@/lib/useFollowingPages'
 import type { WalkPoint } from '@/types'
 
 export type CanonicalReadError = 'permission-denied' | 'network-error' | 'unavailable'
@@ -146,43 +149,48 @@ function withTransitions(transitions: Partial<Record<SessionStep, number>>) {
  * familia con paseo diario dejaba de ver lo suyo a los tres meses. Cada pantalla
  * pide el rango que necesita; ver recentWindow.ts.
  */
-export function useCustomerWalkSessions(customerId: string, options: { since?: string; until?: string } = {}) {
-  const [sessions, setSessions] = useState<CanonicalWalkSession[]>([])
+export function useCustomerWalkSessions(customerId: string, options: { since?: string; until?: string; maxPages?: number } = {}) {
+  const [firstPage, setFirstPage] = useState<CanonicalWalkSession[]>([])
+  const [firstLast, setFirstLast] = useState<QueryDocumentSnapshot | null>(null)
   const [loading, setLoading] = useState(Boolean(customerId))
   const [error, setError] = useState<CanonicalReadError | null>(null)
-  const [capped, setCapped] = useState(false)
   const [revision, setRevision] = useState(0)
-  const { since, until } = options
+  const { since, until, maxPages = 1 } = options
+  const following = useFollowingPages(
+    db,
+    { field: 'customerId', uid: customerId },
+    { since, until },
+    firstLast,
+    maxPages,
+    (item) => sessionFromSnapshot(item.id, item.data()),
+  )
 
   useEffect(() => {
     if (!customerId) {
-      setSessions([])
+      setFirstPage([])
+      setFirstLast(null)
       setLoading(false)
       setError(null)
       return
     }
     setLoading(true)
-    const sessionsQuery = query(
-      collection(db, 'walkSessions'),
-      where('customerId', '==', customerId),
-      ...(since ? [where('scheduledDate', '>=', since)] : []),
-      ...(until ? [where('scheduledDate', '<=', until)] : []),
-      orderBy('scheduledDate', 'asc'),
-      limit(WALK_WINDOW_CAP),
-    )
-    return onSnapshot(sessionsQuery, (snapshot) => {
-      setSessions(snapshot.docs.map((item) => sessionFromSnapshot(item.id, item.data())))
-      setCapped(snapshot.docs.length === WALK_WINDOW_CAP)
+    // La misma consulta que usan las páginas que siguen (ver walkWindowQueries.ts).
+    return onSnapshot(walkWindowQuery(db, { field: 'customerId', uid: customerId }, { since, until }), (snapshot) => {
+      setFirstPage(snapshot.docs.map((item) => sessionFromSnapshot(item.id, item.data())))
+      setFirstLast(snapshot.docs.length === WALK_WINDOW_CAP ? snapshot.docs[snapshot.docs.length - 1] : null)
       setError(null)
       setLoading(false)
     }, (readError: FirestoreError) => {
-      setSessions([])
+      setFirstPage([])
+      setFirstLast(null)
       setError(classifyCanonicalReadError(readError))
       setLoading(false)
     })
   }, [customerId, since, until, revision])
 
-  return { sessions, loading, error, capped, retry: () => setRevision((value) => value + 1) }
+  const sessions = mergeById(firstPage, following.extra)
+  const capped = maxPages > 1 ? firstLast !== null && (following.beyond || following.failed) : firstLast !== null
+  return { sessions, loading, loadingMore: following.loadingMore, error, capped, retry: () => setRevision((value) => value + 1) }
 }
 
 export function useRequestedWalkSessions() {
