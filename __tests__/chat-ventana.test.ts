@@ -78,6 +78,16 @@ describe('las dos pantallas la respetan', () => {
     expect(rules).toContain("request.resource.data.get('kind', '') == resource.data.get('kind', '')")
   })
 
+  it('quién es parte de un hilo de paseo lo dice la sesión, no la lista que el hilo guardó', () => {
+    const rules = read('firestore.rules')
+    expect(rules).toContain('function threadParty(convId, conversation)')
+    // Leer, escribir el hilo y leer sus mensajes pasan por la misma pregunta.
+    expect(rules).toContain('(isAdmin() || threadParty(convId, resource.data))')
+    expect(rules).toContain('threadParty(convId, get(/databases/$(database)/documents/conversations/$(convId)).data)')
+    // La lista vieja ya no decide.
+    expect(rules).not.toContain('function isConversationParticipant()')
+  })
+
   it('el paseador conserva su hilo con administración, sin ventana', () => {
     expect(read('src/app/walker/chat/WalkerChatPanel.tsx')).toContain('title="Mensajes con administración"')
   })

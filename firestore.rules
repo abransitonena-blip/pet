@@ -340,6 +340,22 @@ service cloud.firestore {
         && request.time <= walkStartUtc(session.scheduledDate, session.scheduledStart) + duration.value(3, 'h');
     }
 
+    // Quién es parte de un hilo. En uno de paseo, la familia y el paseador que la
+    // SESIÓN tiene hoy -- no los que el hilo dice haber tenido --. La lista de
+    // participantes del hilo se refresca cuando alguien lo abre, y mientras
+    // tanto quedaba desfasada: el paseador nuevo no podía abrirlo (para
+    // refrescarla hay que escribirlo, y se pedía ya estar en ella) y el anterior
+    // seguía leyendo la conversación de una familia que ya no es la suya. Los
+    // demás hilos siguen siendo de quien la lista nombra.
+    function threadParty(convId, conversation) {
+      return conversation.get('kind', '') == 'walk'
+        ? request.auth.uid in [
+            get(/databases/$(database)/documents/walkSessions/$(convId)).data.customerId,
+            get(/databases/$(database)/documents/walkSessions/$(convId)).data.get('walkerId', '')
+          ]
+        : request.auth.uid in conversation.participants;
+    }
+
     // Quién puede escribir en un hilo. Un hilo de paseo sigue la ventana de
     // arriba. Cualquier otro es el de administración con un paseador o con el
     // personal, y una FAMILIA no escribe ahí: le escribe a su paseador, no a
@@ -1495,7 +1511,7 @@ service cloud.firestore {
 
     match /conversations/{convId} {
       allow read: if isAuthenticated()
-        && (isConversationParticipant() || isAdmin());
+        && (isAdmin() || threadParty(convId, resource.data));
       // Una familia sólo abre el hilo de su propio paseo -- no uno con
       // administración --, y nadie que no sea administración le cambia el tipo
       // a un hilo: quitarle `kind: 'walk'` lo sacaba de su ventana.
@@ -1503,7 +1519,7 @@ service cloud.firestore {
         && (request.auth.uid in request.resource.data.participants || isAdmin())
         && (isAdmin() || !isCustomer() || customerOwnsWalkThread(convId, request.resource.data));
       allow update: if isAuthenticated()
-        && (isConversationParticipant() || isAdmin())
+        && (isAdmin() || threadParty(convId, resource.data))
         && (isAdmin() || request.resource.data.get('kind', '') == resource.data.get('kind', ''));
       allow delete: if false;
 
@@ -1513,18 +1529,15 @@ service cloud.firestore {
       // hilo; sólo pasaba el administrador, por su rol. Hay que mirar la
       // conversación de arriba.
       match /messages/{msgId} {
-        allow read: if isParticipantOfConversation(convId) || isAdmin();
+        allow read: if isAdmin()
+          || (exists(/databases/$(database)/documents/conversations/$(convId))
+              && threadParty(convId, get(/databases/$(database)/documents/conversations/$(convId)).data));
         allow create: if (isParticipantOfConversation(convId) || isAdmin())
           && validChatMessage(request.resource.data)
           && (isAdmin()
             || chatThreadWritable(convId, get(/databases/$(database)/documents/conversations/$(convId)).data));
         allow update, delete: if false;
       }
-    }
-
-    function isConversationParticipant() {
-      return isAuthenticated()
-        && request.auth.uid in resource.data.participants;
     }
 
     function isParticipantOfConversation(convId) {
