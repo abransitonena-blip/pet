@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { BellRing, X } from 'lucide-react'
+import { BellRing, Share, SquarePlus, X } from 'lucide-react'
 import { enablePush, pushAvailability } from '@/lib/push/pushClient'
+import { installAdvice, readDevice, type InstallAdvice } from '@/lib/installGuide'
 
 /**
  * El ofrecimiento de activar los avisos, donde alguien lo entiende.
@@ -20,28 +21,104 @@ import { enablePush, pushAvailability } from '@/lib/push/pushClient'
  */
 
 const DISMISSED_KEY = 'pet-avisos-propuesta-descartada'
+const INSTALL_DISMISSED_KEY = 'pet-avisos-instalar-descartada'
 
-function wasDismissed(): boolean {
+function wasDismissed(key: string): boolean {
   try {
-    return window.localStorage.getItem(DISMISSED_KEY) === '1'
+    return window.localStorage.getItem(key) === '1'
   } catch {
     return false
   }
 }
 
+/**
+ * En iPhone, una pestaña de Safari no puede recibir avisos: sólo la app
+ * agregada a la pantalla de inicio. Ahí el botón de activar ni siquiera
+ * existe, así que aquí se enseña el camino en lugar de callar.
+ */
+function InstallSteps({ advice, onDismiss }: { advice: Exclude<InstallAdvice, 'none'>; onDismiss: () => void }) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-3">
+      <div className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary" aria-hidden="true">
+          <BellRing size={17} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-ink">Para recibir avisos en tu iPhone</p>
+          <p className="mt-0.5 text-xs text-muted">
+            {advice === 'open-in-safari'
+              ? 'Ábrela en Safari y agrégala a tu pantalla de inicio. Este navegador no puede hacerlo.'
+              : 'En iPhone los avisos sólo llegan si PET Ap está en tu pantalla de inicio. Son tres toques:'}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Ahora no"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-muted hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <X size={16} aria-hidden="true" />
+        </button>
+      </div>
+      {advice === 'add-to-home' && (
+        <ol className="space-y-2 text-sm text-ink">
+          <li className="flex items-center gap-2.5">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-2xs font-bold text-white">1</span>
+            <span>Toca <Share size={15} className="mx-0.5 inline align-text-bottom text-primary" aria-hidden="true" /> <strong>Compartir</strong>, el cuadro con una flecha hacia arriba de Safari.</span>
+          </li>
+          <li className="flex items-center gap-2.5">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-2xs font-bold text-white">2</span>
+            <span>Elige <SquarePlus size={15} className="mx-0.5 inline align-text-bottom text-primary" aria-hidden="true" /> <strong>Agregar a pantalla de inicio</strong>.</span>
+          </li>
+          <li className="flex items-center gap-2.5">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-2xs font-bold text-white">3</span>
+            <span>Abre <strong>PET Ap desde el ícono nuevo</strong>, no desde Safari, y activa los avisos ahí.</span>
+          </li>
+        </ol>
+      )}
+      <p className="text-xs text-muted">Necesitas iOS 16.4 o más reciente.</p>
+    </div>
+  )
+}
+
 export default function PushNudge({ message }: { message: string }) {
   const [visible, setVisible] = useState(false)
+  const [install, setInstall] = useState<InstallAdvice>('none')
   const [busy, setBusy] = useState(false)
   const [failure, setFailure] = useState('')
 
   useEffect(() => {
-    setVisible(pushAvailability() === 'available' && !wasDismissed())
+    const availability = pushAvailability()
+    // Con la función apagada o los avisos ya activos no hay nada que ofrecer.
+    if (availability === 'off' || availability === 'enabled') return
+    const device = readDevice()
+    const advice = device ? installAdvice(device) : 'none'
+    if (advice !== 'none') {
+      // En una pestaña de iPhone los avisos no existen, sea lo que sea que
+      // diga el navegador: primero hay que instalarla.
+      if (!wasDismissed(INSTALL_DISMISSED_KEY)) setInstall(advice)
+      return
+    }
+    setVisible(availability === 'available' && !wasDismissed(DISMISSED_KEY))
   }, [])
+
+  const remember = (key: string) => {
+    try { window.localStorage.setItem(key, '1') } catch { /* Sin almacenamiento, vuelve a salir. */ }
+  }
+
+  if (install !== 'none') {
+    return (
+      <InstallSteps
+        advice={install}
+        onDismiss={() => { remember(INSTALL_DISMISSED_KEY); setInstall('none') }}
+      />
+    )
+  }
 
   if (!visible) return null
 
   const dismiss = () => {
-    try { window.localStorage.setItem(DISMISSED_KEY, '1') } catch { /* Sin almacenamiento, vuelve a salir. */ }
+    remember(DISMISSED_KEY)
     setVisible(false)
   }
 

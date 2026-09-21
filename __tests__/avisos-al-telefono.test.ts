@@ -119,7 +119,9 @@ describe('se ofrecen donde la gente está', () => {
 
   it('no se dibuja si no hay nada que activar', () => {
     // Ya activados, bloqueados, sin soporte o con la función apagada: nada que ofrecer.
-    expect(nudge).toContain("pushAvailability() === 'available'")
+    // Sólo el estado "available" ofrece activar; en iPhone sin instalar se enseña
+    // otra cosa (ver guia-iphone.test.ts).
+    expect(nudge).toContain("availability === 'available' && !wasDismissed(DISMISSED_KEY)")
   })
 
   it('quien dice que no, no lo vuelve a ver en ese teléfono', () => {
