@@ -15,6 +15,7 @@ import { getCustomerProfile } from '@/lib/customerProfile'
 import { openWalkConversation } from '@/lib/chat'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import WalkerCard from '@/components/family/WalkerCard'
+import LegacyAdminMessages from '@/components/chat/LegacyAdminMessages'
 import { daysAgo } from '@/lib/recentWindow'
 import { chatWindowNotice, chatWindowState, pickChatWalk } from '@/lib/chatWindow'
 
@@ -84,14 +85,17 @@ export default function FamilyMessagesPage() {
 
   if (!walk) {
     return (
-      <Card className="p-6 shadow-none">
-        <EmptyState
-          icon={<MessagesSquare size={24} />}
-          title="Todavía no hay con quién escribir"
-          description="Cuando tu paseo tenga un paseador asignado, podrás escribirle desde aquí y preguntarle cómo va."
-          action={<Link href="/familia/nueva-reserva" className="btn-primary">Solicitar un paseo</Link>}
-        />
-      </Card>
+      <div className="space-y-3">
+        <Card className="p-6 shadow-none">
+          <EmptyState
+            icon={<MessagesSquare size={24} />}
+            title="Todavía no hay con quién escribir"
+            description="Cuando tu paseo tenga un paseador asignado, podrás escribirle desde aquí y preguntarle cómo va."
+            action={<Link href="/familia/nueva-reserva" className="btn-primary">Solicitar un paseo</Link>}
+          />
+        </Card>
+        <LegacyAdminMessages uid={identity.uid} />
+      </div>
     )
   }
 
@@ -107,6 +111,7 @@ export default function FamilyMessagesPage() {
         description={`Sobre el paseo del ${walk.scheduledDate}. Pregúntale cómo va, avísale algo de tu perro o cuéntale un detalle de la entrada.`}
         closedNotice={chatWindowNotice(windowState, walk.scheduledDate, walk.scheduledStart, 'family')}
       />
+      <LegacyAdminMessages uid={identity.uid} />
     </div>
   )
 }

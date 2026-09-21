@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import type { Conversation, ChatMessage } from '@/types'
 import { notifyChatMessage } from '@/lib/push/pushClient'
+import { confirmWhatsAppShare } from '@/lib/utils'
+import { WhatsAppIcon } from '@/components/ui/SocialIcons'
 
 export default function AdminChat() {
   const searchParams = useSearchParams()
@@ -62,7 +64,7 @@ export default function AdminChat() {
       // El mismo camino que usan la familia y el paseador, firmado con el uid
       // real de quien contesta: antes decía 'admin' a secas y no quedaba quién
       // del equipo había escrito.
-      await sendChatMessage(selectedId, { text, senderId: uid, senderRole: 'admin' })
+      await sendChatMessage(selectedId, { text, senderId: uid, senderRole: 'admin' }, { walkThread: selectedConv?.participantRole === 'walk' })
       notifyChatMessage(selectedId)
     } catch (e) {
       setInput(text)
@@ -138,6 +140,26 @@ export default function AdminChat() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Las familias le escriben a su paseador, no a administración: no
+              tienen ninguna pantalla donde ver una respuesta en este hilo. Se
+              deja para consultar lo que se escribió, y para escribirles hay
+              WhatsApp. */}
+          {selectedConv.participantRole === 'customer' ? (
+            <div className="flex flex-col gap-2 p-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
+              <p role="status" className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Este hilo es de consulta. Las familias le escriben a su paseador, así que no verían una respuesta aquí.
+              </p>
+              {selectedConv.customerPhone && (
+                <button
+                  type="button"
+                  onClick={() => confirmWhatsAppShare(selectedConv.customerPhone ?? '', 'Hola, te escribimos de PET Ap.')}
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-success-500/10 text-sm font-medium text-success-600 transition-colors hover:bg-success-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <WhatsAppIcon width={13} height={13} /> Escribir por WhatsApp
+                </button>
+              )}
+            </div>
+          ) : (
           <div className="flex flex-col gap-2 p-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
             {sendError && <p role="alert" className="text-xs text-red-700">{sendError}</p>}
             <div className="flex items-center gap-2">
@@ -168,6 +190,7 @@ export default function AdminChat() {
             </button>
             </div>
           </div>
+          )}
         </>
       ) : (
         <>

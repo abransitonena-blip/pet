@@ -6,18 +6,23 @@ import { MessagesSquare } from 'lucide-react'
 import { startConversationAsAdmin } from '@/lib/chat'
 
 /**
- * Abrir el chat con esta persona desde su ficha.
+ * Abrir el chat con un paseador desde su ficha.
  *
- * El hilo sólo nacía cuando la familia o el paseador entraban a su pantalla de
- * mensajes, así que administración no tenía a dónde escribir primero: tenía que
- * salirse a WhatsApp. Esto crea el hilo y lleva a la bandeja con él abierto.
+ * El hilo sólo nacía cuando el paseador entraba a su pantalla de mensajes, así
+ * que administración no tenía a dónde escribir primero: tenía que salirse a
+ * WhatsApp. Esto crea el hilo y lleva a la bandeja con él abierto.
+ *
+ * Sólo para paseadores. Las familias le escriben a su paseador y no tienen
+ * ninguna pantalla donde ver un hilo con administración: el botón les creaba
+ * uno que nunca iban a leer ni a poder contestar. A una familia se le escribe
+ * por WhatsApp.
  */
 
 interface StartChatButtonProps {
   uid: string
   name: string
   phone?: string
-  role: 'customer' | 'walker'
+  role: 'walker'
   className?: string
 }
 

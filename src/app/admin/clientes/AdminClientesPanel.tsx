@@ -10,7 +10,6 @@ import ErrorState from '@/components/ui/ErrorState'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { WhatsAppIcon } from '@/components/ui/SocialIcons'
-import StartChatButton from '@/components/admin/StartChatButton'
 import { confirmWhatsAppShare } from '@/lib/utils'
 import { useCanonicalDirectory, type DirectoryCustomer, type DirectoryDog } from '@/lib/useCanonicalDirectory'
 import { useCanonicalReservations, type CanonicalReservationView } from '@/lib/useCanonicalReservations'
@@ -471,12 +470,6 @@ export default function AdminClientesPage() {
               </div>
 
               <div className="space-y-2">
-                <StartChatButton
-                  uid={selected.customer.uid}
-                  name={selected.customer.name}
-                  phone={selected.customer.phone}
-                  role="customer"
-                />
                 {selected.customer.phone && (
                   <button
                     type="button"

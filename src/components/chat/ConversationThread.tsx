@@ -65,9 +65,11 @@ export default function ConversationThread({ identity, title, description, open,
           : 'No pudimos cargar los mensajes. Revisa tu conexión.')
       },
     )
-    void markConversationRead(conversationId, 'participant').catch(() => {})
+    // En un hilo de paseo cada lado tiene su contador; en el de administración,
+    // la persona limpia el de "cliente". Sólo un hilo de paseo trae `open`.
+    void markConversationRead(conversationId, open && identity.role === 'walker' ? 'walker' : 'participant').catch(() => {})
     return unsubscribe
-  }, [conversationId])
+  }, [conversationId, open, identity.role])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -79,7 +81,7 @@ export default function ConversationThread({ identity, title, description, open,
     setSending(true)
     setInput('')
     try {
-      await sendChatMessage(conversationId, { text, senderId: identity.uid, senderRole: identity.role })
+      await sendChatMessage(conversationId, { text, senderId: identity.uid, senderRole: identity.role }, { walkThread: Boolean(open) })
       // Que suene del otro lado: el servidor decide a quién y sin el texto.
       notifyChatMessage(conversationId)
     } catch {

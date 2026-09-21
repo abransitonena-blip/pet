@@ -127,6 +127,13 @@ describe('lo que no cambia', () => {
     await assertSucceeds(getDocs(collection(dbFor('admin-1', 'admin'), 'conversations', 'paseo', 'messages')))
   })
 
+  test('cada lado apaga su propio "sin leer" en el hilo del paseo', async () => {
+    await reassigned('paseo', 'walker-new', 'walker-new')
+    await assertSucceeds(updateDoc(doc(dbFor('customer-1'), 'conversations', 'paseo'), { unreadClient: 0 }))
+    await assertSucceeds(updateDoc(doc(dbFor('walker-new', 'walker'), 'conversations', 'paseo'), { unreadWalker: 0 }))
+    await assertFails(updateDoc(doc(dbFor('customer-2'), 'conversations', 'paseo'), { unreadWalker: 99 }))
+  })
+
   test('otra familia o un paseador ajeno siguen sin entrar', async () => {
     await reassigned('paseo', 'walker-new', 'walker-old')
     await assertFails(getDocs(collection(dbFor('customer-2'), 'conversations', 'paseo', 'messages')))

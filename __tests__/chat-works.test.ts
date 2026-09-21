@@ -8,7 +8,7 @@ import { CHAT_MESSAGE_MAX_LENGTH } from '@/lib/chat'
 
 const read = (path: string) => readFileSync(path, 'utf8')
 const rules = read('firestore.rules')
-const messagesBlock = rules.slice(rules.indexOf('match /messages/{msgId}'), rules.indexOf('function isConversationParticipant'))
+const messagesBlock = rules.slice(rules.indexOf('match /messages/{msgId}'), rules.indexOf('function isParticipantOfConversation'))
 
 /**
  * El chat no funcionaba para nadie más que administración, y la causa estaba en
@@ -18,8 +18,11 @@ const messagesBlock = rules.slice(rules.indexOf('match /messages/{msgId}'), rule
  */
 describe('quién puede leer y escribir en un hilo', () => {
   test('el permiso se busca en la conversación de arriba, no en el mensaje', () => {
+    // Leer y escribir preguntan por la conversación de arriba, con su id.
+    expect(messagesBlock).toContain('get(/databases/$(database)/documents/conversations/$(convId)).data')
     expect(messagesBlock).toContain('isParticipantOfConversation(convId)')
-    expect(messagesBlock).not.toContain('isConversationParticipant()')
+    // Nunca por `resource`, que dentro de `messages` es el mensaje.
+    expect(messagesBlock).not.toContain('resource.data.participants')
   })
 
   test('esa comprobación lee la conversación por su id', () => {
@@ -30,7 +33,11 @@ describe('quién puede leer y escribir en un hilo', () => {
 
   test('la conversación sigue resolviéndose con su propio resource', () => {
     const conversation = rules.slice(rules.indexOf('match /conversations/{convId}'), rules.indexOf('match /messages/{msgId}'))
-    expect(conversation).toContain('isConversationParticipant() || isAdmin()')
+    // En un hilo de paseo, quien es parte lo dice la sesión (threadParty); en los
+    // demás, la lista de participantes del propio hilo.
+    expect(conversation).toContain('(isAdmin() || threadParty(convId, resource.data))')
+    const party = rules.slice(rules.indexOf('function threadParty'))
+    expect(party.slice(0, 700)).toContain('request.auth.uid in conversation.participants')
   })
 })
 

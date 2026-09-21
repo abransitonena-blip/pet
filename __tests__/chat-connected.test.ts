@@ -37,8 +37,8 @@ describe('administración puede escribir primero', () => {
     expect(fn.slice(0, 600)).toContain('lastTimestamp: serverTimestamp()')
   })
 
-  test('el botón vive en la ficha de la familia y en la del paseador', () => {
-    expect(read('src/app/admin/clientes/AdminClientesPanel.tsx')).toContain('<StartChatButton')
+  test('el botón vive en la ficha del paseador; a una familia se le escribe por WhatsApp', () => {
+    expect(read('src/app/admin/clientes/AdminClientesPanel.tsx')).not.toContain('<StartChatButton')
     expect(read('src/app/admin/paseadores/AdminPaseadoresPanel.tsx')).toContain('<StartChatButton')
   })
 

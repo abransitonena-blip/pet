@@ -189,6 +189,8 @@ export interface Conversation {
   lastTimestamp?: { seconds: number; nanoseconds: number }
   unreadAdmin: number
   unreadClient: number
+  /** Sólo en un hilo de paseo: lo que espera al paseador. */
+  unreadWalker?: number
   createdAt?: { seconds: number; nanoseconds: number }
 }
 

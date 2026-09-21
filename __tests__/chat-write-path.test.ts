@@ -26,7 +26,9 @@ describe('conversaciones con administración', () => {
 
   test('el contador de no leídos sube del lado contrario al que escribe', () => {
     const chat = read('src/lib/chat.ts')
-    expect(chat).toContain("message.senderRole === 'admin' ? { unreadClient: increment(1) } : { unreadAdmin: increment(1) }")
+    // Las cuentas viven en chatCounters (con sus propias pruebas en chat-sin-callejon).
+    expect(chat).toContain('countersToBump(message.senderRole, options.walkThread === true)')
+    expect(read('src/lib/chatCounters.ts')).toContain("[senderRole === 'admin' ? 'unreadClient' : 'unreadAdmin']")
   })
 
   test('paseadores y familias tienen entrada al hilo', () => {

@@ -10,6 +10,7 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { db } from '@/firebase/db'
+import { counterToClear, countersToBump, type ChatReadSide, type ChatSenderRole } from '@/lib/chatCounters'
 
 /**
  * Conversaciones con administración.
@@ -25,7 +26,7 @@ import { db } from '@/firebase/db'
  * their role claim and is therefore not listed.
  */
 
-export type ChatSenderRole = 'admin' | 'customer' | 'walker'
+export type { ChatSenderRole, ChatReadSide }
 
 /** El mismo tope que comprueban las reglas. */
 export const CHAT_MESSAGE_MAX_LENGTH = 2000
@@ -123,6 +124,8 @@ export async function startConversationAsAdmin(identity: ConversationIdentity): 
 export async function sendChatMessage(
   conversationId: string,
   message: { text: string; senderId: string; senderRole: ChatSenderRole },
+  /** `walkThread`: el hilo es de un paseo, y el "sin leer" sube del otro lado, no de administración. */
+  options: { walkThread?: boolean } = {},
 ): Promise<void> {
   const text = message.text.trim()
   if (!text) return
@@ -141,10 +144,10 @@ export async function sendChatMessage(
   await updateDoc(doc(db, 'conversations', conversationId), {
     lastMessage: text,
     lastTimestamp: serverTimestamp(),
-    ...(message.senderRole === 'admin' ? { unreadClient: increment(1) } : { unreadAdmin: increment(1) }),
+    ...Object.fromEntries(countersToBump(message.senderRole, options.walkThread === true).map((counter) => [counter, increment(1)])),
   })
 }
 
-export async function markConversationRead(conversationId: string, side: 'admin' | 'participant'): Promise<void> {
-  await updateDoc(doc(db, 'conversations', conversationId), side === 'admin' ? { unreadAdmin: 0 } : { unreadClient: 0 })
+export async function markConversationRead(conversationId: string, side: ChatReadSide): Promise<void> {
+  await updateDoc(doc(db, 'conversations', conversationId), { [counterToClear(side)]: 0 })
 }
