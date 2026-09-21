@@ -123,7 +123,7 @@ export default function CanonicalDispatchPanel() {
 
       {queue.sessions.length === 0 ? (
         <Card className="shadow-none">
-          <EmptyState
+          <EmptyState illustration="sentado"
             icon={<CheckCircle2 size={22} />}
             title="No hay solicitudes pendientes"
             description="Cuando una familia pida un paseo, aparecerá aquí para asignarlo."

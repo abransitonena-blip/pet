@@ -236,7 +236,7 @@ export default function NotificacionesPage() {
       )}
 
       {feed.length === 0 ? (
-        <EmptyState
+        <EmptyState illustration="durmiendo"
           icon={<Bell size={28} />}
           title="Sin notificaciones"
           description="Aquí verás cada avance de tus paseos: asignación, llegada del paseador, inicio y fin."

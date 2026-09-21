@@ -99,7 +99,7 @@ export default function DireccionesPage() {
 
       {addresses.length === 0 ? (
         <Card className="py-12">
-          <EmptyState
+          <EmptyState illustration="caminando"
             icon={<MapPin size={28} />}
             title="Aún no tienes direcciones guardadas"
             action={<Button size="sm" onClick={openCreate}>Agregar primera dirección</Button>}

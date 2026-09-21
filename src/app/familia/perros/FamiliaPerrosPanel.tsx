@@ -114,7 +114,7 @@ export default function MisPerrosPage() {
 
       {pets.length === 0 ? (
         <Card className="p-8">
-          <EmptyState
+          <EmptyState illustration="sentado"
             icon={<PawPrint size={28} />}
             title="Aún no tienes mascotas registradas"
             description="Registra a tu peludo para agilizar tus reservas y guardar su información"

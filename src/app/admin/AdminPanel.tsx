@@ -85,7 +85,7 @@ export default function AdminDashboard() {
         ) : queue.error ? (
           <p className="text-sm text-red-700" role="alert">No pudimos consultar las solicitudes. Ábrelas desde Solicitudes y paseos.</p>
         ) : ordered.length === 0 ? (
-          <EmptyState
+          <EmptyState illustration="sentado"
             icon={<CheckCircle2 size={22} />}
             title="Todo asignado"
             description="Cuando una familia pida un paseo, aparecerá aquí."

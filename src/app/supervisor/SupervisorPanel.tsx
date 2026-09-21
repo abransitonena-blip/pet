@@ -43,7 +43,7 @@ export default function SupervisorOverview() {
         ) : error ? (
           <ErrorState description={canonicalReadErrorMessage(error)} onRetry={retry} />
         ) : reservations.length === 0 ? (
-          <EmptyState icon={<LayoutDashboard size={20} />} title="Sin paseos" description="No hay paseos para supervisar todavía." />
+          <EmptyState illustration="durmiendo" icon={<LayoutDashboard size={20} />} title="Sin paseos" description="No hay paseos para supervisar todavía." />
         ) : (
           <ul className="divide-y" style={{ borderColor: 'var(--border)' }}>
             {reservations.map((item) => (

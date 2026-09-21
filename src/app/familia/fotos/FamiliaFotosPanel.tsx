@@ -116,7 +116,7 @@ export default function FotosPage() {
 
       {completed.length === 0 ? (
         <Card>
-          <EmptyState
+          <EmptyState illustration="asomando"
             icon={<Camera size={28} />}
             title="Sin paseos terminados en los últimos 60 días"
             description="Cuando un paseo se complete, sus fotos y su reporte aparecerán aquí."

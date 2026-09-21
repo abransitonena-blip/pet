@@ -87,7 +87,7 @@ export default function FamilyMessagesPage() {
     return (
       <div className="space-y-3">
         <Card className="p-6 shadow-none">
-          <EmptyState
+          <EmptyState illustration="asomando"
             icon={<MessagesSquare size={24} />}
             title="Todavía no hay con quién escribir"
             description="Cuando tu paseo tenga un paseador asignado, podrás escribirle desde aquí y preguntarle cómo va."

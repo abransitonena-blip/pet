@@ -63,7 +63,7 @@ export default function CanonicalFamilyHistory({ customerId }: { customerId: str
         <Card className="p-4 shadow-none"><ErrorState description={canonicalReadErrorMessage(error)} onRetry={retry} /></Card>
       ) : sorted.length === 0 ? (
         <Card className="shadow-none">
-          <EmptyState
+          <EmptyState illustration="durmiendo"
             icon={<CalendarDays size={21} />}
             title={`Sin paseos en ${window.label}`}
             description="Cambia de mes para ver otros, o solicita uno nuevo."

@@ -168,7 +168,7 @@ export default function WalkerDashboard() {
 
         {todayCount === 0 ? (
           <Card className="shadow-none">
-            <EmptyState
+            <EmptyState illustration="durmiendo"
               icon={<CalendarDays size={21} />}
               title="No tienes paseos asignados hoy"
               description="Puedes revisar tu disponibilidad o consultar las próximas asignaciones."

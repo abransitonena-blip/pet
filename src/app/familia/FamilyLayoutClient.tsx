@@ -143,7 +143,7 @@ export default function FamilyLayoutClient({ children }: { children: React.React
       <AnnouncementBanner />
       {children || (
         <Card className="p-8">
-          <EmptyState
+          <EmptyState illustration="sentado"
             icon={<Dog size={28} />}
             title={userName}
             description="Selecciona una opción del menú para comenzar."

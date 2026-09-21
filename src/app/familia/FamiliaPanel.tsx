@@ -238,7 +238,7 @@ export default function DashboardPage() {
             </Card>
           ) : (
             <Card className="shadow-none">
-              <EmptyState
+              <EmptyState illustration="sentado"
                 icon={<CalendarDays size={24} />}
                 title="No tienes paseos por delante"
                 description="Cuando solicites uno, aquí verás cuándo llega y quién lo lleva."

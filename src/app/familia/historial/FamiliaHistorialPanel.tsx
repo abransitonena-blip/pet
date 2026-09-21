@@ -132,7 +132,7 @@ export default function HistorialPage() {
         <ErrorState description={canonicalReadErrorMessage(sessionsError)} onRetry={retry} />
       ) : filtered.length === 0 ? (
         <Card className="p-8">
-          <EmptyState
+          <EmptyState illustration="durmiendo"
             icon={<History size={28} />}
             title={filter === 'all' ? 'No hay reservas en tu historial' : `No hay reservas ${filter === 'completed' ? 'completadas' : 'canceladas'}`}
             description="Tu historial se actualizará automáticamente"

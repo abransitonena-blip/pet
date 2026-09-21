@@ -103,7 +103,7 @@ export default function WalkerHistoryPage() {
 
       {filtered.length === 0 ? (
         <Card className="shadow-none">
-          <EmptyState
+          <EmptyState illustration="durmiendo"
             icon={<History size={21} />}
             title={filter === 'all' ? `Sin paseos en ${month.label}` : 'No hay resultados para este filtro'}
             description="Cambia de mes para ver otros."
