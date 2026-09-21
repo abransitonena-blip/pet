@@ -16,7 +16,7 @@ import { openWalkConversation } from '@/lib/chat'
 import { canonicalReadErrorMessage, useCustomerWalkSessions } from '@/lib/useCanonicalWalkSessions'
 import WalkerCard from '@/components/family/WalkerCard'
 import { daysAgo } from '@/lib/recentWindow'
-import { chatWindowNotice, chatWindowState } from '@/lib/chatWindow'
+import { chatWindowNotice, chatWindowState, pickChatWalk } from '@/lib/chatWindow'
 
 /**
  * Los mensajes de una familia van a quien lleva a su perro.
@@ -59,10 +59,9 @@ export default function FamilyMessagesPage() {
   const since = daysAgo(new Date().toLocaleDateString('en-CA'), 14)
   const { sessions, error, retry } = useCustomerWalkSessions(identity?.uid ?? '', { since })
 
-  const walk = useMemo(
-    () => sessions.find((session) => OPEN_STATUSES.has(session.status) && session.walkerId),
-    [sessions],
-  )
+  // La lista viene de la fecha más antigua a la más nueva: quedarse con el
+  // primero enseñaba un paseo viejo sin cerrar en lugar del de hoy.
+  const walk = useMemo(() => pickChatWalk(sessions, OPEN_STATUSES), [sessions])
 
   const open = useCallback(async () => {
     if (!identity || !walk?.walkerId) throw new Error('walk-conversation-incomplete')
@@ -106,7 +105,7 @@ export default function FamilyMessagesPage() {
         otherName="Tu paseador"
         title="Mensajes con tu paseador"
         description={`Sobre el paseo del ${walk.scheduledDate}. Pregúntale cómo va, avísale algo de tu perro o cuéntale un detalle de la entrada.`}
-        closedNotice={chatWindowNotice(windowState, walk.scheduledDate, walk.scheduledStart)}
+        closedNotice={chatWindowNotice(windowState, walk.scheduledDate, walk.scheduledStart, 'family')}
       />
     </div>
   )

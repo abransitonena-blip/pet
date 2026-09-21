@@ -1,3 +1,5 @@
+import { BRAND } from '@/lib/brand'
+
 /**
  * Cuándo está abierto el hilo de un paseo.
  *
@@ -38,13 +40,56 @@ export function chatWindowState(date: string, start: string, nowMs = Date.now())
   return 'open'
 }
 
-/** Qué decirle a quien no puede escribir todavía, o ya no. */
-export function chatWindowNotice(state: ChatWindowState, date: string, start: string): string {
+export type ChatAudience = 'family' | 'walker'
+
+/**
+ * Qué decirle a quien no puede escribir todavía, o ya no.
+ *
+ * A la familia no se le manda a "administración": ya no le escribe ahí. Si
+ * necesita algo fuera del horario del paseo, el canal es el WhatsApp del
+ * negocio. Al paseador sí: su hilo con administración sigue existiendo.
+ */
+export function chatWindowNotice(state: ChatWindowState, date: string, start: string, audience: ChatAudience = 'walker'): string {
+  if (state === 'open') return ''
+  const elsewhere = audience === 'family'
+    ? `escríbenos por WhatsApp al ${BRAND.displayPhone}`
+    : 'escríbele a administración'
   if (state === 'too-early') {
-    return `Este hilo se abre dos horas antes del paseo (${date} a las ${start}). Si necesitas algo antes, escríbele a administración.`
+    return `Este hilo se abre dos horas antes del paseo (${date} a las ${start}). Si necesitas algo antes, ${elsewhere}.`
   }
   if (state === 'closed') {
-    return 'Este paseo ya pasó y su hilo está cerrado. Puedes leer lo que se escribió; para algo nuevo, escríbele a administración.'
+    return `Este paseo ya pasó y su hilo está cerrado. Puedes leer lo que se escribió; para algo nuevo, ${elsewhere}.`
   }
-  return ''
+  // Sin una hora válida no se puede saber cuándo abre, y las reglas tampoco
+  // lo dejarían escribir: mejor decirlo que ofrecer un campo que va a fallar.
+  return 'Este paseo todavía no tiene una hora confirmada, así que su hilo aún no se abre.'
+}
+
+/**
+ * De todos los paseos con paseador, el que tiene sentido mostrar en el chat.
+ *
+ * La lista llega de la fecha más antigua a la más nueva, y quedarse con el
+ * primero enseñaba un paseo de hace dos semanas que nunca se cerró en vez del de
+ * hoy. Va primero el que está abierto ahora (el más cercano a su hora); si no
+ * hay, el próximo que se abrirá; si tampoco, el último que ya pasó; y al final
+ * los que no tienen hora válida.
+ */
+export function pickChatWalk<T extends { status: string; walkerId?: string; scheduledDate: string; scheduledStart: string }>(
+  walks: readonly T[],
+  openStatuses: ReadonlySet<string>,
+  nowMs = Date.now(),
+): T | null {
+  const rankOf = (walk: T): [number, number] => {
+    const startMs = walkStartMs(walk.scheduledDate, walk.scheduledStart)
+    switch (chatWindowState(walk.scheduledDate, walk.scheduledStart, nowMs)) {
+      case 'open': return [0, Math.abs((startMs ?? nowMs) - nowMs)]
+      case 'too-early': return [1, (startMs ?? nowMs) - nowMs]
+      case 'closed': return [2, nowMs - (startMs ?? nowMs)]
+      default: return [3, 0]
+    }
+  }
+  return walks
+    .filter((walk) => openStatuses.has(walk.status) && Boolean(walk.walkerId))
+    .map((walk) => ({ walk, rank: rankOf(walk) }))
+    .sort((a, b) => a.rank[0] - b.rank[0] || a.rank[1] - b.rank[1])[0]?.walk ?? null
 }

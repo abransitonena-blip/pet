@@ -1,6 +1,6 @@
 # Plan de rediseño de PET Ap
 
-Estado al 2026-09-19 (cuarta vuelta: del rediseño a lo que la app puede hacer). Cada fase se cierra por completo antes de abrir la
+Estado al 2026-09-21 (cuarta vuelta: del rediseño a lo que la app puede hacer). Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
 Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md); lo que puede
@@ -36,7 +36,7 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 21 | Que un paseo no se caiga en silencio | Guardia de la mañana: un solo aviso a quien opera con los paseos de hoy sin paseador y los de días pasados sin cerrar | `guardia` |
 | 22 | El paseador ve a dónde llegar | La ficha del paseo trae la dirección de recogida (calle, colonia, referencias, cómo entrar) y la abre en Google Maps. Sólo mientras el paseo sigue en pie: al completarse ya no viaja, y nunca viajan teléfono, nombre ni correo de la familia | `walker-walk-sheet` |
 | 23 | Estrellas al terminar el paseo | Como al bajar de un viaje: el inicio de la familia pregunta "¿Cómo estuvo el paseo de {perro} con {paseador}?" durante 3 días, sólo si hubo paseador y se puede decir "ahora no". Una calificación enviada esconde la tarjeta | `family-home` |
-| 24 | El chat es sólo con el paseador, y con horario | La familia ya no escribe a administración. El chat de un paseo se abre 2 horas antes y cierra 3 después; lo aplican las reglas de Firestore, no sólo la pantalla, y la pantalla dice por qué está cerrado | `chat-ventana`, emulador |
+| 24 | El chat es sólo con el paseador, y con horario | La familia ya no escribe a administración -- ni por el hilo de siempre ni abriendo uno nuevo --, y el hilo de un paseo se abre 2 horas antes y cierra 3 después. Las dos cosas las aplican las reglas, no sólo la pantalla. La hora sale de la sesión del paseo, no del hilo (que cualquiera de los dos podía editar para reabrirlo); si el paseo se mueve, el hilo lo sigue. La pantalla dice por qué está cerrado y manda a la familia al WhatsApp del negocio, no a "administración"; y elige el paseo de hoy, no el primero de una lista que viene de más viejo a más nuevo | `chat-ventana`, `chat-ventana-rules`, `chat-rules` (emulador) |
 | 25 | Los avisos explican su fallo y se ofrecen donde la gente está | La prueba de avisos ya no dice "0 enviados": distingue "no hay teléfonos registrados" de "FCM rechazó el envío" y dice el motivo. Y los tres inicios ofrecen activarlos una vez, porque el control vivía en pantallas a las que nadie entra | `avisos-al-telefono` |
 | 26 | Los paneles muestran lo que ya sabían | La familia ve la cara de su perro y el refuerzo que anotó y nunca volvía a ver; el Resumen dice quién está en la calle; el paseador ve su calificación donde trabaja. La espera lleva huellas y ningún hueco vacío queda sin ícono | `cuidados-perro`, `admin-resumen`, `walker-reviews`, `perritos-en-la-marca` |
 
@@ -133,6 +133,16 @@ no de una lista escrita de antemano.
 - **Un cambio de otra sesión puede romper mi verificación.** Con dos sesiones en
   el mismo repo, un `tsc` o un `jest` rojos pueden ser ajenos. Se verifica en un
   worktree limpio del commit, no en la carpeta compartida.
+- **Una regla que lee un campo que el propio usuario puede editar no limita
+  nada.** La ventana del chat comparaba la hora contra `scheduledStart` del hilo,
+  y el hilo lo puede escribir cualquiera de sus dos participantes: bastaba
+  reescribir esa línea para reabrirlo. La hora tiene que salir de un documento
+  que el usuario no escribe -- aquí, la sesión del paseo.
+- **Una pantalla que ya no ofrece algo no es una regla.** "La familia no le
+  escribe a administración" estaba cumplido en la interfaz y abierto en las
+  reglas; y una prueba mía lo daba por bueno (`un hilo que no es de un paseo no
+  tiene ventana` escribía como familia). Se encontró releyendo lo que se había
+  cerrado, no porque algo fallara.
 - **Una colección sin bloque de reglas no es un descuido menor.** `privacyRequests`
   caía al `catch-all: deny everything else` del final del archivo -- ni un error
   visible, ni un log, sólo un formulario que parecía funcionar y una solicitud

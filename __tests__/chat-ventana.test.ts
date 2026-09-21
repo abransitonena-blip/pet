@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { chatWindowNotice, chatWindowState, walkStartMs } from '../src/lib/chatWindow'
+import { chatWindowNotice, chatWindowState, pickChatWalk, walkStartMs } from '../src/lib/chatWindow'
 
 const read = (path: string) => readFileSync(path, 'utf8')
 
@@ -27,13 +27,24 @@ describe('la ventana del chat de un paseo', () => {
   it('con una fecha u hora que no lo son, no inventa una ventana', () => {
     expect(chatWindowState('mañana', START, WALK)).toBe('unknown')
     expect(chatWindowState(DATE, '25:99', WALK)).toBe('unknown')
-    expect(chatWindowNotice('unknown', DATE, START)).toBe('')
+    // No ofrece un campo que las reglas van a rechazar: lo dice.
+    expect(chatWindowNotice('unknown', DATE, START)).toContain('todavía no tiene una hora confirmada')
+    expect(chatWindowNotice('open', DATE, START)).toBe('')
   })
 
   it('dice por qué no se puede escribir, y a dónde ir', () => {
     expect(chatWindowNotice('too-early', DATE, START)).toContain('dos horas antes')
     expect(chatWindowNotice('too-early', DATE, START)).toContain('administración')
     expect(chatWindowNotice('closed', DATE, START)).toContain('Puedes leer lo que se escribió')
+  })
+
+  it('a la familia no la manda con administración: ya no le escribe ahí', () => {
+    for (const state of ['too-early', 'closed'] as const) {
+      const notice = chatWindowNotice(state, DATE, START, 'family')
+      expect(notice).not.toContain('administración')
+      expect(notice).toContain('WhatsApp')
+      expect(notice).toContain('+52 55 3823 1235')
+    }
   })
 })
 
@@ -49,14 +60,85 @@ describe('las dos pantallas la respetan', () => {
     expect(thread).toContain('role="status"')
   })
 
-  it('la conversación guarda la hora del paseo, que es de donde sale la ventana', () => {
-    expect(read('src/lib/chat.ts')).toContain('scheduledStart: walk.scheduledStart,')
-    expect(read('firestore.rules')).toContain('function walkChatOpen(conversation)')
+  it('la ventana sale de la sesión del paseo, no del hilo que cualquiera de los dos edita', () => {
+    const rules = read('firestore.rules')
+    expect(rules).toContain('function walkThreadWritable(convId, conversation)')
+    expect(rules).toContain('get(/databases/$(database)/documents/walkSessions/$(convId)).data')
+    // La versión con el hueco leía la hora del hilo.
+    expect(rules).not.toContain('function walkChatOpen(')
+    expect(rules).not.toContain('conversation.scheduledStart')
   })
 
-  it('el hilo con administración no tiene ventana: es a donde se va cuando el otro está cerrado', () => {
+  it('una familia no escribe a administración: sólo en el hilo de su paseo', () => {
     const rules = read('firestore.rules')
-    expect(rules).toContain("conversation.get('kind', '') != 'walk'")
-    expect(rules).toContain('|| isAdmin()')
+    expect(rules).toContain('function chatThreadWritable(convId, conversation)')
+    expect(rules).toContain(': !isCustomer();')
+    expect(rules).toContain('(isAdmin() || !isCustomer() || customerOwnsWalkThread(convId, request.resource.data))')
+    // Nadie que no sea administración le cambia el tipo a un hilo para sacarlo de su ventana.
+    expect(rules).toContain("request.resource.data.get('kind', '') == resource.data.get('kind', '')")
+  })
+
+  it('el paseador conserva su hilo con administración, sin ventana', () => {
+    expect(read('src/app/walker/chat/WalkerChatPanel.tsx')).toContain('title="Mensajes con administración"')
+  })
+
+  it('la familia recibe el aviso hecho para ella, no el del paseador', () => {
+    expect(read('src/app/familia/mensajes/FamiliaMensajesPanel.tsx')).toContain("walk.scheduledStart, 'family')")
+  })
+})
+
+/**
+ * El chat de la familia elegía el primer paseo abierto de una lista que viene de
+ * la fecha más antigua a la más nueva: con un paseo de hace dos semanas que
+ * nunca se cerró, enseñaba ese en lugar del de hoy.
+ */
+describe('qué paseo enseña el chat', () => {
+  const OPEN = new Set(['assigned', 'confirmed', 'in_progress'])
+  const NOW = Date.UTC(2026, 9, 2, 16, 0) // 2 de octubre, 10:00 en México
+  const walk = (id: string, date: string, start: string, status = 'assigned', walkerId = 'w1') =>
+    ({ id, status, walkerId, scheduledDate: date, scheduledStart: start })
+
+  it('el de hoy gana al viejo sin cerrar, aunque el viejo venga primero', () => {
+    const picked = pickChatWalk([
+      walk('viejo', '2026-09-18', '10:00'),
+      walk('hoy', '2026-10-02', '10:30'),
+    ], OPEN, NOW)
+    expect(picked?.id).toBe('hoy')
+  })
+
+  it('con dos abiertos, el más cercano a su hora', () => {
+    const picked = pickChatWalk([
+      walk('lejos', '2026-10-02', '12:00'),
+      walk('cerca', '2026-10-02', '10:10'),
+    ], OPEN, NOW)
+    expect(picked?.id).toBe('cerca')
+  })
+
+  it('sin ninguno abierto, el que se abrirá primero', () => {
+    const picked = pickChatWalk([
+      walk('pasado', '2026-10-05', '10:00'),
+      walk('manana', '2026-10-03', '10:00'),
+    ], OPEN, NOW)
+    expect(picked?.id).toBe('manana')
+  })
+
+  it('si todos ya pasaron, el más reciente: es el que se puede releer', () => {
+    const picked = pickChatWalk([
+      walk('hace-mes', '2026-09-02', '10:00'),
+      walk('hace-dias', '2026-09-28', '10:00'),
+    ], OPEN, NOW)
+    expect(picked?.id).toBe('hace-dias')
+  })
+
+  it('ignora lo que no tiene paseador o ya no está en pie, y deja al final lo que no tiene hora', () => {
+    expect(pickChatWalk([
+      walk('sin-paseador', '2026-10-02', '10:00', 'assigned', ''),
+      walk('terminado', '2026-10-02', '10:00', 'completed'),
+    ], OPEN, NOW)).toBeNull()
+    const picked = pickChatWalk([
+      walk('sin-hora', '2026-10-02', ''),
+      walk('con-hora', '2026-10-09', '10:00'),
+    ], OPEN, NOW)
+    expect(picked?.id).toBe('con-hora')
   })
 })

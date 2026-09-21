@@ -21,6 +21,12 @@ function dbFor(uid: string, role?: string): Firestore {
   return env.authenticatedContext(uid, role ? { role } : undefined).firestore() as unknown as Firestore
 }
 
+/** Fecha y hora del negocio (Ciudad de México, UTC-6) de este mismo instante. */
+function businessNow(): { date: string; start: string } {
+  const local = new Date(Date.now() - 6 * 60 * 60_000)
+  return { date: local.toISOString().slice(0, 10), start: local.toISOString().slice(11, 16) }
+}
+
 const message = (senderId: string, senderRole: string, text = 'Hola') => ({
   text, senderId, senderRole, timestamp: serverTimestamp(),
 })
@@ -50,6 +56,10 @@ beforeEach(async () => {
     })
     await setDoc(doc(db, 'walkerProfiles', 'paseador-1'), { status: 'active' })
     // El hilo de un paseo: la familia y el paseador de ese paseo, nadie más.
+    const now = businessNow()
+    await setDoc(doc(db, 'walkSessions', 'paseo-1'), {
+      customerId: 'familia-1', walkerId: 'paseador-1', scheduledDate: now.date, scheduledStart: now.start, status: 'in_progress',
+    })
     await setDoc(doc(db, 'conversations', 'paseo-1'), {
       participants: ['familia-1', 'paseador-1'], kind: 'walk', participantRole: 'walk',
       sessionId: 'paseo-1', customerId: 'familia-1', walkerId: 'paseador-1',
@@ -66,9 +76,9 @@ describe('la familia en su propio hilo', () => {
     await assertSucceeds(getDocs(collection(familia, 'conversations', 'familia-1', 'messages')))
   })
 
-  test('manda un mensaje', async () => {
+  test('ya no le escribe a administración: su canal es su paseador', async () => {
     const familia = dbFor('familia-1', 'customer')
-    await assertSucceeds(addDoc(collection(familia, 'conversations', 'familia-1', 'messages'), message('familia-1', 'customer')))
+    await assertFails(addDoc(collection(familia, 'conversations', 'familia-1', 'messages'), message('familia-1', 'customer')))
   })
 
   test('marca su hilo como leído', async () => {
@@ -121,20 +131,23 @@ describe('lo que nadie puede hacer', () => {
     await assertFails(addDoc(collection(intrusa, 'conversations', 'familia-1', 'messages'), message('familia-2', 'customer')))
   })
 
+  // Estas tres se prueban en el hilo del paseo, donde la familia SÍ puede
+  // escribir: en el de administración fallarían por otra razón y no dirían nada.
   test('nadie escribe a nombre de otro', async () => {
     const familia = dbFor('familia-1', 'customer')
-    await assertFails(addDoc(collection(familia, 'conversations', 'familia-1', 'messages'), message('otra-persona', 'customer')))
+    await assertSucceeds(addDoc(collection(familia, 'conversations', 'paseo-1', 'messages'), message('familia-1', 'customer')))
+    await assertFails(addDoc(collection(familia, 'conversations', 'paseo-1', 'messages'), message('otra-persona', 'customer')))
   })
 
   test('una familia no puede hacerse pasar por administración en su propio hilo', async () => {
     const familia = dbFor('familia-1', 'customer')
-    await assertFails(addDoc(collection(familia, 'conversations', 'familia-1', 'messages'), message('familia-1', 'admin')))
+    await assertFails(addDoc(collection(familia, 'conversations', 'paseo-1', 'messages'), message('familia-1', 'admin')))
   })
 
   test('un mensaje vacío o con campos de más no entra', async () => {
     const familia = dbFor('familia-1', 'customer')
-    await assertFails(addDoc(collection(familia, 'conversations', 'familia-1', 'messages'), message('familia-1', 'customer', '')))
-    await assertFails(addDoc(collection(familia, 'conversations', 'familia-1', 'messages'), {
+    await assertFails(addDoc(collection(familia, 'conversations', 'paseo-1', 'messages'), message('familia-1', 'customer', '')))
+    await assertFails(addDoc(collection(familia, 'conversations', 'paseo-1', 'messages'), {
       ...message('familia-1', 'customer'), unreadAdmin: 99,
     }))
   })

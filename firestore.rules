@@ -309,6 +309,16 @@ service cloud.firestore {
     // Fuera de eso no se escribe -- ni la familia ni el paseador --, que es lo
     // que el dueño pidió: el chat es para ese paseo, no un canal permanente.
     //
+    // La hora sale de la SESIÓN del paseo, no del hilo. El hilo lo puede editar
+    // cualquiera de sus dos participantes, y la primera versión leía la hora de
+    // ahí: bastaba reescribir `scheduledStart` para reabrirlo cuando se quisiera.
+    // La sesión, en cambio, sólo la escriben las reglas de arriba, y si el paseo
+    // se mueve, el hilo lo sigue sin tocarlo.
+    //
+    // Escribe sólo la familia o el paseador DE ESE PASEO, y sólo si el hilo los
+    // lleva a los dos: un hilo donde falta el paseador lo leería únicamente
+    // administración, y eso sería escribirle a administración por otra puerta.
+    //
     // La app guarda fecha y hora en la hora del negocio (Ciudad de México,
     // UTC-6 todo el año desde 2022) y `request.time` viene en UTC: por eso se
     // suman seis horas para comparar.
@@ -318,14 +328,33 @@ service cloud.firestore {
         + duration.value(int(clock[3:5]), 'm');
     }
 
-    function walkChatOpen(conversation) {
-      return conversation.get('kind', '') != 'walk'
-        || !(conversation.get('scheduledDate', '') is string)
-        || !(conversation.get('scheduledStart', '') is string)
-        || conversation.get('scheduledDate', '').size() != 10
-        || conversation.get('scheduledStart', '').size() != 5
-        || (request.time >= walkStartUtc(conversation.scheduledDate, conversation.scheduledStart) - duration.value(2, 'h')
-          && request.time <= walkStartUtc(conversation.scheduledDate, conversation.scheduledStart) + duration.value(3, 'h'));
+    function walkThreadWritable(convId, conversation) {
+      let session = get(/databases/$(database)/documents/walkSessions/$(convId)).data;
+      return session.get('walkerId', '') is string
+        && session.get('walkerId', '') != ''
+        && request.auth.uid in [session.customerId, session.walkerId]
+        && conversation.participants.hasAll([session.customerId, session.walkerId])
+        && validDateKey(session.get('scheduledDate', ''))
+        && validClock(session.get('scheduledStart', ''))
+        && request.time >= walkStartUtc(session.scheduledDate, session.scheduledStart) - duration.value(2, 'h')
+        && request.time <= walkStartUtc(session.scheduledDate, session.scheduledStart) + duration.value(3, 'h');
+    }
+
+    // Quién puede escribir en un hilo. Un hilo de paseo sigue la ventana de
+    // arriba. Cualquier otro es el de administración con un paseador o con el
+    // personal, y una FAMILIA no escribe ahí: le escribe a su paseador, no a
+    // administración. La pantalla ya no lo ofrece, pero una pantalla no es una
+    // regla. Administración no pasa por aquí: escribe siempre.
+    function chatThreadWritable(convId, conversation) {
+      return conversation.get('kind', '') == 'walk'
+        ? walkThreadWritable(convId, conversation)
+        : !isCustomer();
+    }
+
+    // Una familia sólo abre el hilo del paseo que es suyo.
+    function customerOwnsWalkThread(convId, data) {
+      return data.get('kind', '') == 'walk'
+        && get(/databases/$(database)/documents/walkSessions/$(convId)).data.customerId == request.auth.uid;
     }
 
     function validWalkerTransition(from, to) {
@@ -1467,10 +1496,15 @@ service cloud.firestore {
     match /conversations/{convId} {
       allow read: if isAuthenticated()
         && (isConversationParticipant() || isAdmin());
+      // Una familia sólo abre el hilo de su propio paseo -- no uno con
+      // administración --, y nadie que no sea administración le cambia el tipo
+      // a un hilo: quitarle `kind: 'walk'` lo sacaba de su ventana.
       allow create: if isActiveAccount()
-        && (request.auth.uid in request.resource.data.participants || isAdmin());
+        && (request.auth.uid in request.resource.data.participants || isAdmin())
+        && (isAdmin() || !isCustomer() || customerOwnsWalkThread(convId, request.resource.data));
       allow update: if isAuthenticated()
-        && (isConversationParticipant() || isAdmin());
+        && (isConversationParticipant() || isAdmin())
+        && (isAdmin() || request.resource.data.get('kind', '') == resource.data.get('kind', ''));
       allow delete: if false;
 
       // Dentro de messages, `resource` es el mensaje, no la conversación: los
@@ -1483,7 +1517,7 @@ service cloud.firestore {
         allow create: if (isParticipantOfConversation(convId) || isAdmin())
           && validChatMessage(request.resource.data)
           && (isAdmin()
-            || walkChatOpen(get(/databases/$(database)/documents/conversations/$(convId)).data));
+            || chatThreadWritable(convId, get(/databases/$(database)/documents/conversations/$(convId)).data));
         allow update, delete: if false;
       }
     }
