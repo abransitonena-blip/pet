@@ -1,6 +1,6 @@
 # Plan de rediseño de PET Ap
 
-Estado al 2026-09-21 (cuarta vuelta: del rediseño a lo que la app puede hacer). Cada fase se cierra por completo antes de abrir la
+Estado al 2026-09-22 (cuarta vuelta: del rediseño a lo que la app puede hacer). Cada fase se cierra por completo antes de abrir la
 siguiente, y cada una deja su prueba: si no hay prueba, la fase no está cerrada.
 
 Las reglas que rigen todo esto viven en [AGENTS.md](AGENTS.md); lo que puede
@@ -39,6 +39,9 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 24 | El chat es sólo con el paseador, y con horario | La familia ya no escribe a administración -- ni por el hilo de siempre ni abriendo uno nuevo --, y el hilo de un paseo se abre 2 horas antes y cierra 3 después. Las dos cosas las aplican las reglas, no sólo la pantalla. La hora sale de la sesión del paseo, no del hilo (que cualquiera de los dos podía editar para reabrirlo); si el paseo se mueve, el hilo lo sigue. La pantalla dice por qué está cerrado y manda a la familia al WhatsApp del negocio, no a "administración"; y elige el paseo de hoy, no el primero de una lista que viene de más viejo a más nuevo | `chat-ventana`, `chat-ventana-rules`, `chat-rules` (emulador) |
 | 25 | Los avisos explican su fallo y se ofrecen donde la gente está | La prueba de avisos ya no dice "0 enviados": distingue "no hay teléfonos registrados" de "FCM rechazó el envío" y dice el motivo. Y los tres inicios ofrecen activarlos una vez, porque el control vivía en pantallas a las que nadie entra | `avisos-al-telefono` |
 | 26 | Los paneles muestran lo que ya sabían | La familia ve la cara de su perro y el refuerzo que anotó y nunca volvía a ver; el Resumen dice quién está en la calle; el paseador ve su calificación donde trabaja. La espera lleva huellas y ningún hueco vacío queda sin ícono | `cuidados-perro`, `admin-resumen`, `walker-reviews`, `perritos-en-la-marca` |
+| 27 | Guía para instalarla en el iPhone | En iPhone una pestaña de Safari no puede recibir avisos, sólo la app en la pantalla de inicio (iOS 16.4+). La franja del inicio detecta el iPhone sin instalar y enseña los tres pasos; en otro navegador de iPhone manda a Safari | `guia-iphone` |
+| 28 | Un paseo reasignado | El paseador nuevo no podía abrir el hilo (para refrescar la lista de participantes había que ya estar en ella) y el anterior seguía leyéndolo. Ahora en un hilo de paseo quien es parte lo dice la sesión | `chat-reasignado-rules` (emulador) |
+| 29 | Sin callejón en el chat | Fuera el botón de chat a familias (creaba un hilo que no podían leer); el hilo viejo queda de consulta con WhatsApp y lo que administración ya escribió se conserva. De paso: cada mensaje de un paseo subía el "sin leer" de administración | `chat-sin-callejon` |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -55,19 +58,51 @@ Resumen leía 100 perfiles de familia para un conteo que no mostraba.
 
 ## Abiertas, en orden
 
-El rediseño (fases 0-16) está cerrado. Lo que sigue ya no es cómo se ve la app,
-sino qué puede hacer. El criterio para elegir: **cuánto trabajo manual le quita
-al negocio, o cuánta preocupación le quita a una familia.**
+El rediseño (fases 0-16) está cerrado, y con él lo que la app hace hoy por una
+familia, un paseador y quien opera. Lo que sigue es lo que el dueño pidió el
+2026-09-21 y 22. El criterio de orden: **primero lo que se puede probar y
+publicar sin decisiones de fuera, luego lo que cambia quién puede hacer qué, y
+al final lo que toca todo el código.**
 
-Ninguna. Lo que quedó pendiente no es código: está en
-[CRITICO.md](CRITICO.md) -- comprobar en producción lo que ya se corrigió, y las
-tres cosas que sólo el dueño puede destrabar (la cuenta de Apple, el precio del
-plan de adiestramiento y `CRON_SECRET` en Vercel).
+| # | Fase | Qué es | Notas |
+|---|---|---|---|
+| 30 | El recorrido completo, con sesiones simuladas | Una prueba de reglas que camina el paseo entero como lo haría cada rol: la familia pide, administración asigna, el paseador avanza y termina, la familia califica y escribe | Es lo que habría cazado el fallo de producción de los paneles |
+| 31 | Perritos propios | Ilustraciones de perros para huecos vacíos, bienvenida e inicio | Hoy hay huellas y la marca teñida por raza |
+| 32 | El refuerzo, al teléfono | El recordatorio de vacuna que hoy sólo se ve en la app, también como aviso, con la fecha que la familia anotó | Reutiliza la tarea de las 19:00 |
+| 33 | Meses de más de 100 paseos | Cargar más dentro de un mes, en vez de sólo avisar que no cabe | Límite conocido de `CRITICO.md` §4 |
+| 34 | Aviso al teléfono cuando alguien sale de la zona | Hoy la alerta sólo se guarda y sale en un cartel DENTRO del panel de administración: si nadie lo tiene abierto, nadie se entera | Va primero porque es lo que el dueño ya pidió y hoy no ocurre |
+| 35 | "Área recomendada" y el orden del aviso | Las zonas se dicen "área recomendada", no frontera. Salirse alerta primero a administración, que marca si fue un percance; sólo entonces se avisa a la familia | Supuesto: la familia se entera cuando administración lo marca, no sola tras un tiempo -- así un GPS impreciso no asusta a nadie |
+| 36 | Recorrido compatible con Google Maps y ubicación compartida por un tiempo | Abrir el recorrido en Google Maps, y un enlace que muestra dónde va el paseo durante un tiempo y luego caduca | Ver "Lo que hay que saber" abajo |
+| 37 | Administrador de zona | Un rol nuevo con su panel: se le asigna un estado y desde ahí delega, entrega suministros a los paseadores, ve reportes y tickets. Sin quitarle el control al administrador general, que sigue siendo global | Cambia quién puede leer qué: reglas por zona |
+| 38 | Internacional | La web en más idiomas y sin dar por hecho México: zona horaria, moneda, teléfono, dirección | Toca casi todo el código: ver abajo |
 
-Lo siguiente que merezca una fase saldrá de ahí: de lo que falle en la calle,
-no de una lista escrita de antemano.
+**Lo que hay que saber antes de las fases 34 a 38**
 
----
+- **Ya existe** el envío de la posición cada ~2 minutos mientras el paseo está
+  en curso (`WalkTracker` → `/api/tracking/point`), la alerta de salida de zona
+  (`geofenceAlerts`, con su cartel y su panel de Rutas), y el mapa en vivo de la
+  familia. Lo nuevo es lo que se hace con esa alerta y con quién se comparte.
+- **Google Maps como mapa embebido necesita una cuenta de facturación** de
+  Google Cloud, y el proyecto no tiene ni puede tener una (`AGENTS.md`: nada que
+  pida RFC ni cobre). Por eso "compatible con Google Maps" se cumple con
+  enlaces -- abrir el recorrido y la ruta en la app de Google Maps, que no piden
+  llave ni cuenta --, no con su mapa incrustado. El mapa de la app sigue siendo
+  Leaflet.
+- **Compartir ubicación por un tiempo es un dato personal que sale de la
+  cuenta.** Un enlace con caducidad debe poder revocarse, no listar a nadie, y
+  decirle al paseador que su ubicación se comparte. El texto del aviso de
+  privacidad que lo cubra **REQUIERE VALIDACIÓN DE ABOGADO EN MÉXICO**, y en
+  cada país donde se opere, cuando esa fase llegue.
+- **El administrador de zona no cabe en las reglas de hoy.** Los claims son
+  `customer`, `walker`, `supervisor` y `admin`, y las reglas no conocen zonas:
+  para que un administrador de zona lea sólo lo suyo, cada paseo, paseador y
+  familia tiene que llevar su zona. Es una migración de datos, y va con
+  respaldo previo.
+- **Internacional toca más de lo que parece.** La hora del negocio (UTC-6) está
+  escrita dentro de las reglas de Firestore y de `chatWindow.ts`; hay 56
+  archivos con moneda, zona horaria o fechas de México. Traducir los textos es
+  la parte fácil. Nada de esto se publica como "internacional" mientras el
+  aviso de privacidad y los términos no tengan validación por país.
 
 ## Lo que aprendimos, y conviene recordar
 
