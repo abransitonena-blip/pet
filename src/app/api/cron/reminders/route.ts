@@ -4,6 +4,8 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { notifyUser } from '@/lib/push/pushServer'
 import { buildReminders, reminderMarker, tomorrowKey, type ReminderSession } from '@/lib/reminders'
 import { authorizeCronCall, isDryRun } from '@/lib/cronAuth'
+import { runVaccineReminders, type VaccineRunResult } from '@/lib/vaccineRemindersServer'
+import { dateInTimezone } from '@/lib/bookingSchedule'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,6 +31,10 @@ const MAX_SESSIONS = 200
  * familia y, si ya tiene paseador, otro al paseador. Cada aviso deja su marca
  * en `pushEvents` con create(), que falla si ya existe, así que una segunda
  * corrida del mismo día no vuelve a avisar.
+ *
+ * En la misma corrida sale también el aviso de refuerzo de vacuna, a quien anotó
+ * la fecha: una semana antes y el día mismo (ver `vaccineReminders.ts`). Va aparte
+ * de lo anterior: si falla, los recordatorios de paseo ya salieron.
  */
 export async function GET(request: Request) {
   const caller = await authorizeCronCall(request)
@@ -72,9 +78,21 @@ export async function GET(request: Request) {
     let sent = 0
     let repeated = 0
 
+    // Los refuerzos de vacuna van en la misma tarea, pero aparte: si su lectura
+    // falla, los avisos de los paseos de mañana ya no dependen de ella.
+    const vaccines = async (): Promise<VaccineRunResult | null> => {
+      try {
+        return await runVaccineReminders(firestore, dateInTimezone(Date.now()), dryRun)
+      } catch (error) {
+        console.error('cron/reminders vaccines failed:', error instanceof Error ? error.message : String(error))
+        return null
+      }
+    }
+
     if (dryRun) {
       return NextResponse.json({
         code: 'ok', dryRun: true, forDate: tomorrow, walks: sessions.length, reminders: reminders.length, sent: 0, repeated: 0,
+        vaccines: await vaccines(),
       }, { headers: noStore })
     }
 
@@ -108,6 +126,7 @@ export async function GET(request: Request) {
       reminders: reminders.length,
       sent,
       repeated,
+      vaccines: await vaccines(),
     }, { headers: noStore })
   } catch (error) {
     console.error('cron/reminders failed:', error instanceof Error ? error.message : String(error))

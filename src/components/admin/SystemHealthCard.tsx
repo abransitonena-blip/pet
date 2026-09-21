@@ -69,7 +69,15 @@ export default function SystemHealthCard() {
           ? 'El servidor no tiene la identidad para leer los paseos. Esto sólo funciona en producción.'
           : 'No pudimos hacer la prueba.')
       } else if (task === 'reminders') {
-        setMessage(`Mañana saldrían ${data?.reminders ?? 0} recordatorio(s), de ${data?.walks ?? 0} paseo(s) agendados para el ${data?.forDate}.`)
+        // Los refuerzos de vacuna van en la misma tarea; si su lectura falló,
+        // viene null y se dice, en vez de dar un cero que parece "nada que avisar".
+        const vaccines = data?.vaccines as { reminders?: number; scanned?: number; capped?: boolean } | null | undefined
+        const vaccineText = vaccines === null
+          ? ' No pudimos revisar los refuerzos de vacuna.'
+          : vaccines
+            ? ` Hoy saldrían ${vaccines.reminders ?? 0} aviso(s) de refuerzo, de ${vaccines.scanned ?? 0} perro(s) revisados${vaccines.capped ? ' (hay más perros de los que se revisan)' : ''}.`
+            : ''
+        setMessage(`Mañana saldrían ${data?.reminders ?? 0} recordatorio(s), de ${data?.walks ?? 0} paseo(s) agendados para el ${data?.forDate}.${vaccineText}`)
       } else {
         setMessage(String(data?.message || 'Hoy no hay nada que reportar: ningún paseo sin paseador ni sin cerrar.'))
       }

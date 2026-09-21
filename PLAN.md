@@ -44,6 +44,7 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 29 | Sin callejón en el chat | Fuera el botón de chat a familias (creaba un hilo que no podían leer); el hilo viejo queda de consulta con WhatsApp y lo que administración ya escribió se conserva. De paso: cada mensaje de un paseo subía el "sin leer" de administración | `chat-sin-callejon` |
 | 30 | El recorrido completo | La familia pide, administración asigna, el paseador avanza y termina, la familia califica y se escriben, se mueve y se cancela: con las funciones REALES de la app (`submitReservation`, `assignCanonicalWalkSession`, `advanceWalkerSession`, el chat, la cancelación) contra las reglas reales, no con datos copiados a mano. La reseña se arma ya con `buildWalkerReview`, compartido por la pantalla y la prueba | `recorrido-completo` (emulador) |
 | 31 | Perritos propios | Cinco dibujos de PET Ap -- sentado, caminando con correa, durmiendo, asomándose, olfateando -- que sustituyen al ícono en 16 huecos vacíos, cada uno con una postura que dice algo: duerme cuando no hay nada pendiente, se asoma cuando no hay con quién hablar, olfatea cuando la búsqueda no encuentra. Toman el color de marca del negocio; los rasgos de la cara son fijos y sólo lo que va sobre la página sigue al tema | `perritos-propios` |
+| 32 | El refuerzo, al teléfono | En la tarea de las 19:00, un aviso a quien anotó la fecha de refuerzo de su perro: una semana antes y el día mismo, sin repetir (cada aviso deja su marca) y sin nombrar la vacuna, porque sale en la pantalla bloqueada. Sólo avisa fechas que la familia escribió y que existen en el calendario; sin fecha, no hay aviso. Lee los perros por páginas con tope (1 500) y dice si se alcanzó; si falla, los recordatorios de paseo ya salieron. "Ver qué saldría" cuenta también estos | `refuerzo-al-telefono` |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -68,7 +69,6 @@ al final lo que toca todo el código.**
 
 | # | Fase | Qué es | Notas |
 |---|---|---|---|
-| 32 | El refuerzo, al teléfono | El recordatorio de vacuna que hoy sólo se ve en la app, también como aviso, con la fecha que la familia anotó | Reutiliza la tarea de las 19:00 |
 | 33 | Meses de más de 100 paseos | Cargar más dentro de un mes, en vez de sólo avisar que no cabe | Límite conocido de `CRITICO.md` §4 |
 | 34 | Aviso al teléfono cuando alguien sale de la zona | Hoy la alerta sólo se guarda y sale en un cartel DENTRO del panel de administración: si nadie lo tiene abierto, nadie se entera | Va primero porque es lo que el dueño ya pidió y hoy no ocurre |
 | 35 | "Área recomendada" y el orden del aviso | Las zonas se dicen "área recomendada", no frontera. Salirse alerta primero a administración, que marca si fue un percance; sólo entonces se avisa a la familia | Supuesto: la familia se entera cuando administración lo marca, no sola tras un tiempo -- así un GPS impreciso no asusta a nadie |
