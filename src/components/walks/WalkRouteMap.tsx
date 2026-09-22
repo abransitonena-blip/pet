@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapPinned } from 'lucide-react'
+import { MapPinned, Navigation } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import ZoneMap, { type MapPoint } from '@/components/map/ZoneMap'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
-import { summarizeWalkPath } from '@/lib/walkPath'
+import { googleMapsRouteUrl, summarizeWalkPath } from '@/lib/walkPath'
 
 /**
  * Por dónde caminó su perro.
@@ -122,6 +122,19 @@ export default function WalkRouteMap({ sessionId, refreshEveryMs, live = false }
             {summary.label}. Verde: dónde empezó · negro: dónde terminó.
             {route.path.length > 1 && ' La línea une las lecturas del teléfono, una cada ~2 minutos.'}
           </p>
+          {(() => {
+            const mapsUrl = googleMapsRouteUrl(route.path)
+            return mapsUrl && (
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <Navigation size={13} aria-hidden="true" /> Abrir en Google Maps
+              </a>
+            )
+          })()}
           {live && (
             <p className="mt-1 text-xs text-muted" aria-live="polite">
               {lastReadingAt === null

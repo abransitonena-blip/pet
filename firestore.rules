@@ -1269,6 +1269,17 @@ service cloud.firestore {
       }
     }
 
+    // Enlace temporal para ver un paseo sin cuenta (fase 36, apagado por
+    // LOCATION_SHARE_LINKS_ENABLED). El documento se identifica por el token
+    // -- no por el id del paseo -- y ese token es el único secreto: no hay
+    // forma de escribir una regla que lo compare contra "lo que alguien
+    // trae", así que se cierra por completo, igual que walkTracks. Sólo
+    // /api/tracking/share/* (identidad privilegiada) crea, revoca y sirve la
+    // vista pública.
+    match /walkShareLinks/{token} {
+      allow read, write: if false;
+    }
+
     // La calificación que una familia le deja a su paseador.
     //
     // El documento se identifica con el id del paseo, así que sólo puede existir

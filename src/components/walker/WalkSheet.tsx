@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { AlertTriangle, MapPinned, Navigation, Pill, Stethoscope, Syringe } from 'lucide-react'
+import { AlertTriangle, MapPinned, Navigation, Pill, Share2, Stethoscope, Syringe } from 'lucide-react'
 import { VACCINE_STATUS_LABELS, type VaccineStatus } from '@/lib/dogHealth'
 import DogAvatar from '@/components/dogs/DogAvatar'
 import { ZONE_SPOT_LABELS } from '@/lib/zoneMatching'
@@ -39,6 +39,8 @@ interface WalkSheetData {
   zone: { name: string; spots: ZoneSpot[] } | null
   /** A dónde llegar por el perro. Sólo mientras el paseo sigue en pie. */
   pickup: { line: string; references: string; instructions: string; query: string } | null
+  /** Alguien está viendo este paseo por un enlace temporal (fase 36). */
+  locationShared: boolean
 }
 
 const ENERGY_LABELS: Record<string, string> = { bajo: 'Tranquilo', medio: 'Activo', alto: 'Muy activo' }
@@ -65,12 +67,18 @@ export default function WalkSheet({ sessionId, today }: { sessionId: string; tod
         dogs?: DogSheet[]
         zone?: WalkSheetData['zone']
         pickup?: WalkSheetData['pickup']
+        locationShared?: boolean
       }
       if (!response.ok) {
         setState(result.code === 'privileged-identity-not-configured' ? 'unavailable' : 'error')
         return
       }
-      setData({ dogs: result.dogs ?? [], zone: result.zone ?? null, pickup: result.pickup ?? null })
+      setData({
+        dogs: result.dogs ?? [],
+        zone: result.zone ?? null,
+        pickup: result.pickup ?? null,
+        locationShared: result.locationShared === true,
+      })
       setState('ready')
     } catch {
       setState('error')
@@ -100,6 +108,12 @@ export default function WalkSheet({ sessionId, today }: { sessionId: string; tod
 
   return (
     <div className="space-y-3">
+      {data.locationShared && (
+        <p className="flex items-start gap-2 rounded-lg bg-primary/10 px-2 py-1.5 text-xs text-primary">
+          <Share2 size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+          La familia está compartiendo la ubicación de este paseo por un enlace temporal.
+        </p>
+      )}
       {data.dogs.map((dog, index) => {
         const facts = [
           dog.breed,

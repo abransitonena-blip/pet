@@ -4,7 +4,7 @@ Lo que puede romper la operación o hacerle perder dinero al negocio, y lo que
 nadie más que el dueño puede destrabar. El plan completo de mejoras vive en
 [PLAN.md](PLAN.md); las reglas de trabajo, en [AGENTS.md](AGENTS.md).
 
-Estado al 2026-09-21.
+Estado al 2026-09-22.
 
 ---
 
@@ -87,6 +87,7 @@ función en Vercel filtrando por `walker-photo`.
 | Precio de Paseo + Adiestramiento | El servicio está ofrecido y sin tarifa | Una familia puede pedirlo y el paseo no tiene precio verificable: no entra en Finanzas |
 | `CRON_SECRET` en Vercel (Production) y volver a publicar | El recordatorio (19:00 hora de México) y la guardia (08:00) los dispara la tarea programada de Vercel, y sin ese secreto la ruta responde 403 a todo el mundo, incluida la tarea. Ver qué saldría se puede probar hoy desde Estado del sistema, sin el secreto | Nadie recibe el recordatorio de su paseo de mañana ni el aviso de paseos sin paseador |
 | Confirmar que aparece la tarjeta de notificaciones push | Las notificaciones al teléfono dependen de la llave VAPID | Las familias no reciben avisos de su paseo |
+| Aviso de privacidad para el enlace de ubicación (fase 36), validado por abogado en México | Compartir la ubicación de alguien con un tercero es un dato personal que sale de la cuenta. Creación, revocación y vista pública del enlace ya están construidas y probadas detrás de `LOCATION_SHARE_LINKS_ENABLED` en `src/lib/featureFlags.ts` | El flag se queda en `false`: ninguna familia ve el botón de compartir. (El enlace "Abrir en Google Maps" de un recorrido es aparte, no depende de esto, y ya está encendido para todos) |
 
 ---
 

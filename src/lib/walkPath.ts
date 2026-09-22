@@ -48,3 +48,43 @@ export function summarizeWalkPath(points: readonly WalkPathPoint[]): WalkPathSum
   if (outsideCount > 0) parts.push(`${outsideCount} fuera del área`)
   return { readings: points.length, distanceMeters: meters, outsideCount, label: parts.join(' · ') }
 }
+
+/**
+ * Un enlace a Google Maps para el mismo recorrido que ya se dibuja en Leaflet.
+ *
+ * Google Maps no es el mapa de la app -- lo sigue siendo Leaflet, sin llave ni
+ * cuenta de facturación -- pero abrirlo ahí sirve para llegar por calles reales,
+ * comparar con tráfico o vista satelital. Con dos lecturas o más se pide como
+ * ruta a pie; el origen y el destino son la primera y la última, y de en medio
+ * se muestrea una tajada pareja: Google no acepta una parada por cada lectura
+ * de un paseo largo.
+ */
+const MAX_INTERMEDIATE_WAYPOINTS = 23 // + origen + destino = 25, el tope documentado de Google
+
+function sampleEvenly<T>(items: readonly T[], max: number): T[] {
+  if (items.length <= max || max <= 0) return [...items]
+  const step = items.length / max
+  return Array.from({ length: max }, (_, index) => items[Math.floor(index * step)])
+}
+
+export function googleMapsRouteUrl(path: readonly LatLng[]): string | null {
+  if (path.length === 0) return null
+  if (path.length === 1) {
+    return `https://www.google.com/maps/search/?api=1&query=${path[0].lat},${path[0].lng}`
+  }
+
+  const origin = path[0]
+  const destination = path[path.length - 1]
+  const waypoints = sampleEvenly(path.slice(1, -1), MAX_INTERMEDIATE_WAYPOINTS)
+
+  const params = new URLSearchParams({
+    api: '1',
+    origin: `${origin.lat},${origin.lng}`,
+    destination: `${destination.lat},${destination.lng}`,
+    travelmode: 'walking',
+  })
+  if (waypoints.length > 0) {
+    params.set('waypoints', waypoints.map((point) => `${point.lat},${point.lng}`).join('|'))
+  }
+  return `https://www.google.com/maps/dir/?${params.toString()}`
+}

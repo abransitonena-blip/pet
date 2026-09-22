@@ -7,6 +7,9 @@ import { isDogPhotoReference } from '@/lib/dogPhotos'
 import { createPrivateDownloadUrl } from '@/lib/media/privateMediaAdmin.server'
 import type { ZoneSpot } from '@/types'
 import { dateInTimezone } from '@/lib/bookingSchedule'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { isShareLinkActive } from '@/lib/locationShare'
+import type { Firestore } from '@google-cloud/firestore'
 
 export const runtime = 'nodejs'
 
@@ -161,6 +164,24 @@ function pickupFrom(address: Record<string, unknown>): PickupAddress | null {
   }
 }
 
+/**
+ * Si alguien está viendo este paseo por un enlace temporal (fase 36). El
+ * paseador tiene derecho a saberlo -- se le dice sin regañarlo, igual que una
+ * salida del área recomendada -- así que se busca aunque sean pocos
+ * documentos: un paseo no debería acumular más que un puñado de enlaces.
+ */
+async function locationSharedFor(firestore: Firestore, sessionId: string): Promise<boolean> {
+  if (!FEATURE_FLAGS.LOCATION_SHARE_LINKS_ENABLED) return false
+  const shares = await firestore.collection('walkShareLinks').where('sessionId', '==', sessionId).limit(10).get()
+  const now = Date.now()
+  return shares.docs.some((item) => {
+    const data = item.data()
+    const expiresAtMs = typeof data.expiresAt?.toMillis === 'function' ? data.expiresAt.toMillis() : 0
+    const revokedAtMs = data.revokedAt && typeof data.revokedAt.toMillis === 'function' ? data.revokedAt.toMillis() : null
+    return isShareLinkActive({ revokedAtMs, expiresAtMs }, now)
+  })
+}
+
 function spotsFrom(value: unknown): ZoneSpot[] {
   if (!Array.isArray(value)) return []
   return value
@@ -240,8 +261,9 @@ export async function POST(request: Request) {
     const pickup = address && String(session.status) !== 'completed'
       ? pickupFrom(address)
       : null
+    const locationShared = await locationSharedFor(firestore, sessionId)
 
-    return NextResponse.json({ code: 'ok', dogs, zone, pickup }, { headers: noStore })
+    return NextResponse.json({ code: 'ok', dogs, zone, pickup, locationShared }, { headers: noStore })
   } catch (error) {
     console.error('walker/walk-sheet failed:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({ code: 'walk-sheet-failed' }, { status: 500, headers: noStore })

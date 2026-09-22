@@ -48,6 +48,7 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 33 | Meses de más de 100 paseos | Un mes que no cabe en una consulta sigue en las que hagan falta, cada una con su cursor, hasta 500 paseos: el historial de la familia, el del paseador y "Mi trabajo" los muestran completos y esperan el resto antes de contar. Sin índices nuevos: sigue en orden ascendente, porque un orden descendente necesita un índice que hoy no existe y, si falta, la pantalla queda vacía. Un solo constructor de consultas sirve a la primera página y a las siguientes. El aviso de "no cupo" sólo sale pasando de 500 o si falló la lectura del resto | `meses-largos`, `meses-largos-rules` (emulador, 230 paseos contra las reglas reales) |
 | 34 | Aviso al teléfono cuando alguien sale del área | La alerta de salida sólo se guardaba y salía en un cartel DENTRO del panel de administración; ahora también llega como aviso al teléfono de quien opera (administración y supervisión, por su rol). No con cada lectura -- el teléfono manda su posición cada ~2 minutos --: la primera vez, cuando se reabre una alerta ya marcada, y como recordatorio cada media hora si nadie la atiende. Sin coordenadas en el texto, porque sale en la pantalla bloqueada. Estado del sistema avisa de las zonas activas sin centro o radio, que no pueden alertar y no lo dicen | `geocerca-al-telefono`, `estado-del-sistema` |
 | 35 | "Área recomendada" y el orden del aviso | La salida se alerta primero a administración, y sólo ella decide si la familia se entera: "Todo en orden", o "Avisar a la familia" con un texto que ve y puede editar. El aviso sale del servidor, una sola vez por alerta (se reserva antes de mandarlo y se suelta si no se pudo entregar), llega al panel y al teléfono de esa familia, y dice a administración si el teléfono no sonó. **Encontrado al hacerlo:** el mapa de la familia recibía la marca "fuera" de cada punto en vivo, antes de que nadie la juzgara; ahora el servidor se la oculta hasta que administración decide avisarle. Todo texto dice "área recomendada", no frontera; y al paseador se le dice sin regañarlo | `escalamiento-a-la-familia` (rutas ejecutadas con un Firestore de mentira) |
+| 36 | Recorrido en Google Maps, y ubicación compartida por un tiempo | Todo recorrido (admin en Rutas; familia y paseador en su mapa en vivo o su historial) tiene un enlace "Abrir en Google Maps" que arma una ruta a pie real -- origen, destino y hasta 23 paradas de en medio muestreadas parejo, porque Maps no acepta una parada por cada lectura de un paseo largo --; sin mapa incrustado, que seguiría pidiendo una cuenta de facturación de Google Cloud que el proyecto no tiene. El mapa de la app sigue siendo Leaflet. Enlace temporal de ubicación: la familia lo crea desde su paseo en vivo (15 minutos a 3 horas), quien lo abre lo ve sin cuenta y sin la marca de "fuera del área" -- eso sigue siendo sólo entre la familia y administración --, se revoca cuando quieran y caduca solo; el paseador ve que se está compartiendo, igual que con una salida de zona, sin que nadie se lo oculte. **Encontrado al hacerlo:** compartir la ubicación de alguien con un tercero es un dato personal que sale de la cuenta, y el aviso que lo cubra es una decisión legal, no técnica (REQUIERE VALIDACIÓN DE ABOGADO EN MÉXICO, como ya advertía TRACKING_POLICY.md para el rastreo mismo) -- así que la creación, la revocación y la vista pública del enlace están construidas y probadas de punta a punta, pero apagadas detrás de `LOCATION_SHARE_LINKS_ENABLED` hasta que ese aviso exista y el dueño decida encenderlo. El botón de Google Maps no depende de ese flag: no comparte con nadie nada que quien lo abre no pudiera ver ya | `walk-path`, `location-share`, `walk-share-rules` (emulador) |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -72,27 +73,11 @@ al final lo que toca todo el código.**
 
 | # | Fase | Qué es | Notas |
 |---|---|---|---|
-| 36 | Recorrido compatible con Google Maps y ubicación compartida por un tiempo | Abrir el recorrido en Google Maps, y un enlace que muestra dónde va el paseo durante un tiempo y luego caduca | Ver "Lo que hay que saber" abajo |
 | 37 | Administrador de zona | Un rol nuevo con su panel: se le asigna un estado y desde ahí delega, entrega suministros a los paseadores, ve reportes y tickets. Sin quitarle el control al administrador general, que sigue siendo global | Cambia quién puede leer qué: reglas por zona |
 | 38 | Internacional | La web en más idiomas y sin dar por hecho México: zona horaria, moneda, teléfono, dirección | Toca casi todo el código: ver abajo |
 
-**Lo que hay que saber antes de las fases 34 a 38**
+**Lo que hay que saber antes de las fases 37 y 38**
 
-- **Ya existe** el envío de la posición cada ~2 minutos mientras el paseo está
-  en curso (`WalkTracker` → `/api/tracking/point`), la alerta de salida de zona
-  (`geofenceAlerts`, con su cartel y su panel de Rutas), y el mapa en vivo de la
-  familia. Lo nuevo es lo que se hace con esa alerta y con quién se comparte.
-- **Google Maps como mapa embebido necesita una cuenta de facturación** de
-  Google Cloud, y el proyecto no tiene ni puede tener una (`AGENTS.md`: nada que
-  pida RFC ni cobre). Por eso "compatible con Google Maps" se cumple con
-  enlaces -- abrir el recorrido y la ruta en la app de Google Maps, que no piden
-  llave ni cuenta --, no con su mapa incrustado. El mapa de la app sigue siendo
-  Leaflet.
-- **Compartir ubicación por un tiempo es un dato personal que sale de la
-  cuenta.** Un enlace con caducidad debe poder revocarse, no listar a nadie, y
-  decirle al paseador que su ubicación se comparte. El texto del aviso de
-  privacidad que lo cubra **REQUIERE VALIDACIÓN DE ABOGADO EN MÉXICO**, y en
-  cada país donde se opere, cuando esa fase llegue.
 - **El administrador de zona no cabe en las reglas de hoy.** Los claims son
   `customer`, `walker`, `supervisor` y `admin`, y las reglas no conocen zonas:
   para que un administrador de zona lea sólo lo suyo, cada paseo, paseador y
@@ -184,3 +169,9 @@ al final lo que toca todo el código.**
   visible, ni un log, sólo un formulario que parecía funcionar y una solicitud
   ARCO que nunca se guardaba. La prueba de la fase 13 la encontró; nadie la
   había reportado como rota.
+- **Un módulo compartido hereda el entorno más débil de quien lo importa.** El
+  token del enlace de ubicación (fase 36) iba a salir de `randomBytes` de
+  Node, hasta notar que un componente de cliente también importa ese archivo
+  para leer una constante: `node:crypto` no existe en el navegador y hubiera
+  roto el build al primer `import`. Web Crypto (`crypto.getRandomValues`),
+  la misma API que ya usaba la placa de emergencia, corre en los dos lados.

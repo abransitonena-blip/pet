@@ -1,4 +1,4 @@
-import { PATH_NOISE_METERS, formatWalkDistance, pathDistanceMeters, summarizeWalkPath } from '@/lib/walkPath'
+import { PATH_NOISE_METERS, formatWalkDistance, googleMapsRouteUrl, pathDistanceMeters, summarizeWalkPath } from '@/lib/walkPath'
 
 // Un grado de latitud son ~111 km, así que 0.001 son ~111 m: suficiente para
 // comprobar que se suman tramos y no se inventan.
@@ -54,5 +54,38 @@ describe('summarizeWalkPath', () => {
 
   it('no menciona salidas cuando el paseo se mantuvo dentro', () => {
     expect(summarizeWalkPath([A, B]).label).not.toContain('fuera del área')
+  })
+})
+
+describe('googleMapsRouteUrl', () => {
+  it('sin lecturas no hay enlace', () => {
+    expect(googleMapsRouteUrl([])).toBeNull()
+  })
+
+  it('con una sola lectura busca el punto', () => {
+    expect(googleMapsRouteUrl([A])).toBe(`https://www.google.com/maps/search/?api=1&query=${A.lat},${A.lng}`)
+  })
+
+  it('con dos o más pide una ruta a pie de origen a destino', () => {
+    const url = googleMapsRouteUrl([A, B, C])
+    expect(url).toContain('https://www.google.com/maps/dir/?')
+    expect(url).toContain(`origin=${A.lat}%2C${A.lng}`)
+    expect(url).toContain(`destination=${C.lat}%2C${C.lng}`)
+    expect(url).toContain('travelmode=walking')
+    expect(url).toContain(`waypoints=${B.lat}%2C${B.lng}`)
+  })
+
+  it('sin lecturas intermedias no manda waypoints vacíos', () => {
+    const url = googleMapsRouteUrl([A, C])
+    expect(url).not.toContain('waypoints')
+  })
+
+  it('un recorrido largo se muestrea, nunca manda más de 23 paradas intermedias', () => {
+    const long = Array.from({ length: 400 }, (_, index) => ({ lat: A.lat + index * 0.0001, lng: A.lng }))
+    const url = googleMapsRouteUrl(long)
+    const waypointsParam = new URL(url as string).searchParams.get('waypoints') ?? ''
+    const stops = waypointsParam.split('|').filter(Boolean)
+    expect(stops.length).toBeLessThanOrEqual(23)
+    expect(stops.length).toBeGreaterThan(0)
   })
 })

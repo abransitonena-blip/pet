@@ -15,7 +15,7 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import ZoneMap, { type MapPoint, type MapZone } from '@/components/map/ZoneMap'
 import { distanceMeters, isUsableCenter } from '@/lib/geo'
-import { summarizeWalkPath } from '@/lib/walkPath'
+import { googleMapsRouteUrl, summarizeWalkPath } from '@/lib/walkPath'
 import { canonicalReadErrorMessage, classifyCanonicalReadError, type CanonicalReadError } from '@/lib/useCanonicalWalkSessions'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { WalkPoint } from '@/types'
@@ -218,6 +218,19 @@ export default function AdminRutasPage() {
               Verde: inicio · negro: fin · azul: dentro del área recomendada · rojo: fuera.
               {routePath.length > 1 && ' La línea punteada une las lecturas; entre una y otra no se registró el camino.'}
             </p>
+            {(() => {
+              const mapsUrl = googleMapsRouteUrl(routePath)
+              return mapsUrl && (
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <Navigation size={13} aria-hidden="true" /> Abrir en Google Maps
+                </a>
+              )
+            })()}
           </>
         )
       )}

@@ -18,6 +18,8 @@ export const FEATURE_FLAG_NAMES = [
   'PET_EMERGENCY_QR_ENABLED',
   // K: panel de analítica de segmentos de gasto de clientes (apagado por defecto)
   'CLIENT_SPEND_SEGMENT_ANALYTICS_ENABLED',
+  // Fase 36: enlace temporal para ver un paseo sin cuenta (apagado por defecto)
+  'LOCATION_SHARE_LINKS_ENABLED',
 ] as const
 
 export type FeatureFlagName = (typeof FEATURE_FLAG_NAMES)[number]
@@ -65,6 +67,14 @@ export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
   // K: segmentos de gasto de clientes (analítica interna, solo lectura).
   // El admin debe configurar los umbrales antes de que el panel sea útil.
   CLIENT_SPEND_SEGMENT_ANALYTICS_ENABLED: false,
+  // Fase 36: la familia comparte por enlace, sin cuenta, dónde va un paseo
+  // mientras ocurre. El código está listo y probado (creación, revocación,
+  // vista pública sin la marca de "fuera del área", y aviso al paseador de
+  // que se está compartiendo). Sigue apagado porque compartir la ubicación de
+  // alguien con un tercero necesita un aviso de privacidad con VALIDACIÓN DE
+  // ABOGADO EN MÉXICO (ver PLAN.md fase 36 y TRACKING_POLICY.md) que todavía
+  // no existe -- encenderlo antes de tenerlo sería inventar ese texto.
+  LOCATION_SHARE_LINKS_ENABLED: false,
 })
 
 export function isFeatureEnabled(flag: FeatureFlagName): boolean {

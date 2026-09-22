@@ -18,8 +18,18 @@ Ningún navegador puede escribir en esas colecciones: solo la ruta del servidor,
 con la identidad federada de Vercel. Las reglas permiten leerlas al personal y
 marcar una alerta como vista; nada más.
 
-Fuera del paseo no se registra nada. La familia no ve estos puntos: en su panel
-solo aparecen el inicio y el fin que ya guarda la sesión.
+Fuera del paseo no se registra nada.
+
+**Corrección (fase 36):** lo de arriba ya no es exacto. Desde la fase 17 la
+familia SÍ ve estos puntos mientras el paseo ocurre -- el mapa en vivo de su
+inicio, `WalkRouteMap` --, aunque nunca la marca de "fuera del área" salvo que
+administración decida avisarle (fase 35). Y desde la fase 36 puede, además,
+compartir ese mismo recorrido por un enlace temporal con alguien sin cuenta
+(`walkShareLinks`, apagado por `LOCATION_SHARE_LINKS_ENABLED` -- ver PLAN.md
+fase 36): ese enlace tampoco lleva la marca de "fuera del área", ni nombres ni
+teléfonos, y caduca o se revoca. Sigue habiendo un lugar donde nada de esto se
+ve: fuera del paseo no se registra nada, y el enlace compartido deja de servir
+puntos en cuanto caduca o se revoca.
 
 ## Cuánto tiempo se conserva
 
