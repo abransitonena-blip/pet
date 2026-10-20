@@ -31,7 +31,15 @@ describe('P0.2 safe feature defaults', () => {
     // FCM_ENABLED: owner decision (2026-09-13). Double-gated too: without
     // NEXT_PUBLIC_FIREBASE_VAPID_KEY the client returns 'off', and the browser
     // permission is granted by each person, never by the app.
-    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED', 'PET_AHORA_ENABLED', 'BLUETOOTH_PRINTING_ENABLED', 'PRIVATE_MEDIA_UPLOADS_ENABLED', 'WALK_TRACKING_ENABLED', 'PET_EMERGENCY_QR_ENABLED', 'FCM_ENABLED'])
+    // LOCATION_SHARE_LINKS_ENABLED (fase 36): the code is ready and tested,
+    // same shape as PET_AHORA_ENABLED -- the real switch is
+    // config.features.locationShareLinksEnabled in Configuración →
+    // Funcionalidades. Stricter than PET_AHORA's: the owner also writes the
+    // privacy notice there (config.locationSharePrivacyNotice, lawyer-reviewed
+    // in Mexico before it's ever used for real), and the server re-checks both
+    // on every create and every public view (isLocationSharingConfigured in
+    // locationShare.ts) -- not just a hidden button.
+    const enabledByDesign = new Set(['WALK_REPORTS_ENABLED', 'PUBLIC_REVIEWS_ENABLED', 'PET_AHORA_ENABLED', 'BLUETOOTH_PRINTING_ENABLED', 'PRIVATE_MEDIA_UPLOADS_ENABLED', 'WALK_TRACKING_ENABLED', 'PET_EMERGENCY_QR_ENABLED', 'FCM_ENABLED', 'LOCATION_SHARE_LINKS_ENABLED'])
     expect(Object.entries(FEATURE_FLAGS).every(([name, enabled]) => enabledByDesign.has(name) ? enabled : enabled === false)).toBe(true)
   })
 

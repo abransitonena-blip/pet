@@ -70,11 +70,17 @@ export const FEATURE_FLAGS: FeatureFlags = Object.freeze({
   // Fase 36: la familia comparte por enlace, sin cuenta, dónde va un paseo
   // mientras ocurre. El código está listo y probado (creación, revocación,
   // vista pública sin la marca de "fuera del área", y aviso al paseador de
-  // que se está compartiendo). Sigue apagado porque compartir la ubicación de
-  // alguien con un tercero necesita un aviso de privacidad con VALIDACIÓN DE
-  // ABOGADO EN MÉXICO (ver PLAN.md fase 36 y TRACKING_POLICY.md) que todavía
-  // no existe -- encenderlo antes de tenerlo sería inventar ese texto.
-  LOCATION_SHARE_LINKS_ENABLED: false,
+  // que se está compartiendo) -- igual que PET_AHORA_ENABLED, este flag sólo
+  // dice que el mecanismo existe. El interruptor operativo sigue siendo
+  // `config.features.locationShareLinksEnabled` en Configuración →
+  // Funcionalidades, donde el dueño también escribe el aviso de privacidad
+  // (`config.locationSharePrivacyNotice`, revisado por su abogado en México:
+  // compartir la ubicación de alguien con un tercero es un dato personal que
+  // sale de la cuenta). A diferencia de PET_AHORA_ENABLED, ese interruptor de
+  // Firestore no es sólo de interfaz: /api/tracking/share/create y /view lo
+  // vuelven a comprobar en el servidor (ver isLocationSharingConfigured en
+  // locationShare.ts), así que apagarlo ahí cierra la función de verdad.
+  LOCATION_SHARE_LINKS_ENABLED: true,
 })
 
 export function isFeatureEnabled(flag: FeatureFlagName): boolean {

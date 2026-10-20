@@ -21,6 +21,8 @@ interface ViewData {
   path: { lat: number; lng: number }[]
   points: MapPoint[]
   expiresAt: number
+  /** El aviso que escribió el dueño en Configuración → Funcionalidades. */
+  notice: string
 }
 
 type ViewState = 'loading' | 'ready' | 'not-found' | 'error'
@@ -57,6 +59,7 @@ export default function SeguimientoPublicView({ token }: { token: string }) {
           end?: { lat: number; lng: number } | null
           points?: Array<{ lat?: unknown; lng?: unknown }>
           expiresAt?: number
+          notice?: string
         }
         if (!response.ok) throw new Error('share-view-failed')
 
@@ -69,7 +72,13 @@ export default function SeguimientoPublicView({ token }: { token: string }) {
           ...readings,
           ...(result.end ? [result.end] : []),
         ]
-        setData({ active: result.active === true, path, points: readings, expiresAt: result.expiresAt ?? 0 })
+        setData({
+          active: result.active === true,
+          path,
+          points: readings,
+          expiresAt: result.expiresAt ?? 0,
+          notice: typeof result.notice === 'string' ? result.notice : '',
+        })
         setState('ready')
         if (result.active !== true) clearInterval(timer)
       } catch {
@@ -148,6 +157,13 @@ export default function SeguimientoPublicView({ token }: { token: string }) {
           <p className="mt-2 text-xs text-muted" aria-live="polite">Esta página se actualiza sola cada minuto.</p>
         )}
       </section>
+
+      {data.notice && (
+        <div className="rounded-xl bg-warning/10 px-3 py-2.5">
+          <p className="text-2xs font-semibold uppercase tracking-wide text-amber-900">Aviso de privacidad</p>
+          <p className="mt-1 whitespace-pre-line text-xs text-amber-900">{data.notice}</p>
+        </div>
+      )}
 
       <p className="text-center text-2xs text-muted">
         La familia de este paseo de {BRAND.name} compartió este enlace para que lo veas mientras ocurre. Deja de

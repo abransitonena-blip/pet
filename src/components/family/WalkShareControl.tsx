@@ -2,15 +2,17 @@
 
 import { useState } from 'react'
 import { Check, Copy, Share2 } from 'lucide-react'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { useConfig } from '@/context/ConfigContext'
 import { SHARE_LINK_MAX_MINUTES } from '@/lib/locationShare'
 
 /**
  * Compartir por un tiempo, sin cuenta, dónde va este paseo (fase 36).
  *
- * Apagado por FEATURE_FLAGS.LOCATION_SHARE_LINKS_ENABLED hasta que exista el
- * aviso de privacidad revisado por abogado -- ver ese flag. El botón de aquí
- * no aparece mientras tanto: no hay control a medio construir en pantalla.
+ * El botón sólo aparece cuando el dueño prendió el interruptor Y ya escribió
+ * el aviso de privacidad en Configuración → Funcionalidades -- las dos cosas,
+ * vía `useConfig()`. El servidor vuelve a exigir lo mismo al crear el enlace
+ * (ver isLocationSharingConfigured en locationShare.ts), así que ocultar el
+ * botón aquí es una conveniencia de interfaz, no el candado real.
  *
  * Un enlace nuevo no recuerda al anterior: si la familia recarga la página
  * después de crear uno, esta tarjeta vuelve a "Compartir" aunque el enlace
@@ -31,6 +33,7 @@ interface ShareState {
 }
 
 export default function WalkShareControl({ sessionId }: { sessionId: string }) {
+  const { config } = useConfig()
   const [minutes, setMinutes] = useState<number>(60)
   const [share, setShare] = useState<ShareState | null>(null)
   const [state, setState] = useState<'idle' | 'working' | 'error'>('idle')
@@ -87,7 +90,9 @@ export default function WalkShareControl({ sessionId }: { sessionId: string }) {
     }
   }
 
-  if (!FEATURE_FLAGS.LOCATION_SHARE_LINKS_ENABLED) return null
+  const locationShareReady = config.features?.locationShareLinksEnabled === true
+    && (config.locationSharePrivacyNotice ?? '').trim() !== ''
+  if (!locationShareReady) return null
 
   return (
     <div className="mt-3 space-y-2 rounded-xl border border-primary/20 bg-primary/[0.04] p-3">

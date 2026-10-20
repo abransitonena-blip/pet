@@ -91,7 +91,18 @@ export interface SiteConfig {
   maintenance: boolean
   features: {
     petAhoraEnabled: boolean
+    /**
+     * Fase 36: enlace temporal para que alguien sin cuenta vea un paseo.
+     * Interruptor operativo -- el código ya está listo y probado
+     * (FEATURE_FLAGS.LOCATION_SHARE_LINKS_ENABLED) --, pero además exige
+     * `locationSharePrivacyNotice` no vacío: el dueño escribe aquí mismo el
+     * aviso (revisado por su abogado) antes de que el botón de compartir
+     * aparezca para cualquier familia. Ver TRACKING_POLICY.md y PLAN.md fase 36.
+     */
+    locationShareLinksEnabled?: boolean
   }
+  /** El aviso que ve quien abre un enlace de ubicación compartida (fase 36). */
+  locationSharePrivacyNotice?: string
   announcements: Announcement[]
 }
 
@@ -150,6 +161,8 @@ export const DEFAULT_CONFIG: SiteConfig = {
   maintenance: false,
   features: {
     petAhoraEnabled: false,
+    locationShareLinksEnabled: false,
   },
+  locationSharePrivacyNotice: undefined,
   announcements: [],
 }

@@ -25,11 +25,14 @@ familia SÍ ve estos puntos mientras el paseo ocurre -- el mapa en vivo de su
 inicio, `WalkRouteMap` --, aunque nunca la marca de "fuera del área" salvo que
 administración decida avisarle (fase 35). Y desde la fase 36 puede, además,
 compartir ese mismo recorrido por un enlace temporal con alguien sin cuenta
-(`walkShareLinks`, apagado por `LOCATION_SHARE_LINKS_ENABLED` -- ver PLAN.md
-fase 36): ese enlace tampoco lleva la marca de "fuera del área", ni nombres ni
-teléfonos, y caduca o se revoca. Sigue habiendo un lugar donde nada de esto se
-ve: fuera del paseo no se registra nada, y el enlace compartido deja de servir
-puntos en cuanto caduca o se revoca.
+(`walkShareLinks` -- ver PLAN.md fase 36): ese enlace tampoco lleva la marca
+de "fuera del área", ni nombres ni teléfonos, y caduca o se revoca. El botón
+para crear uno sólo aparece cuando el dueño prendió el interruptor en
+Configuración → Funcionalidades y escribió ahí mismo el aviso de privacidad
+de este párrafo; sin las dos cosas, el servidor rechaza crear o ver un enlace.
+Sigue habiendo un lugar donde nada de esto se ve: fuera del paseo no se
+registra nada, y el enlace compartido deja de servir puntos en cuanto caduca
+o se revoca.
 
 ## Cuánto tiempo se conserva
 

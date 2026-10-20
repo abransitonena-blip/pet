@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
-import { isShareLinkActive, isShareToken } from '@/lib/locationShare'
+import { isLocationSharingConfigured, isShareLinkActive, isShareToken, readLocationShareSettings } from '@/lib/locationShare'
 
 export const runtime = 'nodejs'
 
@@ -54,6 +54,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: 'privileged-identity-not-configured' }, { status: 503, headers: noStore })
   }
 
+  // Si el dueño apagó el interruptor (o nunca escribió el aviso), un enlace
+  // que ya existía deja de poder verse: la misma respuesta genérica que un
+  // token vencido o revocado, para no distinguir el motivo a quien mira.
+  const settingsSnapshot = await firestore.collection('appSettings').doc('public').get()
+  const settings = readLocationShareSettings(settingsSnapshot.data())
+  if (!isLocationSharingConfigured(settings)) {
+    return NextResponse.json({ code: 'not-found' }, { status: 404, headers: noStore })
+  }
+
   try {
     const shareSnapshot = await firestore.collection('walkShareLinks').doc(token).get()
     const share = shareSnapshot.exists ? shareSnapshot.data() ?? {} : null
@@ -84,6 +93,7 @@ export async function POST(request: Request) {
       end: point(session?.endLocation),
       points,
       expiresAt: expiresAtMs,
+      notice: settings.notice,
     }, { headers: noStore })
   } catch (error) {
     console.error('tracking/share/view failed:', error instanceof Error ? error.message : String(error))

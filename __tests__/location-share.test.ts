@@ -3,8 +3,10 @@ import {
   SHARE_LINK_MIN_MINUTES,
   clampShareMinutes,
   generateShareToken,
+  isLocationSharingConfigured,
   isShareLinkActive,
   isShareToken,
+  readLocationShareSettings,
 } from '@/lib/locationShare'
 
 describe('generateShareToken', () => {
@@ -77,5 +79,36 @@ describe('isShareLinkActive', () => {
 
   it('revocado, aunque todavía no caduque', () => {
     expect(isShareLinkActive({ revokedAtMs: NOW - 1000, expiresAtMs: NOW + 1000 }, NOW)).toBe(false)
+  })
+})
+
+describe('readLocationShareSettings', () => {
+  it('sin documento, todo apagado', () => {
+    expect(readLocationShareSettings(undefined)).toEqual({ enabled: false, notice: '' })
+  })
+
+  it('lee el interruptor y recorta espacios del aviso', () => {
+    const settings = readLocationShareSettings({
+      features: { locationShareLinksEnabled: true, petAhoraEnabled: false },
+      locationSharePrivacyNotice: '  Este enlace comparte tu ubicación.  ',
+    })
+    expect(settings).toEqual({ enabled: true, notice: 'Este enlace comparte tu ubicación.' })
+  })
+
+  it('un aviso que no es string no cuenta como aviso', () => {
+    expect(readLocationShareSettings({ features: { locationShareLinksEnabled: true }, locationSharePrivacyNotice: 42 })).toEqual({ enabled: true, notice: '' })
+  })
+
+  it('un `features` que no es objeto no tumba la lectura', () => {
+    expect(readLocationShareSettings({ features: 'no-es-un-objeto' })).toEqual({ enabled: false, notice: '' })
+  })
+})
+
+describe('isLocationSharingConfigured', () => {
+  it('necesita el interruptor encendido Y el aviso escrito', () => {
+    expect(isLocationSharingConfigured({ enabled: true, notice: 'Aviso real' })).toBe(true)
+    expect(isLocationSharingConfigured({ enabled: true, notice: '' })).toBe(false)
+    expect(isLocationSharingConfigured({ enabled: false, notice: 'Aviso real' })).toBe(false)
+    expect(isLocationSharingConfigured({ enabled: false, notice: '' })).toBe(false)
   })
 })

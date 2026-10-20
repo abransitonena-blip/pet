@@ -4,7 +4,7 @@ import { verifyAuthenticatedToken } from '@/lib/serverAuth'
 import { getPrivilegedFirestore } from '@/lib/finance/serverFirestore'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
-import { clampShareMinutes, generateShareToken } from '@/lib/locationShare'
+import { clampShareMinutes, generateShareToken, isLocationSharingConfigured, readLocationShareSettings } from '@/lib/locationShare'
 import { absoluteUrl } from '@/lib/siteUrl'
 
 export const runtime = 'nodejs'
@@ -17,8 +17,10 @@ const RATE_LIMIT_WINDOW_MS = 10 * 60_000
  * La familia crea un enlace temporal para que alguien sin cuenta vea por
  * dónde va un paseo, sin pedirle que entre a la app.
  *
- * Fail-closed detrás de FEATURE_FLAGS.LOCATION_SHARE_LINKS_ENABLED -- ver ese
- * flag para el porqué (aviso de privacidad pendiente de validación legal).
+ * Fail-closed en dos capas: el flag de código (listo, no decide nada por su
+ * cuenta -- ver featureFlags.ts) y el interruptor del dueño en Configuración →
+ * Funcionalidades, que además exige el aviso de privacidad ya escrito
+ * (isLocationSharingConfigured en locationShare.ts). Sin las dos cosas, nada.
  *
  * Sólo la familia dueña del paseo (comparado contra la sesión guardada, nunca
  * contra un rol) y sólo mientras sigue `in_progress`: compartir un paseo que
@@ -46,6 +48,11 @@ export async function POST(request: Request) {
   const firestore = getPrivilegedFirestore()
   if (!firestore) {
     return NextResponse.json({ code: 'privileged-identity-not-configured' }, { status: 503, headers: noStore })
+  }
+
+  const settingsSnapshot = await firestore.collection('appSettings').doc('public').get()
+  if (!isLocationSharingConfigured(readLocationShareSettings(settingsSnapshot.data()))) {
+    return NextResponse.json({ code: 'location-share-not-enabled' }, { status: 503, headers: noStore })
   }
 
   let body: { sessionId?: unknown; minutes?: unknown }

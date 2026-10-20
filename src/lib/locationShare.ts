@@ -4,9 +4,16 @@
  * REQUIERE VALIDACIÓN DE ABOGADO EN MÉXICO antes de ofrecerlo de verdad:
  * compartir la ubicación de alguien con un tercero es un dato personal que
  * sale de la cuenta, y el aviso que lo cubra es una decisión legal, no
- * técnica (ver PLAN.md fase 36 y TRACKING_POLICY.md). Por eso todo esto vive
- * detrás de `LOCATION_SHARE_LINKS_ENABLED`, apagado hasta la decisión del
- * dueño.
+ * técnica (ver PLAN.md fase 36 y TRACKING_POLICY.md). Por eso el código no
+ * decide por el dueño: `FEATURE_FLAGS.LOCATION_SHARE_LINKS_ENABLED` dice que
+ * el mecanismo ya está listo y probado, igual que PET_AHORA_ENABLED, y el
+ * interruptor real vive en Configuración → Funcionalidades
+ * (`appSettings/public.features.locationShareLinksEnabled`), donde el dueño
+ * también escribe el aviso (`locationSharePrivacyNotice`). Sin ese texto no
+ * hay enlace, aunque el interruptor esté encendido -- ver
+ * `isLocationSharingConfigured` abajo, que el servidor vuelve a comprobar
+ * en cada creación y cada vista pública: a diferencia de PET_AHORA_ENABLED,
+ * aquí el interruptor de Firestore no es solo cosmético.
  *
  * El token es el secreto -- 128 bits, igual que el de la placa de emergencia
  * (`emergencyProfile.ts`) -- y vive en un documento server-only
@@ -59,4 +66,27 @@ export function isShareLinkActive(share: ShareLinkRecord | null, nowMs: number):
   if (!share) return false
   if (share.revokedAtMs !== null) return false
   return share.expiresAtMs > nowMs
+}
+
+export interface LocationShareSettings {
+  /** `appSettings/public.features.locationShareLinksEnabled`, decidido por el dueño. */
+  enabled: boolean
+  /** `appSettings/public.locationSharePrivacyNotice`, ya sin espacios de sobra. */
+  notice: string
+}
+
+/** Lee el documento `appSettings/public` tal cual lo da Firestore -- cliente o servidor. */
+export function readLocationShareSettings(data: Record<string, unknown> | undefined): LocationShareSettings {
+  const features = data?.features
+  const featuresRecord = features && typeof features === 'object' ? features as Record<string, unknown> : null
+  const notice = typeof data?.locationSharePrivacyNotice === 'string' ? data.locationSharePrivacyNotice.trim() : ''
+  return { enabled: featuresRecord?.locationShareLinksEnabled === true, notice }
+}
+
+/**
+ * El dueño prendió el interruptor Y ya escribió el aviso. Sin las dos cosas
+ * no hay enlace -- ni para crear uno nuevo, ni para ver uno que ya existía.
+ */
+export function isLocationSharingConfigured(settings: LocationShareSettings): boolean {
+  return settings.enabled && settings.notice !== ''
 }

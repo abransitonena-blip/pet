@@ -541,11 +541,31 @@ function PrivacyEditor({ config, updateConfig, saving }: EditorProps) {
 function FeaturesEditor({ config, updateConfig, saving }: EditorProps) {
   const [petAhora, setPetAhora] = useState(config.features?.petAhoraEnabled ?? false)
   const [analyticsEnabled, setAnalyticsEnabled] = useState(config.analyticsEnabled === true)
+  const [locationShare, setLocationShare] = useState(config.features?.locationShareLinksEnabled ?? false)
+  const [locationShareNotice, setLocationShareNotice] = useState(config.locationSharePrivacyNotice ?? '')
+  const [locationShareError, setLocationShareError] = useState<string | null>(null)
 
   useEffect(() => { setPetAhora(config.features?.petAhoraEnabled ?? false) }, [config.features?.petAhoraEnabled])
   useEffect(() => { setAnalyticsEnabled(config.analyticsEnabled === true) }, [config.analyticsEnabled])
+  useEffect(() => { setLocationShare(config.features?.locationShareLinksEnabled ?? false) }, [config.features?.locationShareLinksEnabled])
+  useEffect(() => { setLocationShareNotice(config.locationSharePrivacyNotice ?? '') }, [config.locationSharePrivacyNotice])
 
-  const save = () => updateConfig({ features: { petAhoraEnabled: petAhora }, analyticsEnabled })
+  const save = () => {
+    // Sin este texto el enlace de ubicación no sirve a nadie, aunque el
+    // interruptor esté encendido: el servidor vuelve a exigirlo (ver
+    // locationShare.ts), pero avisar aquí evita guardar algo que no va a
+    // funcionar.
+    if (locationShare && !locationShareNotice.trim()) {
+      setLocationShareError('Escribe el aviso antes de activarlo: sin texto, nadie puede abrir el enlace aunque esto esté encendido.')
+      return
+    }
+    setLocationShareError(null)
+    updateConfig({
+      features: { petAhoraEnabled: petAhora, locationShareLinksEnabled: locationShare },
+      analyticsEnabled,
+      locationSharePrivacyNotice: locationShareNotice,
+    })
+  }
 
   return (
     <div className="space-y-3">
@@ -572,6 +592,34 @@ function FeaturesEditor({ config, updateConfig, saving }: EditorProps) {
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>PET Ahora permite a clientes solicitar paseos al instante. Requiere configuración adicional de zonas, paseadores y disponibilidad.</p>
         </div>
       )}
+
+      <div className="flex items-center gap-3 border-t border-ink/10 pt-3">
+        <button
+          onClick={() => setLocationShare(!locationShare)}
+          className={`w-10 h-6 rounded-full transition-all ${locationShare ? 'bg-brand-500' : 'bg-ink/15'}`}
+        >
+          <div className={`w-4 h-4 rounded-full bg-white shadow transition-all ${locationShare ? 'translate-x-5' : 'translate-x-1'}`} />
+        </button>
+        <span className="text-xs text-muted">{locationShare ? 'Ubicación compartida activada' : 'Ubicación compartida desactivada'}</span>
+      </div>
+      {locationShare && (
+        <div className="space-y-2 p-3 bg-brand-500/10 border border-brand-500/20 rounded-lg">
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            Deja que una familia comparta por un enlace temporal, sin cuenta, por dónde va el paseo de su perro
+            mientras ocurre. Escribe abajo el aviso que verá quien abra ese enlace -- revisado por tu abogado --:
+            sin ese texto, el botón de compartir no aparece aunque esto esté encendido.
+          </p>
+          <InputField
+            id="location-share-notice"
+            label="Aviso que ve quien abre el enlace"
+            value={locationShareNotice}
+            onChange={setLocationShareNotice}
+            multiline
+          />
+          {locationShareError && <p className="text-xs text-danger-400" role="alert">{locationShareError}</p>}
+        </div>
+      )}
+
       <SaveButton onClick={save} saving={saving} />
     </div>
   )
