@@ -58,6 +58,10 @@ service cloud.firestore {
       return hasRole('supervisor');
     }
 
+    function isZoneAdmin() {
+      return hasRole('zone_admin');
+    }
+
     function isCustomer() {
       return hasRole('customer');
     }
@@ -96,6 +100,29 @@ service cloud.firestore {
       return isWalker()
         && exists(/databases/$(database)/documents/walkerProfiles/$(request.auth.uid))
         && get(/databases/$(database)/documents/walkerProfiles/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isActiveZoneAdmin() {
+      return isZoneAdmin()
+        && exists(/databases/$(database)/documents/zoneAdminProfiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/zoneAdminProfiles/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Una de las zonas que esta persona administra.
+    function isMyZoneDoc(zoneId) {
+      return isActiveZoneAdmin()
+        && zoneId in get(/databases/$(database)/documents/zoneAdminProfiles/$(request.auth.uid)).data.zones;
+    }
+
+    // Una sesión de paseo no lleva su propia zona (fase 37: ver PLAN.md --
+    // migrarla es trabajo aparte), así que se resuelve igual que la sugerencia
+    // de asignación: por la zona de la dirección de recogida. Un salto más
+    // que isMyZoneDoc, y Firestore no repite el get() si ya lo pidió antes en
+    // esta misma evaluación.
+    function isMyZoneSession(sessionData) {
+      return sessionData.addressId is string
+        && exists(/databases/$(database)/documents/addresses/$(sessionData.addressId))
+        && isMyZoneDoc(get(/databases/$(database)/documents/addresses/$(sessionData.addressId)).data.zoneId);
     }
 
     function onlyAllowedFieldsChanged(fields) {
@@ -809,10 +836,17 @@ service cloud.firestore {
 
     // Canonical vertical slice: customer request → staff assignment → Walker execution.
     match /walkSessions/{sessionId} {
+      // list se queda sólo para quien ya tenía acceso de siempre: sin zoneId
+      // en el propio documento, una consulta "mis paseos de zona" no tiene
+      // campo contra el que filtrar, y Firestore rechaza la lista entera si
+      // un solo documento no cumple la regla (CRITICO.md 1.1). El admin de
+      // zona ve su lista server-resuelta en /api/zone/overview; get() aquí sí
+      // le sirve una vez que ya tiene el id de un paseo concreto.
       allow get: if isAuthenticated()
         && (resource.data.customerId == request.auth.uid
           || (isActiveWalker() && resource.data.walkerId == request.auth.uid)
-          || isStaff());
+          || isStaff()
+          || isMyZoneSession(resource.data));
       allow list: if isAuthenticated()
         && (resource.data.customerId == request.auth.uid
           || (isActiveWalker() && resource.data.walkerId == request.auth.uid)
@@ -822,7 +856,7 @@ service cloud.firestore {
         && isCustomer()
         && validCustomerWalkSession(request.resource.data);
       allow update: if sameSessionIdentity()
-        && ((isStaff() && (validStaffAssignment() || validStaffReprogram()))
+        && (((isStaff() || isMyZoneSession(resource.data)) && (validStaffAssignment() || validStaffReprogram()))
           || customerCanCancel()
           || customerCanReschedule()
           || (isActiveWalker()
@@ -1223,12 +1257,54 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════
+    // ZONE ADMIN PROFILES (fase 37: qué zonas administra, y su estado)
+    // ═══════════════════════════════════════════
+    // A diferencia de walkerProfiles, esto NO es de lectura pública para
+    // cualquier autenticado: qué territorio administra alguien no es algo
+    // que una familia o un paseador necesite ver. Sólo admin y la propia
+    // persona (useSessionRole necesita leer su propio estado/zonas).
+    match /zoneAdminProfiles/{uid} {
+      allow get: if isAdmin() || isOwner(uid);
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════
     // ZONES (geographic zones)
     // ═══════════════════════════════════════════
 
     match /zones/{zoneId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════
+    // SUMINISTROS POR ZONA (fase 37)
+    // ═══════════════════════════════════════════
+    // A diferencia de walkSessions, zoneSupplies/zoneSupplyDeliveries son
+    // colecciones nuevas: pueden llevar su propio `zoneId` desde el primer
+    // día, así que sí admiten una consulta real por zona (where zoneId in
+    // [...]), sin el salto de dirección que walkSessions necesita.
+    match /zoneSupplies/{supplyId} {
+      allow get: if isAdmin() || isMyZoneDoc(resource.data.zoneId);
+      allow list: if (isAdmin() || isZoneAdmin())
+        && validListLimit(100)
+        && (isAdmin() || isMyZoneDoc(resource.data.zoneId));
+      // El stock lo fija y lo reabastece administración; el administrador de
+      // zona sólo lo baja, y sólo a través de /api/zone/supplies/deliver
+      // (una transacción que no deja quedar en negativo).
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /zoneSupplyDeliveries/{deliveryId} {
+      allow get: if isAdmin() || isMyZoneDoc(resource.data.zoneId);
+      allow list: if (isAdmin() || isZoneAdmin())
+        && validListLimit(100)
+        && (isAdmin() || isMyZoneDoc(resource.data.zoneId));
+      // Bitácora inmutable: nunca se escribe desde el navegador, ni siquiera
+      // administración -- sólo la ruta de servidor, con identidad privilegiada.
+      allow write: if false;
     }
 
     // ═══════════════════════════════════════════

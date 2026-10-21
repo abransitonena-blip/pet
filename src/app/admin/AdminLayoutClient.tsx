@@ -11,7 +11,7 @@ import {
   Dog, Gauge, Calendar, Users, PawPrint, Footprints,
   MapPin, DollarSign, Tag, Star,
   TrendingUp, Settings, ClipboardList, Bot,
-  MessageSquare, Image, Zap, Printer, Ticket, FlaskConical, AlertOctagon, MessageSquareHeart,
+  MessageSquare, Image, Zap, Printer, Ticket, FlaskConical, AlertOctagon, MessageSquareHeart, Package,
 } from 'lucide-react'
 import AdminShell from '@/components/layout/AdminShell'
 import GeofenceAlertsBanner from '@/components/admin/GeofenceAlertsBanner'
@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { id: 'reportes', label: 'Reportes de paseo', icon: ClipboardList, href: '/admin/reportes', group: 'Operación' },
   { id: 'rutas', label: 'Rutas', icon: MapPin, href: '/admin/rutas', group: 'Operación' },
   { id: 'pet-ahora', label: 'PET Ahora', icon: Zap, href: '/admin/pet-ahora', color: '#f59e0b', group: 'Operación' },
+  { id: 'suministros', label: 'Suministros', icon: Package, href: '/admin/suministros', group: 'Operación' },
   { id: 'clientes', label: 'Familias', icon: Users, href: '/admin/clientes', group: 'Personas' },
   { id: 'perros', label: 'Perros', icon: PawPrint, href: '/admin/perros', group: 'Personas' },
   { id: 'paseadores', label: 'Paseadores', icon: Footprints, href: '/admin/paseadores', group: 'Personas' },

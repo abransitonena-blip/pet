@@ -30,11 +30,14 @@ describe('P0.3 authentication flow', () => {
       walker: '/walker',
       supervisor: '/admin',
       admin: '/admin',
+      zone_admin: '/zona',
     })
     expect(resolveDestination('customer', '/familia/historial')).toBe('/familia/historial')
     expect(resolveDestination('walker', '/familia')).toBe('/walker')
     expect(resolveDestination('supervisor', '/admin/reservas')).toBe('/admin/reservas')
     expect(resolveDestination('supervisor', '/supervisor/incidencias')).toBe('/admin')
+    expect(resolveDestination('zone_admin', '/admin')).toBe('/zona')
+    expect(resolveDestination('zone_admin', '/zona/suministros')).toBe('/zona/suministros')
   })
 
   it('preserves safe internal destinations including their query string', () => {

@@ -41,6 +41,7 @@ export const config = {
     '/familia/:path*',
     '/walker/:path*',
     '/supervisor/:path*',
+    '/zona/:path*',
     '/mi-cuenta/:path*',
     '/paseador/:path*',
   ],

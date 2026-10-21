@@ -4,7 +4,7 @@ Lo que puede romper la operación o hacerle perder dinero al negocio, y lo que
 nadie más que el dueño puede destrabar. El plan completo de mejoras vive en
 [PLAN.md](PLAN.md); las reglas de trabajo, en [AGENTS.md](AGENTS.md).
 
-Estado al 2026-10-20.
+Estado al 2026-10-21.
 
 ---
 
@@ -88,6 +88,8 @@ función en Vercel filtrando por `walker-photo`.
 | `CRON_SECRET` en Vercel (Production) y volver a publicar | El recordatorio (19:00 hora de México) y la guardia (08:00) los dispara la tarea programada de Vercel, y sin ese secreto la ruta responde 403 a todo el mundo, incluida la tarea. Ver qué saldría se puede probar hoy desde Estado del sistema, sin el secreto | Nadie recibe el recordatorio de su paseo de mañana ni el aviso de paseos sin paseador |
 | Confirmar que aparece la tarjeta de notificaciones push | Las notificaciones al teléfono dependen de la llave VAPID | Las familias no reciben avisos de su paseo |
 | Escribir y activar el aviso de privacidad del enlace de ubicación (fase 36), validado por abogado en México | Compartir la ubicación de alguien con un tercero es un dato personal que sale de la cuenta. Desde el 20-oct-2026 esto ya no requiere tocar código: Configuración → Funcionalidades tiene el interruptor y la caja de texto para el aviso, los dos editables por el dueño | Mientras el interruptor esté apagado o el aviso vacío, ninguna familia ve el botón de compartir y el servidor rechaza crear o ver un enlace, aunque alguien lo intente directo (`isLocationSharingConfigured` en `src/lib/locationShare.ts`). (El enlace "Abrir en Google Maps" de un recorrido es aparte, no depende de esto, y ya está encendido para todos) |
+| Asignar al primer administrador de zona (fase 37), desde Alta y activación de personal en `/admin/paseadores` | El rol `zone_admin` y su panel `/zona` ya existen y están probados, pero sin ninguna cuenta con ese rol el panel no lo usa nadie | Nadie ve `/zona` ni delega paseos por ahí hasta que una cuenta real tenga el rol y al menos una zona asignada; mientras tanto, admin sigue siendo el único camino, igual que hoy |
+| Registrar los suministros reales de cada zona en `/admin/suministros` (fase 37) | El inventario (existencias, umbral de aviso) empieza vacío: no hay datos de fábrica ni inventados | Hasta que administración registre al menos un artículo por zona, el administrador de zona no tiene nada que entregar y el panel de Suministros se ve vacío |
 
 ---
 
@@ -117,7 +119,8 @@ del panel deja de registrarse.
 ### 3.2 Los topes de las reglas mandan sobre las consultas
 Las reglas exigen `limit` en las listas grandes: `dogs`, `addresses`,
 `walkSessions`, `walkReports`, `serviceOrders`, `walkerReviews`,
-`coverageRequests` (100), `tickets` y `printEvents` (50). Pedir más **no**
+`coverageRequests`, `zoneSupplies` y `zoneSupplyDeliveries` (100), `tickets` y
+`printEvents` (50). Pedir más **no**
 devuelve una lista corta: Firestore rechaza la consulta entera y la pantalla se
 queda vacía con un mensaje de permisos.
 

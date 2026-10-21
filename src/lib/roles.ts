@@ -11,17 +11,21 @@ export const ROLES = {
   WALKER: 'walker',
   SUPERVISOR: 'supervisor',
   ADMIN: 'admin',
+  // Fase 37: delega paseos y suministros dentro de su propia zona; nunca ve
+  // el expediente de una familia o un perro (eso sigue siendo sólo admin).
+  ZONE_ADMIN: 'zone_admin',
 } as const
 
 export type Role = (typeof ROLES)[keyof typeof ROLES]
 
-export const TEAM_ROLES: readonly Role[] = [ROLES.WALKER, ROLES.SUPERVISOR, ROLES.ADMIN]
+export const TEAM_ROLES: readonly Role[] = [ROLES.WALKER, ROLES.SUPERVISOR, ROLES.ADMIN, ROLES.ZONE_ADMIN]
 
 export type BasicCapability =
   | 'customer:own-data'
   | 'walker:assigned-sessions'
   | 'supervisor:operations'
   | 'admin:allowlisted-administration'
+  | 'zoneAdmin:zone-operations'
 
 export interface RoleAccessPolicy {
   entry: '/login' | '/equipo'
@@ -55,6 +59,12 @@ export const ROLE_ACCESS: Record<Role, RoleAccessPolicy> = {
     allowedPrefixes: ['admin'],
     capabilities: ['admin:allowlisted-administration'],
   },
+  zone_admin: {
+    entry: '/equipo',
+    home: '/zona',
+    allowedPrefixes: ['zona'],
+    capabilities: ['zoneAdmin:zone-operations'],
+  },
 }
 
 export const ACCESS_MESSAGES = {
@@ -77,7 +87,7 @@ export interface RoleClaimResolution {
 }
 
 export function resolveRoleClaim(value: unknown): RoleClaimResolution {
-  if (value === ROLES.CUSTOMER || value === ROLES.WALKER || value === ROLES.SUPERVISOR || value === ROLES.ADMIN) {
+  if (value === ROLES.CUSTOMER || value === ROLES.WALKER || value === ROLES.SUPERVISOR || value === ROLES.ADMIN || value === ROLES.ZONE_ADMIN) {
     return { role: value, claimStatus: 'valid', rawRole: value }
   }
   if (value === 'client') return { role: ROLES.CUSTOMER, claimStatus: 'legacy', rawRole: value }
@@ -122,6 +132,7 @@ export const ROLE_HOME: Record<Role, string> = {
   walker: ROLE_ACCESS.walker.home,
   supervisor: ROLE_ACCESS.supervisor.home,
   admin: ROLE_ACCESS.admin.home,
+  zone_admin: ROLE_ACCESS.zone_admin.home,
 }
 
 export const ROLE_ENTRY: Record<Role, '/login' | '/equipo'> = {
@@ -129,6 +140,7 @@ export const ROLE_ENTRY: Record<Role, '/login' | '/equipo'> = {
   walker: ROLE_ACCESS.walker.entry,
   supervisor: ROLE_ACCESS.supervisor.entry,
   admin: ROLE_ACCESS.admin.entry,
+  zone_admin: ROLE_ACCESS.zone_admin.entry,
 }
 
 export function entryForPrivatePath(pathname: string): '/login' | '/equipo' {
@@ -187,7 +199,7 @@ export interface RoleResolution {
 export type TeamAccessDenial = 'missing-claim' | 'unsupported-claim' | 'customer-account'
 
 export type TeamAccessDecision =
-  | { allowed: true; role: typeof ROLES.WALKER | typeof ROLES.SUPERVISOR | typeof ROLES.ADMIN }
+  | { allowed: true; role: typeof ROLES.WALKER | typeof ROLES.SUPERVISOR | typeof ROLES.ADMIN | typeof ROLES.ZONE_ADMIN }
   | { allowed: false; reason: TeamAccessDenial; message: string }
 
 export function evaluateTeamAccess(resolution: RoleResolution): TeamAccessDecision {

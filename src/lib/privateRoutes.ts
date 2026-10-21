@@ -16,6 +16,7 @@ export const PRIVATE_ROUTES = [
   '/familia',
   '/walker',
   '/supervisor',
+  '/zona',
   // legacy aliases (next.config redirects /mi-cuenta → /familia, /paseador → /walker)
   '/mi-cuenta',
   '/paseador',

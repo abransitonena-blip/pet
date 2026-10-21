@@ -49,6 +49,7 @@ romper la operación, en [CRITICO.md](CRITICO.md).
 | 34 | Aviso al teléfono cuando alguien sale del área | La alerta de salida sólo se guardaba y salía en un cartel DENTRO del panel de administración; ahora también llega como aviso al teléfono de quien opera (administración y supervisión, por su rol). No con cada lectura -- el teléfono manda su posición cada ~2 minutos --: la primera vez, cuando se reabre una alerta ya marcada, y como recordatorio cada media hora si nadie la atiende. Sin coordenadas en el texto, porque sale en la pantalla bloqueada. Estado del sistema avisa de las zonas activas sin centro o radio, que no pueden alertar y no lo dicen | `geocerca-al-telefono`, `estado-del-sistema` |
 | 35 | "Área recomendada" y el orden del aviso | La salida se alerta primero a administración, y sólo ella decide si la familia se entera: "Todo en orden", o "Avisar a la familia" con un texto que ve y puede editar. El aviso sale del servidor, una sola vez por alerta (se reserva antes de mandarlo y se suelta si no se pudo entregar), llega al panel y al teléfono de esa familia, y dice a administración si el teléfono no sonó. **Encontrado al hacerlo:** el mapa de la familia recibía la marca "fuera" de cada punto en vivo, antes de que nadie la juzgara; ahora el servidor se la oculta hasta que administración decide avisarle. Todo texto dice "área recomendada", no frontera; y al paseador se le dice sin regañarlo | `escalamiento-a-la-familia` (rutas ejecutadas con un Firestore de mentira) |
 | 36 | Recorrido en Google Maps, y ubicación compartida por un tiempo | Todo recorrido (admin en Rutas; familia y paseador en su mapa en vivo o su historial) tiene un enlace "Abrir en Google Maps" que arma una ruta a pie real -- origen, destino y hasta 23 paradas de en medio muestreadas parejo, porque Maps no acepta una parada por cada lectura de un paseo largo --; sin mapa incrustado, que seguiría pidiendo una cuenta de facturación de Google Cloud que el proyecto no tiene. El mapa de la app sigue siendo Leaflet. Enlace temporal de ubicación: la familia lo crea desde su paseo en vivo (15 minutos a 3 horas), quien lo abre lo ve sin cuenta y sin la marca de "fuera del área" -- eso sigue siendo sólo entre la familia y administración --, se revoca cuando quieran y caduca solo; el paseador ve que se está compartiendo, igual que con una salida de zona, sin que nadie se lo oculte. **Encontrado al hacerlo:** compartir la ubicación de alguien con un tercero es un dato personal que sale de la cuenta, y el aviso que lo cubra es una decisión legal, no técnica (REQUIERE VALIDACIÓN DE ABOGADO EN MÉXICO, como ya advertía TRACKING_POLICY.md para el rastreo mismo). El botón de Google Maps no depende de nada de esto: no comparte con nadie nada que quien lo abre no pudiera ver ya. **Revisión (20-oct-2026), a petición del dueño:** en vez de dejar el enlace de ubicación bloqueado en el código hasta que alguien programara la activación, el candado se movió a Configuración → Funcionalidades: ahí el dueño prende el interruptor (`config.features.locationShareLinksEnabled`) y escribe él mismo el aviso de privacidad (`config.locationSharePrivacyNotice`) cuando lo tenga listo con su abogado -- sin tocar código ni pedir un despliegue. Mientras falte cualquiera de las dos cosas, el botón de compartir no aparece y el servidor rechaza crear o ver un enlace (`isLocationSharingConfigured` en `locationShare.ts`): a diferencia de otros interruptores operativos de este archivo (como `petAhoraEnabled`), este no es sólo cosmético, el servidor vuelve a exigirlo en cada llamada | `walk-path`, `location-share`, `walk-share-rules` (emulador), `p02-feature-flags` |
+| 37 | Administrador de zona | Rol nuevo (`zone_admin`, panel `/zona`) que el dueño asigna desde Alta y activación de personal, con las zonas que administra guardadas en `zoneAdminProfiles` -- igual que un paseador guarda las que cubre, pero "administra" nunca es "cubre". A petición del dueño (21-oct-2026): ve sólo lo operativo de su zona -- paseos, a quién delegarlos, si ya tienen reporte o ticket -- y nunca el nombre, teléfono o dirección de una familia ni el expediente de un perro; ni siquiera supervisor tiene eso hoy. `walkSessions` todavía no lleva su propia zona (migrarla queda pendiente, ver abajo), así que `/api/zone/overview` la resuelve server-side por la dirección de recogida, y el administrador de zona delega reutilizando `assignCanonicalWalkSession` sin cambios, ahora permitido dentro de su zona por una regla que hace el mismo salto (`isMyZoneSession`). Suministros, con existencias reales: administración fija y reabastece el stock por zona (`/admin/suministros`); el administrador de zona sólo lo entrega a un paseador, nunca lo sube, y nunca en negativo -- una transacción del servidor (`/api/zone/supplies/deliver`) lo exige. El aviso de "queda poco" es visual, no un push -- hay que abrir la pantalla para verlo. | `zone-admin`, `zone-supplies`, `zone-admin-rules` (emulador), `p08-roles`, `p03-auth-flow` |
 
 **Los seis defectos que encontró la fase 9**, todos con prueba:
 1. La jornada del paseador pedía sus 100 paseos más antiguos: con más de cien, dejaba de ver los de hoy.
@@ -73,16 +74,10 @@ al final lo que toca todo el código.**
 
 | # | Fase | Qué es | Notas |
 |---|---|---|---|
-| 37 | Administrador de zona | Un rol nuevo con su panel: se le asigna un estado y desde ahí delega, entrega suministros a los paseadores, ve reportes y tickets. Sin quitarle el control al administrador general, que sigue siendo global | Cambia quién puede leer qué: reglas por zona |
 | 38 | Internacional | La web en más idiomas y sin dar por hecho México: zona horaria, moneda, teléfono, dirección | Toca casi todo el código: ver abajo |
 
-**Lo que hay que saber antes de las fases 37 y 38**
+**Lo que hay que saber antes de la fase 38**
 
-- **El administrador de zona no cabe en las reglas de hoy.** Los claims son
-  `customer`, `walker`, `supervisor` y `admin`, y las reglas no conocen zonas:
-  para que un administrador de zona lea sólo lo suyo, cada paseo, paseador y
-  familia tiene que llevar su zona. Es una migración de datos, y va con
-  respaldo previo.
 - **Internacional toca más de lo que parece.** La hora del negocio (UTC-6) está
   escrita dentro de las reglas de Firestore y de `chatWindow.ts`; hay 56
   archivos con moneda, zona horaria o fechas de México, y las reglas de precio
@@ -184,3 +179,23 @@ al final lo que toca todo el código.**
   usar con cuidado", y quien tiene la autoridad para decidir el resto lo hace
   él mismo, sin esperar otra sesión. Vale para cualquier cosa pendiente de una
   decisión de negocio o legal, no sólo para ubicación compartida.
+- **Una migración de datos no es la única forma de acotar por zona.** El plan
+  original de la fase 37 asumía que el administrador de zona necesitaba que
+  `walkSessions` llevara su propio `zoneId`, con respaldo y migración antes de
+  poder arrancar. Pero el patrón para "la regla necesitaría un cruce entre
+  colecciones" ya existía -- `/api/walks/track` resuelve permiso por servidor
+  precisamente porque "una regla por documento tendría que consultar la
+  sesión en cada punto, y Firestore corta esas consultas anidadas". Lo mismo
+  aplica aquí: un salto (sesión → dirección → zona) sí lo hace una regla para
+  un documento (`get`, `update`), pero no para una lista (Firestore rechaza la
+  consulta entera si un documento no cumple, y sin `zoneId` en el documento no
+  hay campo contra el que filtrar). La lista se resolvió server-side
+  (`/api/zone/overview`) y la escritura puntual con la regla; cero migración,
+  cero riesgo al flujo de reservas en vivo. La migración sigue siendo una
+  mejora futura si el volumen lo pide, no un requisito del día uno.
+- **Un segundo rol con el mismo nombre de campo no es el mismo campo.**
+  `walkerProfiles.zones` significa "las zonas que cubro"; `zoneAdminProfiles.zones`
+  significa "las zonas que administro". Nunca se mezclaron en la misma
+  colección aunque el código de alta (`/api/admin/team`) sea casi idéntico
+  para los dos roles -- el nombre de la colección es lo que evita que alguien
+  lea uno pensando que es el otro.

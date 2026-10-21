@@ -41,6 +41,7 @@ const ROLE_LABELS: Record<Role, string> = {
   walker: 'Paseador',
   supervisor: 'Supervisor',
   admin: 'Administrador',
+  zone_admin: 'Administrador de zona',
 }
 
 const STATUS_LABELS: Record<WalkerStatus, string> = {
@@ -75,7 +76,7 @@ export default function TeamProvisionPanel({ zones, onProvisioned }: TeamProvisi
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
     })
-    const result = await response.json().catch(() => ({})) as { code?: string; message?: string; user?: LookupResult; walkerProfileWritten?: boolean }
+    const result = await response.json().catch(() => ({})) as { code?: string; message?: string; user?: LookupResult; walkerProfileWritten?: boolean; zoneAdminProfileWritten?: boolean }
     if (!response.ok) throw new Error(result.message || messageForCode(result.code))
     return result
   }, [])
@@ -116,7 +117,9 @@ export default function TeamProvisionPanel({ zones, onProvisioned }: TeamProvisi
       setLookup(result.user ?? lookup)
       setNotice(role === ROLES.WALKER
         ? `Rol de paseador asignado${result.walkerProfileWritten ? ' y perfil operativo creado' : ''}. La persona debe cerrar sesión y volver a entrar para que su token tome el nuevo rol.`
-        : `Rol ${ROLE_LABELS[role]} asignado. La persona debe cerrar sesión y volver a entrar.`)
+        : role === ROLES.ZONE_ADMIN
+          ? `Rol de administrador de zona asignado${result.zoneAdminProfileWritten ? ', con sus zonas' : ''}. La persona debe cerrar sesión y volver a entrar.`
+          : `Rol ${ROLE_LABELS[role]} asignado. La persona debe cerrar sesión y volver a entrar.`)
       onProvisioned?.()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No pudimos asignar el rol.')
@@ -191,12 +194,12 @@ export default function TeamProvisionPanel({ zones, onProvisioned }: TeamProvisi
             </select>
           </div>
 
-          {role === ROLES.WALKER && (
+          {(role === ROLES.WALKER || role === ROLES.ZONE_ADMIN) && (
             <div className="space-y-3 rounded-xl bg-ink/[0.03] p-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <label htmlFor="provision-name" className="text-xs font-medium text-muted">Nombre</label>
-                  <input id="provision-name" value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder="Nombre del paseador" />
+                  <input id="provision-name" value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder="Nombre" />
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="provision-phone" className="text-xs font-medium text-muted">Teléfono</label>
@@ -212,13 +215,15 @@ export default function TeamProvisionPanel({ zones, onProvisioned }: TeamProvisi
                   ))}
                 </select>
                 <p className="text-2xs text-muted">
-                  Solo un paseador con estado <strong>activo</strong> puede ser asignado a un paseo y mover su estado.
+                  {role === ROLES.WALKER
+                    ? 'Solo un paseador con estado activo puede ser asignado a un paseo y mover su estado.'
+                    : 'Solo un administrador de zona con estado activo conserva acceso a su panel.'}
                 </p>
               </div>
 
               {zones.length > 0 && (
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-muted">Zonas</span>
+                  <span className="text-xs font-medium text-muted">{role === ROLES.WALKER ? 'Zonas que cubre' : 'Zonas que administra'}</span>
                   <div className="flex flex-wrap gap-1.5">
                     {zones.map((zone) => {
                       // IDs, not names: dispatch matches `zones` against the

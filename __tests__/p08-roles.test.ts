@@ -43,11 +43,12 @@ describe('normalizeRole / roleFromToken', () => {
 
 describe('ROLE_HOME / resolveDestination (navegación por rol)', () => {
   it('centraliza entrada, inicio y capacidad básica por rol', () => {
-    expect(ROLE_ENTRY).toEqual({ customer: '/login', walker: '/equipo', supervisor: '/equipo', admin: '/equipo' })
+    expect(ROLE_ENTRY).toEqual({ customer: '/login', walker: '/equipo', supervisor: '/equipo', admin: '/equipo', zone_admin: '/equipo' })
     expect(ROLE_ACCESS.customer.capabilities).toContain('customer:own-data')
     expect(ROLE_ACCESS.walker.capabilities).toContain('walker:assigned-sessions')
     expect(ROLE_ACCESS.supervisor.capabilities).toContain('supervisor:operations')
     expect(ROLE_ACCESS.admin.capabilities).toContain('admin:allowlisted-administration')
+    expect(ROLE_ACCESS.zone_admin.capabilities).toContain('zoneAdmin:zone-operations')
     expect(entryForPrivatePath('/familia/nueva-reserva')).toBe('/login')
     expect(entryForPrivatePath('/walker')).toBe('/equipo')
     expect(entryForPrivatePath('/admin')).toBe('/equipo')

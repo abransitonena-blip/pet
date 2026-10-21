@@ -19,7 +19,7 @@ const MAX_ZONES = 20
 
 type WalkerStatus = 'active' | 'inactive' | 'suspended'
 
-const ASSIGNABLE_ROLES: readonly Role[] = [ROLES.CUSTOMER, ROLES.WALKER, ROLES.SUPERVISOR, ROLES.ADMIN]
+const ASSIGNABLE_ROLES: readonly Role[] = [ROLES.CUSTOMER, ROLES.WALKER, ROLES.SUPERVISOR, ROLES.ADMIN, ROLES.ZONE_ADMIN]
 const WALKER_STATUSES: readonly WalkerStatus[] = ['active', 'inactive', 'suspended']
 
 /**
@@ -107,11 +107,12 @@ export async function POST(request: Request) {
   }
 
   let walkerProfileWritten = false
-  if (role === ROLES.WALKER) {
+  let zoneAdminProfileWritten = false
+  if (role === ROLES.WALKER || role === ROLES.ZONE_ADMIN) {
     const firestore = getPrivilegedFirestore()
     if (!firestore) {
       // The claim landed but the operational profile did not: say so instead
-      // of reporting success, because isActiveWalker() needs both.
+      // of reporting success, because isActiveWalker()/the zone gate needs both.
       return NextResponse.json(
         { code: 'profile-not-written', user: claimResult.value, message: identityFailureMessage('not-configured') },
         { status: 503, headers: noStore },
@@ -125,7 +126,8 @@ export async function POST(request: Request) {
         .slice(0, MAX_ZONES)
       : []
 
-    const profileRef = firestore.collection('walkerProfiles').doc(account.uid)
+    const collectionName = role === ROLES.WALKER ? 'walkerProfiles' : 'zoneAdminProfiles'
+    const profileRef = firestore.collection(collectionName).doc(account.uid)
     const existing = await profileRef.get()
     const previous = existing.exists ? existing.data() ?? {} : {}
 
@@ -134,6 +136,9 @@ export async function POST(request: Request) {
       name: cleanString(body.name, MAX_NAME) || String(previous.name ?? '') || account.displayName || account.email,
       email: account.email,
       phone: cleanString(body.phone, MAX_PHONE) || String(previous.phone ?? ''),
+      // El paseador CUBRE estas zonas (paseos que puede recibir); el admin de
+      // zona las ADMINISTRA (lo que puede delegar y entregar) -- mismo campo,
+      // dos colecciones con significado distinto, nunca mezcladas.
       zones: zones.length > 0 ? zones : (Array.isArray(previous.zones) ? previous.zones : []),
       schedule: previous.schedule ?? {},
       status,
@@ -141,11 +146,12 @@ export async function POST(request: Request) {
       createdAt: previous.createdAt ?? FieldValue.serverTimestamp(),
       provisionedBy: adminUid,
     })
-    walkerProfileWritten = true
+    if (role === ROLES.WALKER) walkerProfileWritten = true
+    else zoneAdminProfileWritten = true
   }
 
   return NextResponse.json(
-    { code: 'ok', user: claimResult.value, walkerProfileWritten },
+    { code: 'ok', user: claimResult.value, walkerProfileWritten, zoneAdminProfileWritten },
     { headers: noStore },
   )
 }

@@ -24,6 +24,7 @@ export const ADMIN_PANELS: readonly AdminPanel[] = [
   { id: 'reportes', label: 'Reportes de paseo', group: 'Operación', description: 'Lo que el paseador escribió y las fotos que subió, cuando envía su reporte.' },
   { id: 'rutas', label: 'Rutas', group: 'Operación', description: 'Dónde empezó y terminó cada paseo, su recorrido y las alertas de salida de zona.' },
   { id: 'pet-ahora', label: 'PET Ahora', group: 'Operación', description: 'Paseos al instante: a quién se le ofreció cada solicitud y quién la tomó.' },
+  { id: 'suministros', label: 'Suministros', group: 'Operación', description: 'Existencias por zona y su reabasto. El administrador de zona sólo las entrega; aquí se reabastecen.' },
   { id: 'clientes', label: 'Familias', group: 'Personas', description: 'Las cuentas registradas, con su etapa (nueva, activa, en riesgo) y sus paseos.' },
   { id: 'perros', label: 'Perros', group: 'Personas', description: 'Todos los perros dados de alta, con alergias, medicamento y refuerzos de vacuna.' },
   { id: 'paseadores', label: 'Paseadores', group: 'Personas', description: 'Alta y activación del equipo, sus zonas y su carga de trabajo real.' },

@@ -104,9 +104,10 @@ export function useSessionRole(allowedRoles: readonly Role[]): SessionRoleState 
       }
       setRole(currentRole)
 
-      if (currentRole === 'walker' || currentRole === 'supervisor') {
-        const profileSnap = await getDoc(doc(db, 'walkerProfiles', user.uid))
-        if (currentRole === 'walker' && !profileSnap.exists()) {
+      if (currentRole === 'walker' || currentRole === 'supervisor' || currentRole === 'zone_admin') {
+        const profileCollection = currentRole === 'zone_admin' ? 'zoneAdminProfiles' : 'walkerProfiles'
+        const profileSnap = await getDoc(doc(db, profileCollection, user.uid))
+        if ((currentRole === 'walker' || currentRole === 'zone_admin') && !profileSnap.exists()) {
           setStatus('profile-missing')
           return
         }
